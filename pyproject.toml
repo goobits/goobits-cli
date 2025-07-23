@@ -1,0 +1,18 @@
+[project]
+name = "goobits-cli"
+version = "0.1.0"
+description = "Unified CLI for Goobits projects."
+dependencies = [
+    "pyyaml",
+    "jinja2",
+    "pydantic",
+    "typer",
+    "toml"
+]
+
+[project.scripts]
+goobits = "goobits_cli.main:app"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

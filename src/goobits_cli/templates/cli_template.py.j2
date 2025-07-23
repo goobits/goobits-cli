@@ -1,0 +1,336 @@
+#!/usr/bin/env python3
+"""Auto-generated from {{ file_name }}"""
+import os
+import sys
+import importlib.util
+from pathlib import Path
+import rich_click as click
+from rich_click import RichGroup, RichCommand
+
+# Set up rich-click configuration globally
+click.rich_click.USE_RICH_MARKUP = True  
+click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
+click.rich_click.MARKUP_MODE = "rich"
+
+# Environment variables for additional control
+os.environ["RICH_CLICK_USE_RICH_MARKUP"] = "1"
+os.environ["RICH_CLICK_FORCE_TERMINAL"] = "1"
+click.rich_click.SHOW_ARGUMENTS = True
+click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
+click.rich_click.SHOW_METAVARS_COLUMN = {{ cli.config.show_metavars_column if cli.config else False }}
+click.rich_click.APPEND_METAVARS_HELP = {{ cli.config.append_metavars_help if cli.config else True }}
+click.rich_click.STYLE_ERRORS_SUGGESTION = "#ff5555"
+click.rich_click.ERRORS_SUGGESTION = "Try running the '--help' flag for more information."
+click.rich_click.ERRORS_EPILOGUE = "To find out more, visit https://github.com/anthropics/claude-code"
+click.rich_click.MAX_WIDTH = {{ cli.config.max_width if cli.config else 120 }}
+click.rich_click.WIDTH = None  # Let terminal determine width
+click.rich_click.COLOR_SYSTEM = "auto"
+click.rich_click.SHOW_SUBCOMMAND_ALIASES = True
+click.rich_click.ALIGN_OPTIONS_SWITCHES = True
+click.rich_click.STYLE_OPTION = "#ff79c6"      # Dracula Pink - for option flags
+click.rich_click.STYLE_SWITCH = "#50fa7b"      # Dracula Green - for switches
+click.rich_click.STYLE_METAVAR = "#8be9fd"     # Bright cyan - for argument types  
+click.rich_click.STYLE_METAVAR_SEPARATOR = "#6272a4"  # Dracula Comment
+click.rich_click.STYLE_HEADER_TEXT = "bold yellow"    # Bold yellow - for section headers
+click.rich_click.STYLE_EPILOGUE_TEXT = "#6272a4"      # Dracula Comment
+click.rich_click.STYLE_FOOTER_TEXT = "#6272a4"        # Dracula Comment
+click.rich_click.STYLE_USAGE = "#bd93f9"              # Purple - for "Usage:" line
+click.rich_click.STYLE_USAGE_COMMAND = "#50fa7b"      # Dracula Green - for subcommands
+click.rich_click.STYLE_DEPRECATED = "#ff5555"         # Dracula Red
+click.rich_click.STYLE_HELPTEXT_FIRST_LINE = "#f8f8f2" # Dracula Foreground
+click.rich_click.STYLE_HELPTEXT = "#b3b8c0"           # Dim gray - for help descriptions
+click.rich_click.STYLE_OPTION_DEFAULT = "#ffb86c"     # Dracula Orange
+click.rich_click.STYLE_REQUIRED_SHORT = "#ff5555"     # Dracula Red
+click.rich_click.STYLE_REQUIRED_LONG = "#ff5555"      # Dracula Red
+click.rich_click.STYLE_OPTIONS_PANEL_BORDER = "dim"   # Dim for subtle borders
+
+{% if cli.command_groups %}
+# Command groups will be set after main function is defined
+{% endif %}
+
+# Hooks system - try to import app_hooks module
+app_hooks = None
+try:
+    # Try to import from the same directory as this script
+    script_dir = Path(__file__).parent
+    hooks_path = script_dir / "app_hooks.py"
+    
+    if hooks_path.exists():
+        spec = importlib.util.spec_from_file_location("app_hooks", hooks_path)
+        app_hooks = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(app_hooks)
+    else:
+        # Try to import from Python path
+        import app_hooks
+except (ImportError, FileNotFoundError):
+    # No hooks module found, use default behavior
+    pass
+
+def load_plugins(cli_group):
+    """Load plugins from the conventional plugin directory."""
+    # Define plugin directories to search
+    plugin_dirs = [
+        # User-specific plugin directory
+        Path.home() / ".config" / "goobits" / "{{ cli.name }}" / "plugins",
+        # Local plugin directory (same as script)
+        Path(__file__).parent / "plugins",
+    ]
+    
+    for plugin_dir in plugin_dirs:
+        if not plugin_dir.exists():
+            continue
+            
+        # Add plugin directory to Python path
+        sys.path.insert(0, str(plugin_dir))
+        
+        # Scan for plugin files
+        for plugin_file in plugin_dir.glob("*.py"):
+            if plugin_file.name.startswith("_"):
+                continue
+                
+            plugin_name = plugin_file.stem
+            
+            try:
+                # Import the plugin module
+                spec = importlib.util.spec_from_file_location(plugin_name, plugin_file)
+                plugin_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(plugin_module)
+                
+                # Call register_plugin if it exists
+                if hasattr(plugin_module, "register_plugin"):
+                    plugin_module.register_plugin(cli_group)
+                    click.echo(f"Loaded plugin: {plugin_name}", err=True)
+            except Exception as e:
+                click.echo(f"Failed to load plugin {plugin_name}: {e}", err=True)
+
+{% macro render_option(opt) -%}
+@click.option(
+    {%- if opt.short %}"-{{ opt.short }}", {% endif %}"--{{ opt.name }}"
+    {%- if opt.type == "flag" %},
+    is_flag=True
+    {%- elif opt.choices %},
+    type=click.Choice({{ opt.choices }})
+    {%- else %},
+    type={% if opt.type == "str" %}str{% elif opt.type == "int" %}int{% elif opt.type == "float" %}float{% elif opt.type == "bool" %}bool{% else %}str{% endif %}
+    {%- endif %}
+    {%- if opt.default is not none %},
+    default={% if opt.default is sameas true %}True{% elif opt.default is sameas false %}False{% elif opt.default is number %}{{ opt.default }}{% else %}"{{ opt.default }}"{% endif %}
+    {%- endif %},
+    help="{{ opt.desc }}"
+)
+{%- endmacro %}
+
+{% macro render_argument(arg) -%}
+@click.argument(
+    "{{ arg.name|upper|replace('-', '_') }}"
+    {%- if arg.nargs %},
+    nargs={% if arg.nargs == "*" %}-1{% else %}{{ arg.nargs }}{% endif %}
+    {%- endif %}
+    {%- if arg.choices %},
+    type=click.Choice({{ arg.choices }})
+    {%- endif %}
+)
+{%- endmacro %}
+
+{% macro render_command(cmd_name, cmd_data, is_subcommand=False) -%}
+{% if not is_subcommand %}@main.command(){% else %}@{{ cmd_name }}.command(){% endif %}
+{% for arg in (cmd_data.args or []) %}
+{{ render_argument(arg) }}
+{% endfor %}
+{% for opt in (cmd_data.options or []) %}
+{{ render_option(opt) }}
+{% endfor %}
+def {{ cmd_name }}({% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
+    """{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}"""
+    # Check if hook function exists
+    hook_name = f"on_{{ cmd_name }}"
+    if app_hooks and hasattr(app_hooks, hook_name):
+        # Call the hook with all parameters
+        hook_func = getattr(app_hooks, hook_name)
+        {% if cmd_data.args or cmd_data.options %}
+        result = hook_func({% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %})
+        {% else %}
+        result = hook_func()
+        {% endif %}
+        return result
+    else:
+        # Default placeholder behavior
+        click.echo(f"Executing {{ cmd_name }} command...")
+        {% if cmd_data.args %}
+        {% for arg in cmd_data.args %}
+        click.echo(f"  {{ arg.name }}: {{ '{' }}{{ arg.name|lower|replace('-', '_') }}{{ '}' }}")
+        {% endfor %}
+        {% endif %}
+        {% if cmd_data.options %}
+        {% for opt in cmd_data.options %}
+        click.echo(f"  {{ opt.name }}: {{ '{' }}{{ opt.name|replace('-', '_') }}{{ '}' }}")
+        {% endfor %}
+        {% endif %}
+{%- endmacro %}
+
+def get_version():
+    """Get version from pyproject.toml or __init__.py"""
+    import re
+    
+    try:
+        # Try to get version from pyproject.toml FIRST (most authoritative)
+        toml_path = Path(__file__).parent.parent / "pyproject.toml"
+        if toml_path.exists():
+            content = toml_path.read_text()
+            match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+            if match:
+                return match.group(1)
+    except Exception:
+        pass
+    
+    try:
+        # Fallback to __init__.py
+        init_path = Path(__file__).parent / "__init__.py"
+        if init_path.exists():
+            content = init_path.read_text()
+            match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
+            if match:
+                return match.group(1)
+    except Exception:
+        pass
+        
+    # Final fallback
+    return "{{ cli.version or '1.0.0' }}"
+
+{# Find the default command #}
+{% set ns = namespace(default_cmd=None) %}
+{% for cmd_name, cmd_data in cli.commands.items() %}
+  {% if cmd_data.is_default %}
+    {% set ns.default_cmd = cmd_name %}
+  {% endif %}
+{% endfor %}
+
+{% if ns.default_cmd %}
+class DefaultGroup(RichGroup):
+    """Allow a default command to be invoked without being specified."""
+    
+    def __init__(self, *args, default=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.default_command = default
+    
+    def resolve_command(self, ctx, args):
+        try:
+            # Try normal command resolution first
+            return super().resolve_command(ctx, args)
+        except click.UsageError:
+            # If no command found and we have a default, use it
+            if self.default_command and args:
+                # Get the default command object
+                cmd = self.commands.get(self.default_command)
+                if cmd:
+                    # Return command name, command object, and all args
+                    return self.default_command, cmd, args
+            raise
+{% endif %}
+
+{% if ns.default_cmd %}
+@click.group(cls=DefaultGroup, default='{{ ns.default_cmd }}', context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
+{% else %}
+@click.group(cls=RichGroup, context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
+{% endif %}
+@click.version_option(version=get_version(), prog_name="{{ cli.name }}")
+@click.pass_context
+def main(ctx):
+    """{% if cli.icon %}{{ cli.icon }} {% endif %}[bold cyan]{{ cli.name }}[/bold cyan]{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %} - {{ cli.tagline }}
+    
+    {% if cli.description %}\b
+    [dim]{{ cli.description }}[/dim]
+    {% endif %}{% if cli.examples %}\b
+        [bold yellow]{{ cli.examples_section_title or "💡 Quick Start" }}:[/bold yellow]
+        \b
+{% for ex in cli.examples %}
+ [dim]  [/dim][green]{{ ex.cmd }}[/green]{{ " " * (48 - ex.cmd|length) }}[dim italic]# {{ ex.desc }}[/dim italic]
+{% endfor %}
+
+        {% endif %}{% if cli.setup_steps %}\b
+        
+        [bold yellow]{{ cli.setup_section_title or "🔑 First-time Setup" }}:[/bold yellow]
+        \b
+{% for step in cli.setup_steps %}
+ [dim]  {{ step.step + ":" if not step.step.endswith(":") else step.step }}  [/dim][green]{{ step.cmd }}[/green]
+{% endfor %}
+
+        {% endif %}{% if cli.footer_note %}\b
+        
+ [dim]{{ cli.footer_note }}[/dim]
+        {% endif %}"""
+    
+    pass
+
+# Version is included directly in the docstring if display_version is true
+
+{% if cli.command_groups %}
+# Set command groups after main function is defined
+click.rich_click.COMMAND_GROUPS = {
+    "main": [
+        {% for group in cli.command_groups %}
+        {
+            "name": "{{ group.name }}",
+            "commands": {{ group.commands }},
+        },
+        {% endfor %}
+    ]
+}
+{% endif %}
+
+{% for cmd_name, cmd_data in cli.commands.items() %}
+{% if not cmd_data.subcommands %}
+{{ render_command(cmd_name, cmd_data) }}
+{% else %}
+@main.group()
+def {{ cmd_name }}():
+    """{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}"""
+    pass
+
+{% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+@{{ cmd_name }}.command()
+{% for arg in (subcmd_data.args or []) %}
+{{ render_argument(arg) }}
+{% endfor %}
+{% for opt in (subcmd_data.options or []) %}
+{{ render_option(opt) }}
+{% endfor %}
+def {{ subcmd_name }}({% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
+    """{% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}"""
+    # Check if hook function exists
+    hook_name = f"on_{{ cmd_name }}_{{ subcmd_name }}"
+    if app_hooks and hasattr(app_hooks, hook_name):
+        # Call the hook with all parameters
+        hook_func = getattr(app_hooks, hook_name)
+        {% if subcmd_data.args or subcmd_data.options %}
+        result = hook_func({% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %})
+        {% else %}
+        result = hook_func()
+        {% endif %}
+        return result
+    else:
+        # Default placeholder behavior
+        click.echo(f"Executing {{ subcmd_name }} command...")
+        {% if subcmd_data.args %}
+        {% for arg in subcmd_data.args %}
+        click.echo(f"  {{ arg.name }}: {{ '{' }}{{ arg.name|lower|replace('-', '_') }}{{ '}' }}")
+        {% endfor %}
+        {% endif %}
+        {% if subcmd_data.options %}
+        {% for opt in subcmd_data.options %}
+        click.echo(f"  {{ opt.name }}: {{ '{' }}{{ opt.name|replace('-', '_') }}{{ '}' }}")
+        {% endfor %}
+        {% endif %}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+def cli_entry():
+    """Entry point for the CLI when installed via pipx."""
+    # Load plugins before running the CLI
+    load_plugins(main)
+    main()
+
+if __name__ == "__main__":
+    cli_entry()
