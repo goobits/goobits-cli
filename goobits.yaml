@@ -1,0 +1,190 @@
+# Goobits CLI Framework - Self-hosting configuration
+# This file allows goobits-cli to build itself using its own framework
+
+package_name: goobits-cli
+command_name: goobits
+display_name: "Goobits CLI Framework"
+description: "Build professional command-line tools with YAML configuration"
+
+# CLI generation configuration
+cli_output_path: "src/goobits_cli/generated_cli.py"
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required:
+    - git
+    - pipx
+    - type: system_package
+      name: python3-dev
+      description: "Python development headers"
+      ubuntu: python3-dev
+      debian: python3-dev
+      centos: python3-devel
+      fedora: python3-devel
+      macos: python3
+      check_method: dpkg_query
+  optional:
+    - curl
+    - wget
+
+installation:
+  pypi_name: goobits-cli
+  development_path: "."
+
+shell_integration:
+  enabled: false
+  alias: goobits
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: |
+    🎉 Goobits CLI Framework has been installed successfully!
+    
+    Get started with:
+      mkdir my-awesome-cli && cd my-awesome-cli
+      goobits init        # Create initial goobits.yaml
+      goobits build       # Generate CLI and setup scripts
+      ./setup.sh install --dev
+    
+    Visit https://github.com/goobits/goobits-cli for documentation.
+  
+  install_dev_success: |
+    🚀 Goobits CLI Framework installed in development mode!
+    ✅ Your changes to the framework will be reflected immediately.
+    
+    Development workflow:
+      - Edit source code in src/goobits_cli/
+      - Test immediately with: goobits build
+      - Run tests with: python -m pytest
+      
+    💡 Framework changes take effect without reinstalling!
+  
+  upgrade_success: |
+    🆙 Goobits CLI Framework has been upgraded successfully!
+    Check out the latest features with: goobits --version
+
+cli:
+  name: "Goobits CLI"
+  version: "1.1.0"
+  display_version: true
+  tagline: "Build professional command-line tools with YAML configuration"
+  description: "Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."
+  enable_recursive_help: true
+  enable_help_json: false
+  
+  header_sections:
+    - title: "Quick Start"
+      items:
+        - { item: 'mkdir my-cli && cd my-cli', desc: "Create new project directory", style: "setup" }
+        - { item: 'goobits init', desc: "Generate initial goobits.yaml", style: "example" }
+        - { item: 'goobits build', desc: "Create CLI and setup scripts", style: "example" }
+        - { item: './setup.sh install --dev', desc: "Install for development", style: "setup" }
+
+    - title: "Core Commands"
+      items:
+        - { item: "build", desc: "🔨 Generate CLI and setup scripts from goobits.yaml", style: "command" }
+        - { item: "serve", desc: "🌐 Serve local PyPI-compatible package index", style: "command" }
+        - { item: "init", desc: "🆕 Create initial goobits.yaml template", style: "command" }
+
+    - title: "Development Workflow"
+      items:
+        - { item: "1. Edit goobits.yaml", desc: "Define your CLI structure", style: "setup" }
+        - { item: "2. goobits build", desc: "Generate implementation files", style: "setup" }
+        - { item: "3. Edit app_hooks.py", desc: "Add your business logic", style: "setup" }
+  
+  command_groups:
+    - name: "Core Commands"
+      commands: ["build", "init"]
+    - name: "Development Tools"
+      commands: ["serve"]
+    - name: "Utilities"
+      commands: ["upgrade", "version", "help"]
+
+  commands:
+    build:
+      desc: "Build CLI and setup scripts from goobits.yaml configuration"
+      icon: "🔨"
+      is_default: true
+      args:
+        - name: "config_path"
+          desc: "Path to goobits.yaml file (defaults to ./goobits.yaml)"
+          required: false
+      options:
+        - name: "output-dir"
+          short: "o"
+          type: "str"
+          desc: "📁 Output directory (defaults to same directory as config file)"
+        - name: "output"
+          type: "str"
+          desc: "📝 Output filename for generated CLI (defaults to 'generated_cli.py')"
+        - name: "backup"
+          type: "flag"
+          desc: "💾 Create backup files (.bak) when overwriting existing files"
+    
+    init:
+      desc: "Create initial goobits.yaml template"
+      icon: "🆕"
+      args:
+        - name: "project_name"
+          desc: "Name of the project (optional)"
+          required: false
+      options:
+        - name: "template"
+          short: "t"
+          type: "str"
+          desc: "🎯 Template type"
+          choices: ["basic", "advanced", "api-client", "text-processor"]
+          default: "basic"
+        - name: "force"
+          type: "flag"
+          desc: "🔥 Overwrite existing goobits.yaml file"
+    
+    serve:
+      desc: "Serve local PyPI-compatible package index"
+      icon: "🌐"
+      args:
+        - name: "directory"
+          desc: "Directory containing packages to serve"
+          required: true
+      options:
+        - name: "host"
+          type: "str"
+          desc: "🌍 Host to bind the server to"
+          default: "localhost"
+        - name: "port"
+          short: "p"
+          type: "int"
+          desc: "🔌 Port to run the server on"
+          default: 8080
+    
+    upgrade:
+      desc: "Upgrade goobits-cli to the latest version"
+      icon: "🆙"
+      options:
+        - name: "source"
+          type: "str"
+          desc: "Upgrade source: pypi, git, local"
+          default: "pypi"
+        - name: "version"
+          type: "str"
+          desc: "Specific version to install"
+        - name: "pre"
+          type: "flag"
+          desc: "Include pre-release versions"
+        - name: "dry-run"
+          type: "flag"
+          desc: "Show what would be upgraded without doing it"
+
+  config:
+    rich_help_panel: true
+    show_metavars_column: false
+    append_metavars_help: true  
+    style_errors_suggestion: true
+    max_width: 120

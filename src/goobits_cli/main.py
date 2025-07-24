@@ -3,6 +3,7 @@ import sys
 import yaml
 import toml
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Optional, Dict, Any
 import typer
@@ -12,8 +13,21 @@ from pydantic import ValidationError
 from .schemas import ConfigSchema, GoobitsConfigSchema, DependencyItem
 from .builder import generate_cli_code
 from .pypi_server import serve_packages
+from .__version__ import __version__
+
+def version_callback(value: bool):
+    if value:
+        typer.echo(f"goobits-cli {__version__}")
+        raise typer.Exit()
 
 app = typer.Typer(name="goobits", help="Unified CLI for Goobits projects")
+
+@app.callback()
+def main(
+    version: Optional[bool] = typer.Option(None, "--version", callback=version_callback, is_eager=True, help="Show version and exit")
+):
+    """Goobits CLI Framework - Build professional command-line tools with YAML configuration."""
+    pass
 
 
 def load_goobits_config(file_path: Path) -> GoobitsConfigSchema:
@@ -303,6 +317,299 @@ def build(
 
 
 @app.command()
+def init(
+    project_name: Optional[str] = typer.Argument(None, help="Name of the project (optional)"),
+    template: str = typer.Option("basic", "--template", "-t", help="Template type (basic, advanced, api-client, text-processor)"),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing goobits.yaml file")
+):
+    """
+    Create initial goobits.yaml template.
+    
+    This command generates a starter goobits.yaml configuration file
+    to help you get started with building your CLI application.
+    
+    Templates:
+        basic: Simple CLI with one command
+        advanced: Multi-command CLI with options and subcommands
+        api-client: Template for API client tools
+        text-processor: Template for text processing utilities
+    
+    Examples:
+        goobits init my-awesome-tool
+        goobits init --template advanced
+        goobits init my-api-client --template api-client
+    """
+    config_path = Path("./goobits.yaml")
+    
+    if config_path.exists() and not force:
+        typer.echo(f"Error: {config_path} already exists. Use --force to overwrite.", err=True)
+        raise typer.Exit(1)
+    
+    # Determine project name
+    if not project_name:
+        project_name = Path.cwd().name
+    
+    # Generate template based on type
+    templates = {
+        "basic": generate_basic_template(project_name),
+        "advanced": generate_advanced_template(project_name),
+        "api-client": generate_api_client_template(project_name),
+        "text-processor": generate_text_processor_template(project_name)
+    }
+    
+    if template not in templates:
+        typer.echo(f"Error: Unknown template '{template}'. Available: {', '.join(templates.keys())}", err=True)
+        raise typer.Exit(1)
+    
+    # Write template
+    with open(config_path, 'w') as f:
+        f.write(templates[template])
+    
+    typer.echo(f"✅ Created {config_path} using '{template}' template")
+    typer.echo(f"📝 Project: {project_name}")
+    typer.echo("")
+    typer.echo("Next steps:")
+    typer.echo("  1. Edit goobits.yaml to customize your CLI")
+    typer.echo("  2. Run: goobits build")
+    typer.echo("  3. Run: ./setup.sh install --dev")
+
+
+def generate_basic_template(project_name: str) -> str:
+    return f'''# Basic Goobits CLI Configuration
+package_name: {project_name}
+command_name: {project_name.replace('-', '_')}
+display_name: "{project_name.replace('-', ' ').title()}"
+description: "A CLI tool built with Goobits"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+
+cli:
+  name: {project_name.replace('-', '_')}
+  tagline: "Your awesome CLI tool"
+  commands:
+    hello:
+      desc: "Say hello"
+      is_default: true
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: false
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting"
+          default: "Hello"
+'''
+
+def generate_advanced_template(project_name: str) -> str:
+    return f'''# Advanced Goobits CLI Configuration
+package_name: {project_name}
+command_name: {project_name.replace('-', '_')}
+display_name: "{project_name.replace('-', ' ').title()}"
+description: "An advanced CLI tool built with Goobits"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+    - git
+  optional:
+    - curl
+
+cli:
+  name: {project_name.replace('-', '_')}
+  tagline: "Advanced CLI with multiple commands"
+  command_groups:
+    - name: "Core Commands"
+      commands: ["process", "convert"]
+    - name: "Utilities"
+      commands: ["status", "config"]
+  
+  commands:
+    process:
+      desc: "Process input data"
+      is_default: true
+      args:
+        - name: input
+          desc: "Input to process"
+          nargs: "*"
+      options:
+        - name: output
+          short: o
+          desc: "Output file"
+        - name: format
+          short: f
+          choices: ["json", "yaml", "text"]
+          default: "text"
+    
+    convert:
+      desc: "Convert between formats"
+      args:
+        - name: source
+          desc: "Source file"
+          required: true
+      options:
+        - name: target
+          short: t
+          desc: "Target format"
+          required: true
+    
+    status:
+      desc: "Show system status"
+    
+    config:
+      desc: "Manage configuration"
+      subcommands:
+        show:
+          desc: "Show current configuration"
+        set:
+          desc: "Set configuration value"
+          args:
+            - name: key
+              desc: "Configuration key"
+            - name: value
+              desc: "Configuration value"
+'''
+
+def generate_api_client_template(project_name: str) -> str:
+    return f'''# API Client Goobits CLI Configuration
+package_name: {project_name}
+command_name: {project_name.replace('-', '_')}
+display_name: "{project_name.replace('-', ' ').title()}"
+description: "API client CLI tool built with Goobits"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+    - curl
+  optional:
+    - jq
+
+cli:
+  name: {project_name.replace('-', '_')}
+  tagline: "API client for your service"
+  commands:
+    get:
+      desc: "GET request to API endpoint"
+      is_default: true
+      args:
+        - name: endpoint
+          desc: "API endpoint path"
+          required: true
+      options:
+        - name: api-key
+          desc: "API key for authentication"
+        - name: format
+          short: f
+          choices: ["json", "yaml", "table"]
+          default: "json"
+        - name: output
+          short: o
+          desc: "Save output to file"
+    
+    post:
+      desc: "POST request to API endpoint"
+      args:
+        - name: endpoint
+          desc: "API endpoint path"
+          required: true
+      options:
+        - name: data
+          short: d
+          desc: "JSON data to send"
+        - name: file
+          desc: "Read data from file"
+        - name: api-key
+          desc: "API key for authentication"
+    
+    config:
+      desc: "Manage API configuration"
+      subcommands:
+        set-key:
+          desc: "Set API key"
+          args:
+            - name: key
+              desc: "API key value"
+        show:
+          desc: "Show current configuration"
+'''
+
+def generate_text_processor_template(project_name: str) -> str:
+    return f'''# Text Processor Goobits CLI Configuration
+package_name: {project_name}
+command_name: {project_name.replace('-', '_')}
+display_name: "{project_name.replace('-', ' ').title()}"
+description: "Text processing CLI tool built with Goobits"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+  optional:
+    - pandoc
+
+cli:
+  name: {project_name.replace('-', '_')}
+  tagline: "Process text files with ease"
+  commands:
+    process:
+      desc: "Process text input"
+      is_default: true
+      args:
+        - name: text
+          desc: "Text to process (or read from stdin)"
+          nargs: "*"
+      options:
+        - name: uppercase
+          short: u
+          type: flag
+          desc: "Convert to uppercase"
+        - name: lowercase
+          short: l
+          type: flag
+          desc: "Convert to lowercase"
+        - name: output
+          short: o
+          desc: "Output file"
+        - name: format
+          short: f
+          choices: ["text", "json", "markdown"]
+          default: "text"
+    
+    count:
+      desc: "Count words, lines, characters"
+      args:
+        - name: files
+          desc: "Files to count"
+          nargs: "*"
+      options:
+        - name: words
+          short: w
+          type: flag
+          desc: "Count words"
+        - name: lines
+          short: l
+          type: flag
+          desc: "Count lines"
+        - name: chars
+          short: c
+          type: flag
+          desc: "Count characters"
+'''
+
+@app.command()
 def serve(
     directory: Path = typer.Argument(..., help="Directory containing packages to serve."),
     host: str = typer.Option("localhost", help="Host to bind the server to."),
@@ -350,6 +657,117 @@ def serve(
         raise typer.Exit(1)
     except Exception as e:
         typer.echo(f"❌ Unexpected error: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@app.command()
+def upgrade(
+    source: str = typer.Option("pypi", help="Upgrade source: pypi, git, local"),
+    version: Optional[str] = typer.Option(None, help="Specific version to install"),
+    pre_release: bool = typer.Option(False, "--pre", help="Include pre-release versions"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be upgraded without doing it")
+):
+    """
+    Upgrade goobits-cli to the latest version.
+    
+    This command uses pipx to safely upgrade goobits-cli in its isolated environment.
+    Multiple upgrade sources are supported for flexibility.
+    
+    Sources:
+        pypi: Upgrade from PyPI (default)
+        git: Upgrade from GitHub repository
+        local: Upgrade from current directory (for development)
+    
+    Examples:
+        goobits upgrade                    # Upgrade from PyPI
+        goobits upgrade --version 1.2.0    # Upgrade to specific version
+        goobits upgrade --source git       # Upgrade from latest git
+        goobits upgrade --dry-run          # See what would be upgraded
+    """
+    # Check if pipx is available
+    try:
+        result = subprocess.run(["pipx", "--version"], capture_output=True, text=True, check=True)
+        typer.echo(f"Using pipx version: {result.stdout.strip()}")
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        typer.echo("❌ Error: pipx is required for upgrades but not found.", err=True)
+        typer.echo("Install pipx: https://pypa.github.io/pipx/installation/", err=True)
+        raise typer.Exit(1)
+    
+    # Get current version
+    current_version = __version__
+    typer.echo(f"Current version: {current_version}")
+    
+    # Build upgrade command based on source
+    if source == "pypi":
+        if version:
+            cmd = ["pipx", "install", f"goobits-cli=={version}", "--force"]
+            target_desc = f"version {version} from PyPI"
+        else:
+            cmd = ["pipx", "upgrade", "goobits-cli"]
+            if pre_release:
+                cmd.extend(["--pip-args", "--pre"])
+            target_desc = "latest version from PyPI"
+    elif source == "git":
+        git_url = "git+https://github.com/goobits/goobits-cli.git"
+        if version:
+            git_url += f"@{version}"
+        cmd = ["pipx", "install", git_url, "--force"]
+        target_desc = f"version {version if version else 'latest'} from Git"
+    elif source == "local":
+        cmd = ["pipx", "install", ".", "--force", "--editable"]
+        target_desc = "local development version"
+    else:
+        typer.echo(f"❌ Error: Unknown source '{source}'. Use: pypi, git, local", err=True)
+        raise typer.Exit(1)
+    
+    typer.echo(f"Planning to upgrade to: {target_desc}")
+    
+    if dry_run:
+        typer.echo(f"Dry run - would execute: {' '.join(cmd)}")
+        return
+    
+    # Confirm upgrade
+    if not typer.confirm(f"Upgrade goobits-cli to {target_desc}?"):
+        typer.echo("Upgrade cancelled.")
+        return
+    
+    # Execute upgrade
+    typer.echo("🔄 Upgrading goobits-cli...")
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        
+        # Show success message
+        typer.echo("✅ Upgrade completed successfully!")
+        
+        # Try to get new version
+        try:
+            version_result = subprocess.run(["goobits", "--version"], capture_output=True, text=True, check=True)
+            new_version = version_result.stdout.strip().split()[-1]
+            if new_version != current_version:
+                typer.echo(f"📈 Upgraded from {current_version} → {new_version}")
+            else:
+                typer.echo(f"Already at latest version: {current_version}")
+        except:
+            typer.echo("New version information not available")
+        
+        if result.stdout:
+            typer.echo("\nInstall output:")
+            typer.echo(result.stdout)
+            
+    except subprocess.CalledProcessError as e:
+        typer.echo(f"❌ Upgrade failed: {e}", err=True)
+        if e.stderr:
+            typer.echo(f"Error details: {e.stderr}", err=True)
+        
+        # Suggest troubleshooting
+        typer.echo("\n💡 Troubleshooting:")
+        typer.echo("- Ensure pipx is up to date: pipx upgrade pipx")
+        typer.echo("- Check network connection for PyPI/Git access")
+        typer.echo("- Try: pipx reinstall goobits-cli")
+        
+        raise typer.Exit(1)
+    except Exception as e:
+        typer.echo(f"❌ Unexpected error during upgrade: {e}", err=True)
         raise typer.Exit(1)
 
 
