@@ -39,13 +39,24 @@ class PyPIHandler(BaseHTTPRequestHandler):
             self._serve_index()
             return
         
-        # Handle package file requests
+        # Handle PyPI Simple API: /simple/package-name/
+        if path.startswith('simple/') and path.endswith('/'):
+            package_name = path[7:-1]  # Remove 'simple/' and trailing '/'
+            self._serve_package_simple_page(package_name)
+            return
+        
+        # Handle direct package file requests
         file_path = self.package_dir / path
         
         if file_path.exists() and file_path.is_file():
             self._serve_file(file_path)
         else:
-            self._send_404()
+            # Try to find file with normalized package name
+            normalized_path = self._find_normalized_package_file(path)
+            if normalized_path:
+                self._serve_file(normalized_path)
+            else:
+                self._send_404()
     
     def _serve_index(self) -> None:
         """Generate and serve the package index HTML."""
@@ -82,6 +93,13 @@ class PyPIHandler(BaseHTTPRequestHandler):
         """Generate HTML index of available packages."""
         packages = self._get_package_files()
         
+        # Extract unique package names for Simple API
+        package_names = set()
+        for package_file in packages:
+            base_name = package_file.name.split('-')[0]
+            normalized_name = self._normalize_package_name(base_name)
+            package_names.add((base_name, normalized_name))
+        
         html_lines = [
             "<!DOCTYPE html>",
             "<html>",
@@ -89,18 +107,38 @@ class PyPIHandler(BaseHTTPRequestHandler):
             "<title>Local PyPI Server</title>",
             "<style>",
             "body { font-family: Arial, sans-serif; margin: 40px; }",
-            "h1 { color: #333; }",
-            "a { display: block; margin: 5px 0; text-decoration: none; }",
+            "h1, h2 { color: #333; }",
+            "a { display: block; margin: 5px 0; text-decoration: none; color: #0066cc; }",
             "a:hover { text-decoration: underline; }",
             ".package-list { margin: 20px 0; }",
             ".stats { color: #666; font-size: 0.9em; margin-bottom: 20px; }",
+            ".simple-api { background: #f5f5f5; padding: 10px; margin: 20px 0; }",
             "</style>",
             "</head>",
             "<body>",
             "<h1>Local PyPI Server</h1>",
             f'<div class="stats">Serving {len(packages)} packages from: {self.package_dir}</div>',
-            '<div class="package-list">',
         ]
+        
+        # Add Simple API section
+        if package_names:
+            html_lines.extend([
+                '<div class="simple-api">',
+                '<h2>PyPI Simple API (for pip install)</h2>',
+                '<p>Use these links for package installation:</p>',
+            ])
+            
+            for base_name, normalized_name in sorted(package_names):
+                simple_url = f"/simple/{normalized_name}/"
+                html_lines.append(f'<a href="{simple_url}">{base_name}</a>')
+            
+            html_lines.append('</div>')
+        
+        # Add direct file downloads
+        html_lines.extend([
+            '<h2>Direct Downloads</h2>',
+            '<div class="package-list">',
+        ])
         
         if packages:
             for package_file in sorted(packages):
@@ -113,7 +151,7 @@ class PyPIHandler(BaseHTTPRequestHandler):
             '</div>',
             '<hr>',
             '<p><em>To install packages from this server:</em></p>',
-            '<code>pip install --index-url http://localhost:8080 --trusted-host localhost PACKAGE_NAME</code>',
+            '<code>pip install --index-url http://localhost:8080/simple --trusted-host localhost PACKAGE_NAME</code>',
             '</body>',
             '</html>'
         ])
@@ -156,6 +194,71 @@ class PyPIHandler(BaseHTTPRequestHandler):
     def _send_error(self, status_code: int, message: str) -> None:
         """Send error response."""
         self._send_response(status_code, message, 'text/plain')
+    
+    def _normalize_package_name(self, name: str) -> str:
+        """Normalize package name according to PEP 508."""
+        import re
+        return re.sub(r"[-_.]+", "-", name).lower()
+    
+    def _find_normalized_package_file(self, requested_path: str) -> Optional[Path]:
+        """Find package file using normalized name matching."""
+        # Extract package name from path
+        if '/' in requested_path:
+            return None
+        
+        requested_base = requested_path.split('-')[0] if '-' in requested_path else requested_path
+        requested_normalized = self._normalize_package_name(requested_base)
+        
+        # Search for matching files
+        for file_path in self.package_dir.glob("*.whl"):
+            file_base = file_path.name.split('-')[0]
+            file_normalized = self._normalize_package_name(file_base)
+            
+            if requested_normalized == file_normalized:
+                return file_path
+        
+        return None
+    
+    def _serve_package_simple_page(self, package_name: str) -> None:
+        """Serve PyPI Simple API page for a specific package."""
+        normalized_name = self._normalize_package_name(package_name)
+        
+        # Find matching package files
+        matching_files = []
+        for file_path in self.package_dir.glob("*.whl"):
+            file_base = file_path.name.split('-')[0]
+            file_normalized = self._normalize_package_name(file_base)
+            
+            if normalized_name == file_normalized:
+                matching_files.append(file_path)
+        
+        if not matching_files:
+            self._send_404()
+            return
+        
+        # Generate simple API HTML
+        html_lines = [
+            "<!DOCTYPE html>",
+            "<html>",
+            "<head>",
+            f"<title>Links for {package_name}</title>",
+            "</head>",
+            "<body>",
+            f"<h1>Links for {package_name}</h1>",
+        ]
+        
+        for file_path in matching_files:
+            # Create direct download link
+            file_url = f"/{file_path.name}"
+            html_lines.append(f'<a href="{file_url}">{file_path.name}</a><br/>')
+        
+        html_lines.extend([
+            "</body>",
+            "</html>"
+        ])
+        
+        html_content = '\n'.join(html_lines)
+        self._send_response(200, html_content, 'text/html')
 
 
 class PyPIServer:
