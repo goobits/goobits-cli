@@ -29,22 +29,23 @@ click.rich_click.SHOW_SUBCOMMAND_ALIASES = True
 click.rich_click.ALIGN_OPTIONS_SWITCHES = True
 click.rich_click.STYLE_OPTION = "#ff79c6"      # Dracula Pink - for option flags
 click.rich_click.STYLE_SWITCH = "#50fa7b"      # Dracula Green - for switches
-click.rich_click.STYLE_METAVAR = "#8be9fd"     # Bright cyan - for argument types  
+click.rich_click.STYLE_METAVAR = "#8BE9FD not bold"   # Light cyan - for argument types (OPTIONS, COMMAND)  
 click.rich_click.STYLE_METAVAR_SEPARATOR = "#6272a4"  # Dracula Comment
 click.rich_click.STYLE_HEADER_TEXT = "bold yellow"    # Bold yellow - for section headers
 click.rich_click.STYLE_EPILOGUE_TEXT = "#6272a4"      # Dracula Comment
 click.rich_click.STYLE_FOOTER_TEXT = "#6272a4"        # Dracula Comment
-click.rich_click.STYLE_USAGE = "#bd93f9"              # Purple - for "Usage:" line
-click.rich_click.STYLE_USAGE_COMMAND = "#50fa7b"      # Dracula Green - for subcommands
+click.rich_click.STYLE_USAGE = "#BD93F9"              # Purple - for "Usage:" line
+click.rich_click.STYLE_USAGE_COMMAND = "bold"         # Bold for main command name
 click.rich_click.STYLE_DEPRECATED = "#ff5555"         # Dracula Red
 click.rich_click.STYLE_HELPTEXT_FIRST_LINE = "#f8f8f2" # Dracula Foreground
-click.rich_click.STYLE_HELPTEXT = "#b3b8c0"           # Dim gray - for help descriptions
+click.rich_click.STYLE_HELPTEXT = "#B3B8C0"           # Light gray - for help descriptions
 click.rich_click.STYLE_OPTION_DEFAULT = "#ffb86c"     # Dracula Orange
 click.rich_click.STYLE_REQUIRED_SHORT = "#ff5555"     # Dracula Red
 click.rich_click.STYLE_REQUIRED_LONG = "#ff5555"      # Dracula Red
 click.rich_click.STYLE_OPTIONS_PANEL_BORDER = "dim"   # Dim for subtle borders
 click.rich_click.STYLE_COMMANDS_PANEL_BORDER = "dim"  # Dim for subtle borders
 click.rich_click.STYLE_COMMAND = "#50fa7b"            # Dracula Green - for command names in list
+click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)  # Command:Description ratio (1/4 : 3/4)
 
 {% if cli.command_groups %}
 # Command groups will be set after main function is defined
@@ -238,27 +239,28 @@ class DefaultGroup(RichGroup):
 @click.version_option(version=get_version(), prog_name="{{ cli.name }}")
 @click.pass_context
 def main(ctx):
-    """{% if cli.icon %}{{ cli.icon }} {% endif %}[bold cyan]{{ cli.name }}[/bold cyan]{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %} - {{ cli.tagline }}
+    """{% if cli.icon %}{{ cli.icon }} {% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
     {% if cli.description %}
-
-    [dim]{{ cli.description }}[/dim]
+    \b
+    [#B3B8C0]{{ cli.description }}[/#B3B8C0]
     {% endif %}{% if cli.examples %}
-
+    \b
     [bold yellow]{{ cli.examples_section_title or "💡 Quick Start" }}:[/bold yellow]
-    
-    {% for ex in cli.examples -%}
-      [green]{{ ex.cmd }}[/green]  [dim italic]# {{ ex.desc }}[/dim italic]
-    {% endfor %}
+    {% for ex in cli.examples %}
+    \b
+      [#B3B8C0]  [/#B3B8C0][color(2)]{{ ex.cmd }}[/color(2)]  [italic #B3B8C0]# {{ ex.desc }}[/italic #B3B8C0]
+    {%- endfor %}
     {%- endif %}{% if cli.setup_steps %}
-
+    \b
     [bold yellow]{{ cli.setup_section_title or "🔑 First-time Setup" }}:[/bold yellow]
-    
-    {% for step in cli.setup_steps -%}
-      [dim]{{ step.step + ":" if not step.step.endswith(":") else step.step }}[/dim]  [green]{{ step.cmd }}[/green]
+    {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 6 %}
+    {% for step in cli.setup_steps %}
+      [#B3B8C0]{{ (step.step + ":").ljust(max_step_len) }}[/#B3B8C0][color(2)]{{ step.cmd }}[/color(2)]
     {% endfor %}
     {%- endif %}{% if cli.footer_note %}
 
-    [dim italic]{{ cli.footer_note }}[/dim italic]{% endif %}"""
+    \b
+    [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]{% endif %}"""
     
     pass
 
@@ -330,7 +332,13 @@ def cli_entry():
     """Entry point for the CLI when installed via pipx."""
     # Load plugins before running the CLI
     load_plugins(main)
-    main()
+    try:
+        main()
+    except SystemExit as e:
+        # Add a final newline after help output
+        if e.code == 0:  # Successful exit (like --help)
+            print()
+        raise
 
 if __name__ == "__main__":
     cli_entry()
