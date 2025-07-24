@@ -127,8 +127,14 @@ def load_plugins(cli_group):
 @click.argument(
     "{{ arg.name|upper|replace('-', '_') }}"
     {%- if arg.nargs %},
-    nargs={% if arg.nargs == "*" %}-1{% else %}{{ arg.nargs }}{% endif %}
+    nargs={% if arg.nargs == "*" %}-1{% elif arg.nargs == "?" %}1{% else %}{{ arg.nargs }}{% endif %}
+    {%- if arg.nargs == "?" %},
+    required=False{% endif %}
     {%- endif %}
+    {%- if arg.required is defined and not arg.required %},
+    required=False{% endif %}
+    {%- if arg.required is defined and arg.required and arg.nargs and arg.nargs == "*" and arg.name != "options" %},
+    required=True{% endif %}
     {%- if arg.choices %},
     type=click.Choice({{ arg.choices }})
     {%- endif %}
@@ -200,6 +206,16 @@ def get_version():
     # Final fallback
     return "{{ cli.version or '1.0.0' }}"
 
+{% if cli.enable_help_json %}
+def show_help_json(ctx, param, value):
+    """Callback for --help-json option."""
+    if not value or ctx.resilient_parsing:
+        return
+    # The triple quotes are important to correctly handle the multi-line JSON string
+    click.echo('''{{ cli_config_json }}''')
+    ctx.exit()
+{% endif %}
+
 {# Find the default command #}
 {% set ns = namespace(default_cmd=None) %}
 {% for cmd_name, cmd_data in cli.commands.items() %}
@@ -222,7 +238,7 @@ class DefaultGroup(RichGroup):
             return super().resolve_command(ctx, args)
         except click.UsageError:
             # If no command found and we have a default, use it
-            if self.default_command and args:
+            if self.default_command and args and not any(arg in ['--help-all', '--help-json'] for arg in args):
                 # Get the default command object
                 cmd = self.commands.get(self.default_command)
                 if cmd:
@@ -238,7 +254,13 @@ class DefaultGroup(RichGroup):
 {% endif %}
 @click.version_option(version=get_version(), prog_name="{{ cli.name }}")
 @click.pass_context
-def main(ctx):
+{% if cli.enable_help_json %}
+@click.option('--help-json', is_flag=True, callback=show_help_json, is_eager=True, help='Output CLI structure as JSON.', hidden=True)
+{% endif %}
+{% if cli.enable_recursive_help %}
+@click.option('--help-all', is_flag=True, is_eager=True, help='Show help for all commands.', hidden=True)
+{% endif %}
+def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.enable_recursive_help %}, help_all=False{% endif %}):
     """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
 
     {% if cli.description %}
@@ -254,6 +276,8 @@ def main(ctx):
     {% for item in aligned_items -%}
     {% if item.style == 'example' -%}
        [green]{{ item.item_aligned }}[/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
+    {% elif item.style == 'command' -%}
+       [green]{{ item.item_aligned }}[/green]  {{ item.desc }}
     {% elif item.style == 'setup' -%}
        {{ item.item + ":" }}{{ " " * (item.item_aligned|length - item.item|length - 1) }}[green]{{ item.desc }}[/green]
     {% endif -%}
@@ -264,7 +288,31 @@ def main(ctx):
     {% if cli.footer_note %}
        [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
     {% endif %}"""
-    
+
+    {% if cli.enable_recursive_help %}
+    if help_all:
+        # Print main help
+        click.echo(ctx.get_help())
+        click.echo() # Add a blank line for spacing
+
+        # Get a list of all command names
+        commands_to_show = sorted(ctx.command.list_commands(ctx))
+
+        for cmd_name in commands_to_show:
+            command = ctx.command.get_command(ctx, cmd_name)
+
+            # Create a new context for the subcommand
+            sub_ctx = click.Context(command, info_name=cmd_name, parent=ctx)
+
+            # Print a separator and the subcommand's help
+            click.echo("="*20 + f" HELP FOR: {cmd_name} " + "="*20)
+            click.echo(sub_ctx.get_help())
+            click.echo() # Add a blank line for spacing
+
+        # Exit after printing all help
+        ctx.exit()
+    {% endif %}
+
     pass
 
 {% if cli.command_groups %}

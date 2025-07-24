@@ -82,16 +82,16 @@ def generate_setup_script(config: GoobitsConfigSchema) -> str:
     return script
 
 
-def backup_file(file_path: Path) -> Optional[Path]:
-    """Create a backup of a file if it exists."""
-    if file_path.exists():
+def backup_file(file_path: Path, create_backup: bool = False) -> Optional[Path]:
+    """Create a backup of a file if it exists and backup is requested."""
+    if create_backup and file_path.exists():
         backup_path = file_path.with_suffix(file_path.suffix + '.bak')
         shutil.copy2(file_path, backup_path)
         return backup_path
     return None
 
 
-def update_pyproject_toml(project_dir: Path, package_name: str, command_name: str) -> bool:
+def update_pyproject_toml(project_dir: Path, package_name: str, command_name: str, create_backup: bool = False) -> bool:
     """Update pyproject.toml to use the generated CLI."""
     pyproject_path = project_dir / "pyproject.toml"
     
@@ -100,8 +100,8 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
         return False
     
     try:
-        # Backup pyproject.toml
-        backup_path = backup_file(pyproject_path)
+        # Backup pyproject.toml if requested
+        backup_path = backup_file(pyproject_path, create_backup)
         if backup_path:
             typer.echo(f"📋 Created backup: {backup_path}")
         
@@ -148,6 +148,11 @@ def build(
         None,
         "--output-dir", "-o",
         help="Output directory (defaults to same directory as config file)"
+    ),
+    backup: bool = typer.Option(
+        False,
+        "--backup",
+        help="Create backup files (.bak) when overwriting existing files"
     )
 ):
     """
@@ -177,6 +182,11 @@ def build(
     output_dir.mkdir(parents=True, exist_ok=True)
     
     typer.echo(f"Loading configuration from: {config_path}")
+    
+    # Show backup status
+    if not backup:
+        typer.echo("💡 Backups disabled (use --backup to create .bak files)")
+        typer.echo("💡 Ensure your changes are committed to git before proceeding")
     
     # Load goobits configuration
     goobits_config = load_goobits_config(config_path)
@@ -232,15 +242,15 @@ def build(
         
         typer.echo(f"✅ Generated CLI script: {cli_output_path}")
         
-        # Backup the original CLI file if it exists
+        # Backup the original CLI file if it exists and backup is requested
         original_cli = package_dir / "cli.py"
         if original_cli.exists():
-            backup_path = backup_file(original_cli)
+            backup_path = backup_file(original_cli, backup)
             if backup_path:
                 typer.echo(f"📋 Backed up original CLI: {backup_path}")
         
         # Update pyproject.toml to use the generated CLI
-        if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name):
+        if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name, backup):
             typer.echo("✅ Updated pyproject.toml to use generated CLI")
             typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
             typer.echo(f"   ./setup.sh install --dev")

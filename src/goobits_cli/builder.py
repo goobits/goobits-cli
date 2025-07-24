@@ -42,12 +42,23 @@ def generate_cli_code(config: ConfigSchema, file_name: str) -> str:
     env.filters['format_icon'] = format_icon_spacing
     env.filters['align_header_items'] = align_header_items
     
+    # Serialize the CLI part of the config to a JSON string
+    # We need to escape backslashes and quotes for embedding in Python code
+    import json
+    cli_dict = config.cli.model_dump()
+    cli_config_json = json.dumps(cli_dict, indent=2, ensure_ascii=False)
+    # Escape backslashes so they're preserved when Python interprets the string
+    cli_config_json = cli_config_json.replace("\\", "\\\\")
+    # Also escape any potential triple quotes
+    cli_config_json = cli_config_json.replace("'''", "\\'\\'\\'")
+    
     template = env.get_template("cli_template.py.j2")
     
     # Render the template
     code = template.render(
         cli=config.cli,
-        file_name=file_name
+        file_name=file_name,
+        cli_config_json=cli_config_json
     )
     
     return code

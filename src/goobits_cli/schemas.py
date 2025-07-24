@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class HeaderItemSchema(BaseModel):
     item: str
     desc: str
-    style: str = 'example'  # Style can be 'example' or 'setup'
+    style: str = 'example'  # Can be 'example' or 'setup'
 
 
 class HeaderSectionSchema(BaseModel):
@@ -19,6 +19,7 @@ class ArgumentSchema(BaseModel):
     desc: str
     nargs: Optional[str] = None
     choices: Optional[List[str]] = None
+    required: Optional[bool] = True
 
 
 class OptionSchema(BaseModel):
@@ -65,6 +66,8 @@ class CLISchema(BaseModel):
     commands: Dict[str, CommandSchema]
     command_groups: Optional[List[CommandGroupSchema]] = None
     config: Optional[RichConfigSchema] = None
+    enable_recursive_help: Optional[bool] = False
+    enable_help_json: Optional[bool] = False
 
 
 class ConfigSchema(BaseModel):
