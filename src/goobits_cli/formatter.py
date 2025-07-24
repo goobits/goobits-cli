@@ -134,14 +134,13 @@ def get_icon_width(icon: str) -> int:
     """
     Calculate the display width of an icon/emoji in terminal columns.
     
-    Most emojis are 2 columns wide, but some with variation selectors
-    or combining characters may need different handling.
+    Icons with variation selectors or multiple code points need extra spacing.
     
     Args:
         icon: The icon/emoji string
         
     Returns:
-        Width in terminal columns (1 or 2)
+        Width indicator (1 for normal, 2 for complex icons)
     """
     if not icon:
         return 0
@@ -153,16 +152,10 @@ def get_icon_width(icon: str) -> int:
     has_variation_selector = '\uFE0F' in icon or '\uFE0E' in icon
     has_combining = any(unicodedata.category(c) in ['Mn', 'Mc', 'Me'] for c in icon)
     
-    # Most emojis are 2 columns wide
-    # But if it has multiple Unicode characters (like variation selectors), 
-    # it still displays as 2 columns
+    # Only return 2 for icons with multiple code points or special modifiers
+    # This handles cases like ℹ️ (info + VS16) and ⚙️ (gear + VS16)
     if char_count > 1 or has_variation_selector or has_combining:
         return 2
-    
-    # Check if it's a wide character
-    for char in icon:
-        if unicodedata.east_asian_width(char) in ['W', 'F']:
-            return 2
     
     return 1
 
