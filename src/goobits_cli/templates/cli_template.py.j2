@@ -240,28 +240,33 @@ class DefaultGroup(RichGroup):
 @click.pass_context
 def main(ctx):
     """{% if cli.icon %}{{ cli.icon }} {% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
+
     {% if cli.description %}
     \b
     [#B3B8C0]{{ cli.description }}[/#B3B8C0]
-    {% endif %}{% if cli.examples %}
+    {% endif %}
+
+    {% if cli.examples %}
     \b
     [bold yellow]{{ cli.examples_section_title or "💡 Quick Start" }}:[/bold yellow]
+    {% set max_desc_len = cli.examples | map(attribute='desc') | map('length') | max + 2 %}
     {% for ex in cli.examples %}
-    \b
-       [color(2)]{{ ex.cmd }}[/color(2)]  [italic #B3B8C0]# {{ ex.desc }}[/italic #B3B8C0]
-    {%- endfor %}
-    {%- endif %}
+       {{ (ex.desc + ":").ljust(max_desc_len + 5) }}[color(2)]{{ ex.cmd }}[/color(2)]
+    {% endfor %}
+    {% endif %}
+
     {% if cli.setup_steps %}
     \b
     [bold yellow]{{ cli.setup_section_title or "🔑 First-time Setup" }}:[/bold yellow]
-    {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 6 %}
+    {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 2 %}
     {% for step in cli.setup_steps %}
-       {{ (step.step + ":").ljust(max_step_len) }}[color(2)]{{ step.cmd }}[/color(2)]
+       {{ (step.step + ":").ljust(max_step_len + 5) }}[color(2)]{{ step.cmd }}[/color(2)]
     {% endfor %}
     {% endif %}
     \b
     {% if cli.footer_note %}
-    [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]{% endif %}"""
+       [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
+    {% endif %}"""
     
     pass
 
