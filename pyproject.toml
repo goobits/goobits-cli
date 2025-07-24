@@ -4,9 +4,16 @@ version = "0.1.0"
 description = "Unified CLI for Goobits projects."
 dependencies = [ "pyyaml", "jinja2", "pydantic", "typer", "toml", "rich-click",]
 
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov"]
+
 [build-system]
 requires = [ "setuptools>=61.0", "wheel",]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
 goobits = "cli.generated_cli:cli_entry"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["src/tests"]

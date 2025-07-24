@@ -28,40 +28,51 @@ def load_yaml_config(file_path: str) -> ConfigSchema:
         sys.exit(1)
 
 
+class Builder:
+    """CLI code builder that generates Python code from YAML configuration."""
+    
+    def __init__(self):
+        """Initialize the Builder with Jinja2 environment."""
+        # Set up Jinja2 environment
+        template_dir = Path(__file__).parent / "templates"
+        self.env = Environment(loader=FileSystemLoader(template_dir))
+        
+        # Add custom filters
+        self.env.filters['align_examples'] = align_examples
+        self.env.filters['format_multiline'] = format_multiline_text
+        self.env.filters['escape_docstring'] = escape_for_docstring
+        self.env.filters['align_setup_steps'] = align_setup_steps
+        self.env.filters['format_icon'] = format_icon_spacing
+        self.env.filters['align_header_items'] = align_header_items
+    
+    def build(self, config: ConfigSchema, file_name: str = "config.yaml") -> str:
+        """Build CLI Python code from configuration and return the rendered template string."""
+        # Serialize the CLI part of the config to a JSON string
+        # We need to escape backslashes and quotes for embedding in Python code
+        import json
+        cli_dict = config.cli.model_dump()
+        cli_config_json = json.dumps(cli_dict, indent=2, ensure_ascii=False)
+        # Escape backslashes so they're preserved when Python interprets the string
+        cli_config_json = cli_config_json.replace("\\", "\\\\")
+        # Also escape any potential triple quotes
+        cli_config_json = cli_config_json.replace("'''", "\\'\\'\\'")
+        
+        template = self.env.get_template("cli_template.py.j2")
+        
+        # Render the template
+        code = template.render(
+            cli=config.cli,
+            file_name=file_name,
+            cli_config_json=cli_config_json
+        )
+        
+        return code
+
+
 def generate_cli_code(config: ConfigSchema, file_name: str) -> str:
     """Generate CLI Python code from configuration."""
-    # Set up Jinja2 environment
-    template_dir = Path(__file__).parent / "templates"
-    env = Environment(loader=FileSystemLoader(template_dir))
-    
-    # Add custom filters
-    env.filters['align_examples'] = align_examples
-    env.filters['format_multiline'] = format_multiline_text
-    env.filters['escape_docstring'] = escape_for_docstring
-    env.filters['align_setup_steps'] = align_setup_steps
-    env.filters['format_icon'] = format_icon_spacing
-    env.filters['align_header_items'] = align_header_items
-    
-    # Serialize the CLI part of the config to a JSON string
-    # We need to escape backslashes and quotes for embedding in Python code
-    import json
-    cli_dict = config.cli.model_dump()
-    cli_config_json = json.dumps(cli_dict, indent=2, ensure_ascii=False)
-    # Escape backslashes so they're preserved when Python interprets the string
-    cli_config_json = cli_config_json.replace("\\", "\\\\")
-    # Also escape any potential triple quotes
-    cli_config_json = cli_config_json.replace("'''", "\\'\\'\\'")
-    
-    template = env.get_template("cli_template.py.j2")
-    
-    # Render the template
-    code = template.render(
-        cli=config.cli,
-        file_name=file_name,
-        cli_config_json=cli_config_json
-    )
-    
-    return code
+    builder = Builder()
+    return builder.build(config, file_name)
 
 
 def main():
