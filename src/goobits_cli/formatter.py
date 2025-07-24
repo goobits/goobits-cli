@@ -1,5 +1,6 @@
 """Formatting utilities for CLI generation."""
 from typing import List, Tuple
+import unicodedata
 
 
 def align_examples(examples: List[Tuple[str, str]]) -> List[str]:
@@ -127,3 +128,62 @@ def escape_for_docstring(text: str) -> str:
     text = text.replace('\\\\t', '\\t')
     
     return text
+
+
+def get_icon_width(icon: str) -> int:
+    """
+    Calculate the display width of an icon/emoji in terminal columns.
+    
+    Most emojis are 2 columns wide, but some with variation selectors
+    or combining characters may need different handling.
+    
+    Args:
+        icon: The icon/emoji string
+        
+    Returns:
+        Width in terminal columns (1 or 2)
+    """
+    if not icon:
+        return 0
+    
+    # Count the number of actual characters (not bytes)
+    char_count = len(icon)
+    
+    # Check if it contains variation selectors or combining characters
+    has_variation_selector = '\uFE0F' in icon or '\uFE0E' in icon
+    has_combining = any(unicodedata.category(c) in ['Mn', 'Mc', 'Me'] for c in icon)
+    
+    # Most emojis are 2 columns wide
+    # But if it has multiple Unicode characters (like variation selectors), 
+    # it still displays as 2 columns
+    if char_count > 1 or has_variation_selector or has_combining:
+        return 2
+    
+    # Check if it's a wide character
+    for char in icon:
+        if unicodedata.east_asian_width(char) in ['W', 'F']:
+            return 2
+    
+    return 1
+
+
+def format_icon_spacing(icon: str) -> str:
+    """
+    Add appropriate spacing after an icon based on its display width.
+    
+    Args:
+        icon: The icon/emoji string
+        
+    Returns:
+        Icon with appropriate spacing
+    """
+    if not icon:
+        return ""
+    
+    width = get_icon_width(icon)
+    
+    # Add one space for single-width icons, two spaces for double-width
+    if width == 2:
+        return icon + "  "
+    else:
+        return icon + " "

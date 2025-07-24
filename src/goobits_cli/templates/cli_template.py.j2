@@ -144,7 +144,7 @@ def load_plugins(cli_group):
 {{ render_option(opt) }}
 {% endfor %}
 def {{ cmd_name }}({% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
-    """{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}"""
+    """{% if cmd_data.icon %}{{ cmd_data.icon | format_icon }}{% endif %}{{ cmd_data.desc }}"""
     # Check if hook function exists
     hook_name = f"on_{{ cmd_name }}"
     if app_hooks and hasattr(app_hooks, hook_name):
@@ -239,7 +239,7 @@ class DefaultGroup(RichGroup):
 @click.version_option(version=get_version(), prog_name="{{ cli.name }}")
 @click.pass_context
 def main(ctx):
-    """{% if cli.icon %}{{ cli.icon }} {% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
+    """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
 
     {% if cli.description %}
     \b
@@ -290,7 +290,7 @@ click.rich_click.COMMAND_GROUPS = {
 {% else %}
 @main.group()
 def {{ cmd_name }}():
-    """{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}"""
+    """{% if cmd_data.icon %}{{ cmd_data.icon | format_icon }}{% endif %}{{ cmd_data.desc }}"""
     pass
 
 {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
@@ -302,7 +302,7 @@ def {{ cmd_name }}():
 {{ render_option(opt) }}
 {% endfor %}
 def {{ subcmd_name }}({% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
-    """{% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}"""
+    """{% if subcmd_data.icon %}{{ subcmd_data.icon | format_icon }}{% endif %}{{ subcmd_data.desc }}"""
     # Check if hook function exists
     hook_name = f"on_{{ cmd_name }}_{{ subcmd_name }}"
     if app_hooks and hasattr(app_hooks, hook_name):
