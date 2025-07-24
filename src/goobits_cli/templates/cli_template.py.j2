@@ -257,7 +257,7 @@ def main(ctx):
 
     {% if cli.setup_steps %}
     \b
-    [bold yellow]{{ cli.setup_section_title or "🔑 First-time Setup" }}:[/bold yellow]
+    [bold yellow]{{ cli.setup_section_title or "🔑 Initial Setup" }}:[/bold yellow]
     {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 2 %}
     {%- for step in cli.setup_steps %}
        \b    {{ (step.step + ":").ljust(max_step_len + 2) }}[color(2)]{{ step.cmd }}[/color(2)]
@@ -336,13 +336,7 @@ def cli_entry():
     """Entry point for the CLI when installed via pipx."""
     # Load plugins before running the CLI
     load_plugins(main)
-    try:
-        main()
-    except SystemExit as e:
-        # Add a final newline after help output
-        if e.code == 0:  # Successful exit (like --help)
-            print()
-        raise
+    main()
 
 if __name__ == "__main__":
     cli_entry()
