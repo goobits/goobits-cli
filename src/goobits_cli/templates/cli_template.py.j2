@@ -248,23 +248,22 @@ def main(ctx):
     [bold yellow]{{ cli.examples_section_title or "💡 Quick Start" }}:[/bold yellow]
     {% for ex in cli.examples %}
     \b
-      [#B3B8C0]  [/#B3B8C0][color(2)]{{ ex.cmd }}[/color(2)]  [italic #B3B8C0]# {{ ex.desc }}[/italic #B3B8C0]
+       [color(2)]{{ ex.cmd }}[/color(2)]  [italic #B3B8C0]# {{ ex.desc }}[/italic #B3B8C0]
     {%- endfor %}
-    {%- endif %}{% if cli.setup_steps %}
+    {%- endif %}
+    {% if cli.setup_steps %}
     \b
     [bold yellow]{{ cli.setup_section_title or "🔑 First-time Setup" }}:[/bold yellow]
     {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 6 %}
     {% for step in cli.setup_steps %}
-      [#B3B8C0]{{ (step.step + ":").ljust(max_step_len) }}[/#B3B8C0][color(2)]{{ step.cmd }}[/color(2)]
+       {{ (step.step + ":").ljust(max_step_len) }}[color(2)]{{ step.cmd }}[/color(2)]
     {% endfor %}
-    {%- endif %}{% if cli.footer_note %}
-
+    {% endif %}
     \b
+    {% if cli.footer_note %}
     [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]{% endif %}"""
     
     pass
-
-# Version is included directly in the docstring if display_version is true
 
 {% if cli.command_groups %}
 # Set command groups after main function is defined
