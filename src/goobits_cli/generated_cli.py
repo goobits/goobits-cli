@@ -5,7 +5,7 @@ import sys
 import importlib.util
 from pathlib import Path
 import rich_click as click
-from rich_click import RichGroup, RichCommand
+from rich_click import RichGroup
 
 # Set up rich-click configuration globally
 click.rich_click.USE_RICH_MARKUP = True  
@@ -183,7 +183,7 @@ class DefaultGroup(RichGroup):
                 # Check if stdin is a pipe or file (not a terminal)
                 stdin_stat = os.fstat(sys.stdin.fileno())
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
-            except:
+            except (OSError, AttributeError):
                 # Fallback to isatty check
                 has_stdin = not sys.stdin.isatty()
             
@@ -210,7 +210,7 @@ class DefaultGroup(RichGroup):
                 # Use S_ISFIFO to check if it's a pipe, or S_ISREG to check if it's a regular file
                 import stat
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
-            except Exception as e:
+            except Exception:
                 # Fallback to isatty check
                 has_stdin = not sys.stdin.isatty()
             
@@ -346,7 +346,7 @@ click.rich_click.COMMAND_GROUPS = {
 def build(config_path, output_dir, output, backup):
     """🔨 Build CLI and setup scripts from goobits.yaml configuration"""
     # Check if hook function exists
-    hook_name = f"on_build"
+    hook_name = "on_build"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
@@ -356,7 +356,7 @@ def build(config_path, output_dir, output, backup):
         return result
     else:
         # Default placeholder behavior
-        click.echo(f"Executing build command...")
+        click.echo("Executing build command...")
         
         
         click.echo(f"  config_path: {config_path}")
@@ -397,7 +397,7 @@ def build(config_path, output_dir, output, backup):
 def init(project_name, template, force):
     """🆕 Create initial goobits.yaml template"""
     # Check if hook function exists
-    hook_name = f"on_init"
+    hook_name = "on_init"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
@@ -407,7 +407,7 @@ def init(project_name, template, force):
         return result
     else:
         # Default placeholder behavior
-        click.echo(f"Executing init command...")
+        click.echo("Executing init command...")
         
         
         click.echo(f"  project_name: {project_name}")
@@ -446,7 +446,7 @@ def init(project_name, template, force):
 def serve(directory, host, port):
     """🌐 Serve local PyPI-compatible package index"""
     # Check if hook function exists
-    hook_name = f"on_serve"
+    hook_name = "on_serve"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
@@ -456,7 +456,7 @@ def serve(directory, host, port):
         return result
     else:
         # Default placeholder behavior
-        click.echo(f"Executing serve command...")
+        click.echo("Executing serve command...")
         
         
         click.echo(f"  directory: {directory}")
@@ -500,7 +500,7 @@ def serve(directory, host, port):
 def upgrade(source, version, pre, dry_run):
     """🆙 Upgrade goobits-cli to the latest version"""
     # Check if hook function exists
-    hook_name = f"on_upgrade"
+    hook_name = "on_upgrade"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
@@ -510,7 +510,7 @@ def upgrade(source, version, pre, dry_run):
         return result
     else:
         # Default placeholder behavior
-        click.echo(f"Executing upgrade command...")
+        click.echo("Executing upgrade command...")
         
         
         

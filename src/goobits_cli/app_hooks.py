@@ -4,10 +4,7 @@ App hooks for goobits-cli generated CLI.
 This file contains the actual implementation for CLI commands.
 """
 
-import sys
-import subprocess
 from pathlib import Path
-from typing import Optional
 
 def on_build(config_path, output_dir, output, backup):
     """Hook for build command - delegate to main.py implementation."""

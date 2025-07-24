@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-import sys
 import yaml
 import toml
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional
 import typer
 from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
 
-from .schemas import ConfigSchema, GoobitsConfigSchema, DependencyItem
+from .schemas import ConfigSchema, GoobitsConfigSchema
 from .builder import generate_cli_code
 from .pypi_server import serve_packages
 from .__version__ import __version__
@@ -51,7 +50,6 @@ def load_goobits_config(file_path: Path) -> GoobitsConfigSchema:
 
 def normalize_dependencies_for_template(config: GoobitsConfigSchema) -> GoobitsConfigSchema:
     """Normalize dependencies for template rendering with enhanced data."""
-    import json
     from copy import deepcopy
     
     # Create a copy to avoid modifying the original
@@ -291,7 +289,7 @@ def build(
         if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name, cli_filename, backup):
             typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
             typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
-            typer.echo(f"   ./setup.sh install --dev")
+            typer.echo("   ./setup.sh install --dev")
         else:
             cli_module_name = cli_filename.replace('.py', '')
             typer.echo("⚠️  Could not update pyproject.toml automatically")
@@ -313,7 +311,7 @@ def build(
     setup_output_path.chmod(0o755)
     
     typer.echo(f"✅ Generated setup script: {setup_output_path}")
-    typer.echo(f"🎉 Build completed successfully!")
+    typer.echo("🎉 Build completed successfully!")
 
 
 @app.command()
@@ -747,7 +745,7 @@ def upgrade(
                 typer.echo(f"📈 Upgraded from {current_version} → {new_version}")
             else:
                 typer.echo(f"Already at latest version: {current_version}")
-        except:
+        except Exception:
             typer.echo("New version information not available")
         
         if result.stdout:

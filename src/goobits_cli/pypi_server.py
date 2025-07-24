@@ -6,7 +6,6 @@ This module provides a simple HTTP server that can serve Python packages
 (.whl and .tar.gz files) in a PyPI-compatible format for use with pip install.
 """
 
-import os
 import logging
 import mimetypes
 from pathlib import Path

@@ -106,7 +106,7 @@ class Builder:
                         sys.exit(1)
                     if opt.type not in ['str', 'int', 'float', 'bool', 'flag']:
                         print(f"❌ Error: Option '{opt.name}' in command '{cmd_name}' has invalid type '{opt.type}'")
-                        print(f"   Valid types: str, int, float, bool, flag")
+                        print("   Valid types: str, int, float, bool, flag")
                         sys.exit(1)
 
 
