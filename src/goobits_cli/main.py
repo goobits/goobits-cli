@@ -91,7 +91,7 @@ def backup_file(file_path: Path, create_backup: bool = False) -> Optional[Path]:
     return None
 
 
-def update_pyproject_toml(project_dir: Path, package_name: str, command_name: str, create_backup: bool = False) -> bool:
+def update_pyproject_toml(project_dir: Path, package_name: str, command_name: str, cli_filename: str = "generated_cli.py", create_backup: bool = False) -> bool:
     """Update pyproject.toml to use the generated CLI."""
     pyproject_path = project_dir / "pyproject.toml"
     
@@ -110,13 +110,16 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
             data = toml.load(f)
         
         # Update the entry points
+        # Remove .py extension from filename for module import
+        cli_module_name = cli_filename.replace('.py', '')
+        
         if 'tool' in data and 'poetry' in data['tool'] and 'scripts' in data['tool']['poetry']:
             # Poetry format
-            data['tool']['poetry']['scripts'][command_name] = f"{package_name}.generated_cli:cli_entry"
+            data['tool']['poetry']['scripts'][command_name] = f"{package_name}.{cli_module_name}:cli_entry"
             typer.echo(f"✅ Updated Poetry entry point for '{command_name}'")
         elif 'project' in data and 'scripts' in data['project']:
             # PEP 621 format
-            data['project']['scripts'][command_name] = f"{package_name}.generated_cli:cli_entry"
+            data['project']['scripts'][command_name] = f"{package_name}.{cli_module_name}:cli_entry"
             typer.echo(f"✅ Updated PEP 621 entry point for '{command_name}'")
         else:
             # Create project.scripts section if it doesn't exist
@@ -124,7 +127,7 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
                 data['project'] = {}
             if 'scripts' not in data['project']:
                 data['project']['scripts'] = {}
-            data['project']['scripts'][command_name] = f"{package_name}.generated_cli:cli_entry"
+            data['project']['scripts'][command_name] = f"{package_name}.{cli_module_name}:cli_entry"
             typer.echo(f"✅ Created entry point for '{command_name}'")
         
         # Write back the modified pyproject.toml
@@ -149,6 +152,11 @@ def build(
         "--output-dir", "-o",
         help="Output directory (defaults to same directory as config file)"
     ),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        help="Output filename for generated CLI (defaults to 'generated_cli.py')"
+    ),
     backup: bool = typer.Option(
         False,
         "--backup",
@@ -159,8 +167,10 @@ def build(
     Build CLI and setup scripts from goobits.yaml configuration.
     
     This command reads a goobits.yaml file and generates:
-    - cli.py: Project-specific CLI script
+    - CLI script: Generated from goobits.yaml (default: generated_cli.py)
     - setup.sh: Project setup script
+    
+    Use --output to specify a custom CLI filename (e.g., --output cli.py)
     """
     # Determine config file path
     if config_path is None:
@@ -235,8 +245,14 @@ def build(
         legacy_config = ConfigSchema(cli=goobits_config.cli)
         cli_code = generate_cli_code(legacy_config, config_path.name)
         
-        # Write to generated_cli.py inside the package directory
-        cli_output_path = package_dir / "generated_cli.py"
+        # Determine output filename
+        cli_filename = output if output else "generated_cli.py"
+        # If output contains path separators, extract just the filename for the package directory
+        if "/" in cli_filename or "\\" in cli_filename:
+            cli_filename = Path(cli_filename).name
+        
+        # Write CLI file inside the package directory
+        cli_output_path = package_dir / cli_filename
         with open(cli_output_path, 'w') as f:
             f.write(cli_code)
         
@@ -250,13 +266,14 @@ def build(
                 typer.echo(f"📋 Backed up original CLI: {backup_path}")
         
         # Update pyproject.toml to use the generated CLI
-        if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name, backup):
+        if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name, cli_filename, backup):
             typer.echo("✅ Updated pyproject.toml to use generated CLI")
             typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
             typer.echo(f"   ./setup.sh install --dev")
         else:
+            cli_module_name = cli_filename.replace('.py', '')
             typer.echo("⚠️  Could not update pyproject.toml automatically")
-            typer.echo(f"   Please update your entry points to use: {package_dir_name}.generated_cli:cli_entry")
+            typer.echo(f"   Please update your entry points to use: {package_dir_name}.{cli_module_name}:cli_entry")
     else:
         typer.echo("⚠️  No CLI configuration found, skipping cli.py generation")
     
