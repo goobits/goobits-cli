@@ -105,7 +105,7 @@ cli:
     - name: "Development Tools"
       commands: ["serve"]
     - name: "Utilities"
-      commands: ["upgrade", "version", "help"]
+      commands: ["upgrade"]
 
   commands:
     build:

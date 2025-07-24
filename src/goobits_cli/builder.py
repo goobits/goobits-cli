@@ -47,6 +47,9 @@ class Builder:
     
     def build(self, config: ConfigSchema, file_name: str = "config.yaml") -> str:
         """Build CLI Python code from configuration and return the rendered template string."""
+        # Validate configuration before building
+        self._validate_config(config)
+        
         # Serialize the CLI part of the config to a JSON string
         # We need to escape backslashes and quotes for embedding in Python code
         import json
@@ -67,6 +70,44 @@ class Builder:
         )
         
         return code
+    
+    def _validate_config(self, config: ConfigSchema) -> None:
+        """Validate configuration and provide helpful error messages."""
+        cli = config.cli
+        defined_commands = set(cli.commands.keys())
+        
+        # Validate command groups reference existing commands
+        if cli.command_groups:
+            for group in cli.command_groups:
+                invalid_commands = set(group.commands) - defined_commands
+                if invalid_commands:
+                    print(f"❌ Error: Command group '{group.name}' references non-existent commands: {', '.join(sorted(invalid_commands))}")
+                    print(f"   Available commands: {', '.join(sorted(defined_commands))}")
+                    sys.exit(1)
+        
+        # Validate command structure
+        for cmd_name, cmd_data in cli.commands.items():
+            if not cmd_data.desc:
+                print(f"❌ Error: Command '{cmd_name}' is missing required 'desc' field")
+                sys.exit(1)
+            
+            # Validate arguments
+            if cmd_data.args:
+                for arg in cmd_data.args:
+                    if not arg.desc:
+                        print(f"❌ Error: Argument '{arg.name}' in command '{cmd_name}' is missing required 'desc' field")
+                        sys.exit(1)
+            
+            # Validate options
+            if cmd_data.options:
+                for opt in cmd_data.options:
+                    if not opt.desc:
+                        print(f"❌ Error: Option '{opt.name}' in command '{cmd_name}' is missing required 'desc' field")
+                        sys.exit(1)
+                    if opt.type not in ['str', 'int', 'float', 'bool', 'flag']:
+                        print(f"❌ Error: Option '{opt.name}' in command '{cmd_name}' has invalid type '{opt.type}'")
+                        print(f"   Valid types: str, int, float, bool, flag")
+                        sys.exit(1)
 
 
 def generate_cli_code(config: ConfigSchema, file_name: str) -> str:
