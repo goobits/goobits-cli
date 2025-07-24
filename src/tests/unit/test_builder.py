@@ -1,14 +1,9 @@
 """Unit tests for builder.py module."""
 import pytest
-import sys
-import yaml
-import json
-from pathlib import Path
-from unittest.mock import Mock, patch, mock_open, MagicMock
-from pydantic import ValidationError
+from unittest.mock import Mock, patch, mock_open
 
 from goobits_cli.builder import load_yaml_config, generate_cli_code, main, Builder
-from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema
+from goobits_cli.schemas import ConfigSchema, CLISchema
 
 
 class TestBuilder:
@@ -107,7 +102,7 @@ class TestBuilder:
             builder = Builder()
             
             # Call build method without filename
-            result = builder.build(self.mock_config)
+            builder.build(self.mock_config)
             
             # Check that default filename was used
             render_call = mock_template.render.call_args
@@ -139,7 +134,7 @@ class TestBuilder:
             builder = Builder()
             
             # Call build method
-            result = builder.build(self.mock_config, "test.yaml")
+            builder.build(self.mock_config, "test.yaml")
             
             # Check that render was called with properly escaped JSON
             render_call = mock_template.render.call_args

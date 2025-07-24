@@ -334,7 +334,8 @@ class PyPIServer:
         """Run the server in a loop until shutdown."""
         try:
             while not self._shutdown_event.is_set():
-                self.server.handle_request()
+                if self.server is not None:
+                    self.server.handle_request()
         except Exception as e:
             if not self._shutdown_event.is_set():
                 logging.error(f"Server error: {e}")

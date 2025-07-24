@@ -1,5 +1,4 @@
 """Unit tests for formatter.py module."""
-import pytest
 from unittest.mock import Mock
 from goobits_cli.formatter import (
     align_examples,

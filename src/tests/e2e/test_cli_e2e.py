@@ -12,8 +12,6 @@ import tempfile
 import venv
 from pathlib import Path
 import sys
-import os
-import shutil
 
 from goobits_cli.builder import load_yaml_config, Builder
 

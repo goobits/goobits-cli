@@ -60,11 +60,13 @@ try:
     
     if hooks_path.exists():
         spec = importlib.util.spec_from_file_location("app_hooks", hooks_path)
-        app_hooks = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(app_hooks)
+        if spec is not None and spec.loader is not None:
+            app_hooks = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(app_hooks)
     else:
         # Try to import from Python path
-        import app_hooks
+        import app_hooks as app_hooks_module  # type: ignore[import-not-found]
+        app_hooks = app_hooks_module
 except (ImportError, FileNotFoundError):
     # No hooks module found, use default behavior
     pass

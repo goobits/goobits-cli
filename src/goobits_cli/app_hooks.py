@@ -8,7 +8,7 @@ from pathlib import Path
 
 def on_build(config_path, output_dir, output, backup):
     """Hook for build command - delegate to main.py implementation."""
-    import goobits_cli.main as main
+    import goobits_cli.main as main  # type: ignore[import-untyped]
     
     # Convert string paths to Path objects if needed
     config_path_obj = Path(config_path) if config_path else None
@@ -23,7 +23,7 @@ def on_build(config_path, output_dir, output, backup):
 
 def on_init(project_name, template, force):
     """Hook for init command - delegate to main.py implementation."""
-    import goobits_cli.main as main
+    import goobits_cli.main as main  # type: ignore[import-untyped]
     
     try:
         main.init(project_name, template, force)
@@ -33,7 +33,7 @@ def on_init(project_name, template, force):
 
 def on_serve(directory, host, port):
     """Hook for serve command - delegate to main.py implementation."""
-    import goobits_cli.main as main
+    import goobits_cli.main as main  # type: ignore[import-untyped]
     
     directory_obj = Path(directory)
     
@@ -45,7 +45,7 @@ def on_serve(directory, host, port):
 
 def on_upgrade(source, version, pre, dry_run):
     """Hook for upgrade command - delegate to main.py implementation."""
-    import goobits_cli.main as main
+    import goobits_cli.main as main  # type: ignore[import-untyped]
     
     try:
         main.upgrade(source, version, pre, dry_run)

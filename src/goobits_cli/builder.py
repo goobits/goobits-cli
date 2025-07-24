@@ -69,6 +69,8 @@ class Builder:
             cli_config_json=cli_config_json
         )
         
+        # Explicitly assert the type to satisfy mypy
+        assert isinstance(code, str)
         return code
     
     def _validate_config(self, config: ConfigSchema) -> None:
