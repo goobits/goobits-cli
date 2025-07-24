@@ -249,18 +249,18 @@ def main(ctx):
     {% if cli.examples %}
     \b
     [bold yellow]{{ cli.examples_section_title or "💡 Quick Start" }}:[/bold yellow]
-    {% set max_desc_len = cli.examples | map(attribute='desc') | map('length') | max + 2 %}
-    {% for ex in cli.examples %}
-       {{ (ex.desc + ":").ljust(max_desc_len + 5) }}[color(2)]{{ ex.cmd }}[/color(2)]
-    {% endfor %}
-    {% endif %}
+    {%- set max_desc_len = cli.examples | map(attribute='cmd') | map('length') | max + 2 %}
+    {%- for ex in cli.examples %}
+       [color(2)]{{ (ex.cmd).ljust(max_desc_len + 2) }}[/color(2)] [italic][#B3B8C0]# {{ ex.desc }}[/#B3B8C0][/italic]
+    {%- endfor %}
+    {%- endif %}
 
     {% if cli.setup_steps %}
     \b
     [bold yellow]{{ cli.setup_section_title or "🔑 First-time Setup" }}:[/bold yellow]
     {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 2 %}
-    {% for step in cli.setup_steps %}
-       {{ (step.step + ":").ljust(max_step_len + 5) }}[color(2)]{{ step.cmd }}[/color(2)]
+    {%- for step in cli.setup_steps %}
+       \b    {{ (step.step + ":").ljust(max_step_len + 2) }}[color(2)]{{ step.cmd }}[/color(2)]
     {% endfor %}
     {% endif %}
     \b
