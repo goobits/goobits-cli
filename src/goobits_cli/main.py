@@ -205,69 +205,43 @@ def build(
     
     # Generate cli.py if CLI configuration exists
     if goobits_config.cli:
-        # Find the main package directory
-        # Look for a directory with the same name as package_name (without 'goobits-' prefix)
-        package_dir_name = goobits_config.package_name.replace('goobits-', '')
-        
-        # Try common locations
-        possible_locations = [
-            output_dir / package_dir_name,  # Direct package directory
-            output_dir / 'src' / package_dir_name,  # src layout
-            output_dir / 'lib' / package_dir_name,  # lib layout
-        ]
-        
-        package_dir = None
-        for location in possible_locations:
-            if location.exists() and (location / '__init__.py').exists():
-                package_dir = location
-                break
-        
-        if not package_dir:
-            # Try to find any Python package directory (but skip tests)
-            for item in output_dir.iterdir():
-                if item.is_dir() and item.name not in ['tests', 'test', '__pycache__', '.git', 'venv', '.venv']:
-                    if (item / '__init__.py').exists():
-                        package_dir = item
-                        break
-                    # Check src layout
-                    for subitem in item.iterdir():
-                        if subitem.is_dir() and (subitem / '__init__.py').exists() and subitem.name not in ['tests', 'test']:
-                            package_dir = subitem
-                            break
-                    if package_dir:
-                        break
-        
-        if not package_dir:
-            typer.echo(f"❌ Could not find package directory. Expected: {package_dir_name}", err=True)
-            raise typer.Exit(1)
-        
         # Convert goobits config to legacy CLI schema format for compatibility
         legacy_config = ConfigSchema(cli=goobits_config.cli)
         cli_code = generate_cli_code(legacy_config, config_path.name)
         
-        # Determine output filename
-        cli_filename = output if output else "generated_cli.py"
-        # If output contains path separators, extract just the filename for the package directory
-        if "/" in cli_filename or "\\" in cli_filename:
-            cli_filename = Path(cli_filename).name
+        # Use configured output path, with package name substitution
+        cli_output_path = goobits_config.cli_output_path.format(
+            package_name=goobits_config.package_name.replace('goobits-', '')
+        )
         
-        # Write CLI file inside the package directory
-        cli_output_path = package_dir / cli_filename
-        with open(cli_output_path, 'w') as f:
+        # Override with command line option if provided
+        if output:
+            cli_output_path = output
+        
+        # Resolve to full path
+        cli_path = output_dir / cli_output_path
+        
+        # Ensure parent directories exist
+        cli_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Backup existing file if it exists and backup is requested
+        backup_path = backup_file(cli_path, backup)
+        if backup_path:
+            typer.echo(f"📋 Backed up existing CLI: {backup_path}")
+        
+        # Write CLI file
+        with open(cli_path, 'w') as f:
             f.write(cli_code)
         
-        typer.echo(f"✅ Generated CLI script: {cli_output_path}")
+        typer.echo(f"✅ Generated CLI script: {cli_path}")
         
-        # Backup the original CLI file if it exists and backup is requested
-        original_cli = package_dir / "cli.py"
-        if original_cli.exists():
-            backup_path = backup_file(original_cli, backup)
-            if backup_path:
-                typer.echo(f"📋 Backed up original CLI: {backup_path}")
+        # Extract package name and filename for pyproject.toml update
+        package_dir_name = goobits_config.package_name.replace('goobits-', '')
+        cli_filename = Path(cli_output_path).name
         
         # Update pyproject.toml to use the generated CLI
         if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name, cli_filename, backup):
-            typer.echo("✅ Updated pyproject.toml to use generated CLI")
+            typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
             typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
             typer.echo(f"   ./setup.sh install --dev")
         else:

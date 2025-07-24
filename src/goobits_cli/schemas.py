@@ -81,7 +81,7 @@ CommandSchema.model_rebuild()
 # New schemas for goobits.yaml format (setup configuration)
 class PythonConfigSchema(BaseModel):
     minimum_version: str = "3.8"
-    maximum_version: str = ""
+    maximum_version: str = "3.13"
 
 
 class DependenciesSchema(BaseModel):
@@ -119,6 +119,9 @@ class GoobitsConfigSchema(BaseModel):
     command_name: str
     display_name: str
     description: str
+    
+    # CLI generation configuration
+    cli_output_path: str = "src/{package_name}/cli.py"
     
     # Python configuration
     python: PythonConfigSchema
