@@ -246,22 +246,19 @@ def main(ctx):
     [#B3B8C0]{{ cli.description }}[/#B3B8C0]
     {% endif %}
 
-    {% if cli.examples %}
+    {% if cli.header_sections %}
+    {%- for section in cli.header_sections %}
     \b
-    [bold yellow]{{ cli.examples_section_title or "💡 Quick Start" }}:[/bold yellow]
-    {%- set max_desc_len = cli.examples | map(attribute='cmd') | map('length') | max + 2 %}
-    {%- for ex in cli.examples %}
-       [color(2)]{{ (ex.cmd).ljust(max_desc_len + 2) }}[/color(2)] [italic][#B3B8C0]# {{ ex.desc }}[/#B3B8C0][/italic]
-    {%- endfor %}
-    {%- endif %}
-
-    {% if cli.setup_steps %}
-    \b
-    [bold yellow]{{ cli.setup_section_title or "🔑 Initial Setup" }}:[/bold yellow]
-    {% set max_step_len = cli.setup_steps | map(attribute='step') | map('length') | max + 2 %}
-    {%- for step in cli.setup_steps %}
-       \b    {{ (step.step + ":").ljust(max_step_len + 2) }}[color(2)]{{ step.cmd }}[/color(2)]
-    {% endfor %}
+    [bold yellow]{{ section.title }}:[/bold yellow]
+    {%- set aligned_items = section.items | align_header_items %}
+    {% for item in aligned_items -%}
+    {% if item.style == 'example' -%}
+       [green]{{ item.item_aligned }}[/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
+    {% elif item.style == 'setup' -%}
+       {{ item.item + ":" }}{{ " " * (item.item_aligned|length - item.item|length - 1) }}[green]{{ item.desc }}[/green]
+    {% endif -%}
+    {% endfor -%}
+    {% endfor -%}
     {% endif %}
     \b
     {% if cli.footer_note %}

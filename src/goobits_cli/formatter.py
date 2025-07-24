@@ -180,3 +180,43 @@ def format_icon_spacing(icon: str) -> str:
         return icon + "  "
     else:
         return icon + " "
+
+
+def align_header_items(items: List) -> List[dict]:
+    """
+    Align header section items by padding the item field.
+    
+    Args:
+        items: List of header items (can be dicts or objects with item/desc/style attributes)
+        
+    Returns:
+        List of dictionaries with aligned 'item_aligned' field added
+    """
+    if not items:
+        return []
+    
+    # Convert items to dicts if they're objects
+    dict_items = []
+    for item in items:
+        if hasattr(item, 'dict'):
+            # Pydantic model
+            dict_items.append(item.dict())
+        elif hasattr(item, '__dict__'):
+            # Regular object
+            dict_items.append(vars(item))
+        else:
+            # Already a dict
+            dict_items.append(item)
+    
+    # Find the maximum item length across all items in the section
+    max_length = max(len(item['item']) for item in dict_items)
+    
+    # Return items with aligned field added
+    aligned_items = []
+    for item in dict_items:
+        aligned_item = item.copy()
+        # Add 2 spaces of padding for visual separation
+        aligned_item['item_aligned'] = item['item'].ljust(max_length + 2)
+        aligned_items.append(aligned_item)
+    
+    return aligned_items

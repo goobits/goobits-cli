@@ -2,18 +2,16 @@ from typing import Dict, List, Optional, Any, Union
 from pydantic import BaseModel, Field
 
 
-class ExampleSchema(BaseModel):
-    cmd: str
+class HeaderItemSchema(BaseModel):
+    item: str
     desc: str
-    section_title: Optional[str] = "Examples"
-    section_icon: Optional[str] = None
+    style: str = 'example'  # Style can be 'example' or 'setup'
 
 
-class SetupStepSchema(BaseModel):
-    step: str
-    cmd: str
-    section_title: Optional[str] = "First-time Setup"
-    section_icon: Optional[str] = None
+class HeaderSectionSchema(BaseModel):
+    title: str
+    icon: Optional[str] = None
+    items: List[HeaderItemSchema]
 
 
 class ArgumentSchema(BaseModel):
@@ -62,9 +60,7 @@ class CLISchema(BaseModel):
     tagline: str
     description: Optional[str] = None
     icon: Optional[str] = None
-    examples: Optional[List[ExampleSchema]] = None
-    setup_guide: Optional[str] = None
-    setup_steps: Optional[List[SetupStepSchema]] = None
+    header_sections: Optional[List[HeaderSectionSchema]] = None
     footer_note: Optional[str] = None
     commands: Dict[str, CommandSchema]
     command_groups: Optional[List[CommandGroupSchema]] = None

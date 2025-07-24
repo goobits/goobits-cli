@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
 
 from .schemas import ConfigSchema
-from .formatter import align_examples, format_multiline_text, escape_for_docstring, align_setup_steps, format_icon_spacing
+from .formatter import align_examples, format_multiline_text, escape_for_docstring, align_setup_steps, format_icon_spacing, align_header_items
 
 
 def load_yaml_config(file_path: str) -> ConfigSchema:
@@ -40,6 +40,7 @@ def generate_cli_code(config: ConfigSchema, file_name: str) -> str:
     env.filters['escape_docstring'] = escape_for_docstring
     env.filters['align_setup_steps'] = align_setup_steps
     env.filters['format_icon'] = format_icon_spacing
+    env.filters['align_header_items'] = align_header_items
     
     template = env.get_template("cli_template.py.j2")
     
