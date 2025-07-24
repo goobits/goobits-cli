@@ -9,7 +9,7 @@ import typer
 from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
 
-from .schemas import ConfigSchema, GoobitsConfigSchema
+from .schemas import ConfigSchema, GoobitsConfigSchema, DependencyItem
 from .builder import generate_cli_code
 from .pypi_server import serve_packages
 
@@ -35,10 +35,44 @@ def load_goobits_config(file_path: Path) -> GoobitsConfigSchema:
         raise typer.Exit(1)
 
 
+def normalize_dependencies_for_template(config: GoobitsConfigSchema) -> GoobitsConfigSchema:
+    """Normalize dependencies for template rendering with enhanced data."""
+    import json
+    from copy import deepcopy
+    
+    # Create a copy to avoid modifying the original
+    normalized_config = deepcopy(config)
+    
+    # The DependenciesSchema validator already normalizes the dependencies,
+    # so we just need to ensure they're properly formatted for the template
+    
+    return normalized_config
+
+
+def dependency_to_dict(dep):
+    """Convert DependencyItem to dict for JSON serialization."""
+    if isinstance(dep, str):
+        return {'name': dep, 'type': 'command'}
+    elif hasattr(dep, 'model_dump'):
+        return dep.model_dump()
+    elif isinstance(dep, dict):
+        return dep
+    else:
+        return {'name': str(dep), 'type': 'command'}
+
+def dependencies_to_json(deps):
+    """Convert list of dependencies to JSON string."""
+    import json
+    return json.dumps([dependency_to_dict(dep) for dep in deps])
+
 def generate_setup_script(config: GoobitsConfigSchema) -> str:
     """Generate setup.sh script from goobits configuration."""
     template_dir = Path(__file__).parent / "templates"
     env = Environment(loader=FileSystemLoader(template_dir))
+    
+    # Add custom filters
+    env.filters['dependency_to_dict'] = dependency_to_dict
+    env.filters['dependencies_to_json'] = dependencies_to_json
     
     template = env.get_template("setup_template.sh.j2")
     
@@ -253,7 +287,9 @@ def build(
     
     # Generate setup.sh
     typer.echo("Generating setup script...")
-    setup_script = generate_setup_script(goobits_config)
+    # Normalize dependencies for backward compatibility
+    normalized_config = normalize_dependencies_for_template(goobits_config)
+    setup_script = generate_setup_script(normalized_config)
     
     setup_output_path = output_dir / "setup.sh"
     with open(setup_output_path, 'w') as f:

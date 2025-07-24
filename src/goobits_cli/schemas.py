@@ -1,5 +1,5 @@
-from typing import Dict, List, Optional, Any, Union
-from pydantic import BaseModel, Field
+from typing import Dict, List, Optional, Any, Union, Literal
+from pydantic import BaseModel, Field, field_validator
 
 
 class HeaderItemSchema(BaseModel):
@@ -84,9 +84,66 @@ class PythonConfigSchema(BaseModel):
     maximum_version: str = "3.13"
 
 
+class DependencyItem(BaseModel):
+    """Individual dependency with type and platform-specific configuration."""
+    type: Literal["command", "system_package"] = "command"
+    name: str
+    description: Optional[str] = None
+    
+    # Platform-specific package names
+    ubuntu: Optional[str] = None
+    debian: Optional[str] = None
+    centos: Optional[str] = None
+    fedora: Optional[str] = None
+    macos: Optional[str] = None
+    windows: Optional[str] = None
+    
+    # Detection configuration
+    check_method: Optional[Literal["pkg_config", "dpkg_query", "rpm_query", "file_exists", "brew_list"]] = None
+    check_args: Optional[List[str]] = None
+    
+    # Installation instructions
+    install_instructions: Optional[Dict[str, str]] = None
+    
+    @field_validator('install_instructions')
+    @classmethod
+    def validate_install_instructions(cls, v):
+        if v is None:
+            return v
+        valid_platforms = {'ubuntu', 'debian', 'centos', 'fedora', 'macos', 'windows', 'generic'}
+        for platform in v.keys():
+            if platform not in valid_platforms:
+                raise ValueError(f"Invalid platform '{platform}'. Must be one of {valid_platforms}")
+        return v
+
+
 class DependenciesSchema(BaseModel):
-    required: List[str] = Field(default_factory=list)
-    optional: List[str] = Field(default_factory=list)
+    """Dependencies with backward compatibility for string format."""
+    required: Union[List[str], List[DependencyItem], List[Union[str, DependencyItem]]] = Field(default_factory=list)
+    optional: Union[List[str], List[DependencyItem], List[Union[str, DependencyItem]]] = Field(default_factory=list)
+    
+    @field_validator('required', 'optional')
+    @classmethod
+    def normalize_dependencies(cls, v):
+        """Convert strings to DependencyItem objects for backward compatibility."""
+        if not v:
+            return []
+        
+        normalized = []
+        for item in v:
+            if isinstance(item, str):
+                # Convert string to DependencyItem
+                normalized.append(DependencyItem(name=item, type="command"))
+            elif isinstance(item, dict):
+                # Handle dict format (from YAML)
+                normalized.append(DependencyItem(**item))
+            elif isinstance(item, DependencyItem):
+                # Already a DependencyItem
+                normalized.append(item)
+            else:
+                raise ValueError(f"Invalid dependency format: {item}")
+        
+        return normalized
 
 
 class InstallationSchema(BaseModel):
