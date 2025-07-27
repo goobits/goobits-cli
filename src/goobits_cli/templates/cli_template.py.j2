@@ -54,8 +54,8 @@ click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)  # Command:Des
 # Hooks system - try to import app_hooks module
 app_hooks = None
 try:
-    # Try to import from the same directory as this script
-    script_dir = Path(__file__).parent
+    # Try to import from the project root directory
+    script_dir = Path(__file__).parent.parent.parent
     hooks_path = script_dir / "app_hooks.py"
     
     if hooks_path.exists():
@@ -120,6 +120,9 @@ def load_plugins(cli_group):
     {%- else %},
     type={% if opt.type == "str" %}str{% elif opt.type == "int" %}int{% elif opt.type == "float" %}float{% elif opt.type == "bool" %}bool{% else %}str{% endif %}
     {%- endif %}
+    {%- if opt.multiple %},
+    multiple=True
+    {%- endif %}
     {%- if opt.default is not none %},
     default={% if opt.default is sameas true %}True{% elif opt.default is sameas false %}False{% elif opt.default is number %}{{ opt.default }}{% else %}"{{ opt.default }}"{% endif %}
     {%- endif %},
@@ -149,24 +152,86 @@ def load_plugins(cli_group):
 
 {% macro render_command(cmd_name, cmd_data, is_subcommand=False) -%}
 {% if not is_subcommand %}@main.command(){% else %}@{{ cmd_name }}.command(){% endif %}
+@click.pass_context
 {% for arg in (cmd_data.args or []) %}
 {{ render_argument(arg) }}
 {% endfor %}
 {% for opt in (cmd_data.options or []) %}
 {{ render_option(opt) }}
 {% endfor %}
-def {{ cmd_name }}({% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
+def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
     """{% if cmd_data.icon %}{{ cmd_data.icon | format_icon }}{% endif %}{{ cmd_data.desc }}"""
-    # Check if hook function exists
+    {% if cmd_data.lifecycle == "managed" %}
+    # Managed command - expect an instance of ManagedCommand
+    command_instance_name = f"{{ cmd_name }}_command"
+    if app_hooks and hasattr(app_hooks, command_instance_name):
+        # Get the command instance
+        command_instance = getattr(app_hooks, command_instance_name)
+        
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = '{{ cmd_name }}'  # Pass command name for daemon management
+        {% if cmd_data.args %}
+        {% for arg in cmd_data.args %}
+        kwargs['{{ arg.name|lower|replace('-', '_') }}'] = {{ arg.name|lower|replace('-', '_') }}
+        {% endfor %}
+        {% endif %}
+        {% if cmd_data.options %}
+        {% for opt in cmd_data.options %}
+        {# Handle hyphenated parameters correctly #}
+        {% set param_name = opt.name|replace('-', '_') %}
+        {% set var_name = opt.name|replace('-', '_') %}
+        kwargs['{{ param_name }}'] = {{ var_name }}
+        {% endfor %}
+        {% endif %}
+        
+        # Add global options from context
+        {% if cli.options %}
+        if ctx.obj:
+            {% for option in cli.options %}
+            kwargs['{{ option.name|replace('-', '_') }}'] = ctx.obj.get('{{ option.name }}')
+            {% endfor %}
+        {% endif %}
+        
+        # Call execute() method on the ManagedCommand instance
+        result = command_instance.execute(**kwargs)
+        return result
+    else:
+        click.echo(f"Error: Managed command '{{ cmd_name }}' requires '{{ cmd_name }}_command' instance in app_hooks.py")
+        sys.exit(1)
+    {% else %}
+    # Standard command - use the existing hook pattern
     hook_name = f"on_{{ cmd_name }}"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
-        {% if cmd_data.args or cmd_data.options %}
-        result = hook_func({% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %})
-        {% else %}
-        result = hook_func()
+        
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = '{{ cmd_name }}'  # Pass command name for all commands
+        {% if cmd_data.args %}
+        {% for arg in cmd_data.args %}
+        kwargs['{{ arg.name|lower|replace('-', '_') }}'] = {{ arg.name|lower|replace('-', '_') }}
+        {% endfor %}
         {% endif %}
+        {% if cmd_data.options %}
+        {% for opt in cmd_data.options %}
+        {# Handle hyphenated parameters correctly #}
+        {% set param_name = opt.name|replace('-', '_') %}
+        {% set var_name = opt.name|replace('-', '_') %}
+        kwargs['{{ param_name }}'] = {{ var_name }}
+        {% endfor %}
+        {% endif %}
+        
+        # Add global options from context
+        {% if cli.options %}
+        if ctx.obj:
+            {% for option in cli.options %}
+            kwargs['{{ option.name|replace('-', '_') }}'] = ctx.obj.get('{{ option.name }}')
+            {% endfor %}
+        {% endif %}
+        
+        result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
@@ -181,6 +246,7 @@ def {{ cmd_name }}({% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')
         click.echo(f"  {{ opt.name }}: {{ '{' }}{{ opt.name|replace('-', '_') }}{{ '}' }}")
         {% endfor %}
         {% endif %}
+    {% endif %}
 {%- endmacro %}
 
 def get_version():
@@ -310,7 +376,12 @@ class DefaultGroup(RichGroup):
 {% if cli.enable_recursive_help %}
 @click.option('--help-all', is_flag=True, is_eager=True, help='Show help for all commands.', hidden=True)
 {% endif %}
-def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.enable_recursive_help %}, help_all=False{% endif %}):
+{% if cli.options %}
+{% for option in cli.options %}
+{{ render_option(option) }}
+{% endfor %}
+{% endif %}
+def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.enable_recursive_help %}, help_all=False{% endif %}{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% if option.type == 'flag' %}=False{% else %}=None{% endif %}{% endfor %}{% endif %}):
     """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
 
     {% if cli.description %}
@@ -362,6 +433,15 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
         # Exit after printing all help
         ctx.exit()
     {% endif %}
+    
+    # Store global options in context for use by commands
+    {% if cli.options %}
+    if ctx.obj is None:
+        ctx.obj = {}
+    {% for option in cli.options %}
+    ctx.obj['{{ option.name }}'] = {{ option.name.replace('-', '_') }}
+    {% endfor %}
+    {% endif %}
 
     pass
 
@@ -391,24 +471,44 @@ def {{ cmd_name }}():
 
 {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
 @{{ cmd_name }}.command()
+@click.pass_context
 {% for arg in (subcmd_data.args or []) %}
 {{ render_argument(arg) }}
 {% endfor %}
 {% for opt in (subcmd_data.options or []) %}
 {{ render_option(opt) }}
 {% endfor %}
-def {{ subcmd_name }}({% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
+def {{ subcmd_name }}(ctx{% if subcmd_data.args or subcmd_data.options %}, {% endif %}{% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
     """{% if subcmd_data.icon %}{{ subcmd_data.icon | format_icon }}{% endif %}{{ subcmd_data.desc }}"""
     # Check if hook function exists
     hook_name = f"on_{{ cmd_name }}_{{ subcmd_name }}"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
-        {% if subcmd_data.args or subcmd_data.options %}
-        result = hook_func({% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %})
-        {% else %}
-        result = hook_func()
+        
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = '{{ subcmd_name }}'  # Pass command name for all commands
+        {% if subcmd_data.args %}
+        {% for arg in subcmd_data.args %}
+        kwargs['{{ arg.name|lower|replace('-', '_') }}'] = {{ arg.name|lower|replace('-', '_') }}
+        {% endfor %}
         {% endif %}
+        {% if subcmd_data.options %}
+        {% for opt in subcmd_data.options %}
+        kwargs['{{ opt.name|replace('-', '_') }}'] = {{ opt.name|replace('-', '_') }}
+        {% endfor %}
+        {% endif %}
+        
+        # Add global options from context
+        {% if cli.options %}
+        if ctx.obj:
+            {% for option in cli.options %}
+            kwargs['{{ option.name|replace('-', '_') }}'] = ctx.obj.get('{{ option.name }}')
+            {% endfor %}
+        {% endif %}
+        
+        result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
@@ -427,6 +527,250 @@ def {{ subcmd_name }}({% if subcmd_data.args %}{{ (subcmd_data.args|map(attribut
 {% endif %}
 
 {% endfor %}
+
+{# Auto-generate daemon management commands for managed commands #}
+{% set ns = namespace(has_managed=false) %}
+{% for cmd_name, cmd_data in cli.commands.items() %}
+{% if cmd_data.lifecycle == "managed" %}
+{% set ns.has_managed = true %}
+{% endif %}
+{% endfor %}
+{% if ns.has_managed %}
+@main.command()
+@click.pass_context
+@click.argument(
+    "command_name",
+    required=True
+)
+@click.option("--timeout",
+    type=int,
+    default=10,
+    help="Timeout in seconds for graceful shutdown"
+)
+@click.option("--json",
+    is_flag=True,
+    help="Output in JSON format"
+)
+def daemonstop(ctx, command_name, timeout, json):
+    """⏹️ Stop a running daemon process"""
+    from src.gubits.daemon import DaemonHelper
+    
+    daemon_helper = DaemonHelper(command_name)
+    
+    # Check if daemon is running
+    if not daemon_helper.is_running():
+        msg = f"No daemon running for command '{command_name}'"
+        if json:
+            import json as json_module
+            click.echo(json_module.dumps({"status": "not_running", "message": msg}))
+        else:
+            click.echo(f"⚠️  {msg}")
+        return {"status": "not_running"}
+    
+    # Get PID before stopping
+    pid = daemon_helper.get_pid()
+    
+    # Stop the daemon
+    if daemon_helper.stop(timeout=timeout):
+        if json:
+            import json as json_module
+            click.echo(json_module.dumps({
+                "status": "stopped",
+                "command": command_name,
+                "pid": pid,
+                "message": f"Successfully stopped daemon for '{command_name}'"
+            }))
+        else:
+            click.echo(f"✅ Successfully stopped daemon '{command_name}' (PID: {pid})")
+        return {"status": "stopped", "pid": pid}
+    else:
+        error_msg = f"Failed to stop daemon '{command_name}' (PID: {pid})"
+        if json:
+            import json as json_module
+            click.echo(json_module.dumps({"status": "error", "message": error_msg}))
+        else:
+            click.echo(f"❌ {error_msg}")
+        return {"status": "error", "message": error_msg}
+
+
+@main.command()
+@click.pass_context
+@click.argument(
+    "command_name",
+    required=True
+)
+@click.option("--json",
+    is_flag=True,
+    help="Output in JSON format"
+)
+def daemonstatus(ctx, command_name, json):
+    """📊 Check status of a daemon process"""
+    from src.gubits.daemon import DaemonHelper
+    
+    daemon_helper = DaemonHelper(command_name)
+    
+    # Get daemon stats
+    stats = daemon_helper.get_daemon_stats()
+    
+    if json:
+        import json as json_module
+        click.echo(json_module.dumps(stats, indent=2))
+    else:
+        is_running = stats['running']
+        status_emoji = '🟢' if is_running else '🔴'
+        status_text = 'Running' if is_running else 'Stopped'
+        
+        click.echo(f"📊 Daemon Status for '{command_name}': {status_emoji} {status_text}")
+        
+        if is_running:
+            click.echo(f"   PID: {stats['pid']}")
+            click.echo(f"   PID File: {stats['pid_file']}")
+        else:
+            click.echo(f"   PID File: {stats['pid_file']} (not found or stale)")
+            
+    return stats
+
+
+@main.group()
+def daemon():
+    """🔧 Daemon system integration commands"""
+    pass
+
+
+@daemon.command()
+@click.pass_context
+@click.argument(
+    "command_name",
+    required=True
+)
+@click.option("--user",
+    is_flag=True,
+    default=True,
+    help="Install as user service (default)"
+)
+@click.option("--system",
+    is_flag=True,
+    help="Install as system service (requires sudo)"
+)
+def install(ctx, command_name, user, system):
+    """🔧 Generate systemd service file for daemon management"""
+    import shutil
+    import subprocess
+    from pathlib import Path
+    
+    # Determine CLI executable path
+    cli_executable = shutil.which("{{ cli.name|lower|replace(' ', '') }}")
+    if not cli_executable:
+        # Fallback to sys.executable with -m approach
+        cli_executable = f"{sys.executable} -m {{ cli.name|lower|replace(' ', '_') }}"
+    
+    # Determine installation type
+    if system:
+        service_dir = Path("/etc/systemd/system")
+        service_type = "system"
+        install_cmd_prefix = "sudo "
+    else:
+        service_dir = Path.home() / ".config" / "systemd" / "user"
+        service_type = "user"
+        install_cmd_prefix = ""
+    
+    # Ensure service directory exists
+    if not service_dir.exists():
+        try:
+            service_dir.mkdir(parents=True, exist_ok=True)
+        except PermissionError:
+            click.echo(f"❌ Permission denied creating directory: {service_dir}")
+            click.echo(f"   Try running with sudo for system services")
+            sys.exit(1)
+    
+    # Generate service file name
+    service_name = f"{{ cli.name|lower|replace(' ', '-') }}-{command_name}.service"
+    service_file_path = service_dir / service_name
+    
+    # Determine PID file path
+    if system:
+        pid_file_path = f"/run/{{ cli.name|lower|replace(' ', '-') }}-{command_name}.pid"
+        working_dir = "/var/lib/{{ cli.name|lower|replace(' ', '-') }}"
+    else:
+        runtime_dir = os.environ.get('XDG_RUNTIME_DIR', f"/run/user/{os.getuid()}")
+        pid_file_path = f"{runtime_dir}/{{ cli.name|lower|replace(' ', '-') }}-{command_name}.pid"
+        working_dir = str(Path.home())
+    
+    # Generate systemd unit file content
+    service_content = f"""# Auto-generated by goobits for the '{command_name}' command
+# Service file for {{ cli.name }} daemon management
+[Unit]
+Description=goobits-managed daemon for the '{command_name}' command
+After=network.target
+Wants=network.target
+
+[Service]
+Type=forking
+ExecStart={cli_executable} {command_name} --daemon
+PIDFile={pid_file_path}
+Restart=on-failure
+RestartSec=5
+WorkingDirectory={working_dir}
+"""
+
+    # Add user-specific settings
+    if not system:
+        service_content += """
+# User service settings
+User=%i
+Group=%i
+"""
+
+    service_content += """
+[Install]
+WantedBy={"default.target" if not system else "multi-user.target"}
+"""
+    
+    # Write service file
+    try:
+        with open(service_file_path, 'w') as f:
+            f.write(service_content)
+        click.echo(f"✅ Generated systemd service file: {service_file_path}")
+    except PermissionError:
+        click.echo(f"❌ Permission denied writing to: {service_file_path}")
+        if not system:
+            click.echo(f"   Try: mkdir -p {service_dir}")
+        sys.exit(1)
+    
+    # Print usage instructions
+    click.echo(f"")
+    click.echo(f"🔧 Systemd service '{service_name}' created successfully!")
+    click.echo(f"")
+    click.echo(f"📋 To enable and start the service:")
+    if system:
+        click.echo(f"   sudo systemctl daemon-reload")
+        click.echo(f"   sudo systemctl enable {service_name}")
+        click.echo(f"   sudo systemctl start {service_name}")
+        click.echo(f"")
+        click.echo(f"📊 To check status:")
+        click.echo(f"   sudo systemctl status {service_name}")
+        click.echo(f"")
+        click.echo(f"🛑 To stop and disable:")
+        click.echo(f"   sudo systemctl stop {service_name}")
+        click.echo(f"   sudo systemctl disable {service_name}")
+    else:
+        click.echo(f"   systemctl --user daemon-reload")
+        click.echo(f"   systemctl --user enable {service_name}")
+        click.echo(f"   systemctl --user start {service_name}")
+        click.echo(f"")
+        click.echo(f"📊 To check status:")
+        click.echo(f"   systemctl --user status {service_name}")
+        click.echo(f"")
+        click.echo(f"🛑 To stop and disable:")
+        click.echo(f"   systemctl --user stop {service_name}")
+        click.echo(f"   systemctl --user disable {service_name}")
+    
+    click.echo(f"")
+    click.echo(f"📝 Service file location: {service_file_path}")
+    
+    return {"status": "service_created", "service_file": str(service_file_path), "service_name": service_name}
+
+{% endif %}
 
 def cli_entry():
     """Entry point for the CLI when installed via pipx."""

@@ -29,12 +29,14 @@ class OptionSchema(BaseModel):
     desc: str
     default: Optional[Any] = None
     choices: Optional[List[str]] = None
+    multiple: Optional[bool] = False
 
 
 class CommandSchema(BaseModel):
     desc: str
     icon: Optional[str] = None
     is_default: Optional[bool] = False
+    lifecycle: Optional[Literal["standard", "managed"]] = "standard"
     args: Optional[List[ArgumentSchema]] = Field(default_factory=list)
     options: Optional[List[OptionSchema]] = Field(default_factory=list)
     subcommands: Optional[Dict[str, "CommandSchema"]] = None
@@ -63,6 +65,7 @@ class CLISchema(BaseModel):
     icon: Optional[str] = None
     header_sections: Optional[List[HeaderSectionSchema]] = None
     footer_note: Optional[str] = None
+    options: Optional[List[OptionSchema]] = Field(default_factory=list)
     commands: Dict[str, CommandSchema]
     command_groups: Optional[List[CommandGroupSchema]] = None
     config: Optional[RichConfigSchema] = None
