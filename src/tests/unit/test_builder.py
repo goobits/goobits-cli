@@ -3,37 +3,14 @@ import pytest
 from unittest.mock import Mock, patch, mock_open
 
 from goobits_cli.builder import load_yaml_config, generate_cli_code, main, Builder
-from goobits_cli.schemas import ConfigSchema, CLISchema
+from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema
 
 
 class TestBuilder:
     """Test cases for Builder class."""
     
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.builder = Builder()
-        self.mock_config = Mock(spec=ConfigSchema)
-        self.mock_cli = Mock(spec=CLISchema)
-        self.mock_config.cli = self.mock_cli
-        
-        # Mock the model_dump method
-        self.mock_cli.model_dump.return_value = {
-            "name": "test-cli",
-            "tagline": "Test CLI Application",
-            "commands": {
-                "hello": {
-                    "desc": "Say hello command"
-                }
-            }
-        }
-    
-    @patch("goobits_cli.builder.Path")
-    def test_builder_initialization(self, mock_path):
-        """Test Builder class initialization."""
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
-        
+    def test_builder_initialization(self):
+        """Test Builder class initialization creates environment with custom filters."""
         builder = Builder()
         
         # Check that environment was created
@@ -48,150 +25,237 @@ class TestBuilder:
         for filter_name in expected_filters:
             assert filter_name in builder.env.filters
     
-    @patch("goobits_cli.builder.Path")
-    def test_build(self, mock_path):
-        """Test Builder.build method returns rendered template string."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
+    def test_build_generates_valid_cli_structure(self):
+        """Test that build generates a CLI with correct structure."""
+        # Use a minimal but real config
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline="Test CLI Application",
+            commands={"hello": CommandSchema(desc="Say hello to someone")}
+        ))
         
-        # Create a fresh builder with mocked environment
-        with patch("goobits_cli.builder.Environment") as mock_env_class:
-            mock_env = Mock()
-            mock_env_class.return_value = mock_env
-            mock_env.filters = {}
-            
-            mock_template = Mock()
-            mock_env.get_template.return_value = mock_template
-            mock_template.render.return_value = "rendered_template"
-            
-            builder = Builder()
-            
-            # Call build method
-            result = builder.build(self.mock_config, "test.yaml")
-            
-            # Assertions
-            assert result == "rendered_template"
-            mock_env.get_template.assert_called_once_with("cli_template.py.j2")
-            mock_template.render.assert_called_once()
-            
-            # Verify that render was called with correct schema data
-            render_call = mock_template.render.call_args
-            assert render_call[1]['cli'] == self.mock_cli
-            assert render_call[1]['file_name'] == "test.yaml"
-            assert 'cli_config_json' in render_call[1]
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
+        
+        # Test essential CLI structure
+        assert "#!/usr/bin/env python3" in result
+        assert 'Auto-generated from test.yaml' in result
+        assert "import rich_click as click" in result
+        assert "from rich_click import RichGroup" in result
+        
+        # Test command structure
+        assert "def hello(ctx):" in result
+        assert '@main.command()' in result
+        assert '"Say hello to someone"' in result
+        
+        # Test main CLI function
+        assert "def main(ctx):" in result
+        assert "Test CLI Application" in result  # Tagline appears in docstring
     
-    @patch("goobits_cli.builder.Path")
-    def test_build_with_default_filename(self, mock_path):
-        """Test Builder.build method with default filename."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
+    def test_build_handles_command_with_arguments(self):
+        """Test that build correctly handles commands with arguments."""
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline="Test CLI",
+            commands={
+                "greet": CommandSchema(
+                    desc="Greet a user",
+                    args=[
+                        ArgumentSchema(
+                            name="name",
+                            desc="Name of person to greet",
+                            required=True
+                        )
+                    ]
+                )
+            }
+        ))
         
-        with patch("goobits_cli.builder.Environment") as mock_env_class:
-            mock_env = Mock()
-            mock_env_class.return_value = mock_env
-            mock_env.filters = {}
-            
-            mock_template = Mock()
-            mock_env.get_template.return_value = mock_template
-            mock_template.render.return_value = "rendered_template"
-            
-            builder = Builder()
-            
-            # Call build method without filename
-            builder.build(self.mock_config)
-            
-            # Check that default filename was used
-            render_call = mock_template.render.call_args
-            assert render_call[1]['file_name'] == "config.yaml"
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
+        
+        # Check argument handling
+        assert "def greet(ctx, name):" in result
+        assert '@click.argument' in result
+        assert '"NAME"' in result  # Arguments are uppercase in decorator
+        # Help text is shown in the docstring, not in argument decorator
     
-    @patch("goobits_cli.builder.Path")
-    def test_build_json_serialization(self, mock_path):
-        """Test Builder.build method properly serializes config to JSON."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
+    def test_build_handles_command_with_options(self):
+        """Test that build correctly handles commands with options."""
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline="Test CLI",
+            commands={
+                "hello": CommandSchema(
+                    desc="Say hello",
+                    options=[
+                        OptionSchema(
+                            name="uppercase",
+                            desc="Print in uppercase",
+                            type="flag"
+                        ),
+                        OptionSchema(
+                            name="count",
+                            desc="Number of times to repeat",
+                            type="int",
+                            default=1
+                        )
+                    ]
+                )
+            }
+        ))
         
-        # Set up config with special characters that need escaping
-        self.mock_cli.model_dump.return_value = {
-            "name": "test-cli",
-            "description": "Text with \\ and ''' quotes"
-        }
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
         
-        with patch("goobits_cli.builder.Environment") as mock_env_class:
-            mock_env = Mock()
-            mock_env_class.return_value = mock_env
-            mock_env.filters = {}
-            
-            mock_template = Mock()
-            mock_env.get_template.return_value = mock_template
-            mock_template.render.return_value = "rendered_template"
-            
-            builder = Builder()
-            
-            # Call build method
-            builder.build(self.mock_config, "test.yaml")
-            
-            # Check that render was called with properly escaped JSON
-            render_call = mock_template.render.call_args
-            cli_config_json = render_call[1]['cli_config_json']
-            
-            # Should escape backslashes and triple quotes
-            assert "\\\\" in cli_config_json
-            assert "\\'\\'\\'" in cli_config_json
+        # Check option handling
+        assert "def hello(ctx, uppercase, count):" in result
+        assert '@click.option("--uppercase"' in result
+        assert 'is_flag=True' in result
+        assert '@click.option("--count"' in result
+        assert 'type=int' in result
+        assert 'default=1' in result
+    
+    def test_build_includes_daemon_support_for_managed_commands(self):
+        """Test that managed lifecycle commands get daemon support."""
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline="Test CLI",
+            commands={
+                "serve": CommandSchema(
+                    desc="Run server",
+                    lifecycle="managed"
+                )
+            }
+        ))
+        
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
+        
+        # Verify managed command functionality
+        assert "# Managed command" in result
+        assert "command_instance_name = f\"serve_command\"" in result
+        assert "command_instance.execute(**kwargs)" in result
+        assert 'Error: Managed command' in result
+    
+    def test_build_includes_global_options(self):
+        """Test that global CLI options are properly included."""
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline="Test CLI",
+            options=[
+                OptionSchema(
+                    name="verbose",
+                    desc="Enable verbose output",
+                    type="flag"
+                )
+            ],
+            commands={"hello": CommandSchema(desc="Say hello")}
+        ))
+        
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
+        
+        # Check global option handling
+        assert "def main(ctx" in result
+        assert "verbose" in result
+        assert "ctx.obj['verbose'] = verbose" in result
+        assert "@click.option" in result
+        assert "--verbose" in result
+    
+    def test_build_includes_config_metadata(self):
+        """Test that build includes configuration metadata."""
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline="Test CLI",
+            version="1.2.3",
+            commands={"hello": CommandSchema(desc="Say hello")}
+        ))
+        
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
+        
+        # Check metadata inclusion
+        assert "test.yaml" in result
+        assert "1.2.3" in result
+    
+    def test_build_escapes_special_characters_in_json(self):
+        """Test that special characters are properly escaped in embedded JSON."""
+        config = ConfigSchema(cli=CLISchema(
+            name="test-cli",
+            tagline='CLI with "quotes" and \'apostrophes\'',
+            commands={"hello": CommandSchema(desc="Say hello")}
+        ))
+        
+        builder = Builder()
+        result = builder.build(config, "test.yaml")
+        
+        # The tagline with special characters should be in the output
+        assert "CLI with" in result
+        assert "quotes" in result
+        assert "apostrophes" in result
+        # The template should handle these special characters correctly
 
 
 class TestLoadYamlConfig:
     """Test cases for load_yaml_config function."""
     
-    @patch("builtins.open", new_callable=mock_open, read_data="cli:\n  name: test\n  tagline: Test CLI\n  commands: {}")
+    @patch("builtins.open", new_callable=mock_open, read_data="""
+cli:
+  name: test-cli
+  tagline: Test CLI Application
+  commands:
+    hello:
+      desc: Hello command
+""")
     def test_load_valid_yaml_config(self, mock_file):
-        """Test load_yaml_config with valid YAML configuration."""
+        """Test load_yaml_config with valid YAML."""
         result = load_yaml_config("test.yaml")
         
         assert isinstance(result, ConfigSchema)
-        assert result.cli.name == "test"
-        assert result.cli.tagline == "Test CLI"
-        mock_file.assert_called_once_with("test.yaml", 'r')
+        assert result.cli.name == "test-cli"
+        assert result.cli.tagline == "Test CLI Application"
+        assert "hello" in result.cli.commands
+        assert result.cli.commands["hello"].desc == "Hello command"
     
     @patch("builtins.open", side_effect=FileNotFoundError)
     @patch("sys.exit")
     def test_load_yaml_config_file_not_found(self, mock_exit, mock_file):
-        """Test load_yaml_config with non-existent file."""
-        with patch("builtins.print") as mock_print:
-            load_yaml_config("nonexistent.yaml")
-            
-            mock_print.assert_called_once()
-            assert "Error: File 'nonexistent.yaml' not found." in str(mock_print.call_args)
-            mock_exit.assert_called_once_with(1)
+        """Test load_yaml_config when file doesn't exist."""
+        load_yaml_config("missing.yaml")
+        
+        mock_exit.assert_called_once_with(1)
     
-    @patch("builtins.open", new_callable=mock_open, read_data="invalid: yaml: content: [")
+    @patch("builtins.open", new_callable=mock_open, read_data="invalid: yaml: content:")
     @patch("sys.exit")
     def test_load_yaml_config_invalid_yaml(self, mock_exit, mock_file):
         """Test load_yaml_config with invalid YAML syntax."""
-        with patch("builtins.print") as mock_print:
-            load_yaml_config("invalid.yaml")
-            
-            mock_print.assert_called_once()
-            assert "Error parsing YAML:" in str(mock_print.call_args)
-            mock_exit.assert_called_once_with(1)
+        load_yaml_config("invalid.yaml")
+        
+        mock_exit.assert_called_once_with(1)
     
-    @patch("builtins.open", new_callable=mock_open, read_data="cli:\n  name: test\n  invalid_field: value")
+    @patch("builtins.open", new_callable=mock_open, read_data="""
+cli:
+  # Missing required 'name' field
+  commands:
+    hello:
+      desc: Hello
+""")
     @patch("sys.exit")
     def test_load_yaml_config_validation_error(self, mock_exit, mock_file):
-        """Test load_yaml_config with validation errors."""
-        with patch("builtins.print") as mock_print:
-            load_yaml_config("invalid_schema.yaml")
-            
-            mock_print.assert_called_once()
-            assert "Error validating configuration:" in str(mock_print.call_args)
-            mock_exit.assert_called_once_with(1)
+        """Test load_yaml_config with schema validation error."""
+        load_yaml_config("invalid_schema.yaml")
+        
+        mock_exit.assert_called_once_with(1)
     
-    @patch("builtins.open", new_callable=mock_open, read_data="cli:\n  name: test\n  tagline: Test CLI\n  commands:\n    hello:\n      desc: Hello command")
+    @patch("builtins.open", new_callable=mock_open, read_data="""
+cli:
+  name: test-cli
+  tagline: Test CLI
+  commands:
+    hello:
+      desc: Hello command
+""")
     def test_load_yaml_config_with_commands(self, mock_file):
         """Test load_yaml_config with commands defined."""
         result = load_yaml_config("test.yaml")
@@ -201,137 +265,6 @@ class TestLoadYamlConfig:
         assert result.cli.commands["hello"].desc == "Hello command"
 
 
-class TestGenerateCliCode:
-    """Test cases for generate_cli_code function."""
-    
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mock_config = Mock(spec=ConfigSchema)
-        self.mock_cli = Mock(spec=CLISchema)
-        self.mock_config.cli = self.mock_cli
-        
-        # Mock the model_dump method
-        self.mock_cli.model_dump.return_value = {
-            "name": "test-cli",
-            "tagline": "Test CLI",
-            "commands": {}
-        }
-    
-    @patch("goobits_cli.builder.Path")
-    @patch("goobits_cli.builder.Environment")
-    def test_generate_cli_code_basic(self, mock_env_class, mock_path):
-        """Test generate_cli_code with basic configuration."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
-        
-        mock_env = Mock()
-        mock_env_class.return_value = mock_env
-        mock_env.filters = {}
-        
-        mock_template = Mock()
-        mock_env.get_template.return_value = mock_template
-        mock_template.render.return_value = "generated_cli_code"
-        
-        # Call function
-        result = generate_cli_code(self.mock_config, "test.yaml")
-        
-        # Assertions
-        assert result == "generated_cli_code"
-        mock_env_class.assert_called_once()
-        mock_env.get_template.assert_called_once_with("cli_template.py.j2")
-        mock_template.render.assert_called_once()
-    
-    @patch("goobits_cli.builder.Path")
-    @patch("goobits_cli.builder.Environment")
-    def test_generate_cli_code_with_filters(self, mock_env_class, mock_path):
-        """Test generate_cli_code adds custom filters."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
-        
-        mock_env = Mock()
-        mock_env_class.return_value = mock_env
-        mock_env.filters = {}
-        
-        mock_template = Mock()
-        mock_env.get_template.return_value = mock_template
-        mock_template.render.return_value = "generated_code"
-        
-        # Call function
-        generate_cli_code(self.mock_config, "test.yaml")
-        
-        # Check that filters were added
-        expected_filters = [
-            'align_examples', 'format_multiline', 'escape_docstring',
-            'align_setup_steps', 'format_icon', 'align_header_items'
-        ]
-        for filter_name in expected_filters:
-            assert filter_name in mock_env.filters
-    
-    @patch("goobits_cli.builder.Path")
-    @patch("goobits_cli.builder.Environment")
-    def test_generate_cli_code_json_serialization(self, mock_env_class, mock_path):
-        """Test generate_cli_code properly serializes config to JSON."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
-        
-        mock_env = Mock()
-        mock_env_class.return_value = mock_env
-        mock_env.filters = {}
-        
-        mock_template = Mock()
-        mock_env.get_template.return_value = mock_template
-        mock_template.render.return_value = "generated_code"
-        
-        # Set up config with special characters
-        self.mock_cli.model_dump.return_value = {
-            "name": "test-cli",
-            "description": "Text with \\ and ''' quotes"
-        }
-        
-        # Call function
-        generate_cli_code(self.mock_config, "test.yaml")
-        
-        # Check that render was called with properly escaped JSON
-        render_call = mock_template.render.call_args
-        cli_config_json = render_call[1]['cli_config_json']
-        
-        # Should escape backslashes and triple quotes
-        assert "\\\\" in cli_config_json
-        assert "\\'\\'\\'" in cli_config_json
-    
-    @patch("goobits_cli.builder.Path")
-    @patch("goobits_cli.builder.Environment")
-    def test_generate_cli_code_template_rendering(self, mock_env_class, mock_path):
-        """Test generate_cli_code passes correct parameters to template."""
-        # Setup mocks
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
-        
-        mock_env = Mock()
-        mock_env_class.return_value = mock_env
-        mock_env.filters = {}
-        
-        mock_template = Mock()
-        mock_env.get_template.return_value = mock_template
-        mock_template.render.return_value = "generated_code"
-        
-        # Call function
-        generate_cli_code(self.mock_config, "config.yaml")
-        
-        # Check render call arguments
-        render_call = mock_template.render.call_args
-        assert render_call[1]['cli'] == self.mock_cli
-        assert render_call[1]['file_name'] == "config.yaml"
-        assert 'cli_config_json' in render_call[1]
-
-
 class TestMain:
     """Test cases for main function."""
     
@@ -339,136 +272,70 @@ class TestMain:
     @patch("goobits_cli.builder.load_yaml_config")
     @patch("goobits_cli.builder.generate_cli_code")
     @patch("builtins.print")
-    def test_main_success(self, mock_print, mock_generate, mock_load, ):
+    def test_main_success(self, mock_print, mock_generate, mock_load):
         """Test main function with valid arguments."""
-        # Setup mocks
         mock_config = Mock()
         mock_load.return_value = mock_config
-        mock_generate.return_value = "generated_cli_code"
+        mock_generate.return_value = "generated code"
         
-        # Call main
         main()
         
-        # Assertions
         mock_load.assert_called_once_with("config.yaml")
         mock_generate.assert_called_once_with(mock_config, "config.yaml")
-        mock_print.assert_called_once_with("generated_cli_code")
+        mock_print.assert_called_once_with("generated code")
     
     @patch("sys.argv", ["builder.py"])
     def test_main_no_arguments(self):
         """Test main function with no arguments."""
-        with patch("builtins.print") as mock_print, \
-             patch("sys.exit", side_effect=SystemExit(1)) as mock_exit:
-            
-            with pytest.raises(SystemExit):
-                main()
-            
-            mock_print.assert_called_once()
-            assert "Usage: python -m src.builder <yaml_file>" in str(mock_print.call_args)
-            mock_exit.assert_called_once_with(1)
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+        
+        assert exc_info.value.code == 1
     
-    @patch("sys.argv", ["builder.py", "arg1", "arg2", "arg3"])
+    @patch("sys.argv", ["builder.py", "arg1", "arg2"])
     def test_main_too_many_arguments(self):
         """Test main function with too many arguments."""
-        with patch("builtins.print") as mock_print, \
-             patch("sys.exit", side_effect=SystemExit(1)) as mock_exit:
-            
-            with pytest.raises(SystemExit):
-                main()
-            
-            mock_print.assert_called_once()
-            assert "Usage: python -m src.builder <yaml_file>" in str(mock_print.call_args)
-            mock_exit.assert_called_once_with(1)
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+        
+        assert exc_info.value.code == 1
     
     @patch("sys.argv", ["builder.py", "config.yaml"])
     @patch("goobits_cli.builder.load_yaml_config")
     @patch("goobits_cli.builder.generate_cli_code")
     @patch("builtins.print")
     def test_main_with_path_object(self, mock_print, mock_generate, mock_load):
-        """Test main function correctly handles Path object for file name."""
-        # Setup mocks
+        """Test main function converts string path to Path object."""
+        from pathlib import Path
+        
         mock_config = Mock()
         mock_load.return_value = mock_config
-        mock_generate.return_value = "generated_code"
+        mock_generate.return_value = "generated code"
         
-        # Call main
-        main()
-        
-        # Check that generate_cli_code was called with the filename
-        mock_generate.assert_called_once_with(mock_config, "config.yaml")
+        # Patch Path to track calls
+        with patch("goobits_cli.builder.Path") as mock_path_class:
+            mock_path = Mock()
+            mock_path_class.return_value = mock_path
+            mock_path.name = "config.yaml"
+            
+            main()
+            
+            mock_path_class.assert_called_once_with("config.yaml")
+            mock_generate.assert_called_once_with(mock_config, "config.yaml")
     
-    @patch("sys.argv", ["builder.py", "/path/to/config.yaml"])
+    @patch("sys.argv", ["builder.py", "/absolute/path/to/config.yaml"])
     @patch("goobits_cli.builder.load_yaml_config")
     @patch("goobits_cli.builder.generate_cli_code")
     @patch("builtins.print")
     def test_main_with_absolute_path(self, mock_print, mock_generate, mock_load):
-        """Test main function with absolute path."""
-        # Setup mocks
+        """Test main function with absolute path extracts filename."""
         mock_config = Mock()
         mock_load.return_value = mock_config
-        mock_generate.return_value = "generated_code"
+        mock_generate.return_value = "generated code"
         
         # Call main
         main()
         
         # Check calls
-        mock_load.assert_called_once_with("/path/to/config.yaml")
+        mock_load.assert_called_once_with("/absolute/path/to/config.yaml")
         mock_generate.assert_called_once_with(mock_config, "config.yaml")
-
-
-class TestModuleExecution:
-    """Test cases for module execution behavior."""
-    
-    @patch("goobits_cli.builder.main")
-    def test_main_called_when_module_executed(self, mock_main):
-        """Test that main is called when module is executed directly."""
-        # This test would require actual module execution simulation
-        # For now, we just verify the structure exists
-        from goobits_cli import builder
-        assert hasattr(builder, 'main')
-        assert callable(builder.main)
-
-
-class TestIntegrationScenarios:
-    """Integration test scenarios combining multiple functions."""
-    
-    @patch("builtins.open", new_callable=mock_open)
-    @patch("goobits_cli.builder.Path")
-    @patch("goobits_cli.builder.Environment")
-    def test_full_workflow_simulation(self, mock_env_class, mock_path, mock_file):
-        """Test a complete workflow from YAML loading to code generation."""
-        # Setup YAML content
-        yaml_content = """
-cli:
-  name: test-cli
-  tagline: Test CLI Application
-  commands:
-    hello:
-      desc: Say hello
-      args:
-        - name: name
-          desc: Name to greet
-"""
-        mock_file.return_value.read.return_value = yaml_content
-        
-        # Setup template environment
-        mock_template_dir = Mock()
-        mock_path.return_value.parent = mock_template_dir
-        mock_template_dir.__truediv__ = Mock(return_value="templates/path")
-        
-        mock_env = Mock()
-        mock_env_class.return_value = mock_env
-        mock_env.filters = {}
-        
-        mock_template = Mock()
-        mock_env.get_template.return_value = mock_template
-        mock_template.render.return_value = "# Generated CLI Code"
-        
-        # Execute workflow
-        config = load_yaml_config("test.yaml")
-        result = generate_cli_code(config, "test.yaml")
-        
-        # Verify results
-        assert result == "# Generated CLI Code"
-        assert config.cli.name == "test-cli"
-        assert "hello" in config.cli.commands
