@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
+import typer
 
 from .schemas import ConfigSchema
 from .formatter import align_examples, format_multiline_text, escape_for_docstring, align_setup_steps, format_icon_spacing, align_header_items
@@ -20,13 +21,13 @@ def load_yaml_config(file_path: str) -> ConfigSchema:
         return config
     except FileNotFoundError:
         print(f"Error: File '{file_path}' not found.", file=sys.stderr)
-        sys.exit(1)
+        raise typer.Exit(code=1)
     except yaml.YAMLError as e:
         print(f"Error parsing YAML: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise typer.Exit(code=1)
     except ValidationError as e:
         print(f"Error validating configuration: {e}", file=sys.stderr)
-        sys.exit(1)
+        raise typer.Exit(code=1)
 
 
 class Builder:
@@ -108,56 +109,34 @@ class Builder:
                 if invalid_commands:
                     print(f"❌ Error: Command group '{group.name}' references non-existent commands: {', '.join(sorted(invalid_commands))}")
                     print(f"   Available commands: {', '.join(sorted(defined_commands))}")
-                    sys.exit(1)
+                    raise typer.Exit(code=1)
         
         # Validate command structure
         for cmd_name, cmd_data in cli.commands.items():
             if not cmd_data.desc:
                 print(f"❌ Error: Command '{cmd_name}' is missing required 'desc' field")
-                sys.exit(1)
+                raise typer.Exit(code=1)
             
             # Validate arguments
             if cmd_data.args:
                 for arg in cmd_data.args:
                     if not arg.desc:
                         print(f"❌ Error: Argument '{arg.name}' in command '{cmd_name}' is missing required 'desc' field")
-                        sys.exit(1)
+                        raise typer.Exit(code=1)
             
             # Validate options
             if cmd_data.options:
                 for opt in cmd_data.options:
                     if not opt.desc:
                         print(f"❌ Error: Option '{opt.name}' in command '{cmd_name}' is missing required 'desc' field")
-                        sys.exit(1)
+                        raise typer.Exit(code=1)
                     if opt.type not in ['str', 'int', 'float', 'bool', 'flag']:
                         print(f"❌ Error: Option '{opt.name}' in command '{cmd_name}' has invalid type '{opt.type}'")
                         print("   Valid types: str, int, float, bool, flag")
-                        sys.exit(1)
+                        raise typer.Exit(code=1)
 
 
 def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str) -> str:
     """Generate CLI Python code from configuration."""
     builder = Builder()
     return builder.build(config, file_name)
-
-
-def main():
-    """Main entry point for the CLI builder."""
-    if len(sys.argv) != 2:
-        print("Usage: python -m src.builder <yaml_file>", file=sys.stderr)
-        sys.exit(1)
-    
-    yaml_file = sys.argv[1]
-    
-    # Load and validate configuration
-    config = load_yaml_config(yaml_file)
-    
-    # Generate CLI code
-    code = generate_cli_code(config, Path(yaml_file).name)
-    
-    # Output to stdout
-    print(code)
-
-
-if __name__ == "__main__":
-    main()

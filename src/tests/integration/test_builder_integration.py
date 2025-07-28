@@ -5,6 +5,7 @@ focusing on the interaction between load_yaml_config and generate_cli_code.
 """
 import pytest
 from pathlib import Path
+from click.exceptions import Exit
 
 from goobits_cli.builder import load_yaml_config, generate_cli_code, Builder
 from goobits_cli.schemas import ConfigSchema
@@ -170,8 +171,10 @@ class TestBuilderIntegrationErrorCases:
         nonexistent_path = Path(__file__).parent / "nonexistent.yaml"
         
         # This should exit the program, but in a test environment we can catch it
-        with pytest.raises(SystemExit):
+        with pytest.raises(Exit) as exc_info:
             load_yaml_config(str(nonexistent_path))
+        
+        assert exc_info.value.exit_code == 1
     
     def test_load_invalid_yaml_syntax(self):
         """Test handling of invalid YAML syntax."""
@@ -184,8 +187,10 @@ class TestBuilderIntegrationErrorCases:
                 f.write("cli:\n  name: unclosed string\n  tagline: \"missing quote\n")
             
             # This should exit due to YAML syntax error
-            with pytest.raises(SystemExit):
+            with pytest.raises(Exit) as exc_info:
                 load_yaml_config(str(invalid_yaml_path))
+            
+            assert exc_info.value.exit_code == 1
                 
         finally:
             # Clean up the temporary file
@@ -203,8 +208,10 @@ class TestBuilderIntegrationErrorCases:
                 f.write("cli:\n  name: TestCLI\n  # Missing required tagline and commands\n")
             
             # This should exit due to validation error
-            with pytest.raises(SystemExit):
+            with pytest.raises(Exit) as exc_info:
                 load_yaml_config(str(invalid_schema_path))
+            
+            assert exc_info.value.exit_code == 1
                 
         finally:
             # Clean up the temporary file

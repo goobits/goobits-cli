@@ -422,7 +422,7 @@ class DefaultGroup(RichGroup):
                 # Check if stdin is a pipe or file (not a terminal)
                 stdin_stat = os.fstat(sys.stdin.fileno())
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
-            except:
+            except Exception:
                 # Fallback to isatty check
                 has_stdin = not sys.stdin.isatty()
             

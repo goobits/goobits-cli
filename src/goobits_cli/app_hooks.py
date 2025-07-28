@@ -5,8 +5,9 @@ This file contains the actual implementation for CLI commands.
 """
 
 from pathlib import Path
+from typing import Optional
 
-def on_build(config_path, output_dir, output, backup):
+def on_build(config_path: Optional[str], output_dir: Optional[str], output: Optional[str], backup: bool) -> None:
     """Hook for build command - delegate to main.py implementation."""
     import goobits_cli.main as main  # type: ignore[import-untyped]
     
@@ -21,7 +22,7 @@ def on_build(config_path, output_dir, output, backup):
         # Handle typer.Exit gracefully
         pass
 
-def on_init(project_name, template, force):
+def on_init(project_name: Optional[str], template: str, force: bool) -> None:
     """Hook for init command - delegate to main.py implementation."""
     import goobits_cli.main as main  # type: ignore[import-untyped]
     
@@ -31,7 +32,7 @@ def on_init(project_name, template, force):
         # Handle typer.Exit gracefully
         pass
 
-def on_serve(directory, host, port):
+def on_serve(directory: str, host: str, port: int) -> None:
     """Hook for serve command - delegate to main.py implementation."""
     import goobits_cli.main as main  # type: ignore[import-untyped]
     

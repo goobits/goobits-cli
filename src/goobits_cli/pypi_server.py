@@ -11,10 +11,13 @@ import mimetypes
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import unquote
-from typing import List, Optional
+from typing import List, Optional, Union
 import threading
 import signal
 import sys
+
+# Server shutdown timeout in seconds
+DEFAULT_SERVER_TIMEOUT = 5
 
 
 class PyPIHandler(BaseHTTPRequestHandler):
@@ -173,7 +176,7 @@ class PyPIHandler(BaseHTTPRequestHandler):
         
         return package_files
     
-    def _send_response(self, status_code: int, content: bytes | str, content_type: str) -> None:
+    def _send_response(self, status_code: int, content: Union[bytes, str], content_type: str) -> None:
         """Send HTTP response with proper headers."""
         if isinstance(content, str):
             content = content.encode('utf-8')
@@ -348,7 +351,7 @@ class PyPIServer:
             self.server.server_close()
             
             if self.server_thread and self.server_thread.is_alive():
-                self.server_thread.join(timeout=5)
+                self.server_thread.join(timeout=DEFAULT_SERVER_TIMEOUT)
             
             logging.info("✅ PyPI server stopped")
     

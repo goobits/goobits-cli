@@ -16,7 +16,7 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     try:
         from . import __version__
         current_version = __version__
-    except:
+    except Exception:
         current_version = "unknown"
 
     print(f"Current version: {current_version}")

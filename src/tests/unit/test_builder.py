@@ -1,8 +1,9 @@
 """Unit tests for builder.py module."""
 import pytest
 from unittest.mock import Mock, patch, mock_open
+from click.exceptions import Exit
 
-from goobits_cli.builder import load_yaml_config, generate_cli_code, main, Builder
+from goobits_cli.builder import load_yaml_config, generate_cli_code, Builder
 from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema
 
 
@@ -219,20 +220,20 @@ cli:
         assert result.cli.commands["hello"].desc == "Hello command"
     
     @patch("builtins.open", side_effect=FileNotFoundError)
-    @patch("sys.exit")
-    def test_load_yaml_config_file_not_found(self, mock_exit, mock_file):
+    def test_load_yaml_config_file_not_found(self, mock_file):
         """Test load_yaml_config when file doesn't exist."""
-        load_yaml_config("missing.yaml")
+        with pytest.raises(Exit) as exc_info:
+            load_yaml_config("missing.yaml")
         
-        mock_exit.assert_called_once_with(1)
+        assert exc_info.value.exit_code == 1
     
     @patch("builtins.open", new_callable=mock_open, read_data="invalid: yaml: content:")
-    @patch("sys.exit")
-    def test_load_yaml_config_invalid_yaml(self, mock_exit, mock_file):
+    def test_load_yaml_config_invalid_yaml(self, mock_file):
         """Test load_yaml_config with invalid YAML syntax."""
-        load_yaml_config("invalid.yaml")
+        with pytest.raises(Exit) as exc_info:
+            load_yaml_config("invalid.yaml")
         
-        mock_exit.assert_called_once_with(1)
+        assert exc_info.value.exit_code == 1
     
     @patch("builtins.open", new_callable=mock_open, read_data="""
 cli:
@@ -241,12 +242,12 @@ cli:
     hello:
       desc: Hello
 """)
-    @patch("sys.exit")
-    def test_load_yaml_config_validation_error(self, mock_exit, mock_file):
+    def test_load_yaml_config_validation_error(self, mock_file):
         """Test load_yaml_config with schema validation error."""
-        load_yaml_config("invalid_schema.yaml")
+        with pytest.raises(Exit) as exc_info:
+            load_yaml_config("invalid_schema.yaml")
         
-        mock_exit.assert_called_once_with(1)
+        assert exc_info.value.exit_code == 1
     
     @patch("builtins.open", new_callable=mock_open, read_data="""
 cli:
@@ -264,78 +265,3 @@ cli:
         assert "hello" in result.cli.commands
         assert result.cli.commands["hello"].desc == "Hello command"
 
-
-class TestMain:
-    """Test cases for main function."""
-    
-    @patch("sys.argv", ["builder.py", "config.yaml"])
-    @patch("goobits_cli.builder.load_yaml_config")
-    @patch("goobits_cli.builder.generate_cli_code")
-    @patch("builtins.print")
-    def test_main_success(self, mock_print, mock_generate, mock_load):
-        """Test main function with valid arguments."""
-        mock_config = Mock()
-        mock_load.return_value = mock_config
-        mock_generate.return_value = "generated code"
-        
-        main()
-        
-        mock_load.assert_called_once_with("config.yaml")
-        mock_generate.assert_called_once_with(mock_config, "config.yaml")
-        mock_print.assert_called_once_with("generated code")
-    
-    @patch("sys.argv", ["builder.py"])
-    def test_main_no_arguments(self):
-        """Test main function with no arguments."""
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-        
-        assert exc_info.value.code == 1
-    
-    @patch("sys.argv", ["builder.py", "arg1", "arg2"])
-    def test_main_too_many_arguments(self):
-        """Test main function with too many arguments."""
-        with pytest.raises(SystemExit) as exc_info:
-            main()
-        
-        assert exc_info.value.code == 1
-    
-    @patch("sys.argv", ["builder.py", "config.yaml"])
-    @patch("goobits_cli.builder.load_yaml_config")
-    @patch("goobits_cli.builder.generate_cli_code")
-    @patch("builtins.print")
-    def test_main_with_path_object(self, mock_print, mock_generate, mock_load):
-        """Test main function converts string path to Path object."""
-        from pathlib import Path
-        
-        mock_config = Mock()
-        mock_load.return_value = mock_config
-        mock_generate.return_value = "generated code"
-        
-        # Patch Path to track calls
-        with patch("goobits_cli.builder.Path") as mock_path_class:
-            mock_path = Mock()
-            mock_path_class.return_value = mock_path
-            mock_path.name = "config.yaml"
-            
-            main()
-            
-            mock_path_class.assert_called_once_with("config.yaml")
-            mock_generate.assert_called_once_with(mock_config, "config.yaml")
-    
-    @patch("sys.argv", ["builder.py", "/absolute/path/to/config.yaml"])
-    @patch("goobits_cli.builder.load_yaml_config")
-    @patch("goobits_cli.builder.generate_cli_code")
-    @patch("builtins.print")
-    def test_main_with_absolute_path(self, mock_print, mock_generate, mock_load):
-        """Test main function with absolute path extracts filename."""
-        mock_config = Mock()
-        mock_load.return_value = mock_config
-        mock_generate.return_value = "generated code"
-        
-        # Call main
-        main()
-        
-        # Check calls
-        mock_load.assert_called_once_with("/absolute/path/to/config.yaml")
-        mock_generate.assert_called_once_with(mock_config, "config.yaml")

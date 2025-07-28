@@ -3,6 +3,7 @@ import yaml
 import toml
 import shutil
 import subprocess
+from copy import deepcopy
 from pathlib import Path
 from typing import Optional
 import typer
@@ -13,6 +14,9 @@ from .schemas import ConfigSchema, GoobitsConfigSchema
 from .builder import generate_cli_code
 from .pypi_server import serve_packages
 from .__version__ import __version__
+
+# Default cache time-to-live in seconds (1 hour)
+DEFAULT_CACHE_TTL = 3600
 
 def version_callback(value: bool):
     if value:
@@ -50,8 +54,6 @@ def load_goobits_config(file_path: Path) -> GoobitsConfigSchema:
 
 def normalize_dependencies_for_template(config: GoobitsConfigSchema) -> GoobitsConfigSchema:
     """Normalize dependencies for template rendering with enhanced data."""
-    from copy import deepcopy
-    
     # Create a copy to avoid modifying the original
     normalized_config = deepcopy(config)
     
@@ -121,7 +123,7 @@ def generate_setup_script(config: GoobitsConfigSchema) -> str:
             'upgrade_success': config.messages.upgrade_success,
             'uninstall_success': config.messages.uninstall_success,
         },
-        'cache_ttl': 3600,  # Default cache TTL
+        'cache_ttl': DEFAULT_CACHE_TTL,
     }
     
     script = template.render(**template_vars)
