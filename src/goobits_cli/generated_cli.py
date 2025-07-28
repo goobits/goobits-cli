@@ -5,7 +5,7 @@ import sys
 import importlib.util
 from pathlib import Path
 import rich_click as click
-from rich_click import RichGroup
+from rich_click import RichGroup, RichCommand
 
 # Set up rich-click configuration globally
 click.rich_click.USE_RICH_MARKUP = True  
@@ -54,19 +54,17 @@ click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)  # Command:Des
 # Hooks system - try to import app_hooks module
 app_hooks = None
 try:
-    # Try to import from the same directory as this script
-    script_dir = Path(__file__).parent
+    # Try to import from the project root directory
+    script_dir = Path(__file__).parent.parent.parent
     hooks_path = script_dir / "app_hooks.py"
     
     if hooks_path.exists():
         spec = importlib.util.spec_from_file_location("app_hooks", hooks_path)
-        if spec is not None and spec.loader is not None:
-            app_hooks = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(app_hooks)
+        app_hooks = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(app_hooks)
     else:
         # Try to import from Python path
-        import app_hooks as app_hooks_module  # type: ignore[import-not-found]
-        app_hooks = app_hooks_module
+        import app_hooks
 except (ImportError, FileNotFoundError):
     # No hooks module found, use default behavior
     pass
@@ -185,7 +183,7 @@ class DefaultGroup(RichGroup):
                 # Check if stdin is a pipe or file (not a terminal)
                 stdin_stat = os.fstat(sys.stdin.fileno())
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
-            except (OSError, AttributeError):
+            except:
                 # Fallback to isatty check
                 has_stdin = not sys.stdin.isatty()
             
@@ -212,7 +210,7 @@ class DefaultGroup(RichGroup):
                 # Use S_ISFIFO to check if it's a pipe, or S_ISREG to check if it's a regular file
                 import stat
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
-            except Exception:
+            except Exception as e:
                 # Fallback to isatty check
                 has_stdin = not sys.stdin.isatty()
             
@@ -238,6 +236,7 @@ class DefaultGroup(RichGroup):
 
 
 @click.option('--help-all', is_flag=True, is_eager=True, help='Show help for all commands.', hidden=True)
+
 
 def main(ctx, help_all=False):
     """[bold color(6)]Goobits CLI v1.1.0[/bold color(6)] - Build professional command-line tools with YAML configuration
@@ -293,6 +292,9 @@ def main(ctx, help_all=False):
         # Exit after printing all help
         ctx.exit()
     
+    
+    # Store global options in context for use by commands
+    
 
     pass
 
@@ -313,7 +315,7 @@ click.rich_click.COMMAND_GROUPS = {
         
         {
             "name": "Utilities",
-            "commands": ['upgrade', 'version', 'help'],
+            "commands": ['upgrade'],
         },
         
     ]
@@ -323,6 +325,7 @@ click.rich_click.COMMAND_GROUPS = {
 
 
 @main.command()
+@click.pass_context
 
 @click.argument(
     "CONFIG_PATH",
@@ -345,20 +348,50 @@ click.rich_click.COMMAND_GROUPS = {
     help="💾 Create backup files (.bak) when overwriting existing files"
 )
 
-def build(config_path, output_dir, output, backup):
+def build(ctx, config_path, output_dir, output, backup):
     """🔨 Build CLI and setup scripts from goobits.yaml configuration"""
-    # Check if hook function exists
-    hook_name = "on_build"
+    
+    # Standard command - use the existing hook pattern
+    hook_name = f"on_build"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
         
-        result = hook_func(config_path, output_dir, output, backup)
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = 'build'  # Pass command name for all commands
         
+        
+        kwargs['config_path'] = config_path
+        
+        
+        
+        
+        
+        
+        
+        kwargs['output_dir'] = output_dir
+        
+        
+        
+        
+        kwargs['output'] = output
+        
+        
+        
+        
+        kwargs['backup'] = backup
+        
+        
+        
+        # Add global options from context
+        
+        
+        result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
-        click.echo("Executing build command...")
+        click.echo(f"Executing build command...")
         
         
         click.echo(f"  config_path: {config_path}")
@@ -373,11 +406,13 @@ def build(config_path, output_dir, output, backup):
         click.echo(f"  backup: {backup}")
         
         
+    
 
 
 
 
 @main.command()
+@click.pass_context
 
 @click.argument(
     "PROJECT_NAME",
@@ -396,20 +431,45 @@ def build(config_path, output_dir, output, backup):
     help="🔥 Overwrite existing goobits.yaml file"
 )
 
-def init(project_name, template, force):
+def init(ctx, project_name, template, force):
     """🆕 Create initial goobits.yaml template"""
-    # Check if hook function exists
-    hook_name = "on_init"
+    
+    # Standard command - use the existing hook pattern
+    hook_name = f"on_init"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
         
-        result = hook_func(project_name, template, force)
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = 'init'  # Pass command name for all commands
         
+        
+        kwargs['project_name'] = project_name
+        
+        
+        
+        
+        
+        
+        
+        kwargs['template'] = template
+        
+        
+        
+        
+        kwargs['force'] = force
+        
+        
+        
+        # Add global options from context
+        
+        
+        result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
-        click.echo("Executing init command...")
+        click.echo(f"Executing init command...")
         
         
         click.echo(f"  project_name: {project_name}")
@@ -422,11 +482,13 @@ def init(project_name, template, force):
         click.echo(f"  force: {force}")
         
         
+    
 
 
 
 
 @main.command()
+@click.pass_context
 
 @click.argument(
     "DIRECTORY"
@@ -445,20 +507,45 @@ def init(project_name, template, force):
     help="🔌 Port to run the server on"
 )
 
-def serve(directory, host, port):
+def serve(ctx, directory, host, port):
     """🌐 Serve local PyPI-compatible package index"""
-    # Check if hook function exists
-    hook_name = "on_serve"
+    
+    # Standard command - use the existing hook pattern
+    hook_name = f"on_serve"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
         
-        result = hook_func(directory, host, port)
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = 'serve'  # Pass command name for all commands
         
+        
+        kwargs['directory'] = directory
+        
+        
+        
+        
+        
+        
+        
+        kwargs['host'] = host
+        
+        
+        
+        
+        kwargs['port'] = port
+        
+        
+        
+        # Add global options from context
+        
+        
+        result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
-        click.echo("Executing serve command...")
+        click.echo(f"Executing serve command...")
         
         
         click.echo(f"  directory: {directory}")
@@ -471,11 +558,13 @@ def serve(directory, host, port):
         click.echo(f"  port: {port}")
         
         
+    
 
 
 
 
 @main.command()
+@click.pass_context
 
 
 @click.option("--source",
@@ -499,20 +588,51 @@ def serve(directory, host, port):
     help="Show what would be upgraded without doing it"
 )
 
-def upgrade(source, version, pre, dry_run):
+def upgrade(ctx, source, version, pre, dry_run):
     """🆙 Upgrade goobits-cli to the latest version"""
-    # Check if hook function exists
-    hook_name = "on_upgrade"
+    
+    # Standard command - use the existing hook pattern
+    hook_name = f"on_upgrade"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
         
-        result = hook_func(source, version, pre, dry_run)
+        # Prepare arguments including global options
+        kwargs = {}
+        kwargs['command_name'] = 'upgrade'  # Pass command name for all commands
         
+        
+        
+        
+        
+        
+        kwargs['source'] = source
+        
+        
+        
+        
+        kwargs['version'] = version
+        
+        
+        
+        
+        kwargs['pre'] = pre
+        
+        
+        
+        
+        kwargs['dry_run'] = dry_run
+        
+        
+        
+        # Add global options from context
+        
+        
+        result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
-        click.echo("Executing upgrade command...")
+        click.echo(f"Executing upgrade command...")
         
         
         
@@ -525,6 +645,20 @@ def upgrade(source, version, pre, dry_run):
         click.echo(f"  dry-run: {dry_run}")
         
         
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

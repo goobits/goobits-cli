@@ -123,9 +123,9 @@ class TestBuilderIntegration:
     def _assert_command_structure_present(self, generated_code):
         """Assert that command structure from YAML is present in generated code."""
         # Check for Python function definitions for each command
-        assert "def greet(" in generated_code
-        assert "def hello(" in generated_code
-        assert "def goodbye(" in generated_code
+        assert "def greet(ctx" in generated_code
+        assert "def hello(ctx" in generated_code
+        assert "def goodbye(ctx" in generated_code
         
         # Check for click decorators
         assert "@main.command()" in generated_code
@@ -133,8 +133,8 @@ class TestBuilderIntegration:
     
     def _assert_hello_command_structure(self, generated_code):
         """Assert that the hello command structure is properly represented."""
-        # Check for function definition with correct parameters
-        assert "def hello(name, uppercase)" in generated_code
+        # Check for function definition with correct parameters (now includes ctx)
+        assert "def hello(ctx, name, uppercase)" in generated_code
         
         # Check for command description in docstring
         assert "Says hello to a user." in generated_code
@@ -148,8 +148,8 @@ class TestBuilderIntegration:
     
     def _assert_goodbye_command_structure(self, generated_code):
         """Assert that the goodbye command structure is properly represented."""
-        # Check for function signature with message parameter
-        assert "def goodbye(message)" in generated_code
+        # Check for function signature with message parameter (now includes ctx)
+        assert "def goodbye(ctx, message)" in generated_code
         
         # Check for command description in docstring
         assert "Says goodbye with optional message." in generated_code
