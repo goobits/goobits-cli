@@ -69,6 +69,78 @@ except (ImportError, FileNotFoundError):
     # No hooks module found, use default behavior
     pass
 
+# Built-in commands
+
+def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=False):
+    """Built-in upgrade function for Goobits CLI Framework."""
+    import subprocess
+    import sys
+    import shutil
+    from pathlib import Path
+
+    package_name = "goobits-cli"
+    pypi_name = "goobits-cli"
+    command_name = "goobits"
+    display_name = "Goobits CLI Framework"
+
+    # Get current version
+    try:
+        from . import __version__
+        current_version = __version__
+    except:
+        current_version = "unknown"
+
+    print(f"Current version: {current_version}")
+
+    if check_only:
+        print(f"Checking for updates to {display_name}...")
+        # TODO: Implement PyPI version check
+        print("Update check not yet implemented. Run without --check to upgrade.")
+        return
+
+    # Try to detect installation method
+    use_pipx = False
+    if shutil.which("pipx"):
+        # Check if installed via pipx
+        result = subprocess.run(["pipx", "list"], capture_output=True, text=True)
+        if package_name in result.stdout or pypi_name in result.stdout:
+            use_pipx = True
+
+    # Build the upgrade command
+    if use_pipx:
+        print(f"Upgrading {display_name} with pipx...")
+        if version:
+            cmd = ["pipx", "install", f"{pypi_name}=={version}", "--force"]
+        else:
+            cmd = ["pipx", "upgrade", pypi_name]
+            if pre:
+                cmd.extend(["--pip-args", "--pre"])
+    else:
+        print(f"Upgrading {display_name} with pip...")
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade"]
+        if version:
+            cmd.append(f"{pypi_name}=={version}")
+        else:
+            cmd.append(pypi_name)
+            if pre:
+                cmd.append("--pre")
+
+    if dry_run:
+        print(f"Dry run - would execute: {' '.join(cmd)}")
+        return
+
+    # Execute upgrade
+    print("Upgrading...")
+    result = subprocess.run(cmd)
+
+    if result.returncode == 0:
+        print(f"✅ {display_name} upgraded successfully!")
+        print(f"Run '{command_name} --version' to verify the new version.")
+    else:
+        print(f"❌ Upgrade failed with exit code {result.returncode}")
+        sys.exit(1)
+
+
 def load_plugins(cli_group):
     """Load plugins from the conventional plugin directory."""
     # Define plugin directories to search
@@ -143,7 +215,7 @@ def get_version():
         pass
         
     # Final fallback
-    return "1.1.0"
+    return "1.2.0"
 
 
 
@@ -152,8 +224,6 @@ def get_version():
 
   
     
-  
-
   
 
   
@@ -239,7 +309,7 @@ class DefaultGroup(RichGroup):
 
 
 def main(ctx, help_all=False):
-    """[bold color(6)]Goobits CLI v1.1.0[/bold color(6)] - Build professional command-line tools with YAML configuration
+    """[bold color(6)]Goobits CLI v1.2.0[/bold color(6)] - Build professional command-line tools with YAML configuration
 
     
     \b
@@ -313,13 +383,20 @@ click.rich_click.COMMAND_GROUPS = {
             "commands": ['serve'],
         },
         
-        {
-            "name": "Utilities",
-            "commands": ['upgrade'],
-        },
-        
     ]
 }
+
+
+# Built-in upgrade command (enabled by default)
+
+@main.command()
+@click.option('--check', is_flag=True, help='Check for updates without installing')
+@click.option('--version', type=str, help='Install specific version')
+@click.option('--pre', is_flag=True, help='Include pre-release versions')
+@click.option('--dry-run', is_flag=True, help='Show what would be done without doing it')
+def upgrade(check, version, pre, dry_run):
+    """Upgrade Goobits CLI Framework to the latest version."""
+    builtin_upgrade_command(check_only=check, version=version, pre=pre, dry_run=dry_run)
 
 
 
@@ -559,95 +636,6 @@ def serve(ctx, directory, host, port):
         
         
     
-
-
-
-
-@main.command()
-@click.pass_context
-
-
-@click.option("--source",
-    type=str,
-    default="pypi",
-    help="Upgrade source: pypi, git, local"
-)
-
-@click.option("--version",
-    type=str,
-    help="Specific version to install"
-)
-
-@click.option("--pre",
-    is_flag=True,
-    help="Include pre-release versions"
-)
-
-@click.option("--dry-run",
-    is_flag=True,
-    help="Show what would be upgraded without doing it"
-)
-
-def upgrade(ctx, source, version, pre, dry_run):
-    """🆙 Upgrade goobits-cli to the latest version"""
-    
-    # Standard command - use the existing hook pattern
-    hook_name = f"on_upgrade"
-    if app_hooks and hasattr(app_hooks, hook_name):
-        # Call the hook with all parameters
-        hook_func = getattr(app_hooks, hook_name)
-        
-        # Prepare arguments including global options
-        kwargs = {}
-        kwargs['command_name'] = 'upgrade'  # Pass command name for all commands
-        
-        
-        
-        
-        
-        
-        kwargs['source'] = source
-        
-        
-        
-        
-        kwargs['version'] = version
-        
-        
-        
-        
-        kwargs['pre'] = pre
-        
-        
-        
-        
-        kwargs['dry_run'] = dry_run
-        
-        
-        
-        # Add global options from context
-        
-        
-        result = hook_func(**kwargs)
-        return result
-    else:
-        # Default placeholder behavior
-        click.echo(f"Executing upgrade command...")
-        
-        
-        
-        click.echo(f"  source: {source}")
-        
-        click.echo(f"  version: {version}")
-        
-        click.echo(f"  pre: {pre}")
-        
-        click.echo(f"  dry-run: {dry_run}")
-        
-        
-    
-
-
 
 
 

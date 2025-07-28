@@ -72,7 +72,7 @@ messages:
 
 cli:
   name: "Goobits CLI"
-  version: "1.1.0"
+  version: "1.2.0"
   display_version: true
   tagline: "Build professional command-line tools with YAML configuration"
   description: "Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."
@@ -104,8 +104,6 @@ cli:
       commands: ["build", "init"]
     - name: "Development Tools"
       commands: ["serve"]
-    - name: "Utilities"
-      commands: ["upgrade"]
 
   commands:
     build:
@@ -164,23 +162,6 @@ cli:
           desc: "🔌 Port to run the server on"
           default: 8080
     
-    upgrade:
-      desc: "Upgrade goobits-cli to the latest version"
-      icon: "🆙"
-      options:
-        - name: "source"
-          type: "str"
-          desc: "Upgrade source: pypi, git, local"
-          default: "pypi"
-        - name: "version"
-          type: "str"
-          desc: "Specific version to install"
-        - name: "pre"
-          type: "flag"
-          desc: "Include pre-release versions"
-        - name: "dry-run"
-          type: "flag"
-          desc: "Show what would be upgraded without doing it"
 
   config:
     rich_help_panel: true

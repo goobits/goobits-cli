@@ -2,6 +2,7 @@
 import sys
 import yaml
 from pathlib import Path
+from typing import Union
 from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
 
@@ -45,15 +46,33 @@ class Builder:
         self.env.filters['format_icon'] = format_icon_spacing
         self.env.filters['align_header_items'] = align_header_items
     
-    def build(self, config: ConfigSchema, file_name: str = "config.yaml") -> str:
+    def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str = "config.yaml") -> str:
         """Build CLI Python code from configuration and return the rendered template string."""
-        # Validate configuration before building
-        self._validate_config(config)
+        # Extract CLI configuration and metadata depending on config type
+        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
+            cli_config = config.cli
+            package_name = config.package_name
+            command_name = config.command_name
+            display_name = config.display_name
+            installation = config.installation
+        else:  # ConfigSchema
+            cli_config = config.cli
+            package_name = ""
+            command_name = ""
+            display_name = ""
+            installation = None
+            
+        # Validate configuration before building - only validate CLI for GoobitsConfigSchema
+        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
+            if not cli_config:
+                raise ValueError("No CLI configuration found")
+        else:  # ConfigSchema
+            self._validate_config(config)
         
         # Serialize the CLI part of the config to a JSON string
         # We need to escape backslashes and quotes for embedding in Python code
         import json
-        cli_dict = config.cli.model_dump()
+        cli_dict = cli_config.model_dump()
         cli_config_json = json.dumps(cli_dict, indent=2, ensure_ascii=False)
         # Escape backslashes so they're preserved when Python interprets the string
         cli_config_json = cli_config_json.replace("\\", "\\\\")
@@ -64,9 +83,13 @@ class Builder:
         
         # Render the template
         code = template.render(
-            cli=config.cli,
+            cli=cli_config,
             file_name=file_name,
-            cli_config_json=cli_config_json
+            cli_config_json=cli_config_json,
+            package_name=package_name,
+            command_name=command_name,
+            display_name=display_name,
+            installation=installation
         )
         
         # Explicitly assert the type to satisfy mypy
@@ -112,7 +135,7 @@ class Builder:
                         sys.exit(1)
 
 
-def generate_cli_code(config: ConfigSchema, file_name: str) -> str:
+def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str) -> str:
     """Generate CLI Python code from configuration."""
     builder = Builder()
     return builder.build(config, file_name)

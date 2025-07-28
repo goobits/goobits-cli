@@ -43,12 +43,3 @@ def on_serve(directory, host, port):
         # Handle typer.Exit gracefully
         pass
 
-def on_upgrade(source, version, pre, dry_run):
-    """Hook for upgrade command - delegate to main.py implementation."""
-    import goobits_cli.main as main  # type: ignore[import-untyped]
-    
-    try:
-        main.upgrade(source, version, pre, dry_run)
-    except SystemExit:
-        # Handle typer.Exit gracefully
-        pass

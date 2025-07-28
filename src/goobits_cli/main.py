@@ -251,9 +251,7 @@ def build(
     
     # Generate cli.py if CLI configuration exists
     if goobits_config.cli:
-        # Convert goobits config to legacy CLI schema format for compatibility
-        legacy_config = ConfigSchema(cli=goobits_config.cli)
-        cli_code = generate_cli_code(legacy_config, config_path.name)
+        cli_code = generate_cli_code(goobits_config, config_path.name)
         
         # Use configured output path, with package name substitution
         cli_output_path = goobits_config.cli_output_path.format(
