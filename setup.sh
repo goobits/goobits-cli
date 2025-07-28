@@ -1123,7 +1123,9 @@ main() {
             fi
             ;;
         upgrade)
+            tree_node "info" "Package Upgrade" "$(update_progress)"
             if upgrade_package; then
+                CURRENT_STEP=$((TOTAL_STEPS - 1))
                 tree_final_node "success" "Upgrade Complete - $(get_elapsed_time)"
                 echo "        └─ Try: $COMMAND_NAME --version"
             else

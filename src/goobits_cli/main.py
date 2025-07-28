@@ -280,7 +280,8 @@ def build(
         typer.echo(f"✅ Generated CLI script: {cli_path}")
         
         # Extract package name and filename for pyproject.toml update
-        package_dir_name = goobits_config.package_name.replace('goobits-', '')
+        # Convert package name to Python module name (replace hyphens with underscores)
+        package_dir_name = goobits_config.package_name.replace('-', '_')
         cli_filename = Path(cli_output_path).name
         
         # Update pyproject.toml to use the generated CLI

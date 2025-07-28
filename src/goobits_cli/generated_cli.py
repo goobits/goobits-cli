@@ -83,7 +83,7 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
         return
 
     if dry_run:
-        print("Dry run - would execute: ./setup.sh upgrade")
+        print("Dry run - would execute: pipx upgrade goobits-cli")
         return
 
     # Find the setup.sh script - look in common locations
@@ -119,8 +119,10 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
         result = subprocess.run(cmd)
         if result.returncode == 0:
             print(f"✅ Goobits CLI Framework upgraded successfully!")
+            print(f"Run 'goobits --version' to verify the new version.")
         else:
             print(f"❌ Upgrade failed with exit code {result.returncode}")
+            sys.exit(1)
         return
 
     # Use the enhanced setup.sh script
@@ -415,61 +417,41 @@ def upgrade(check, version, pre, dry_run):
 def build(ctx, config_path, output_dir, output, backup):
     """🔨 Build CLI and setup scripts from goobits.yaml configuration"""
     
-    # Standard command - use the existing hook pattern
-    hook_name = f"on_build"
-    if app_hooks and hasattr(app_hooks, hook_name):
-        # Call the hook with all parameters
-        hook_func = getattr(app_hooks, hook_name)
+    # Check for built-in commands first
+    
+    # Built-in commands (build, init)
+    try:
+        from pathlib import Path
+        import sys
         
-        # Prepare arguments including global options
-        kwargs = {}
-        kwargs['command_name'] = 'build'  # Pass command name for all commands
-        
-        
-        kwargs['config_path'] = config_path
-        
+        # Add the parent directory to sys.path to find goobits_cli
+        parent_dir = Path(__file__).parent.parent.parent
+        if str(parent_dir) not in sys.path:
+            sys.path.insert(0, str(parent_dir))
         
         
+        from goobits_cli.main import build
+        
+        # Use current directory's goobits.yaml if no config path specified
+        config_file = Path(config_path) if config_path else Path("goobits.yaml")
+        output_dir_path = Path(output_dir) if output_dir else None
+        
+        build(config_file, output_dir_path, output, backup)
+        click.echo("✅ Build completed successfully!")
+        click.echo("   - Generated setup.sh")
+        click.echo("   - Updated CLI files")
         
         
-        
-        
-        kwargs['output_dir'] = output_dir
-        
-        
-        
-        
-        kwargs['output'] = output
-        
-        
-        
-        
-        kwargs['backup'] = backup
-        
-        
-        
-        # Add global options from context
-        
-        
-        result = hook_func(**kwargs)
-        return result
-    else:
-        # Default placeholder behavior
-        click.echo(f"Executing build command...")
-        
-        
-        click.echo(f"  config_path: {config_path}")
-        
-        
-        
-        
-        click.echo(f"  output-dir: {output_dir}")
-        
-        click.echo(f"  output: {output}")
-        
-        click.echo(f"  backup: {backup}")
-        
-        
+            
+    except ImportError as e:
+        click.echo(f"❌ Build error: Could not import framework functions: {e}")
+        return False
+    except Exception as e:
+        click.echo(f"❌ Build error: {e}")
+        return False
+    
+    return True
+    
     
 
 
@@ -498,54 +480,36 @@ def build(ctx, config_path, output_dir, output, backup):
 def init(ctx, project_name, template, force):
     """🆕 Create initial goobits.yaml template"""
     
-    # Standard command - use the existing hook pattern
-    hook_name = f"on_init"
-    if app_hooks and hasattr(app_hooks, hook_name):
-        # Call the hook with all parameters
-        hook_func = getattr(app_hooks, hook_name)
+    # Check for built-in commands first
+    
+    # Built-in commands (build, init)
+    try:
+        from pathlib import Path
+        import sys
         
-        # Prepare arguments including global options
-        kwargs = {}
-        kwargs['command_name'] = 'init'  # Pass command name for all commands
-        
-        
-        kwargs['project_name'] = project_name
-        
+        # Add the parent directory to sys.path to find goobits_cli
+        parent_dir = Path(__file__).parent.parent.parent
+        if str(parent_dir) not in sys.path:
+            sys.path.insert(0, str(parent_dir))
         
         
+        from goobits_cli.main import init
+        
+        init(project_name, template, force)
+        click.echo("✅ Init completed successfully!")
+        click.echo("   - Created goobits.yaml")
         
         
-        
-        
-        kwargs['template'] = template
-        
-        
-        
-        
-        kwargs['force'] = force
-        
-        
-        
-        # Add global options from context
-        
-        
-        result = hook_func(**kwargs)
-        return result
-    else:
-        # Default placeholder behavior
-        click.echo(f"Executing init command...")
-        
-        
-        click.echo(f"  project_name: {project_name}")
-        
-        
-        
-        
-        click.echo(f"  template: {template}")
-        
-        click.echo(f"  force: {force}")
-        
-        
+            
+    except ImportError as e:
+        click.echo(f"❌ Init error: Could not import framework functions: {e}")
+        return False
+    except Exception as e:
+        click.echo(f"❌ Init error: {e}")
+        return False
+    
+    return True
+    
     
 
 
@@ -573,6 +537,8 @@ def init(ctx, project_name, template, force):
 
 def serve(ctx, directory, host, port):
     """🌐 Serve local PyPI-compatible package index"""
+    
+    # Check for built-in commands first
     
     # Standard command - use the existing hook pattern
     hook_name = f"on_serve"
@@ -622,6 +588,7 @@ def serve(ctx, directory, host, port):
         click.echo(f"  port: {port}")
         
         
+    
     
 
 
