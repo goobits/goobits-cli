@@ -89,6 +89,8 @@ cli:
         - { item: "2. goobits build", desc: "Generate implementation files", style: "setup" }
         - { item: "3. Edit app_hooks.py", desc: "Add your business logic", style: "setup" }
   
+  footer_note: "📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6]"
+  
   command_groups:
     - name: "Core Commands"
       commands: ["build", "init"]

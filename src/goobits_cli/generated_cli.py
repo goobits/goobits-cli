@@ -311,7 +311,10 @@ def main(ctx, help_all=False):
     \b
     [bold yellow]Core Commands:[/bold yellow][green]build  [/green]  🔨 Generate CLI and setup scripts from goobits.yaml[green]serve  [/green]  🌐 Serve local PyPI-compatible package index[green]init   [/green]  🆕 Create initial goobits.yaml template
     \b
-    [bold yellow]Development Workflow:[/bold yellow]1. Edit goobits.yaml: [green]Define your CLI structure[/green]2. goobits build:     [green]Generate implementation files[/green]3. Edit app_hooks.py: [green]Add your business logic[/green]"""
+    [bold yellow]Development Workflow:[/bold yellow]1. Edit goobits.yaml: [green]Define your CLI structure[/green]2. goobits build:     [green]Generate implementation files[/green]3. Edit app_hooks.py: [green]Add your business logic[/green]
+    \b
+       [#B3B8C0]📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6][/#B3B8C0]
+    """
 
     
     if help_all:
