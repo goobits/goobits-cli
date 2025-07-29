@@ -3,6 +3,7 @@ import yaml
 import toml
 import shutil
 import subprocess
+import re
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional
@@ -79,7 +80,30 @@ def dependencies_to_json(deps):
     import json
     return json.dumps([dependency_to_dict(dep) for dep in deps])
 
-def generate_setup_script(config: GoobitsConfigSchema) -> str:
+def extract_version_from_pyproject(project_dir: Path) -> str:
+    """Extract version from pyproject.toml."""
+    pyproject_path = project_dir / "pyproject.toml"
+    
+    if not pyproject_path.exists():
+        return "unknown"
+    
+    try:
+        with open(pyproject_path, 'r') as f:
+            data = toml.load(f)
+        
+        # Try different locations for version
+        if 'tool' in data and 'poetry' in data['tool'] and 'version' in data['tool']['poetry']:
+            return data['tool']['poetry']['version']
+        elif 'project' in data and 'version' in data['project']:
+            return data['project']['version']
+        else:
+            return "unknown"
+            
+    except Exception:
+        return "unknown"
+
+
+def generate_setup_script(config: GoobitsConfigSchema, project_dir: Path) -> str:
     """Generate setup.sh script from goobits configuration."""
     template_dir = Path(__file__).parent / "templates"
     env = Environment(loader=FileSystemLoader(template_dir))
@@ -90,12 +114,16 @@ def generate_setup_script(config: GoobitsConfigSchema) -> str:
     
     template = env.get_template("setup_template.sh.j2")
     
+    # Extract version from pyproject.toml
+    version = extract_version_from_pyproject(project_dir)
+    
     # Convert goobits config to template variables
     template_vars = {
         'package_name': config.package_name,
         'command_name': config.command_name,
         'display_name': config.display_name,
         'description': config.description,
+        'version': version,
         'python': {
             'minimum_version': config.python.minimum_version,
             'maximum_version': config.python.maximum_version,
@@ -283,19 +311,31 @@ def build(
         typer.echo(f"✅ Generated CLI script: {cli_path}")
         
         # Extract package name and filename for pyproject.toml update
-        # Convert package name to Python module name (replace hyphens with underscores)
-        package_dir_name = goobits_config.package_name.replace('-', '_')
+        # Extract the actual module name from the CLI output path
+        # e.g., "src/ttt/cli.py" -> "ttt"
+        cli_path_parts = Path(cli_output_path).parts
+        if 'src' in cli_path_parts:
+            src_index = cli_path_parts.index('src')
+            if src_index + 1 < len(cli_path_parts):
+                module_name = cli_path_parts[src_index + 1]
+            else:
+                # Fallback to package name conversion
+                module_name = goobits_config.package_name.replace('-', '_')
+        else:
+            # Fallback to package name conversion
+            module_name = goobits_config.package_name.replace('-', '_')
+        
         cli_filename = Path(cli_output_path).name
         
         # Update pyproject.toml to use the generated CLI
-        if update_pyproject_toml(output_dir, package_dir_name, goobits_config.command_name, cli_filename, backup):
+        if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, cli_filename, backup):
             typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
             typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
             typer.echo("   ./setup.sh install --dev")
         else:
             cli_module_name = cli_filename.replace('.py', '')
             typer.echo("⚠️  Could not update pyproject.toml automatically")
-            typer.echo(f"   Please update your entry points to use: {package_dir_name}.{cli_module_name}:cli_entry")
+            typer.echo(f"   Please update your entry points to use: {module_name}.{cli_module_name}:cli_entry")
     else:
         typer.echo("⚠️  No CLI configuration found, skipping cli.py generation")
     
@@ -303,7 +343,7 @@ def build(
     typer.echo("Generating setup script...")
     # Normalize dependencies for backward compatibility
     normalized_config = normalize_dependencies_for_template(goobits_config)
-    setup_script = generate_setup_script(normalized_config)
+    setup_script = generate_setup_script(normalized_config, output_dir)
     
     setup_output_path = output_dir / "setup.sh"
     with open(setup_output_path, 'w') as f:

@@ -53,6 +53,8 @@ click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)  # Command:Des
 
 # Hooks system - try to import app_hooks module
 app_hooks = None
+
+# No hooks path configured, try default locations
 try:
     # Try to import from the project root directory
     script_dir = Path(__file__).parent.parent.parent
@@ -68,6 +70,7 @@ try:
 except (ImportError, FileNotFoundError):
     # No hooks module found, use default behavior
     pass
+
 
 # Built-in commands
 
@@ -298,16 +301,16 @@ class DefaultGroup(RichGroup):
 
 
 def main(ctx, help_all=False):
-    """[bold color(6)]Goobits CLI v1.2.0[/bold color(6)] - Build professional command-line tools with YAML configuration
+    """🛠️  [bold color(6)]Goobits CLI v1.2.0[/bold color(6)] - Build professional command-line tools with YAML configuration
 
     
     \b
-    [#B3B8C0]  Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.[/#B3B8C0]
+    [#B3B8C0]Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.[/#B3B8C0]
     
 
     
     
-    [bold yellow]Quick Start[/bold yellow]
+    [bold yellow]🚀 Quick Start[/bold yellow]
     
     
     [green]   mkdir my-cli && cd my-cli  [/green] [italic][#B3B8C0]# Create new project directory[/#B3B8C0][/italic]
@@ -323,7 +326,7 @@ def main(ctx, help_all=False):
     
     [green] [/green]
     
-    [bold yellow]Core Commands[/bold yellow]
+    [bold yellow]💡 Core Commands[/bold yellow]
     
     
     [green]   build  [/green]  🔨 Generate CLI and setup scripts from goobits.yaml
@@ -336,7 +339,7 @@ def main(ctx, help_all=False):
     
     [green] [/green]
     
-    [bold yellow]Development Workflow[/bold yellow]
+    [bold yellow]🔧 Development Workflow[/bold yellow]
     
     
     [#B3B8C0]   1. Edit goobits.yaml: [/#B3B8C0][green]Define your CLI structure[/green]

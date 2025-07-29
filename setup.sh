@@ -159,16 +159,8 @@ tree_final_node() {
 }
 
 get_version() {
-    # Try to extract version from various sources
-    local version=""
-    if command -v "$COMMAND_NAME" >/dev/null 2>&1; then
-        version=$("$COMMAND_NAME" --version 2>/dev/null | head -1 | grep -oE '[0-9]+\.[0-9]+[^ ]*' | head -1)
-    fi
-    if [[ -n "$version" ]]; then
-        echo "v$version"
-    else
-        echo ""
-    fi
+    # Return the version from pyproject.toml (hardcoded during build)
+    echo "v1.2.0"
 }
 
 get_elapsed_time() {

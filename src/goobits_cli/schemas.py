@@ -191,6 +191,7 @@ class GoobitsConfigSchema(BaseModel):
     
     # CLI generation configuration
     cli_output_path: str = "src/{package_name}/cli.py"
+    hooks_path: Optional[str] = None
     
     # Python configuration
     python: PythonConfigSchema

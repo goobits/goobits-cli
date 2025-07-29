@@ -241,14 +241,37 @@ show_uninstall_success_message() {
 # System dependencies installation (before Python packages)
 install_system_dependencies() {
     if command -v apt-get >/dev/null 2>&1; then
-        tree_sub_node "info" "Installing system packages (may require sudo)..."
+        # Check which packages are missing
+        local missing_packages=()
+        
         {% for pkg in installation.extras.apt %}
-        if sudo apt-get install -y {{ pkg }} >/dev/null 2>&1; then
-            tree_sub_node "success" "Installed apt package: {{ pkg }}"
+        if ! dpkg -l | grep -q "^ii.*{{ pkg }}" 2>/dev/null; then
+            missing_packages+=("{{ pkg }}")
         else
-            tree_sub_node "warning" "Failed to install apt package: {{ pkg }}"
+            tree_sub_node "success" "✓ Already installed: {{ pkg }}"
         fi
         {% endfor %}
+        
+        # Only prompt for sudo if there are missing packages
+        if [[ ${{ '{#missing_packages[@]}' }} -gt 0 ]]; then
+            tree_sub_node "info" "Installing system packages: ${missing_packages[*]} (requires sudo)..."
+            
+            # Update package list first if we're installing anything
+            if ! sudo apt-get update >/dev/null 2>&1; then
+                tree_sub_node "warning" "Failed to update package list"
+            fi
+            
+            # Install each missing package
+            for pkg in "${missing_packages[@]}"; do
+                if sudo apt-get install -y "$pkg" >/dev/null 2>&1; then
+                    tree_sub_node "success" "Installed apt package: $pkg"
+                else
+                    tree_sub_node "warning" "Failed to install apt package: $pkg"
+                fi
+            done
+        else
+            tree_sub_node "success" "All system packages already installed"
+        fi
     else
         tree_sub_node "info" "apt-get not found - manual installation required for: {{ installation.extras.apt|join(', ') }}"
     fi

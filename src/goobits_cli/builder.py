@@ -56,12 +56,14 @@ class Builder:
             command_name = config.command_name
             display_name = config.display_name
             installation = config.installation
+            hooks_path = config.hooks_path
         else:  # ConfigSchema
             cli_config = config.cli
             package_name = ""
             command_name = ""
             display_name = ""
             installation = None
+            hooks_path = None
             
         # Validate configuration before building - only validate CLI for GoobitsConfigSchema
         if hasattr(config, 'package_name'):  # GoobitsConfigSchema
@@ -90,7 +92,8 @@ class Builder:
             package_name=package_name,
             command_name=command_name,
             display_name=display_name,
-            installation=installation
+            installation=installation,
+            hooks_path=hooks_path
         )
         
         # Explicitly assert the type to satisfy mypy

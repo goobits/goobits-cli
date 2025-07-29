@@ -66,24 +66,25 @@ cli:
   display_version: true
   tagline: "Build professional command-line tools with YAML configuration"
   description: "Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."
+  icon: "🛠️"
   enable_recursive_help: true
   enable_help_json: false
   
   header_sections:
-    - title: "Quick Start"
+    - title: "🚀 Quick Start"
       items:
         - { item: 'mkdir my-cli && cd my-cli', desc: "Create new project directory", style: "example" }
         - { item: 'goobits init', desc: "Generate initial goobits.yaml", style: "example" }
         - { item: 'goobits build', desc: "Create CLI and setup scripts", style: "example" }
         - { item: './setup.sh install --dev', desc: "Install for development", style: "example" }
 
-    - title: "Core Commands"
+    - title: "💡 Core Commands"
       items:
         - { item: "build", desc: "🔨 Generate CLI and setup scripts from goobits.yaml", style: "command" }
         - { item: "serve", desc: "🌐 Serve local PyPI-compatible package index", style: "command" }
         - { item: "init", desc: "🆕 Create initial goobits.yaml template", style: "command" }
 
-    - title: "Development Workflow"
+    - title: "🔧 Development Workflow"
       items:
         - { item: "1. Edit goobits.yaml", desc: "Define your CLI structure", style: "setup" }
         - { item: "2. goobits build", desc: "Generate implementation files", style: "setup" }
