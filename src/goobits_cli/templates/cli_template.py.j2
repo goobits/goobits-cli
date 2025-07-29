@@ -118,9 +118,9 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     # Find the setup.sh script - look in common locations
     setup_script = None
     search_paths = [
-        Path.cwd() / "setup.sh",  # Current directory
-        Path(__file__).parent.parent / "setup.sh",  # Package directory
+        Path(__file__).parent.parent / "setup.sh",  # Package directory (prioritize)
         Path.home() / ".local" / "share" / "{{ package_name }}" / "setup.sh",  # User data
+        Path.cwd() / "setup.sh",  # Current directory (fallback only)
     ]
     
     for path in search_paths:
