@@ -160,25 +160,7 @@ class ExtrasSchema(BaseModel):
 class InstallationSchema(BaseModel):
     pypi_name: str
     development_path: str = "."
-    extras: Optional[Union[List[str], Dict[str, List[str]], ExtrasSchema]] = None  # Backwards compatible
-    
-    @model_validator(mode='before')
-    @classmethod
-    def normalize_extras(cls, values):
-        """Normalize extras to support both old list format and new structured format."""
-        extras = values.get('extras')
-        if extras is None:
-            return values
-            
-        # If it's already a dict or ExtrasSchema, leave it as is
-        if isinstance(extras, (dict, ExtrasSchema)):
-            return values
-            
-        # If it's a list (old format), convert to new format
-        if isinstance(extras, list):
-            values['extras'] = {'python': extras}
-            
-        return values
+    extras: Optional[ExtrasSchema] = None  # Multi-language package extras
 
 
 class ShellIntegrationSchema(BaseModel):

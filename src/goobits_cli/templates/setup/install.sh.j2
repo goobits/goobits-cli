@@ -28,15 +28,8 @@ install_with_pipx() {
         tree_node "info" "Installing in development mode" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
-        {% if installation.extras %}
-        {% if installation.extras.python %}
+        {% if installation.extras and installation.extras.python %}
         (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[{{ installation.extras.python|join(',') }}]" --force) &
-        {% elif installation.extras is sequence and installation.extras is not string %}
-        {# Backwards compatibility: if extras is a list, treat as python extras #}
-        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[{{ installation.extras|join(',') }}]" --force) &
-        {% else %}
-        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH" --force) &
-        {% endif %}
         {% else %}
         (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH" --force) &
         {% endif %}
@@ -61,15 +54,8 @@ install_with_pipx() {
         tree_node "info" "Installing from PyPI" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
-        {% if installation.extras %}
-        {% if installation.extras.python %}
+        {% if installation.extras and installation.extras.python %}
         pipx install "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --force &
-        {% elif installation.extras is sequence and installation.extras is not string %}
-        {# Backwards compatibility: if extras is a list, treat as python extras #}
-        pipx install "$PYPI_NAME[{{ installation.extras|join(',') }}]" --force &
-        {% else %}
-        pipx install "$PYPI_NAME" --force &
-        {% endif %}
         {% else %}
         pipx install "$PYPI_NAME" --force &
         {% endif %}
@@ -100,15 +86,8 @@ install_with_pip() {
 
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
-        {% if installation.extras %}
-        {% if installation.extras.python %}
+        {% if installation.extras and installation.extras.python %}
         (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[{{ installation.extras.python|join(',') }}]" --user) &
-        {% elif installation.extras is sequence and installation.extras is not string %}
-        {# Backwards compatibility: if extras is a list, treat as python extras #}
-        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[{{ installation.extras|join(',') }}]" --user) &
-        {% else %}
-        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
-        {% endif %}
         {% else %}
         (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
         {% endif %}
@@ -125,15 +104,8 @@ install_with_pip() {
         fi
     else
         tree_sub_node "progress" "Installing from PyPI with pip..."
-        {% if installation.extras %}
-        {% if installation.extras.python %}
+        {% if installation.extras and installation.extras.python %}
         python3 -m pip install "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --user &
-        {% elif installation.extras is sequence and installation.extras is not string %}
-        {# Backwards compatibility: if extras is a list, treat as python extras #}
-        python3 -m pip install "$PYPI_NAME[{{ installation.extras|join(',') }}]" --user &
-        {% else %}
-        python3 -m pip install "$PYPI_NAME" --user &
-        {% endif %}
         {% else %}
         python3 -m pip install "$PYPI_NAME" --user &
         {% endif %}
@@ -178,15 +150,8 @@ upgrade_package() {
         tree_sub_node "progress" "Upgrading with pip..."
 
         # Capture pip output to prevent it from breaking tree structure
-        {% if installation.extras %}
-        {% if installation.extras.python %}
+        {% if installation.extras and installation.extras.python %}
         python3 -m pip install --upgrade "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --user >/dev/null 2>&1 &
-        {% elif installation.extras is sequence and installation.extras is not string %}
-        {# Backwards compatibility: if extras is a list, treat as python extras #}
-        python3 -m pip install --upgrade "$PYPI_NAME[{{ installation.extras|join(',') }}]" --user >/dev/null 2>&1 &
-        {% else %}
-        python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
-        {% endif %}
         {% else %}
         python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
         {% endif %}
