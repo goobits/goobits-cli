@@ -1,5 +1,5 @@
 from typing import Dict, List, Optional, Any, Union, Literal
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class HeaderItemSchema(BaseModel):
@@ -149,10 +149,36 @@ class DependenciesSchema(BaseModel):
         return normalized
 
 
+class ExtrasSchema(BaseModel):
+    """Schema for multi-language package extras/features."""
+    python: Optional[List[str]] = None  # Python extras (e.g., ["audio", "dev"])
+    npm: Optional[List[str]] = None     # NPM packages (e.g., ["typescript", "@types/node"])
+    apt: Optional[List[str]] = None     # APT packages (e.g., ["ffmpeg", "libportaudio2-dev"])
+    cargo: Optional[List[str]] = None   # Cargo features (e.g., ["cuda", "mkl"])
+
+
 class InstallationSchema(BaseModel):
     pypi_name: str
     development_path: str = "."
-    extras: Optional[List[str]] = None  # Optional dependency groups to install (e.g., ["audio", "dev"])
+    extras: Optional[Union[List[str], Dict[str, List[str]], ExtrasSchema]] = None  # Backwards compatible
+    
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_extras(cls, values):
+        """Normalize extras to support both old list format and new structured format."""
+        extras = values.get('extras')
+        if extras is None:
+            return values
+            
+        # If it's already a dict or ExtrasSchema, leave it as is
+        if isinstance(extras, (dict, ExtrasSchema)):
+            return values
+            
+        # If it's a list (old format), convert to new format
+        if isinstance(extras, list):
+            values['extras'] = {'python': extras}
+            
+        return values
 
 
 class ShellIntegrationSchema(BaseModel):

@@ -667,7 +667,9 @@ install_with_pipx() {
         tree_node "info" "Installing in development mode" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
+        
         (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH" --force) &
+        
         local install_pid=$!
 
         tree_sub_node "progress" "Creating development environment..."
@@ -677,6 +679,7 @@ install_with_pipx() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "" "true"
+            
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "" "true"
@@ -686,7 +689,9 @@ install_with_pipx() {
         tree_node "info" "Installing from PyPI" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
+        
         pipx install "$PYPI_NAME" --force &
+        
         local install_pid=$!
 
         tree_sub_node "progress" "Downloading and installing package..."
@@ -696,6 +701,7 @@ install_with_pipx() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "" "true"
+            
             show_install_success_message
         else
             tree_sub_node "error" "Installation failed" "" "true"
@@ -711,7 +717,9 @@ install_with_pip() {
 
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
+        
         (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
+        
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -725,7 +733,9 @@ install_with_pip() {
         fi
     else
         tree_sub_node "progress" "Installing from PyPI with pip..."
+        
         python3 -m pip install "$PYPI_NAME" --user &
+        
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -767,7 +777,9 @@ upgrade_package() {
         tree_sub_node "progress" "Upgrading with pip..."
 
         # Capture pip output to prevent it from breaking tree structure
+        
         python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
+        
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -848,6 +860,8 @@ show_uninstall_success_message() {
     echo "Uninstall completed successfully!"
     echo
 }
+
+
 
 # Shell integration
 setup_shell_integration() {
