@@ -508,9 +508,9 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
     {% endif -%}
     {% endfor -%}
     {% endfor -%}
-    {% endif %}
-    \b
+    {% endif -%}
     {% if cli.footer_note %}
+    \b
        [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
     {% endif %}"""
 
