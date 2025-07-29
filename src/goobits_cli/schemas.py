@@ -152,6 +152,7 @@ class DependenciesSchema(BaseModel):
 class InstallationSchema(BaseModel):
     pypi_name: str
     development_path: str = "."
+    extras: Optional[List[str]] = None  # Optional dependency groups to install (e.g., ["audio", "dev"])
 
 
 class ShellIntegrationSchema(BaseModel):

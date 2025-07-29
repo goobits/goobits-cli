@@ -107,6 +107,7 @@ def generate_setup_script(config: GoobitsConfigSchema) -> str:
         'installation': {
             'pypi_name': config.installation.pypi_name,
             'development_path': config.installation.development_path,
+            'extras': config.installation.extras,
         },
         'shell_integration': {
             'enabled': config.shell_integration.enabled,
