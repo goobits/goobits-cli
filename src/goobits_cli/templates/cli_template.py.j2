@@ -120,7 +120,7 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     search_paths = [
         Path(__file__).parent.parent / "setup.sh",  # Package directory (prioritize)
         Path.home() / ".local" / "share" / "{{ package_name }}" / "setup.sh",  # User data
-        Path.cwd() / "setup.sh",  # Current directory (fallback only)
+        # Removed Path.cwd() / "setup.sh" - prevents cross-contamination between projects
     ]
     
     for path in search_paths:
