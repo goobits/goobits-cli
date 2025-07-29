@@ -14,25 +14,15 @@ python:
   maximum_version: "3.13"
 
 dependencies:
-  required:
-    - git
-    - pipx
-    - type: system_package
-      name: python3-dev
-      description: "Python development headers"
-      ubuntu: python3-dev
-      debian: python3-dev
-      centos: python3-devel
-      fedora: python3-devel
-      macos: python3
-      check_method: dpkg_query
-  optional:
-    - curl
-    - wget
+  required: []
+  optional: []
 
 installation:
   pypi_name: goobits-cli
   development_path: "."
+  extras:
+    python: ["dev", "test"]
+    apt: ["git", "python3-dev", "curl", "wget", "pipx"]
 
 shell_integration:
   enabled: false

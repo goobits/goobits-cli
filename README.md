@@ -17,10 +17,12 @@ Goobits CLI transforms a simple YAML file into a complete command-line applicati
 
 ### 1. Install Goobits CLI
 ```bash
+# Install from PyPI
 pipx install goobits-cli
+
 # or clone and install locally:
-# git clone https://github.com/goobits/goobits-cli
-# cd goobits-cli && pipx install -e .
+git clone https://github.com/goobits/goobits-cli
+cd goobits-cli && ./setup.sh install
 ```
 
 ### 2. Create Your First CLI
@@ -83,7 +85,7 @@ EOF
 
 ### 5. Install and Test
 ```bash
-./setup.sh install --dev  # Development installation
+./setup.sh install --dev  # Install with all dependencies automatically
 awesome greet World        # Test your CLI
 awesome greet World -g "Hi"  # With custom greeting
 echo "Alice" | awesome greet  # Pipe support works automatically!
@@ -116,10 +118,10 @@ goobits build
 
 ### Development vs Production Installation
 ```bash
-# For development (changes reflected immediately)
+# For development (changes reflected immediately, includes dev dependencies)
 ./setup.sh install --dev
 
-# For end users (stable, isolated)
+# For end users (stable, isolated, production dependencies only)
 ./setup.sh install
 
 # Upgrade existing installation
@@ -199,8 +201,9 @@ package_name: weather-cli
 command_name: weather
 display_name: "Weather CLI"
 
-dependencies:
-  required: ["pipx", "curl"]
+installation:
+  extras:
+    apt: ["curl"]  # System dependencies handled automatically
 
 cli:
   name: weather
@@ -238,10 +241,13 @@ python:
   minimum_version: "3.8"      # Minimum Python version
   maximum_version: "3.12"     # Maximum (optional)
 
-# System dependencies
-dependencies:
-  required: ["git", "pipx"]    # Must be installed
-  optional: ["curl", "jq"]     # Nice to have
+# Installation with automatic dependency management
+installation:
+  pypi_name: my-package        # Package name on PyPI
+  development_path: "."        # Path for development install
+  extras:
+    python: ["dev", "test"]    # Python extras from pyproject.toml
+    apt: ["git", "curl"]       # System packages (installed automatically)
 ```
 
 ### CLI Commands Structure

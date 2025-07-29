@@ -512,7 +512,8 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
     {% if cli.footer_note %}
     \b
        [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
-    {% endif %}"""
+    {% endif -%}
+    """
 
     {% if cli.enable_recursive_help %}
     if help_all:

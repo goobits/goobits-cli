@@ -14,10 +14,10 @@ Goobits CLI Framework is a tool that generates professional command-line interfa
 # Build the CLI from goobits.yaml (self-hosting)
 goobits build
 
-# Install in development mode (editable, changes reflected immediately)
+# Install in development mode (includes dev dependencies, changes reflected immediately)
 ./setup.sh install --dev
 
-# Install in production mode
+# Install in production mode (production dependencies only)
 ./setup.sh install
 
 # Upgrade existing installation
@@ -52,7 +52,7 @@ pytest src/tests/e2e/
 # Run mypy for type checking
 mypy src/goobits_cli/
 
-# Python linting (install ruff separately if needed)
+# Python linting (ruff installed automatically with dev extras)
 ruff check src/
 ```
 
@@ -99,16 +99,21 @@ goobits build  # Generates src/goobits_cli/generated_cli.py
 
 ### Dependency Handling
 
-Dependencies support both simple strings and complex platform-specific configurations:
+Dependencies are now managed through the structured extras format in the installation section:
 ```yaml
-dependencies:
-  required:
-    - git  # Simple command
-    - type: system_package
-      name: python3-dev
-      ubuntu: python3-dev
-      centos: python3-devel
+installation:
+  pypi_name: my-package
+  development_path: "."
+  extras:
+    python: ["dev", "test"]      # Python extras from pyproject.toml
+    apt: ["git", "python3-dev"]   # System packages (installed automatically)
+    npm: ["prettier"]            # NPM packages (if needed)
 ```
+
+The setup.sh script automatically installs all specified dependencies:
+- Python extras are installed with pip
+- APT packages prompt for sudo password when needed
+- NPM packages are installed globally
 
 ### Generated Files
 

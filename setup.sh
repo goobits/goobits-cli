@@ -73,12 +73,12 @@ readonly SHELL_INTEGRATION="False"
 readonly SHELL_ALIAS="goobits"
 
 # Dependencies (legacy format for backward compatibility)
-readonly REQUIRED_DEPS=("git" "pipx" "python3-dev")
-readonly OPTIONAL_DEPS=("curl" "wget")
+readonly REQUIRED_DEPS=()
+readonly OPTIONAL_DEPS=()
 
 # Enhanced dependency data (JSON format for complex dependencies)
-readonly REQUIRED_DEPS_JSON='[{"type": "command", "name": "git", "description": null, "ubuntu": null, "debian": null, "centos": null, "fedora": null, "macos": null, "windows": null, "check_method": null, "check_args": null, "install_instructions": null}, {"type": "command", "name": "pipx", "description": null, "ubuntu": null, "debian": null, "centos": null, "fedora": null, "macos": null, "windows": null, "check_method": null, "check_args": null, "install_instructions": null}, {"type": "system_package", "name": "python3-dev", "description": "Python development headers", "ubuntu": "python3-dev", "debian": "python3-dev", "centos": "python3-devel", "fedora": "python3-devel", "macos": "python3", "windows": null, "check_method": "dpkg_query", "check_args": null, "install_instructions": null}]'
-readonly OPTIONAL_DEPS_JSON='[{"type": "command", "name": "curl", "description": null, "ubuntu": null, "debian": null, "centos": null, "fedora": null, "macos": null, "windows": null, "check_method": null, "check_args": null, "install_instructions": null}, {"type": "command", "name": "wget", "description": null, "ubuntu": null, "debian": null, "centos": null, "fedora": null, "macos": null, "windows": null, "check_method": null, "check_args": null, "install_instructions": null}]'
+readonly REQUIRED_DEPS_JSON='[]'
+readonly OPTIONAL_DEPS_JSON='[]'
 
 # Tree view helper functions
 tree_start() {
@@ -668,7 +668,7 @@ install_with_pipx() {
         tree_sub_node "info" "Using pipx for isolated environment"
 
         
-        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH" --force) &
+        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[dev,test]" --force) &
         
         local install_pid=$!
 
@@ -680,6 +680,8 @@ install_with_pipx() {
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "" "true"
             
+            install_additional_extras
+            
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "" "true"
@@ -690,7 +692,7 @@ install_with_pipx() {
         tree_sub_node "info" "Using pipx for isolated environment"
 
         
-        pipx install "$PYPI_NAME" --force &
+        pipx install "$PYPI_NAME[dev,test]" --force &
         
         local install_pid=$!
 
@@ -701,6 +703,8 @@ install_with_pipx() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "" "true"
+            
+            install_additional_extras
             
             show_install_success_message
         else
@@ -718,7 +722,7 @@ install_with_pip() {
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
         
-        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
+        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[dev,test]" --user) &
         
         show_spinner $!
         wait $!
@@ -734,7 +738,7 @@ install_with_pip() {
     else
         tree_sub_node "progress" "Installing from PyPI with pip..."
         
-        python3 -m pip install "$PYPI_NAME" --user &
+        python3 -m pip install "$PYPI_NAME[dev,test]" --user &
         
         show_spinner $!
         wait $!
@@ -778,7 +782,7 @@ upgrade_package() {
 
         # Capture pip output to prevent it from breaking tree structure
         
-        python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
+        python3 -m pip install --upgrade "$PYPI_NAME[dev,test]" --user >/dev/null 2>&1 &
         
         show_spinner $!
         wait $!
@@ -861,6 +865,51 @@ show_uninstall_success_message() {
     echo
 }
 
+
+# Additional extras installation
+install_additional_extras() {
+    
+    
+    
+    # Install apt packages
+    if command -v apt-get >/dev/null 2>&1; then
+        tree_sub_node "info" "Installing system packages (may require sudo)..."
+        
+        if sudo apt-get install -y git >/dev/null 2>&1; then
+            tree_sub_node "success" "Installed apt package: git"
+        else
+            tree_sub_node "warning" "Failed to install apt package: git"
+        fi
+        
+        if sudo apt-get install -y python3-dev >/dev/null 2>&1; then
+            tree_sub_node "success" "Installed apt package: python3-dev"
+        else
+            tree_sub_node "warning" "Failed to install apt package: python3-dev"
+        fi
+        
+        if sudo apt-get install -y curl >/dev/null 2>&1; then
+            tree_sub_node "success" "Installed apt package: curl"
+        else
+            tree_sub_node "warning" "Failed to install apt package: curl"
+        fi
+        
+        if sudo apt-get install -y wget >/dev/null 2>&1; then
+            tree_sub_node "success" "Installed apt package: wget"
+        else
+            tree_sub_node "warning" "Failed to install apt package: wget"
+        fi
+        
+        if sudo apt-get install -y pipx >/dev/null 2>&1; then
+            tree_sub_node "success" "Installed apt package: pipx"
+        else
+            tree_sub_node "warning" "Failed to install apt package: pipx"
+        fi
+        
+    else
+        tree_sub_node "info" "apt-get not found - manual installation required for: git, python3-dev, curl, wget, pipx"
+    fi
+    
+}
 
 
 # Shell integration

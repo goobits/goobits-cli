@@ -325,7 +325,6 @@ def main(ctx, help_all=False):
     2. goobits build:     [green]Generate implementation files[/green]
     3. Edit app_hooks.py: [green]Add your business logic[/green]
     
-    \b
     """
 
     
