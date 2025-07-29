@@ -94,6 +94,11 @@ install_with_pip() {
 
     tree_sub_node "warning" "Using pip instead of pipx (not recommended)"
 
+    {% if installation.extras and installation.extras.apt %}
+    # Install system dependencies BEFORE Python packages
+    install_system_dependencies
+    {% endif %}
+
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
         {% if installation.extras and installation.extras.python %}
@@ -107,6 +112,9 @@ install_with_pip() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "true"
+            {% if installation.extras and installation.extras.npm %}
+            install_npm_extras
+            {% endif %}
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "true"
@@ -125,6 +133,9 @@ install_with_pip() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "true"
+            {% if installation.extras and installation.extras.npm %}
+            install_npm_extras
+            {% endif %}
             show_install_success_message
         else
             tree_sub_node "error" "Installation failed" "true"

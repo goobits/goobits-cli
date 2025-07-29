@@ -725,6 +725,11 @@ install_with_pip() {
 
     tree_sub_node "warning" "Using pip instead of pipx (not recommended)"
 
+    
+    # Install system dependencies BEFORE Python packages
+    install_system_dependencies
+    
+
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
         
@@ -736,6 +741,7 @@ install_with_pip() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "true"
+            
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "true"
@@ -752,6 +758,7 @@ install_with_pip() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "true"
+            
             show_install_success_message
         else
             tree_sub_node "error" "Installation failed" "true"
