@@ -498,17 +498,17 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
     \b
     [bold yellow]{{ section.title }}:[/bold yellow]
     {%- set aligned_items = section.items | align_header_items %}
-    {%- for item in aligned_items -%}
+    {% for item in aligned_items -%}
     {% if item.style == 'example' -%}
-       [green]{{ item.item_aligned }}[/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
+    [green]{{ item.item_aligned }}[/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
     {%- elif item.style == 'command' -%}
-       [green]{{ item.item_aligned }}[/green]  {{ item.desc }}
+    [green]{{ item.item_aligned }}[/green]  {{ item.desc }}
     {%- elif item.style == 'setup' -%}
-       {{ item.item + ":" }}{{ " " * (item.item_aligned|length - item.item|length - 1) }}[green]{{ item.desc }}[/green]
-    {%- endif -%}
-    {%- endfor -%}
-    {% endfor -%}
-    {% endif -%}
+    {{ item.item + ":" }}{{ " " * (item.item_aligned|length - item.item|length - 1) }}[green]{{ item.desc }}[/green]
+    {%- endif %}
+    {% endfor %}
+    {% endfor %}
+    {% endif %}
     {% if cli.footer_note %}
     \b
        [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
