@@ -72,10 +72,10 @@ cli:
   header_sections:
     - title: "Quick Start"
       items:
-        - { item: 'mkdir my-cli && cd my-cli', desc: "Create new project directory", style: "setup" }
+        - { item: 'mkdir my-cli && cd my-cli', desc: "Create new project directory", style: "example" }
         - { item: 'goobits init', desc: "Generate initial goobits.yaml", style: "example" }
         - { item: 'goobits build', desc: "Create CLI and setup scripts", style: "example" }
-        - { item: './setup.sh install --dev', desc: "Install for development", style: "setup" }
+        - { item: './setup.sh install --dev', desc: "Install for development", style: "example" }
 
     - title: "Core Commands"
       items:
