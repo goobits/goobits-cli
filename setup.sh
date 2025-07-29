@@ -668,6 +668,11 @@ install_with_pipx() {
         tree_sub_node "info" "Using pipx for isolated environment"
 
         
+        # Install system dependencies BEFORE Python packages
+        install_system_dependencies
+        
+
+        
         (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[dev,test]" --force) &
         
         local install_pid=$!
@@ -680,8 +685,6 @@ install_with_pipx() {
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "" "true"
             
-            install_additional_extras
-            
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "" "true"
@@ -690,6 +693,11 @@ install_with_pipx() {
     else
         tree_node "info" "Installing from PyPI" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
+
+        
+        # Install system dependencies BEFORE Python packages
+        install_system_dependencies
+        
 
         
         pipx install "$PYPI_NAME[dev,test]" --force &
@@ -703,8 +711,6 @@ install_with_pipx() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "" "true"
-            
-            install_additional_extras
             
             show_install_success_message
         else
@@ -866,12 +872,8 @@ show_uninstall_success_message() {
 }
 
 
-# Additional extras installation
-install_additional_extras() {
-    
-    
-    
-    # Install apt packages
+# System dependencies installation (before Python packages)
+install_system_dependencies() {
     if command -v apt-get >/dev/null 2>&1; then
         tree_sub_node "info" "Installing system packages (may require sudo)..."
         
@@ -908,8 +910,9 @@ install_additional_extras() {
     else
         tree_sub_node "info" "apt-get not found - manual installation required for: git, python3-dev, curl, wget, pipx"
     fi
-    
 }
+
+
 
 
 # Shell integration

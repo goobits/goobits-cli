@@ -307,25 +307,11 @@ def main(ctx, help_all=False):
 
     
     \b
-    [bold yellow]Quick Start:[/bold yellow]
-    mkdir my-cli && cd my-cli: [green]Create new project directory[/green]
-    [green]goobits init               [/green] [italic][#B3B8C0]# Generate initial goobits.yaml[/#B3B8C0][/italic]
-    [green]goobits build              [/green] [italic][#B3B8C0]# Create CLI and setup scripts[/#B3B8C0][/italic]
-    ./setup.sh install --dev:  [green]Install for development[/green]
-    
+    [bold yellow]Quick Start:[/bold yellow]mkdir my-cli && cd my-cli: [green]Create new project directory[/green][green]goobits init               [/green] [italic][#B3B8C0]# Generate initial goobits.yaml[/#B3B8C0][/italic][green]goobits build              [/green] [italic][#B3B8C0]# Create CLI and setup scripts[/#B3B8C0][/italic]./setup.sh install --dev:  [green]Install for development[/green]
     \b
-    [bold yellow]Core Commands:[/bold yellow]
-    [green]build  [/green]  🔨 Generate CLI and setup scripts from goobits.yaml
-    [green]serve  [/green]  🌐 Serve local PyPI-compatible package index
-    [green]init   [/green]  🆕 Create initial goobits.yaml template
-    
+    [bold yellow]Core Commands:[/bold yellow][green]build  [/green]  🔨 Generate CLI and setup scripts from goobits.yaml[green]serve  [/green]  🌐 Serve local PyPI-compatible package index[green]init   [/green]  🆕 Create initial goobits.yaml template
     \b
-    [bold yellow]Development Workflow:[/bold yellow]
-    1. Edit goobits.yaml: [green]Define your CLI structure[/green]
-    2. goobits build:     [green]Generate implementation files[/green]
-    3. Edit app_hooks.py: [green]Add your business logic[/green]
-    
-    """
+    [bold yellow]Development Workflow:[/bold yellow]1. Edit goobits.yaml: [green]Define your CLI structure[/green]2. goobits build:     [green]Generate implementation files[/green]3. Edit app_hooks.py: [green]Add your business logic[/green]"""
 
     
     if help_all:
