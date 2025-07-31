@@ -92,9 +92,10 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     # Find the setup.sh script - look in common locations
     setup_script = None
     search_paths = [
-        Path.cwd() / "setup.sh",  # Current directory
-        Path(__file__).parent.parent / "setup.sh",  # Package directory
+        Path(__file__).parent / "setup.sh",  # Package directory (installed packages)
+        Path(__file__).parent.parent / "setup.sh",  # Development mode 
         Path.home() / ".local" / "share" / "goobits-cli" / "setup.sh",  # User data
+        # Remove Path.cwd() to prevent cross-contamination
     ]
     
     for path in search_paths:
@@ -207,7 +208,7 @@ def get_version():
         pass
         
     # Final fallback
-    return "1.2.0"
+    return "1.0.0"
 
 
 
@@ -301,7 +302,7 @@ class DefaultGroup(RichGroup):
 
 
 def main(ctx, help_all=False):
-    """🛠️  [bold color(6)]Goobits CLI v1.2.0[/bold color(6)] - Build professional command-line tools with YAML configuration
+    """🛠️  [bold color(6)]Goobits CLI v" + get_version() + "[/bold color(6)] - Build professional command-line tools with YAML configuration
 
     
     \b

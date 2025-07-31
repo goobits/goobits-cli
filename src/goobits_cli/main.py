@@ -207,6 +207,48 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
             data['project']['scripts'][command_name] = f"{package_name}.{cli_module_name}:cli_entry"
             typer.echo(f"✅ Created entry point for '{command_name}'")
         
+        # Add package-data configuration for setup.sh
+        if 'project' in data:  # PEP 621 format
+            if 'tool' not in data:
+                data['tool'] = {}
+            if 'setuptools' not in data['tool']:
+                data['tool']['setuptools'] = {}
+            if 'package-data' not in data['tool']['setuptools']:
+                data['tool']['setuptools']['package-data'] = {}
+            
+            # Add setup.sh to package-data
+            if package_name not in data['tool']['setuptools']['package-data']:
+                data['tool']['setuptools']['package-data'][package_name] = ["setup.sh"]
+                typer.echo(f"✅ Added setup.sh to package-data for '{package_name}'")
+            else:
+                existing = data['tool']['setuptools']['package-data'][package_name]
+                if isinstance(existing, list) and "setup.sh" not in existing:
+                    existing.append("setup.sh")
+                    typer.echo(f"✅ Added setup.sh to existing package-data for '{package_name}'")
+                elif isinstance(existing, str) and existing != "setup.sh":
+                    # Convert single string to list and add setup.sh
+                    data['tool']['setuptools']['package-data'][package_name] = [existing, "setup.sh"]
+                    typer.echo(f"✅ Added setup.sh to existing package-data for '{package_name}'")
+                elif "setup.sh" in existing or existing == "setup.sh":
+                    typer.echo(f"ℹ️  setup.sh already in package-data for '{package_name}'")
+        
+        elif 'tool' in data and 'poetry' in data['tool']:
+            # Poetry format - handle includes differently
+            if 'packages' not in data['tool']['poetry']:
+                data['tool']['poetry']['packages'] = []
+            
+            # Poetry uses include for additional files
+            if 'include' not in data['tool']['poetry']:
+                data['tool']['poetry']['include'] = []
+            
+            # Add setup.sh to includes if not already present
+            setup_include = {"path": "setup.sh", "format": "sdist"}
+            if setup_include not in data['tool']['poetry']['include']:
+                data['tool']['poetry']['include'].append(setup_include)
+                typer.echo(f"✅ Added setup.sh to Poetry includes for '{package_name}'")
+            else:
+                typer.echo(f"ℹ️  setup.sh already in Poetry includes for '{package_name}'")
+        
         # Write back the modified pyproject.toml
         with open(pyproject_path, 'w') as f:
             toml.dump(data, f)
@@ -282,7 +324,13 @@ def build(
     
     # Generate cli.py if CLI configuration exists
     if goobits_config.cli:
-        cli_code = generate_cli_code(goobits_config, config_path.name)
+        # Extract version from pyproject.toml if available
+        pyproject_path = output_dir / "pyproject.toml"
+        version = None
+        if pyproject_path.exists():
+            version = extract_version_from_pyproject(output_dir)
+        
+        cli_code = generate_cli_code(goobits_config, config_path.name, version)
         
         # Use configured output path, with package name substitution
         cli_output_path = goobits_config.cli_output_path.format(
@@ -325,17 +373,39 @@ def build(
             # Fallback to package name conversion
             module_name = goobits_config.package_name.replace('-', '_')
         
-        cli_filename = Path(cli_output_path).name
+        # Extract the full module path relative to the package root
+        cli_path_obj = Path(cli_output_path)
+        cli_path_parts = cli_path_obj.parts
+        
+        # Find the path relative to the package directory
+        if 'src' in cli_path_parts:
+            src_index = cli_path_parts.index('src')
+            if src_index + 2 < len(cli_path_parts):  # src/package/...
+                # Get all parts after src/package/ up to filename
+                relative_parts = cli_path_parts[src_index + 2:]  # Everything after src/package/
+                # Join directory parts with dots, then add filename without .py
+                if len(relative_parts) > 1:
+                    dir_parts = relative_parts[:-1]  # All but filename
+                    filename_part = relative_parts[-1].replace('.py', '')
+                    full_module_path = '.'.join(dir_parts) + '.' + filename_part
+                else:
+                    # Just a filename
+                    full_module_path = relative_parts[0].replace('.py', '')
+            else:
+                # Fallback to just filename
+                full_module_path = cli_path_obj.name.replace('.py', '')
+        else:
+            # Fallback to just filename  
+            full_module_path = cli_path_obj.name.replace('.py', '')
         
         # Update pyproject.toml to use the generated CLI
-        if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, cli_filename, backup):
+        if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, full_module_path + '.py', backup):
             typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
             typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
             typer.echo("   ./setup.sh install --dev")
         else:
-            cli_module_name = cli_filename.replace('.py', '')
             typer.echo("⚠️  Could not update pyproject.toml automatically")
-            typer.echo(f"   Please update your entry points to use: {module_name}.{cli_module_name}:cli_entry")
+            typer.echo(f"   Please update your entry points to use: {module_name}.{full_module_path}:cli_entry")
     else:
         typer.echo("⚠️  No CLI configuration found, skipping cli.py generation")
     
@@ -353,6 +423,33 @@ def build(
     setup_output_path.chmod(0o755)
     
     typer.echo(f"✅ Generated setup script: {setup_output_path}")
+    
+    # Copy setup.sh to package source directory for package-data inclusion
+    if goobits_config.cli:  # Only copy if CLI is configured
+        # Find the package source directory
+        cli_output_path = goobits_config.cli_output_path.format(
+            package_name=goobits_config.package_name.replace('goobits-', '')
+        )
+        cli_path_parts = Path(cli_output_path).parts
+        
+        # Determine package source directory
+        package_src_dir = None
+        if 'src' in cli_path_parts:
+            src_index = cli_path_parts.index('src')
+            if src_index + 1 < len(cli_path_parts):
+                package_src_dir = output_dir / "src" / cli_path_parts[src_index + 1]
+        
+        if package_src_dir and package_src_dir.exists():
+            # Copy setup.sh to package source directory
+            package_setup_path = package_src_dir / "setup.sh"
+            try:
+                shutil.copy2(setup_output_path, package_setup_path)
+                typer.echo(f"✅ Copied setup.sh to package directory: {package_setup_path}")
+            except Exception as e:
+                typer.echo(f"⚠️  Could not copy setup.sh to package directory: {e}")
+        else:
+            typer.echo("ℹ️  Package source directory not found, setup.sh not copied to package")
+    
     typer.echo("🎉 Build completed successfully!")
 
 

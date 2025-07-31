@@ -1,6 +1,6 @@
 [project]
 name = "goobits-cli"
-version = "1.2.0"
+version = "1.2.1"
 description = "Unified CLI for Goobits projects."
 dependencies = [ "pyyaml", "jinja2", "pydantic", "typer", "toml", "rich-click",]
 
@@ -16,7 +16,7 @@ dev = [ "mypy", "types-PyYAML", "types-toml", "ruff",]
 goobits = "goobits_cli.generated_cli:cli_entry"
 
 [tool.setuptools.package-data]
-goobits_cli = [ "templates/*.j2", "templates/**/*.j2",]
+goobits_cli = [ "templates/*.j2", "templates/**/*.j2", "setup.sh",]
 
 [tool.pytest.ini_options]
 pythonpath = [ "src",]

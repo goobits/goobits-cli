@@ -2,7 +2,7 @@
 import sys
 import yaml
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
 from jinja2 import Environment, FileSystemLoader
 from pydantic import ValidationError
 import typer
@@ -47,7 +47,7 @@ class Builder:
         self.env.filters['format_icon'] = format_icon_spacing
         self.env.filters['align_header_items'] = align_header_items
     
-    def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str = "config.yaml") -> str:
+    def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str = "config.yaml", version: Optional[str] = None) -> str:
         """Build CLI Python code from configuration and return the rendered template string."""
         # Extract CLI configuration and metadata depending on config type
         if hasattr(config, 'package_name'):  # GoobitsConfigSchema
@@ -93,7 +93,8 @@ class Builder:
             command_name=command_name,
             display_name=display_name,
             installation=installation,
-            hooks_path=hooks_path
+            hooks_path=hooks_path,
+            version=version
         )
         
         # Explicitly assert the type to satisfy mypy
@@ -139,7 +140,7 @@ class Builder:
                         raise typer.Exit(code=1)
 
 
-def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str) -> str:
+def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str, version: Optional[str] = None) -> str:
     """Generate CLI Python code from configuration."""
     builder = Builder()
-    return builder.build(config, file_name)
+    return builder.build(config, file_name, version)

@@ -118,9 +118,10 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     # Find the setup.sh script - look in common locations
     setup_script = None
     search_paths = [
-        Path(__file__).parent.parent / "setup.sh",  # Package directory (prioritize)
-        Path.home() / ".local" / "share" / "{{ package_name }}" / "setup.sh",  # User data
-        # Removed Path.cwd() / "setup.sh" - prevents cross-contamination between projects
+        Path(__file__).parent / "setup.sh",  # Package directory (installed packages)
+        Path(__file__).parent.parent / "setup.sh",  # Development mode 
+        Path.home() / ".local" / "share" / "{{ installation.pypi_name | default(package_name) }}" / "setup.sh",  # User data
+        # Remove Path.cwd() to prevent cross-contamination
     ]
     
     for path in search_paths:
@@ -388,8 +389,17 @@ def get_version():
     
     try:
         # Try to get version from pyproject.toml FIRST (most authoritative)
-        toml_path = Path(__file__).parent.parent / "pyproject.toml"
-        if toml_path.exists():
+        # Look in multiple possible locations
+        possible_paths = [
+            Path(__file__).parent.parent / "pyproject.toml",  # For flat structure
+            Path(__file__).parent.parent.parent / "pyproject.toml",  # For src/ structure
+        ]
+        toml_path = None
+        for path in possible_paths:
+            if path.exists():
+                toml_path = path
+                break
+        if toml_path:
             content = toml_path.read_text()
             match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
             if match:
@@ -408,8 +418,9 @@ def get_version():
     except Exception:
         pass
         
-    # Final fallback
-    return "{{ cli.version or '1.0.0' }}"
+    # Final fallback{% if cli.version %}
+    return "{{ cli.version }}"{% else %}
+    return "1.0.0"{% endif %}
 
 {% if cli.enable_help_json %}
 def show_help_json(ctx, param, value):
@@ -515,7 +526,7 @@ class DefaultGroup(RichGroup):
 {% endfor %}
 {% endif %}
 def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.enable_recursive_help %}, help_all=False{% endif %}{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% if option.type == 'flag' %}=False{% else %}=None{% endif %}{% endfor %}{% endif %}):
-    """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{{ cli.version or '1.0.0' }}{% endif %}[/bold color(6)] - {{ cli.tagline }}
+    """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %}{% if cli.version %} v{{ cli.version }}{% elif version %} v{{ version }}{% else %} {version}{% endif %}{% endif %}[/bold color(6)] - {{ cli.tagline }}
 
     {% if cli.description %}
     \b
@@ -542,7 +553,6 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
     [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
     {% endif %}
     """
-
     {% if cli.enable_recursive_help %}
     if help_all:
         # Print main help
@@ -577,6 +587,11 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
     {% endif %}
 
     pass
+
+# Replace the version placeholder with dynamic version in the main command docstring
+{% if cli.display_version and not cli.version and not version %}
+main.callback.__doc__ = main.callback.__doc__.replace("{version}", "v" + get_version())
+{% endif %}
 
 {% if cli.command_groups %}
 # Set command groups after main function is defined
