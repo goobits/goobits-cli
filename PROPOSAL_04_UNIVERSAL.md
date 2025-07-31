@@ -1,25 +1,25 @@
-# PROPOSAL_02: Goobits Universal CLI DSL
+# PROPOSAL_04: Goobits Universal CLI DSL
 
 **Status**: Draft Proposal  
 **Author**: Development Team  
 **Date**: 2025-01-24  
 **Version**: 2.0  
-**Prerequisite**: See PROPOSAL_01_RUST.md
+**Prerequisite**: See PROPOSAL_03_RUST.md
 
 ## Executive Summary
 
-This proposal extends PROPOSAL_01_RUST to create a **Universal CLI DSL** that generates native CLIs for multiple programming languages. This builds directly on the Rust implementation proven in Phase 1.
+This proposal extends PROPOSAL_03_RUST to create a **Universal CLI DSL** that generates native CLIs for multiple programming languages. This builds directly on the Rust implementation proven in Phase 1.
 
-**Note**: This proposal assumes successful completion of PROPOSAL_01_RUST as validation.
+**Note**: This proposal assumes successful completion of PROPOSAL_03_RUST as validation.
 
-## Schema Evolution from PROPOSAL_01_RUST
+## Schema Evolution from PROPOSAL_03_RUST
 
 ### Multi-Target Extension
 
 Building on the Rust proposal's `language: rust` approach, extend to support multiple simultaneous targets:
 
 ```yaml
-# Evolution from PROPOSAL_01_RUST single language
+# Evolution from PROPOSAL_03_RUST single language
 targets: [rust, python]  # Generate both from same config
 
 # Rest remains identical to current schema
@@ -57,7 +57,7 @@ command_name: "tts"
 
 ### Phase 2A: Add Go Target (Build on Rust Success)
 
-**Prerequisite**: PROPOSAL_01_RUST implementation completed and validated with claude-usage project.
+**Prerequisite**: PROPOSAL_03_RUST implementation completed and validated with claude-usage project.
 
 **Goal**: Extend proven Rust generator pattern to support Go with Cobra framework.
 
@@ -74,14 +74,14 @@ command_name: "tts"
 
 **Implementation**:
 ```yaml
-# Simple extension of PROPOSAL_01_RUST approach
+# Simple extension of PROPOSAL_03_RUST approach
 targets: [rust, python, go]  # Instead of language: rust
 
-# Generated structure (extends PROPOSAL_01_RUST pattern):
+# Generated structure (extends PROPOSAL_03_RUST pattern):
 goobits-tts/
 ├── goobits.yaml           # Source config
 ├── outputs/
-│   ├── rust/              # From PROPOSAL_01_RUST
+│   ├── rust/              # From PROPOSAL_03_RUST
 │   │   ├── Cargo.toml
 │   │   └── src/main.rs
 │   ├── python/            # Current implementation  
@@ -91,7 +91,7 @@ goobits-tts/
 │       └── cmd/root.go
 └── shared_hooks/
     ├── app_hooks.py       # Existing Python hooks
-    ├── app_hooks.rs       # From PROPOSAL_01_RUST  
+    ├── app_hooks.rs       # From PROPOSAL_03_RUST  
     └── app_hooks.go       # New Go hooks
 ```
 
@@ -100,7 +100,7 @@ goobits-tts/
 **Real Project Testing** (not hypothetical examples):
 1. **goobits-tts**: Multi-provider TTS with complex CLI structure
 2. **goobits-stt**: Speech-to-text with server modes  
-3. **claude-usage**: High-performance Rust tool (from PROPOSAL_01_RUST)
+3. **claude-usage**: High-performance Rust tool (from PROPOSAL_03_RUST)
 4. **goobits-cli**: Self-hosting - generate goobits-cli itself in multiple languages
 
 ### Success Criteria
@@ -115,7 +115,7 @@ goobits-tts/
 - Community feedback validates approach
 - No critical blockers for enterprise adoption
 
-## Key Differentiators from PROPOSAL_01_RUST
+## Key Differentiators from PROPOSAL_03_RUST
 
 ### 1. Multi-Target Generation
 - **Rust Proposal**: Single language (`language: rust`)  
@@ -132,16 +132,16 @@ goobits-tts/
 ## Dependencies and Prerequisites
 
 **Critical Dependencies**:
-1. **PROPOSAL_01_RUST completion**: Must validate Rust generation works with real projects
+1. **PROPOSAL_03_RUST completion**: Must validate Rust generation works with real projects
 2. **Community validation**: Rust implementation gets positive feedback
 3. **Resource commitment**: Multi-language support requires sustained development effort
 
-**Go/No-Go Decision Point**: Only proceed if PROPOSAL_01_RUST demonstrates:
+**Go/No-Go Decision Point**: Only proceed if PROPOSAL_03_RUST demonstrates:
 - Technical feasibility with complex real projects  
 - Community interest and adoption
 - Clear performance/distribution benefits
 
-## Timeline (Post-PROPOSAL_01_RUST)
+## Timeline (Post-PROPOSAL_03_RUST)
 
 **Phase 2A: Go Generator** (Month 1-2)
 - [ ] Add Go/Cobra generator using proven Rust template pattern
@@ -161,16 +161,16 @@ goobits-tts/
 
 **Primary Risk**: Over-engineering before market validation
 
-**Mitigation**: This proposal is contingent on PROPOSAL_01_RUST success. If Rust adoption is low, abandon universal approach and focus on Python+Rust only.
+**Mitigation**: This proposal is contingent on PROPOSAL_03_RUST success. If Rust adoption is low, abandon universal approach and focus on Python+Rust only.
 
 **Secondary Risk**: Maintenance burden across multiple languages
 
-**Mitigation**: Build on proven patterns from PROPOSAL_01_RUST. Don't add languages without strong demand.
+**Mitigation**: Build on proven patterns from PROPOSAL_03_RUST. Don't add languages without strong demand.
 
 ## Conclusion
 
-PROPOSAL_02_UNIVERSAL extends the proven foundation of PROPOSAL_01_RUST into a comprehensive multi-language platform. 
+PROPOSAL_02_UNIVERSAL extends the proven foundation of PROPOSAL_03_RUST into a comprehensive multi-language platform. 
 
 **Key Insight**: This is not a alternative to the Rust proposal - it's the natural evolution after Rust validation proves the concept works.
 
-**Recommendation**: Implement PROPOSAL_01_RUST first. Only proceed with PROPOSAL_02_UNIVERSAL if Rust implementation succeeds and community validates demand for multi-language generation.
+**Recommendation**: Implement PROPOSAL_03_RUST first. Only proceed with PROPOSAL_02_UNIVERSAL if Rust implementation succeeds and community validates demand for multi-language generation.
