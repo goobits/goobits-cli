@@ -11,6 +11,8 @@ Goobits CLI Framework is a tool that generates professional command-line interfa
 ### Building and Installation
 
 ```bash
+# Use the virtual environment when running commands, not the global python (see README for setup details)
+
 # Build the CLI from goobits.yaml (self-hosting)
 goobits build
 
