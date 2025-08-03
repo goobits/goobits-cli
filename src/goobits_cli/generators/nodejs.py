@@ -70,7 +70,7 @@ class NodeJSGenerator(BaseGenerator):
             'command_name': metadata['command_name'],
             'display_name': metadata['display_name'],
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
-            'version': version or '1.0.0',
+            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
             'installation': metadata['installation'],
             'hooks_path': metadata['hooks_path'],
         }
@@ -221,7 +221,7 @@ export default cli;
             'command_name': metadata['command_name'],
             'display_name': metadata['display_name'],
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
-            'version': version or '1.0.0',
+            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
             'installation': metadata['installation'],
             'hooks_path': metadata['hooks_path'],
         }
@@ -364,6 +364,10 @@ npm link
 {context['command_name']} --help
 ```
 
+## Commands
+
+{self._generate_commands_documentation(context)}
+
 ## Configuration
 
 Configuration is stored in:
@@ -382,6 +386,25 @@ To run in development mode:
 
 MIT
 """
+    
+    def _generate_commands_documentation(self, context: dict) -> str:
+        """Generate commands documentation for README."""
+        cli_config = context.get('cli')
+        if not cli_config or not hasattr(cli_config, 'commands'):
+            return "No commands configured."
+        
+        commands_doc = []
+        for cmd_name, cmd_data in cli_config.commands.items():
+            cmd_desc = cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'
+            commands_doc.append(f"- `{cmd_name}` - {cmd_desc}")
+            
+            # Add subcommands if they exist
+            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+                for sub_name, sub_data in cmd_data.subcommands.items():
+                    sub_desc = sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'
+                    commands_doc.append(f"  - `{cmd_name} {sub_name}` - {sub_desc}")
+        
+        return '\n'.join(commands_doc) if commands_doc else "No commands configured."
     
     def _generate_gitignore(self) -> str:
         """Generate .gitignore for Node.js project."""

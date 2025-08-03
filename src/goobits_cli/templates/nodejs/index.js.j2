@@ -496,3 +496,11 @@ export async function cli() {
 
 // Export for use as a module
 export default cli;
+
+// Run CLI if this is the main module
+if (import.meta.url === `file://${process.argv[1]}`) {
+  cli().catch(error => {
+    console.error('CLI Error:', error);
+    process.exit(1);
+  });
+}

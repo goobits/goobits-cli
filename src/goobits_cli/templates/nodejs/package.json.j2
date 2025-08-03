@@ -2,6 +2,7 @@
   "name": "{{ package_name }}",
   "version": "{{ version | default('1.0.0') }}",
   "description": "{{ description | default(cli.description if cli else 'A CLI tool built with goobits') }}",
+  "type": "module",
   "main": "index.js",
   "bin": {
     "{{ command_name }}": "./bin/cli.js"

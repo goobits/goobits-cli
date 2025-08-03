@@ -50,6 +50,18 @@ class TestNodeJSE2E:
                 if filename.endswith('.sh') or filename == 'index.js':
                     file_path.chmod(0o755)
             
+            # Install npm dependencies if Node.js and npm are available
+            if shutil.which("node") and shutil.which("npm"):
+                result = subprocess.run(
+                    ["npm", "install"],
+                    cwd=str(project_path),
+                    capture_output=True,
+                    text=True
+                )
+                # Note: Don't fail if npm install fails - some tests check error conditions
+                if result.returncode != 0:
+                    print(f"Warning: npm install failed: {result.stderr}")
+            
             yield project_path
     
     def test_generated_files_exist(self, temp_nodejs_project):
@@ -287,7 +299,17 @@ cli:
             assert (Path(temp_dir) / "package.json").exists()
             
             # Test with Node.js if available
-            if shutil.which('node'):
+            if shutil.which('node') and shutil.which('npm'):
+                # Install npm dependencies
+                install_result = subprocess.run(
+                    ['npm', 'install'],
+                    cwd=temp_dir,
+                    capture_output=True,
+                    text=True
+                )
+                assert install_result.returncode == 0, f"npm install failed: {install_result.stderr}"
+                
+                # Test CLI execution
                 result = subprocess.run(
                     ['node', 'index.js', 'api', 'generate', '--help'],
                     cwd=temp_dir,
