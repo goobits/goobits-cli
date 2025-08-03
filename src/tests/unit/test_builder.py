@@ -11,20 +11,16 @@ class TestBuilder:
     """Test cases for Builder class."""
     
     def test_builder_initialization(self):
-        """Test Builder class initialization creates environment with custom filters."""
+        """Test Builder class initialization creates a generator instance."""
         builder = Builder()
         
-        # Check that environment was created
-        assert builder.env is not None
-        assert hasattr(builder.env, 'filters')
+        # Check that generator was created
+        assert hasattr(builder, 'generator')
+        assert builder.generator is not None
         
-        # Check that custom filters were added
-        expected_filters = [
-            'align_examples', 'format_multiline', 'escape_docstring',
-            'align_setup_steps', 'format_icon', 'align_header_items'
-        ]
-        for filter_name in expected_filters:
-            assert filter_name in builder.env.filters
+        # Builder now delegates to PythonGenerator
+        from goobits_cli.generators.python import PythonGenerator
+        assert isinstance(builder.generator, PythonGenerator)
     
     def test_build_generates_valid_cli_structure(self):
         """Test that build generates a CLI with correct structure."""

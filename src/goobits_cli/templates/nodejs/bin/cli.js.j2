@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+/**
+ * Auto-generated from {{ file_name }}
+ * CLI executable entry point for {{ display_name }}
+ */
+
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Handle uncaught exceptions gracefully
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Import and run the main CLI
+try {
+  const mainPath = join(__dirname, '..', 'index.js');
+  const { cli } = await import(mainPath);
+  
+  // Run the CLI
+  cli();
+} catch (error) {
+  console.error('Failed to start {{ display_name }}:', error.message);
+  process.exit(1);
+}

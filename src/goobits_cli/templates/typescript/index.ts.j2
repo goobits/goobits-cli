@@ -1,0 +1,520 @@
+/**
+ * Auto-generated from {{ file_name }}
+ * Main CLI implementation for {{ display_name }}
+ */
+
+import { Command } from 'commander';
+import chalk from 'chalk';
+import { readdir } from 'fs/promises';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = dirname(__filename);
+
+// Create the main program
+const program: Command = new Command();
+
+// Type definitions
+interface PackageJson {
+  version: string;
+  [key: string]: any;
+}
+
+interface AppHooks {
+  [key: string]: ((...args: any[]) => Promise<any>) | ((...args: any[]) => any) | any;
+}
+
+interface CommandArgs {
+  commandName: string;
+  [key: string]: any;
+}
+
+interface UpgradeOptions {
+  check?: boolean;
+  version?: string;
+  pre?: boolean;
+  dryRun?: boolean;
+}
+
+// Version helper function
+async function getVersion(): Promise<string> {
+  try {
+    const packagePath: string = join(__dirname, 'package.json');
+    const { default: pkg }: { default: PackageJson } = await import(packagePath, { assert: { type: 'json' } });
+    return pkg.version;
+  } catch (error) {
+    return '{{ version | default("1.0.0") }}';
+  }
+}
+
+// Hooks system - try to import app_hooks module
+let appHooks: AppHooks | null = null;
+{% if hooks_path %}
+// Using configured hooks path: {{ hooks_path }}
+try {
+  const hooksPath: string = join(__dirname, '{{ hooks_path }}');
+  if (existsSync(hooksPath)) {
+    appHooks = await import(hooksPath);
+  }
+} catch (error: any) {
+  // No hooks module found, use default behavior
+  console.debug('Hooks module not found:', error.message);
+}
+{% else %}
+// No hooks path configured, try default locations
+try {
+  const hooksPath: string = join(__dirname, 'app_hooks.js');
+  if (existsSync(hooksPath)) {
+    appHooks = await import(hooksPath);
+  }
+} catch (error: any) {
+  // No hooks module found, use default behavior
+  console.debug('Hooks module not found:', error.message);
+}
+{% endif %}
+
+// Load commands dynamically from commands directory
+async function loadCommands(program: Command): Promise<void> {
+  const commandsDir: string = join(__dirname, 'commands');
+  
+  try {
+    if (!existsSync(commandsDir)) {
+      return;
+    }
+    
+    const files: string[] = await readdir(commandsDir);
+    
+    for (const file of files) {
+      if (file.endsWith('.js') && !file.startsWith('_')) {
+        try {
+          const commandPath: string = join(commandsDir, file);
+          const { default: commandModule } = await import(commandPath);
+          
+          if (typeof commandModule === 'function') {
+            commandModule(program);
+          } else if (commandModule.register) {
+            commandModule.register(program);
+          }
+        } catch (error: any) {
+          console.error(`Failed to load command ${file}:`, error.message);
+        }
+      }
+    }
+  } catch (error: any) {
+    console.debug('Could not load commands directory:', error.message);
+  }
+}
+
+// Load plugins from conventional plugin directories
+async function loadPlugins(program: Command): Promise<void> {
+  const pluginDirs: string[] = [
+    // User-specific plugin directory
+    join(process.env.HOME || '', '.config', 'goobits', '{{ cli.name }}', 'plugins'),
+    // Local plugin directory
+    join(__dirname, 'plugins'),
+  ];
+  
+  for (const pluginDir of pluginDirs) {
+    try {
+      if (!existsSync(pluginDir)) {
+        continue;
+      }
+      
+      const files: string[] = await readdir(pluginDir);
+      
+      for (const file of files) {
+        if (file.endsWith('.js') && !file.startsWith('_')) {
+          try {
+            const pluginPath: string = join(pluginDir, file);
+            const { default: pluginModule } = await import(pluginPath);
+            
+            if (typeof pluginModule === 'function') {
+              pluginModule(program);
+              console.debug(`Loaded plugin: ${file}`);
+            } else if (pluginModule.register) {
+              pluginModule.register(program);
+              console.debug(`Loaded plugin: ${file}`);
+            }
+          } catch (error: any) {
+            console.error(`Failed to load plugin ${file}:`, error.message);
+          }
+        }
+      }
+    } catch (error: any) {
+      // Plugin directory doesn't exist or can't be read
+      console.debug(`Could not access plugin directory ${pluginDir}:`, error.message);
+    }
+  }
+}
+
+{% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
+// Built-in upgrade command
+async function builtinUpgradeCommand(options: UpgradeOptions): Promise<void> {
+  const { execSync } = await import('child_process');
+  const packageName: string = '{{ package_name }}';
+  const displayName: string = '{{ display_name }}';
+  
+  console.log(chalk.blue(`Current version: ${await getVersion()}`));
+  
+  if (options.check) {
+    console.log(chalk.yellow(`Checking for updates to ${displayName}...`));
+    console.log('Update check not yet implemented. Run without --check to upgrade.');
+    return;
+  }
+  
+  if (options.dryRun) {
+    console.log(chalk.gray(`Dry run - would execute: npm install -g ${packageName}`));
+    return;
+  }
+  
+  console.log(chalk.blue(`Upgrading ${displayName}...`));
+  
+  try {
+    let cmd: string = `npm install -g ${packageName}`;
+    if (options.version) {
+      cmd = `npm install -g ${packageName}@${options.version}`;
+    } else if (options.pre) {
+      cmd = `npm install -g ${packageName}@next`;
+    }
+    
+    execSync(cmd, { stdio: 'inherit' });
+    console.log(chalk.green(`✅ ${displayName} upgraded successfully!`));
+    console.log(chalk.gray(`Run '{{ command_name }} --version' to verify the new version.`));
+  } catch (error: any) {
+    console.error(chalk.red(`❌ Upgrade failed: ${error.message}`));
+    process.exit(1);
+  }
+}
+{% endif %}
+
+// Main CLI setup
+export async function cli(): Promise<void> {
+  const version: string = await getVersion();
+  
+  program
+    .name('{{ cli.name }}')
+    .description(`{{ cli.tagline }}{% if cli.description %}\n\n{{ cli.description }}{% endif %}`)
+    .version(version)
+    .helpOption('-h, --help', 'Display help for command')
+    .addHelpCommand('help [command]', 'Display help for command');
+
+  // Configure help formatting
+  program.configureHelp({
+    sortSubcommands: true,
+    subcommandTerm: (cmd: Command) => cmd.name() + ' ' + cmd.usage(),
+  });
+
+  // Global options
+  {% if cli.options %}
+  {% for option in cli.options %}
+  program
+    .option(
+      '{% if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <{{ option.type }}>{% endif %}',
+      '{{ option.desc }}'
+      {%- if option.default is not none %},
+      {% if option.default is sameas true %}true{% elif option.default is sameas false %}false{% elif option.default is number %}{{ option.default }}{% else %}'{{ option.default }}'{% endif %}
+      {%- endif %}
+    );
+  {% endfor %}
+  {% endif %}
+
+  {% if cli.enable_help_json %}
+  // Add --help-json option
+  program
+    .option('--help-json', 'Output CLI structure as JSON', false)
+    .on('option:help-json', () => {
+      const cliConfig = {{ cli | json_stringify | safe }};
+      console.log(JSON.stringify(cliConfig, null, 2));
+      process.exit(0);
+    });
+  {% endif %}
+
+  {% if cli.enable_recursive_help %}
+  // Add --help-all option
+  program
+    .option('--help-all', 'Show help for all commands', false)
+    .on('option:help-all', () => {
+      console.log(program.helpInformation());
+      console.log('\n' + chalk.bold('All Commands:') + '\n');
+      
+      program.commands.forEach((cmd: Command) => {
+        console.log(chalk.yellow('='.repeat(50)));
+        console.log(chalk.bold(`Command: ${cmd.name()}`));
+        console.log(cmd.helpInformation());
+      });
+      
+      process.exit(0);
+    });
+  {% endif %}
+
+  // Built-in commands
+  {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
+  program
+    .command('upgrade')
+    .description('Upgrade {{ display_name }} to the latest version')
+    .option('--check', 'Check for updates without installing')
+    .option('--version <version>', 'Install specific version')
+    .option('--pre', 'Include pre-release versions')
+    .option('--dry-run', 'Show what would be done without doing it')
+    .action(builtinUpgradeCommand);
+  {% endif %}
+
+  // Define commands from configuration
+  {% for cmd_name, cmd_data in cli.commands.items() %}
+  {% if not cmd_data.subcommands %}
+  {
+    const cmd = program
+      .command('{{ cmd_name }}')
+      .description('{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}')
+      {% if cmd_data.alias %}
+      .alias('{{ cmd_data.alias }}')
+      {% endif %}
+      {% if cmd_data.is_default %}
+      .isDefault(true)
+      {% endif %};
+
+    {% if cmd_data.args %}
+    {% for arg in cmd_data.args %}
+    cmd.argument(
+      '{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}',
+      '{{ arg.desc }}'
+      {%- if arg.choices %},
+      { choices: {{ arg.choices | json_stringify }} }
+      {%- endif %}
+    );
+    {% endfor %}
+    {% endif %}
+
+    {% if cmd_data.options %}
+    {% for opt in cmd_data.options %}
+    cmd.option(
+      '{% if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <{{ opt.type }}>{% endif %}',
+      '{{ opt.desc }}'
+      {%- if opt.default is not none %},
+      {% if opt.default is sameas true %}true{% elif opt.default is sameas false %}false{% elif opt.default is number %}{{ opt.default }}{% else %}'{{ opt.default }}'{% endif %}
+      {%- endif %}
+    );
+    {% endfor %}
+    {% endif %}
+
+    cmd.action(async ({% if cmd_data.args %}{{ cmd_data.args | map(attribute='name') | join(': any, ') }}: any, {% endif %}options: any, command: Command) => {
+      {% if cmd_data.lifecycle == "managed" %}
+      // Managed command - expect an instance of ManagedCommand
+      const commandInstanceName: string = '{{ cmd_name }}Command';
+      if (appHooks && appHooks[commandInstanceName]) {
+        const commandInstance = appHooks[commandInstanceName];
+        
+        // Prepare arguments
+        const args: CommandArgs = {
+          commandName: '{{ cmd_name }}',
+          {% if cmd_data.args %}
+          {% for arg in cmd_data.args %}
+          {{ arg.name }}: {{ arg.name }},
+          {% endfor %}
+          {% endif %}
+          ...options,
+          // Add global options
+          {% for option in cli.options %}
+          {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
+          {% endfor %}
+        };
+        
+        try {
+          const result = await commandInstance.execute(args);
+          return result;
+        } catch (error: any) {
+          console.error(chalk.red(`Error: ${error.message}`));
+          process.exit(1);
+        }
+      } else {
+        console.error(chalk.red(`Error: Managed command '{{ cmd_name }}' requires '${commandInstanceName}' export in app_hooks.js`));
+        process.exit(1);
+      }
+      {% else %}
+      // Standard command - use hook pattern
+      const hookName: string = 'on{{ cmd_name | title | replace('-', '') }}';
+      if (appHooks && appHooks[hookName]) {
+        const hookFunc = appHooks[hookName];
+        
+        // Prepare arguments
+        const args: CommandArgs = {
+          commandName: '{{ cmd_name }}',
+          {% if cmd_data.args %}
+          {% for arg in cmd_data.args %}
+          {{ arg.name }}: {{ arg.name }},
+          {% endfor %}
+          {% endif %}
+          ...options,
+          // Add global options
+          {% for option in cli.options %}
+          {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
+          {% endfor %}
+        };
+        
+        try {
+          const result = await hookFunc(args);
+          return result;
+        } catch (error: any) {
+          console.error(chalk.red(`Error: ${error.message}`));
+          process.exit(1);
+        }
+      } else {
+        // Default placeholder behavior
+        console.log(chalk.blue(`Executing {{ cmd_name }} command...`));
+        {% if cmd_data.args %}
+        {% for arg in cmd_data.args %}
+        console.log(`  {{ arg.name }}: ${ {{- arg.name -}} }`);
+        {% endfor %}
+        {% endif %}
+        console.log('Options:', options);
+      }
+      {% endif %}
+    });
+  }
+  {% else %}
+  {
+    // Command with subcommands
+    const parentCmd = program
+      .command('{{ cmd_name }}')
+      .description('{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}');
+
+    {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+    {
+      const subCmd = parentCmd
+        .command('{{ subcmd_name }}')
+        .description('{% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}');
+
+      {% if subcmd_data.args %}
+      {% for arg in subcmd_data.args %}
+      subCmd.argument(
+        '{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}',
+        '{{ arg.desc }}'
+        {%- if arg.choices %},
+        { choices: {{ arg.choices | json_stringify }} }
+        {%- endif %}
+      );
+      {% endfor %}
+      {% endif %}
+
+      {% if subcmd_data.options %}
+      {% for opt in subcmd_data.options %}
+      subCmd.option(
+        '{% if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <{{ opt.type }}>{% endif %}',
+        '{{ opt.desc }}'
+        {%- if opt.default is not none %},
+        {% if opt.default is sameas true %}true{% elif opt.default is sameas false %}false{% elif opt.default is number %}{{ opt.default }}{% else %}'{{ opt.default }}'{% endif %}
+        {%- endif %}
+      );
+      {% endfor %}
+      {% endif %}
+
+      subCmd.action(async ({% if subcmd_data.args %}{{ subcmd_data.args | map(attribute='name') | join(': any, ') }}: any, {% endif %}options: any, command: Command) => {
+        const hookName: string = 'on{{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('-', '') }}';
+        if (appHooks && appHooks[hookName]) {
+          const hookFunc = appHooks[hookName];
+          
+          // Prepare arguments
+          const args: CommandArgs = {
+            commandName: '{{ subcmd_name }}',
+            {% if subcmd_data.args %}
+            {% for arg in subcmd_data.args %}
+            {{ arg.name }}: {{ arg.name }},
+            {% endfor %}
+            {% endif %}
+            ...options,
+            // Add global options
+            {% for option in cli.options %}
+            {{ option.name | replace('-', '_') }}: command.parent.parent.opts().{{ option.name | replace('-', '_') }},
+            {% endfor %}
+          };
+          
+          try {
+            const result = await hookFunc(args);
+            return result;
+          } catch (error: any) {
+            console.error(chalk.red(`Error: ${error.message}`));
+            process.exit(1);
+          }
+        } else {
+          // Default placeholder behavior
+          console.log(chalk.blue(`Executing {{ subcmd_name }} subcommand...`));
+          {% if subcmd_data.args %}
+          {% for arg in subcmd_data.args %}
+          console.log(`  {{ arg.name }}: ${ {{- arg.name -}} }`);
+          {% endfor %}
+          {% endif %}
+          console.log('Options:', options);
+        }
+      });
+    }
+    {% endfor %}
+  }
+  {% endif %}
+  {% endfor %}
+
+  // Load dynamic commands from commands directory
+  await loadCommands(program);
+  
+  // Load plugins
+  await loadPlugins(program);
+
+  {% if cli.command_groups %}
+  // Command groups for help display
+  program.addHelpText('after', '\n' + chalk.bold('Command Groups:'));
+  {% for group in cli.command_groups %}
+  program.addHelpText('after', `\n${chalk.yellow('{{ group.name }}:')}`);
+  {% for cmd_name in group.commands %}
+  {% if cmd_name in cli.commands %}
+  const {{ cmd_name }}Cmd = program.commands.find((c: Command) => c.name() === '{{ cmd_name }}');
+  if ({{ cmd_name }}Cmd) {
+    program.addHelpText('after', `  ${ {{- cmd_name -}} Cmd.name().padEnd(15)} ${ {{- cmd_name -}} Cmd.description()}`);
+  }
+  {% endif %}
+  {% endfor %}
+  {% endfor %}
+  {% endif %}
+
+  {% if cli.header_sections %}
+  // Add header sections to help
+  let headerText: string = '';
+  {% for section in cli.header_sections %}
+  headerText += '\n' + chalk.bold.yellow('{{ section.title }}') + '\n';
+  {% for item in section.items %}
+  {% if item.style == 'example' %}
+  headerText += chalk.green('  {{ item.item }}') + chalk.gray(' # {{ item.desc }}') + '\n';
+  {% elif item.style == 'command' %}
+  headerText += chalk.green('  {{ item.item }}') + '  {{ item.desc }}\n';
+  {% elif item.style == 'setup' %}
+  headerText += chalk.gray('  {{ item.item }}: ') + chalk.green('{{ item.desc }}') + '\n';
+  {% endif %}
+  {% endfor %}
+  {% endfor %}
+  program.addHelpText('before', headerText);
+  {% endif %}
+
+  {% if cli.footer_note %}
+  // Add footer note
+  program.addHelpText('after', '\n' + chalk.gray('{{ cli.footer_note }}'));
+  {% endif %}
+
+  // Parse arguments
+  program.parse(process.argv);
+  
+  // Show help if no arguments provided and no default command
+  {% set has_default = namespace(value=false) %}
+  {% for cmd_name, cmd_data in cli.commands.items() %}
+  {% if cmd_data.is_default %}
+  {% set has_default.value = true %}
+  {% endif %}
+  {% endfor %}
+  {% if not has_default.value %}
+  if (!process.argv.slice(2).length) {
+    program.outputHelp();
+  }
+  {% endif %}
+}
+
+// Export for use as a module
+export default cli;

@@ -1,0 +1,127 @@
+/**
+ * Auto-generated test for {{ cmd_name }} command
+ * Testing {{ display_name }}
+ */
+
+import { test, describe, it, before, after } from 'node:test';
+import assert from 'node:assert';
+import { spawn, SpawnOptions } from 'node:child_process';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename: string = fileURLToPath(import.meta.url);
+const __dirname: string = dirname(__filename);
+
+interface CommandResult {
+  stdout: string;
+  stderr: string;
+  code: number | null;
+}
+
+const execCommand = promisify((cmd: string, args: string[], callback: (err: Error | null, result?: CommandResult) => void): void => {
+  const options: SpawnOptions = { encoding: 'utf8' as BufferEncoding };
+  const child = spawn(cmd, args, options);
+  let stdout = '';
+  let stderr = '';
+  
+  child.stdout?.on('data', (data: Buffer | string) => {
+    stdout += data.toString();
+  });
+  
+  child.stderr?.on('data', (data: Buffer | string) => {
+    stderr += data.toString();
+  });
+  
+  child.on('close', (code: number | null) => {
+    callback(null, { stdout, stderr, code });
+  });
+  
+  child.on('error', callback);
+});
+
+describe('{{ cmd_name }} command', () => {
+  const cliPath: string = join(__dirname, '..', '..', 'dist', 'bin', 'cli.js');
+  
+  before(() => {
+    // Setup before tests
+    console.log('Testing {{ cmd_name }} command...');
+  });
+  
+  after(() => {
+    // Cleanup after tests
+  });
+  
+  it('should run without errors', async () => {
+    const result = await execCommand('node', [cliPath, '{{ cmd_name }}', '--help']);
+    assert.ok(result, 'Command should return a result');
+    const { stdout, stderr, code } = result;
+    
+    assert.strictEqual(code, 0, `Command exited with code ${code}`);
+    assert.ok(stdout.includes('{{ cmd_data.desc }}'), 'Command description not found in help output');
+  });
+  
+  {% if cmd_data.args %}
+  it('should handle required arguments', async () => {
+    {% for arg in cmd_data.args %}
+    {% if arg.required %}
+    // Test missing required argument: {{ arg.name }}
+    const result = await execCommand('node', [cliPath, '{{ cmd_name }}']);
+    assert.ok(result, 'Command should return a result');
+    const { stderr: missingArgErr, code: missingArgCode } = result;
+    assert.notStrictEqual(missingArgCode, 0, 'Command should fail when required argument is missing');
+    {% endif %}
+    {% endfor %}
+  });
+  {% endif %}
+  
+  {% if cmd_data.options %}
+  it('should handle command options', async () => {
+    const testArgs: string[] = [cliPath, '{{ cmd_name }}'];
+    
+    {% for arg in cmd_data.args %}
+    {% if arg.required %}
+    testArgs.push('test-{{ arg.name }}');
+    {% endif %}
+    {% endfor %}
+    
+    {% for opt in cmd_data.options %}
+    {% if opt.type == 'flag' %}
+    // Test flag option: --{{ opt.name }}
+    const flagResult = await execCommand('node', [...testArgs, '--{{ opt.name }}']);
+    assert.ok(flagResult, 'Command should return a result');
+    assert.strictEqual(flagResult.code, 0, 'Command should handle flag option --{{ opt.name }}');
+    {% else %}
+    // Test option with value: --{{ opt.name }}
+    const optResult = await execCommand('node', [...testArgs, '--{{ opt.name }}', 'test-value']);
+    assert.ok(optResult, 'Command should return a result');
+    assert.strictEqual(optResult.code, 0, 'Command should handle option --{{ opt.name }} with value');
+    {% endif %}
+    {% endfor %}
+  });
+  {% endif %}
+  
+  {% if cmd_data.subcommands %}
+  describe('subcommands', () => {
+    {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+    it('should run {{ subcmd_name }} subcommand', async () => {
+      const result = await execCommand('node', [cliPath, '{{ cmd_name }}', '{{ subcmd_name }}', '--help']);
+      assert.ok(result, 'Command should return a result');
+      const { stdout, code } = result;
+      
+      assert.strictEqual(code, 0, `Subcommand {{ subcmd_name }} exited with code ${code}`);
+      assert.ok(stdout.includes('{{ subcmd_data.desc }}'), 'Subcommand description not found in help output');
+    });
+    {% endfor %}
+  });
+  {% endif %}
+  
+  it('should integrate with hooks when available', async () => {
+    // This test would require mocking the hooks module
+    // For now, just verify the command structure
+    const result = await execCommand('node', [cliPath, '{{ cmd_name }}', '--help']);
+    assert.ok(result, 'Command should return a result');
+    const { stdout } = result;
+    assert.ok(stdout.length > 0, 'Help output should not be empty');
+  });
+});

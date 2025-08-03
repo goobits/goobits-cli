@@ -320,6 +320,10 @@ def build(
     # Load goobits configuration
     goobits_config = load_goobits_config(config_path)
     
+    # Detect language from configuration
+    language = goobits_config.language
+    typer.echo(f"Detected language: {language}")
+    
     typer.echo("Generating CLI script...")
     
     # Generate cli.py if CLI configuration exists
@@ -330,102 +334,152 @@ def build(
         if pyproject_path.exists():
             version = extract_version_from_pyproject(output_dir)
         
-        cli_code = generate_cli_code(goobits_config, config_path.name, version)
+        # Route to different generators based on language
+        if language == "nodejs":
+            from goobits_cli.generators.nodejs import NodeJSGenerator
+            generator = NodeJSGenerator()
+            
+            # Node.js generates multiple files
+            all_files = generator.generate_all_files(goobits_config, config_path.name, version)
+        elif language == "typescript":
+            from goobits_cli.generators.typescript import TypeScriptGenerator
+            generator = TypeScriptGenerator()
+            
+            # TypeScript generates multiple files
+            all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         
-        # Use configured output path, with package name substitution
-        cli_output_path = goobits_config.cli_output_path.format(
-            package_name=goobits_config.package_name.replace('goobits-', '')
-        )
+        # Handle multi-file generation for Node.js and TypeScript
+        if language in ["nodejs", "typescript"]:
+            # Write all generated files
+            executable_files = all_files.pop('__executable__', [])
+            for file_path, content in all_files.items():
+                full_path = output_dir / file_path
+                
+                # Ensure parent directories exist
+                full_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Backup existing file if requested
+                backup_path = backup_file(full_path, backup)
+                if backup_path:
+                    typer.echo(f"📋 Backed up existing file: {backup_path}")
+                
+                # Write file
+                with open(full_path, 'w') as f:
+                    f.write(content)
+                
+                # Make files executable as needed
+                if file_path.startswith('bin/') or file_path in executable_files:
+                    full_path.chmod(0o755)
+                
+                typer.echo(f"✅ Generated: {full_path}")
+            
+            # Skip the single file generation for Node.js/TypeScript
+            cli_code = None
+        else:
+            # Use Python generator (default)
+            from goobits_cli.generators.python import PythonGenerator  
+            generator = PythonGenerator()
+            cli_code = generator.generate(goobits_config, config_path.name, version)
+            
+            # Use configured output path, with package name substitution
+            cli_output_path = goobits_config.cli_output_path.format(
+                package_name=goobits_config.package_name.replace('goobits-', '')
+            )
         
-        # Override with command line option if provided
-        if output:
-            cli_output_path = output
+        # Only generate single file for Python
+        if cli_code is not None:
+            # Override with command line option if provided
+            if output:
+                cli_output_path = output
+            
+            # Resolve to full path
+            cli_path = output_dir / cli_output_path
+            
+            # Ensure parent directories exist
+            cli_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Backup existing file if it exists and backup is requested
+            backup_path = backup_file(cli_path, backup)
+            if backup_path:
+                typer.echo(f"📋 Backed up existing CLI: {backup_path}")
+            
+            # Write CLI file
+            with open(cli_path, 'w') as f:
+                f.write(cli_code)
+            
+            typer.echo(f"✅ Generated CLI script: {cli_path}")
         
-        # Resolve to full path
-        cli_path = output_dir / cli_output_path
         
-        # Ensure parent directories exist
-        cli_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Backup existing file if it exists and backup is requested
-        backup_path = backup_file(cli_path, backup)
-        if backup_path:
-            typer.echo(f"📋 Backed up existing CLI: {backup_path}")
-        
-        # Write CLI file
-        with open(cli_path, 'w') as f:
-            f.write(cli_code)
-        
-        typer.echo(f"✅ Generated CLI script: {cli_path}")
-        
-        # Extract package name and filename for pyproject.toml update
-        # Extract the actual module name from the CLI output path
-        # e.g., "src/ttt/cli.py" -> "ttt"
-        cli_path_parts = Path(cli_output_path).parts
-        if 'src' in cli_path_parts:
-            src_index = cli_path_parts.index('src')
-            if src_index + 1 < len(cli_path_parts):
-                module_name = cli_path_parts[src_index + 1]
+        # Extract package name and filename for pyproject.toml update (Python only)
+        if language == "python" and cli_code is not None:
+            # Extract the actual module name from the CLI output path
+            # e.g., "src/ttt/cli.py" -> "ttt"
+            cli_path_parts = Path(cli_output_path).parts
+            if 'src' in cli_path_parts:
+                src_index = cli_path_parts.index('src')
+                if src_index + 1 < len(cli_path_parts):
+                    module_name = cli_path_parts[src_index + 1]
+                else:
+                    # Fallback to package name conversion
+                    module_name = goobits_config.package_name.replace('-', '_')
             else:
                 # Fallback to package name conversion
                 module_name = goobits_config.package_name.replace('-', '_')
-        else:
-            # Fallback to package name conversion
-            module_name = goobits_config.package_name.replace('-', '_')
         
-        # Extract the full module path relative to the package root
-        cli_path_obj = Path(cli_output_path)
-        cli_path_parts = cli_path_obj.parts
-        
-        # Find the path relative to the package directory
-        if 'src' in cli_path_parts:
-            src_index = cli_path_parts.index('src')
-            if src_index + 2 < len(cli_path_parts):  # src/package/...
-                # Get all parts after src/package/ up to filename
-                relative_parts = cli_path_parts[src_index + 2:]  # Everything after src/package/
-                # Join directory parts with dots, then add filename without .py
-                if len(relative_parts) > 1:
-                    dir_parts = relative_parts[:-1]  # All but filename
-                    filename_part = relative_parts[-1].replace('.py', '')
-                    full_module_path = '.'.join(dir_parts) + '.' + filename_part
+            # Extract the full module path relative to the package root
+            cli_path_obj = Path(cli_output_path)
+            cli_path_parts = cli_path_obj.parts
+            
+            # Find the path relative to the package directory
+            if 'src' in cli_path_parts:
+                src_index = cli_path_parts.index('src')
+                if src_index + 2 < len(cli_path_parts):  # src/package/...
+                    # Get all parts after src/package/ up to filename
+                    relative_parts = cli_path_parts[src_index + 2:]  # Everything after src/package/
+                    # Join directory parts with dots, then add filename without .py
+                    if len(relative_parts) > 1:
+                        dir_parts = relative_parts[:-1]  # All but filename
+                        filename_part = relative_parts[-1].replace('.py', '')
+                        full_module_path = '.'.join(dir_parts) + '.' + filename_part
+                    else:
+                        # Just a filename
+                        full_module_path = relative_parts[0].replace('.py', '')
                 else:
-                    # Just a filename
-                    full_module_path = relative_parts[0].replace('.py', '')
+                    # Fallback to just filename
+                    full_module_path = cli_path_obj.name.replace('.py', '')
             else:
-                # Fallback to just filename
+                # Fallback to just filename  
                 full_module_path = cli_path_obj.name.replace('.py', '')
-        else:
-            # Fallback to just filename  
-            full_module_path = cli_path_obj.name.replace('.py', '')
-        
-        # Update pyproject.toml to use the generated CLI
-        if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, full_module_path + '.py', backup):
-            typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
-            typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
-            typer.echo("   ./setup.sh install --dev")
-        else:
-            typer.echo("⚠️  Could not update pyproject.toml automatically")
-            typer.echo(f"   Please update your entry points to use: {module_name}.{full_module_path}:cli_entry")
+            
+            # Update pyproject.toml to use the generated CLI
+            if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, full_module_path + '.py', backup):
+                typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
+                typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
+                typer.echo("   ./setup.sh install --dev")
+            else:
+                typer.echo("⚠️  Could not update pyproject.toml automatically")
+                typer.echo(f"   Please update your entry points to use: {module_name}.{full_module_path}:cli_entry")
     else:
         typer.echo("⚠️  No CLI configuration found, skipping cli.py generation")
     
-    # Generate setup.sh
-    typer.echo("Generating setup script...")
-    # Normalize dependencies for backward compatibility
-    normalized_config = normalize_dependencies_for_template(goobits_config)
-    setup_script = generate_setup_script(normalized_config, output_dir)
+    # Generate setup.sh (Python only - Node.js generates its own)
+    if language == "python":
+        typer.echo("Generating setup script...")
+        # Normalize dependencies for backward compatibility
+        normalized_config = normalize_dependencies_for_template(goobits_config)
+        setup_script = generate_setup_script(normalized_config, output_dir)
+        
+        setup_output_path = output_dir / "setup.sh"
+        with open(setup_output_path, 'w') as f:
+            f.write(setup_script)
+        
+        # Make setup.sh executable
+        setup_output_path.chmod(0o755)
+        
+        typer.echo(f"✅ Generated setup script: {setup_output_path}")
     
-    setup_output_path = output_dir / "setup.sh"
-    with open(setup_output_path, 'w') as f:
-        f.write(setup_script)
-    
-    # Make setup.sh executable
-    setup_output_path.chmod(0o755)
-    
-    typer.echo(f"✅ Generated setup script: {setup_output_path}")
-    
-    # Copy setup.sh to package source directory for package-data inclusion
-    if goobits_config.cli:  # Only copy if CLI is configured
+    # Copy setup.sh to package source directory for package-data inclusion (Python only)
+    if language == "python" and goobits_config.cli:  # Only copy if CLI is configured
         # Find the package source directory
         cli_output_path = goobits_config.cli_output_path.format(
             package_name=goobits_config.package_name.replace('goobits-', '')
@@ -518,6 +572,9 @@ command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "A CLI tool built with Goobits"
 
+# Language selection (python or nodejs)
+language: python
+
 python:
   minimum_version: "3.8"
 
@@ -549,6 +606,9 @@ package_name: {project_name}
 command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "An advanced CLI tool built with Goobits"
+
+# Language selection (python or nodejs)
+language: python
 
 python:
   minimum_version: "3.8"
@@ -622,6 +682,9 @@ command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "API client CLI tool built with Goobits"
 
+# Language selection (python or nodejs)
+language: python
+
 python:
   minimum_version: "3.8"
 
@@ -687,6 +750,9 @@ package_name: {project_name}
 command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "Text processing CLI tool built with Goobits"
+
+# Language selection (python or nodejs)
+language: python
 
 python:
   minimum_version: "3.8"

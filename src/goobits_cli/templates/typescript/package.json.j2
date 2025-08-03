@@ -1,0 +1,65 @@
+{
+  "name": "{{ package_name }}",
+  "version": "{{ version | default('1.0.0') }}",
+  "description": "{{ description | default(cli.description if cli else 'A CLI tool built with goobits') }}",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "{{ command_name }}": "./dist/bin/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node index.ts",
+    "dev": "ts-node-dev --respawn --transpile-only index.ts",
+    "test": "node --loader ts-node/esm --test test/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "prepare": "npm run build",
+    "prepack": "npm run build",
+    "postinstall": "npm run build && node scripts/postinstall.js || true"
+  },
+  "keywords": [
+    "cli",
+    "typescript"{% if cli and cli.tags %},
+    {% for tag in cli.tags %}"{{ tag }}"{% if not loop.last %},{% endif %}
+    {% endfor %}{% endif %}
+  ],
+  "author": "{{ author | default('') }}",
+  "license": "{{ license | default('MIT') }}",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "chalk": "^5.3.0"{% if installation and installation.extras and installation.extras.npm %},
+    {% for package in installation.extras.npm %}
+    {% if '@' in package %}
+    {% set parts = package.rsplit('@', 1) %}
+    "{{ parts[0] }}": "^{{ parts[1] }}"{% else %}"{{ package }}": "latest"{% endif %}{% if not loop.last %},{% endif %}
+    {% endfor %}{% endif %}
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "ts-node-dev": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "type": "module",
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "{{ repository | default('') }}"
+  },
+  "bugs": {
+    "url": "{{ bugs_url | default('') }}"
+  },
+  "homepage": "{{ homepage | default('') }}"
+}

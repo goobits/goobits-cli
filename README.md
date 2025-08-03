@@ -2,6 +2,30 @@
 
 **Build professional command-line tools with YAML configuration.** Goobits CLI generates rich terminal interfaces, setup scripts, and handles installation management automatically.
 
+## Multi-Language Support
+
+Goobits CLI now supports generating command-line applications in **three languages**:
+
+- **Python** - Rich Click-based CLIs with pipx installation
+- **Node.js** - Commander.js-based CLIs with npm/npx support  
+- **TypeScript** - Fully typed CLIs with modern TypeScript tooling
+
+Choose your language in the `goobits.yaml` configuration:
+
+```yaml
+# Python CLI (default)
+language: python
+package_name: my-python-cli
+
+# Node.js CLI  
+language: nodejs
+package_name: my-node-cli
+
+# TypeScript CLI
+language: typescript  
+package_name: my-typescript-cli
+```
+
 ## What is Goobits CLI?
 
 Goobits CLI transforms a simple YAML file into a complete command-line application with:
@@ -26,12 +50,19 @@ cd goobits-cli && ./setup.sh install
 ```
 
 ### 2. Create Your First CLI
+
+Choose your preferred language:
+
+<details>
+<summary><strong>Python CLI</strong> (Click to expand)</summary>
+
 ```bash
 mkdir my-awesome-cli
 cd my-awesome-cli
 
 # Create goobits.yaml
 cat > goobits.yaml << 'EOF'
+language: python
 package_name: my-awesome-cli
 command_name: awesome
 display_name: "Awesome CLI"
@@ -61,15 +92,97 @@ cli:
 EOF
 ```
 
+</details>
+
+<details>
+<summary><strong>Node.js CLI</strong> (Click to expand)</summary>
+
+```bash
+mkdir my-awesome-cli
+cd my-awesome-cli
+
+# Create goobits.yaml
+cat > goobits.yaml << 'EOF'
+language: nodejs
+package_name: my-awesome-cli
+command_name: awesome
+display_name: "Awesome CLI"
+description: "My first Goobits CLI tool"
+
+dependencies:
+  npm_packages: ["commander"]
+
+cli:
+  name: awesome
+  tagline: "An awesome command-line tool"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting"
+          default: "Hello"
+EOF
+```
+
+</details>
+
+<details>
+<summary><strong>TypeScript CLI</strong> (Click to expand)</summary>
+
+```bash
+mkdir my-awesome-cli
+cd my-awesome-cli
+
+# Create goobits.yaml
+cat > goobits.yaml << 'EOF'
+language: typescript
+package_name: my-awesome-cli
+command_name: awesome
+display_name: "Awesome CLI"
+description: "My first Goobits CLI tool"
+
+dependencies:
+  npm_packages: ["commander"]
+
+cli:
+  name: awesome
+  tagline: "An awesome command-line tool"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting"
+          default: "Hello"
+EOF
+```
+
+</details>
+
 ### 3. Generate Your CLI
 ```bash
 goobits build
-# This creates:
-# - src/my_awesome_cli/cli.py (your CLI interface)
-# - setup.sh (installation script)
+# Python: Creates src/my_awesome_cli/cli.py + setup.sh
+# Node.js: Creates index.js + package.json + bin/cli.js  
+# TypeScript: Creates index.ts + tsconfig.json + package.json
 ```
 
 ### 4. Add Your Business Logic
+
+<details>
+<summary><strong>Python</strong> (Click to expand)</summary>
+
 ```bash
 # Create the app hooks file
 mkdir -p src/my_awesome_cli
@@ -83,13 +196,72 @@ def on_greet(name, greeting):
 EOF
 ```
 
+</details>
+
+<details>
+<summary><strong>Node.js</strong> (Click to expand)</summary>
+
+```bash
+# Create the app hooks file
+cat > app_hooks.js << 'EOF'
+function onGreet(name, options) {
+    const greeting = options.greeting || 'Hello';
+    console.log(`${greeting}, ${name}!`);
+    return `${greeting}, ${name}!`;
+}
+
+module.exports = { onGreet };
+EOF
+```
+
+</details>
+
+<details>
+<summary><strong>TypeScript</strong> (Click to expand)</summary>
+
+```bash
+# Create the app hooks file
+cat > app_hooks.ts << 'EOF'
+interface GreetOptions {
+    greeting?: string;
+}
+
+export function onGreet(name: string, options: GreetOptions): string {
+    const greeting = options.greeting || 'Hello';
+    console.log(`${greeting}, ${name}!`);
+    return `${greeting}, ${name}!`;
+}
+EOF
+```
+
+</details>
+
 ### 5. Install and Test
+
+<details>
+<summary><strong>Python</strong> (Click to expand)</summary>
+
 ```bash
 ./setup.sh install --dev  # Install with all dependencies automatically
 awesome greet World        # Test your CLI
 awesome greet World -g "Hi"  # With custom greeting
 echo "Alice" | awesome greet  # Pipe support works automatically!
 ```
+
+</details>
+
+<details>
+<summary><strong>Node.js/TypeScript</strong> (Click to expand)</summary>
+
+```bash
+npm install                 # Install dependencies
+npm link                    # Make CLI available globally
+awesome greet World         # Test your CLI
+awesome greet World -g "Hi" # With custom greeting
+echo "Alice" | awesome greet # Pipe support works automatically!
+```
+
+</details>
 
 ## Development Workflow
 
@@ -400,10 +572,11 @@ mycli fetch-data | jq '.results[]' | mycli process
 ## Next Steps
 
 1. **Study existing examples**: Look at TTT, TTS, STT in the Goobits ecosystem
-2. **Read the generated code**: Check out `src/your_cli/cli.py` after building
-3. **Explore advanced config**: Add subcommands, command groups, custom validation
-4. **Create plugins**: Extend functionality with the plugin system
-5. **Share your CLI**: Publish to PyPI for others to install with `pipx install your-package`
+2. **Read the generated code**: Check out generated files after building
+3. **Explore multi-language**: Try Node.js and TypeScript CLIs (see [Node.js Guide](docs/nodejs_guide.md))
+4. **Explore advanced config**: Add subcommands, command groups, custom validation
+5. **Create plugins**: Extend functionality with the plugin system
+6. **Share your CLI**: Publish to PyPI (Python) or npm (Node.js/TypeScript)
 
 ---
 

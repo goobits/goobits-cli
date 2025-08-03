@@ -189,6 +189,9 @@ class GoobitsConfigSchema(BaseModel):
     display_name: str
     description: str
     
+    # Language selection
+    language: Literal["python", "nodejs", "typescript"] = "python"
+    
     # CLI generation configuration
     cli_output_path: str = "src/{package_name}/cli.py"
     hooks_path: Optional[str] = None
