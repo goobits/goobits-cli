@@ -1,5 +1,8 @@
 # Configuration Standardization Proposal for Goobits Ecosystem
 
+> **📋 Status: PROPOSED - Not yet implemented**  
+> This proposal is under consideration and has not been implemented.
+
 **Date**: 2025-01-31  
 **Author**: Configuration Standardization Team  
 **Status**: Proposed  

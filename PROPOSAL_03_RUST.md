@@ -1,5 +1,9 @@
 # Proposal: Multi-Language Support - Rust CLI Generation
 
+> **📋 Status: DRAFT - Not yet implemented**  
+> This proposal is under consideration and has not been implemented.
+> Note: Node.js/TypeScript support was implemented first. This proposal can leverage those patterns.
+
 **Status**: Draft Proposal  
 **Date**: 2025-01-24  
 **Version**: 1.0  

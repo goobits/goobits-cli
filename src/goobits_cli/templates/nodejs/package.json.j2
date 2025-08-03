@@ -8,7 +8,9 @@
     "{{ command_name }}": "./bin/cli.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
     "build": "echo \"No build step required\"",
     "start": "node index.js"
   },
@@ -28,7 +30,10 @@
     "{{ parts[0] }}": "^{{ parts[1] }}"{% else %}"{{ package }}": "latest"{% endif %}{% if not loop.last %},{% endif %}
     {% endfor %}{% endif %}
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
+  },
   "engines": {
     "node": ">=14.0.0"
   },

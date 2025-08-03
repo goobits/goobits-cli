@@ -1,5 +1,8 @@
 # Proposal: Goobits Testing Framework
 
+> **📋 Status: DRAFT - Not yet implemented**  
+> This proposal is under consideration and has not been implemented.
+
 **Status**: Draft Proposal  
 **Date**: 2025-01-24  
 **Version**: 1.0  

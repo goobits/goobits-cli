@@ -9,9 +9,32 @@ import { readdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+{% set npm_packages = [] %}
+{% if installation and installation.extras and installation.extras.npm %}
+{% for pkg in installation.extras.npm %}
+{% set _ = npm_packages.append(pkg.split('@')[0]) %}
+{% endfor %}
+{% endif %}
+{% if 'inquirer' in npm_packages %}
+import inquirer from 'inquirer';
+{% endif %}
+{% if 'ora' in npm_packages %}
+import ora from 'ora';
+{% endif %}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Load configuration if config module exists
+let config = null;
+try {
+  const configModule = await import('./lib/config.js');
+  config = configModule.default;
+  await config.load();
+} catch (error) {
+  // Config module not available or error loading
+  console.debug('Config module not loaded:', error.message);
+}
 
 // Create the main program
 const program = new Command();
@@ -297,6 +320,8 @@ export async function cli() {
           {% for option in cli.options %}
           {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
           {% endfor %}
+          // Add config if available
+          config: config
         };
         
         try {
@@ -329,6 +354,8 @@ export async function cli() {
           {% for option in cli.options %}
           {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
           {% endfor %}
+          // Add config if available
+          config: config
         };
         
         try {
@@ -340,13 +367,47 @@ export async function cli() {
         }
       } else {
         // Default placeholder behavior
+        {% if 'inquirer' in npm_packages and cmd_data.interactive %}
+        // Interactive mode with inquirer
+        const questions = [];
+        {% if cmd_data.args %}
+        {% for arg in cmd_data.args %}
+        {% if not arg.required %}
+        if (!{{ arg.name }}) {
+          questions.push({
+            type: 'input',
+            name: '{{ arg.name }}',
+            message: '{{ arg.desc }}:'
+          });
+        }
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        
+        if (questions.length > 0) {
+          const answers = await inquirer.prompt(questions);
+          Object.assign(options, answers);
+        }
+        {% endif %}
+        
+        {% if 'ora' in npm_packages %}
+        const spinner = ora(`Executing {{ cmd_name }} command...`).start();
+        {% else %}
         console.log(chalk.blue(`Executing {{ cmd_name }} command...`));
+        {% endif %}
+        
         {% if cmd_data.args %}
         {% for arg in cmd_data.args %}
         console.log(`  {{ arg.name }}: ${ {{- arg.name -}} }`);
         {% endfor %}
         {% endif %}
         console.log('Options:', options);
+        
+        {% if 'ora' in npm_packages %}
+        // Simulate work
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        spinner.succeed('Command completed successfully!');
+        {% endif %}
       }
       {% endif %}
     });
@@ -406,6 +467,8 @@ export async function cli() {
             {% for option in cli.options %}
             {{ option.name | replace('-', '_') }}: command.parent.parent.opts().{{ option.name | replace('-', '_') }},
             {% endfor %}
+            // Add config if available
+            config: config
           };
           
           try {
@@ -417,13 +480,24 @@ export async function cli() {
           }
         } else {
           // Default placeholder behavior
+          {% if 'ora' in npm_packages %}
+          const spinner = ora(`Executing {{ subcmd_name }} subcommand...`).start();
+          {% else %}
           console.log(chalk.blue(`Executing {{ subcmd_name }} subcommand...`));
+          {% endif %}
+          
           {% if subcmd_data.args %}
           {% for arg in subcmd_data.args %}
           console.log(`  {{ arg.name }}: ${ {{- arg.name -}} }`);
           {% endfor %}
           {% endif %}
           console.log('Options:', options);
+          
+          {% if 'ora' in npm_packages %}
+          // Simulate work
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          spinner.succeed('Subcommand completed successfully!');
+          {% endif %}
         }
       });
     }

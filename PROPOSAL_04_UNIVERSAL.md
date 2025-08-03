@@ -1,5 +1,9 @@
 # PROPOSAL_04: Goobits Universal CLI DSL
 
+> **📋 Status: DRAFT - Not yet implemented**  
+> This proposal is under consideration and has not been implemented.
+> Note: Depends on Rust implementation (PROPOSAL_03) being completed first.
+
 **Status**: Draft Proposal  
 **Author**: Development Team  
 **Date**: 2025-01-24  

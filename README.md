@@ -1041,6 +1041,14 @@ apicli get /users | jq '.[].id' | xargs -I {} apicli get /users/{}
 5. **Create plugins**: Extend functionality with the plugin system
 6. **Share your CLI**: Publish to PyPI (Python) or npm (Node.js/TypeScript)
 
+## Future Development
+
+Check out our [design proposals](docs/proposals/) for upcoming features:
+- **Rust Support** - High-performance CLI generation
+- **Universal DSL** - Write once, generate for any language
+- **Testing Framework** - YAML-based testing for generated CLIs
+- **Config Standardization** - Unified configuration across all goobits projects
+
 ---
 
 **🚀 Ready to build professional CLIs with minimal boilerplate? Start with `goobits build` and let the framework handle the complexity!**
