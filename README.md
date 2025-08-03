@@ -71,8 +71,9 @@ description: "My first Goobits CLI tool"
 python:
   minimum_version: "3.8"
 
-dependencies:
-  required: ["pipx"]
+installation:
+  extras:
+    python: ["pipx"]
 
 cli:
   name: awesome
@@ -109,12 +110,14 @@ command_name: awesome
 display_name: "Awesome CLI"
 description: "My first Goobits CLI tool"
 
-dependencies:
-  npm_packages: ["commander"]
+installation:
+  extras:
+    npm: ["commander@^11.1.0", "chalk@^5.3.0"]
 
 cli:
   name: awesome
   tagline: "An awesome command-line tool"
+  version: "1.0.0"
   commands:
     greet:
       desc: "Greet someone"
@@ -147,12 +150,14 @@ command_name: awesome
 display_name: "Awesome CLI"
 description: "My first Goobits CLI tool"
 
-dependencies:
-  npm_packages: ["commander"]
+installation:
+  extras:
+    npm: ["commander@^11.1.0", "chalk@^5.3.0", "@types/node@^20.0.0", "typescript@^5.0.0"]
 
 cli:
   name: awesome
   tagline: "An awesome command-line tool"
+  version: "1.0.0"
   commands:
     greet:
       desc: "Greet someone"
@@ -173,12 +178,54 @@ EOF
 ### 3. Generate Your CLI
 ```bash
 goobits build
-# Python: Creates src/my_awesome_cli/cli.py + setup.sh
-# Node.js: Creates index.js + package.json + bin/cli.js  
-# TypeScript: Creates index.ts + tsconfig.json + package.json
 ```
 
+<details>
+<summary><strong>Generated File Structure</strong> (Click to see what's created)</summary>
+
+**Python:**
+```
+my-awesome-cli/
+├── src/
+│   └── my_awesome_cli/
+│       └── cli.py          # Generated CLI code
+├── setup.sh                # Installation script
+└── README.md               # Auto-generated docs
+```
+
+**Node.js:**
+```
+my-awesome-cli/
+├── index.js                # Main CLI entry point
+├── package.json            # NPM configuration
+├── bin/
+│   └── cli.js              # Executable wrapper
+├── app_hooks.js            # Your business logic goes here
+├── setup.sh                # Installation script (supports --dev)
+├── README.md               # Auto-generated docs
+└── .gitignore              # Node.js ignores
+```
+
+**TypeScript:**
+```
+my-awesome-cli/
+├── index.ts                # TypeScript CLI entry
+├── package.json            # NPM configuration
+├── tsconfig.json           # TypeScript config
+├── bin/
+│   └── cli.js              # Executable wrapper
+├── app_hooks.ts            # Your typed business logic
+├── setup.sh                # Installation script
+├── README.md               # Auto-generated docs
+└── .gitignore              # Node.js ignores
+```
+</details>
+
 ### 4. Add Your Business Logic
+
+> **Note:** Hook function signatures differ by language:
+> - **Python**: Individual parameters `on_greet(name, greeting)`
+> - **Node.js/TypeScript**: Single args object `onGreet(args)` with destructuring
 
 <details>
 <summary><strong>Python</strong> (Click to expand)</summary>
@@ -202,15 +249,16 @@ EOF
 <summary><strong>Node.js</strong> (Click to expand)</summary>
 
 ```bash
-# Create the app hooks file
+# Create the app hooks file (ES6 modules)
 cat > app_hooks.js << 'EOF'
-function onGreet(name, options) {
-    const greeting = options.greeting || 'Hello';
-    console.log(`${greeting}, ${name}!`);
-    return `${greeting}, ${name}!`;
-}
+import chalk from 'chalk';
 
-module.exports = { onGreet };
+export function onGreet(args) {
+    const { name, greeting = 'Hello' } = args;
+    const message = `${greeting}, ${name}!`;
+    console.log(chalk.green(message));
+    return message;
+}
 EOF
 ```
 
@@ -220,16 +268,21 @@ EOF
 <summary><strong>TypeScript</strong> (Click to expand)</summary>
 
 ```bash
-# Create the app hooks file
+# Create the app hooks file (TypeScript)
 cat > app_hooks.ts << 'EOF'
-interface GreetOptions {
+import chalk from 'chalk';
+
+interface GreetArgs {
+    name: string;
     greeting?: string;
+    [key: string]: any;
 }
 
-export function onGreet(name: string, options: GreetOptions): string {
-    const greeting = options.greeting || 'Hello';
-    console.log(`${greeting}, ${name}!`);
-    return `${greeting}, ${name}!`;
+export function onGreet(args: GreetArgs): string {
+    const { name, greeting = 'Hello' } = args;
+    const message = `${greeting}, ${name}!`;
+    console.log(chalk.green(message));
+    return message;
 }
 EOF
 ```
@@ -254,9 +307,16 @@ echo "Alice" | awesome greet  # Pipe support works automatically!
 <summary><strong>Node.js/TypeScript</strong> (Click to expand)</summary>
 
 ```bash
+# Option 1: Using setup.sh (recommended)
+./setup.sh --dev            # Install dependencies + create global link
+awesome greet World         # Test your CLI
+
+# Option 2: Using npm directly
 npm install                 # Install dependencies
 npm link                    # Make CLI available globally
 awesome greet World         # Test your CLI
+
+# Both options support:
 awesome greet World -g "Hi" # With custom greeting
 echo "Alice" | awesome greet # Pipe support works automatically!
 ```
@@ -267,15 +327,23 @@ echo "Alice" | awesome greet # Pipe support works automatically!
 
 ### The Goobits Pattern
 ```
-goobits.yaml → goobits build → cli.py + setup.sh → ./setup.sh install --dev → working CLI
+goobits.yaml → goobits build → Generated Files → Install → Working CLI
+
+Python:    goobits.yaml → goobits build → cli.py + setup.sh → ./setup.sh install --dev → working CLI
+Node.js:   goobits.yaml → goobits build → index.js + package.json → npm install && npm link → working CLI  
+TypeScript: goobits.yaml → goobits build → index.ts + tsconfig.json → npm install && npm link → working CLI
 ```
 
 ### Daily Development Cycle
+
+<details>
+<summary><strong>Python Development</strong></summary>
+
 ```bash
 # 1. Modify your business logic
 vim src/my_awesome_cli/app_hooks.py
 
-# 2. Test immediately (changes reflected instantly)
+# 2. Test immediately (changes reflected instantly with --dev)
 awesome greet "Test"
 
 # 3. Add new commands/options? Update config
@@ -287,21 +355,69 @@ goobits build
 # 5. Update installation
 ./setup.sh upgrade
 ```
+</details>
+
+<details>
+<summary><strong>Node.js/TypeScript Development</strong></summary>
+
+```bash
+# 1. Modify your business logic
+vim app_hooks.js  # or app_hooks.ts for TypeScript
+
+# 2. Test immediately (changes reflected after rebuild)
+awesome greet "Test"
+
+# 3. Add new commands/options? Update config
+vim goobits.yaml
+
+# 4. Rebuild CLI structure
+goobits build
+
+# 5. For TypeScript, compile the changes
+npx tsc  # TypeScript only
+
+# 6. Test your changes
+node index.js greet "Test"
+```
+</details>
 
 ### Development vs Production Installation
+
+<details>
+<summary><strong>Language-Specific Installation Methods</strong></summary>
+
+**Python (Live Reload):**
 ```bash
-# For development (changes reflected immediately, includes dev dependencies)
+# Development mode - changes reflect immediately without reinstall
 ./setup.sh install --dev
 
-# For end users (stable, isolated, production dependencies only)
+# Production mode - stable installation
 ./setup.sh install
-
-# Upgrade existing installation
-./setup.sh upgrade
-
-# Remove completely
-./setup.sh uninstall
 ```
+
+**Node.js/TypeScript (Manual Reload):**
+```bash
+# Development mode - creates global link, but requires restart for changes
+./setup.sh --dev
+# OR
+npm install && npm link
+
+# Production mode - install from npm registry
+npm install -g my-awesome-cli
+```
+
+**Key Difference:** Python's `--dev` mode automatically reflects code changes, while Node.js requires restarting the CLI after modifications.
+</details>
+
+### Workflow Differences by Language
+
+| Feature | Python | Node.js | TypeScript |
+|---------|---------|----------|-------------|
+| **Live reload on code changes** | ✅ Yes (--dev mode) | ❌ No | ❌ No |
+| **Global command after dev install** | ✅ Yes | ✅ Yes | ✅ Yes |
+| **Restart needed after changes** | ❌ No | ✅ Yes | ✅ Yes + compile |
+| **Installation command** | `./setup.sh install --dev` | `./setup.sh --dev` | `./setup.sh --dev` |
+| **Hook location** | `src/package_name/app_hooks.py` | `app_hooks.js` | `app_hooks.ts` |
 
 ## Real-World Examples
 
@@ -559,6 +675,350 @@ Goobits CLIs include rich formatting automatically:
 ./plugins/
 ```
 
+## Node.js & TypeScript Deep Dive
+
+### Generated File Structure
+
+When you run `goobits build` with Node.js or TypeScript, you get:
+
+```
+my-awesome-cli/
+├── index.js (or index.ts)    # Main CLI entry point
+├── package.json              # NPM package configuration  
+├── bin/cli.js               # Global command executable
+├── app_hooks.js             # Your business logic
+├── tsconfig.json            # TypeScript config (TS only)
+├── README.md                # Auto-generated documentation
+└── .gitignore               # Node.js specific ignores
+```
+
+### Advanced Node.js CLI Example
+
+```yaml
+# goobits.yaml - Production Node.js API client
+language: nodejs
+package_name: api-client
+command_name: apicli
+display_name: "API Client"
+description: "Professional REST API client with authentication"
+
+installation:
+  extras:
+    npm: ["commander@^11.1.0", "chalk@^5.3.0", "axios@^1.6.0", "dotenv@^16.3.0"]
+
+cli:
+  name: apicli
+  tagline: "Professional REST API client"
+  version: "2.1.0"
+  options:
+    - name: config
+      short: c
+      type: str
+      desc: "Config file path"
+      default: ".env"
+    - name: verbose
+      short: v
+      type: flag
+      desc: "Verbose output"
+  commands:
+    auth:
+      desc: "Authentication commands"
+      subcommands:
+        login:
+          desc: "Login with API credentials"
+          options:
+            - name: username
+              short: u
+              type: str
+              desc: "Username"
+            - name: save
+              type: flag
+              desc: "Save credentials"
+        logout:
+          desc: "Logout and clear credentials"
+    get:
+      desc: "GET request to API endpoint"
+      args:
+        - name: endpoint
+          desc: "API endpoint path"
+          required: true
+      options:
+        - name: headers
+          short: H
+          type: str
+          desc: "Custom headers (JSON)"
+        - name: output
+          short: o
+          type: str
+          desc: "Save response to file"
+    post:
+      desc: "POST request with data"
+      args:
+        - name: endpoint
+          desc: "API endpoint path"
+          required: true
+        - name: data
+          desc: "JSON data to send"
+          required: true
+      options:
+        - name: file
+          short: f
+          type: flag
+          desc: "Read data from file"
+```
+
+```javascript
+// app_hooks.js - Professional Node.js implementation
+import chalk from 'chalk';
+import axios from 'axios';
+import { readFileSync, writeFileSync } from 'fs';
+import { config } from 'dotenv';
+
+// Load environment variables
+config();
+
+const API_BASE = process.env.API_BASE || 'https://api.example.com';
+let authToken = process.env.API_TOKEN;
+
+export async function onAuthLogin(args) {
+    const { username, save, verbose } = args;
+    
+    if (verbose) console.log(chalk.blue('Authenticating...'));
+    
+    try {
+        const response = await axios.post(`${API_BASE}/auth/login`, {
+            username,
+            password: process.env.API_PASSWORD
+        });
+        
+        authToken = response.data.token;
+        
+        if (save) {
+            writeFileSync('.env', `API_TOKEN=${authToken}\n`, { flag: 'a' });
+            console.log(chalk.green('✅ Credentials saved'));
+        }
+        
+        console.log(chalk.green('✅ Login successful'));
+        return { success: true, token: authToken };
+    } catch (error) {
+        console.error(chalk.red(`❌ Login failed: ${error.response?.data?.message || error.message}`));
+        process.exit(1);
+    }
+}
+
+export async function onGet(args) {
+    const { endpoint, headers, output, verbose } = args;
+    
+    if (!authToken) {
+        console.error(chalk.red('❌ Not authenticated. Run: apicli auth login'));
+        process.exit(1);
+    }
+    
+    try {
+        const config = {
+            headers: { 
+                Authorization: `Bearer ${authToken}`,
+                ...(headers ? JSON.parse(headers) : {})
+            }
+        };
+        
+        if (verbose) console.log(chalk.blue(`GET ${API_BASE}${endpoint}`));
+        
+        const response = await axios.get(`${API_BASE}${endpoint}`, config);
+        
+        if (output) {
+            writeFileSync(output, JSON.stringify(response.data, null, 2));
+            console.log(chalk.green(`✅ Response saved to ${output}`));
+        } else {
+            console.log(JSON.stringify(response.data, null, 2));
+        }
+        
+        return response.data;
+    } catch (error) {
+        console.error(chalk.red(`❌ Request failed: ${error.response?.data?.message || error.message}`));
+        process.exit(1);
+    }
+}
+
+export async function onPost(args) {
+    const { endpoint, data, file, verbose } = args;
+    
+    let payload;
+    if (file) {
+        payload = JSON.parse(readFileSync(data, 'utf8'));
+    } else {
+        payload = JSON.parse(data);
+    }
+    
+    try {
+        const config = {
+            headers: { 
+                Authorization: `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        };
+        
+        if (verbose) console.log(chalk.blue(`POST ${API_BASE}${endpoint}`));
+        
+        const response = await axios.post(`${API_BASE}${endpoint}`, payload, config);
+        console.log(JSON.stringify(response.data, null, 2));
+        
+        return response.data;
+    } catch (error) {
+        console.error(chalk.red(`❌ Request failed: ${error.response?.data?.message || error.message}`));
+        process.exit(1);
+    }
+}
+```
+
+### TypeScript CLI with Advanced Types
+
+```typescript
+// app_hooks.ts - Type-safe implementation
+import chalk from 'chalk';
+import axios, { AxiosResponse } from 'axios';
+import { readFileSync, writeFileSync } from 'fs';
+
+interface CommandArgs {
+    [key: string]: any;
+    verbose?: boolean;
+}
+
+interface AuthLoginArgs extends CommandArgs {
+    username: string;
+    save?: boolean;
+}
+
+interface ApiResponse<T = any> {
+    data: T;
+    message?: string;
+    success: boolean;
+}
+
+interface LoginResponse {
+    token: string;
+    user: {
+        id: string;
+        username: string;
+        role: string;
+    };
+}
+
+class APIClient {
+    private baseURL: string;
+    private token?: string;
+
+    constructor(baseURL: string, token?: string) {
+        this.baseURL = baseURL;
+        this.token = token;
+    }
+
+    private getHeaders(customHeaders?: Record<string, string>) {
+        return {
+            Authorization: this.token ? `Bearer ${this.token}` : '',
+            'Content-Type': 'application/json',
+            ...customHeaders
+        };
+    }
+
+    async login(username: string, password: string): Promise<LoginResponse> {
+        const response: AxiosResponse<ApiResponse<LoginResponse>> = await axios.post(
+            `${this.baseURL}/auth/login`,
+            { username, password }
+        );
+        
+        this.token = response.data.data.token;
+        return response.data.data;
+    }
+
+    async get<T = any>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+        const response: AxiosResponse<T> = await axios.get(
+            `${this.baseURL}${endpoint}`,
+            { headers: this.getHeaders(headers) }
+        );
+        return response.data;
+    }
+
+    async post<T = any>(endpoint: string, data: any): Promise<T> {
+        const response: AxiosResponse<T> = await axios.post(
+            `${this.baseURL}${endpoint}`,
+            data,
+            { headers: this.getHeaders() }
+        );
+        return response.data;
+    }
+}
+
+const client = new APIClient(
+    process.env.API_BASE || 'https://api.example.com',
+    process.env.API_TOKEN
+);
+
+export async function onAuthLogin(args: AuthLoginArgs): Promise<{ success: boolean; token: string }> {
+    const { username, save, verbose } = args;
+    
+    if (verbose) console.log(chalk.blue('Authenticating...'));
+    
+    try {
+        const result = await client.login(username, process.env.API_PASSWORD || '');
+        
+        if (save) {
+            writeFileSync('.env', `API_TOKEN=${result.token}\n`, { flag: 'a' });
+            console.log(chalk.green('✅ Credentials saved'));
+        }
+        
+        console.log(chalk.green(`✅ Welcome, ${result.user.username}!`));
+        return { success: true, token: result.token };
+    } catch (error: any) {
+        console.error(chalk.red(`❌ Login failed: ${error.response?.data?.message || error.message}`));
+        process.exit(1);
+    }
+}
+```
+
+### Node.js vs TypeScript Benefits
+
+| Feature | Node.js | TypeScript |
+|---------|---------|------------|
+| **Type Safety** | Runtime only | Compile-time + Runtime |
+| **IDE Support** | Good | Excellent (autocomplete, refactoring) |
+| **Development Speed** | Fast iteration | Slower build, better DX |
+| **Error Detection** | Runtime | Compile-time |
+| **Bundle Size** | Smaller | Transpiled to JS |
+| **Learning Curve** | JavaScript knowledge | JavaScript + TypeScript |
+
+### Publishing Your CLI
+
+**Node.js CLI:**
+```bash
+# Build and test
+npm run build
+npm test
+
+# Publish to npm
+npm version patch
+npm publish
+
+# Install globally
+npm install -g my-awesome-cli
+```
+
+**TypeScript CLI:**
+```bash
+# Build TypeScript
+npx tsc
+
+# Test compiled output  
+node dist/index.js --help
+
+# Publish (publishes compiled JS)
+npm publish
+
+# Install and use
+npm install -g my-awesome-cli
+awesome --help
+```
+
 ### Integration Examples
 ```bash
 # Text processing pipeline
@@ -567,6 +1027,9 @@ stt recording.wav | ttt "summarize" | tts  # Transcribe, summarize, speak
 
 # API workflow  
 mycli fetch-data | jq '.results[]' | mycli process
+
+# Node.js CLI chaining
+apicli get /users | jq '.[].id' | xargs -I {} apicli get /users/{}
 ```
 
 ## Next Steps
