@@ -347,9 +347,15 @@ def build(
             
             # TypeScript generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
+        elif language == "rust":
+            from goobits_cli.generators.rust import RustGenerator
+            generator = RustGenerator()
+            
+            # Rust generates multiple files
+            all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         
-        # Handle multi-file generation for Node.js and TypeScript
-        if language in ["nodejs", "typescript"]:
+        # Handle multi-file generation for Node.js, TypeScript, and Rust
+        if language in ["nodejs", "typescript", "rust"]:
             # Write all generated files
             executable_files = all_files.pop('__executable__', [])
             for file_path, content in all_files.items():
@@ -368,12 +374,12 @@ def build(
                     f.write(content)
                 
                 # Make files executable as needed
-                if file_path.startswith('bin/') or file_path in executable_files:
+                if file_path.startswith('bin/') or file_path in executable_files or file_path == 'setup.sh':
                     full_path.chmod(0o755)
                 
                 typer.echo(f"✅ Generated: {full_path}")
             
-            # Skip the single file generation for Node.js/TypeScript
+            # Skip the single file generation for Node.js/TypeScript/Rust
             cli_code = None
         else:
             # Use Python generator (default)
@@ -572,7 +578,7 @@ command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "A CLI tool built with Goobits"
 
-# Language selection (python or nodejs)
+# Language selection (python, nodejs, typescript, or rust)
 language: python
 
 python:
@@ -607,7 +613,7 @@ command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "An advanced CLI tool built with Goobits"
 
-# Language selection (python or nodejs)
+# Language selection (python, nodejs, typescript, or rust)
 language: python
 
 python:
@@ -682,7 +688,7 @@ command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "API client CLI tool built with Goobits"
 
-# Language selection (python or nodejs)
+# Language selection (python, nodejs, typescript, or rust)
 language: python
 
 python:
@@ -751,7 +757,7 @@ command_name: {project_name.replace('-', '_')}
 display_name: "{project_name.replace('-', ' ').title()}"
 description: "Text processing CLI tool built with Goobits"
 
-# Language selection (python or nodejs)
+# Language selection (python, nodejs, typescript, or rust)
 language: python
 
 python:

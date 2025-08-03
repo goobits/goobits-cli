@@ -1,0 +1,41 @@
+language: rust
+package_name: invalid-crates-cli
+command_name: invalidcrates
+display_name: "InvalidCratesCLI"
+description: "A Rust CLI with invalid crate specifications for error testing"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+# This should cause compilation errors
+rust_crates:
+  nonexistent_crate: "999.999.999"
+  invalid_version_spec:
+    version: "not-a-version"
+  malformed_features:
+    version: "1.0"
+    features: "not-an-array"
+
+installation:
+  pypi_name: "invalid-crates-cli"
+  github_repo: "example/invalid-crates-cli"
+
+shell_integration:
+  alias: "invalidcrates"
+
+validation:
+  minimum_disk_space_mb: 50
+
+messages:
+  install_success: "InvalidCratesCLI installed successfully!"
+
+cli:
+  name: "InvalidCratesCLI"
+  tagline: "CLI with invalid crate specs"
+  version: "0.1.0"
+  commands:
+    test:
+      desc: "Test command"

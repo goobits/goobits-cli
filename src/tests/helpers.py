@@ -3,6 +3,7 @@ from typing import Dict, Optional
 from goobits_cli.schemas import ConfigSchema, GoobitsConfigSchema
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.generators.python import PythonGenerator
+from goobits_cli.generators.rust import RustGenerator
 
 
 def determine_language(config: GoobitsConfigSchema) -> str:
@@ -16,11 +17,15 @@ def generate_cli(config: GoobitsConfigSchema, filename: str, version: Optional[s
     Returns a dictionary mapping file paths to their contents.
     For Python, returns a single-entry dict with the CLI script.
     For Node.js, returns multiple files.
+    For Rust, returns multiple files.
     """
     language = determine_language(config)
     
     if language == "nodejs":
         generator = NodeJSGenerator()
+        return generator.generate_all_files(config, filename, version)
+    elif language == "rust":
+        generator = RustGenerator()
         return generator.generate_all_files(config, filename, version)
     else:
         # Default to Python

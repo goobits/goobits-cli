@@ -1,0 +1,108 @@
+language: rust
+package_name: rust-deps-cli
+command_name: rustdeps
+display_name: "RustDepsCLI"
+description: "A Rust CLI with custom dependencies for testing"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+rust_crates:
+  serde:
+    version: "1.0"
+    features: ["derive"]
+  tokio:
+    version: "1.0"
+    features: ["full"]
+    optional: true
+  clap:
+    version: "4.0"
+    features: ["derive", "env"]
+  reqwest:
+    version: "0.11"
+    features: ["json", "rustls-tls"]
+  anyhow: "1.0"
+  uuid:
+    version: "1.0"
+    features: ["v4", "serde"]
+
+installation:
+  pypi_name: "rust-deps-cli"
+  github_repo: "example/rust-deps-cli"
+
+shell_integration:
+  alias: "rustdeps"
+
+validation:
+  minimum_disk_space_mb: 150
+
+messages:
+  install_success: "RustDepsCLI with custom dependencies installed successfully!"
+
+cli:
+  name: "RustDepsCLI"
+  tagline: "Rust CLI with custom dependencies"
+  version: "2.0.0"
+  options:
+    - name: api-key
+      type: str
+      desc: "API key for external services"
+    - name: timeout
+      type: int
+      desc: "Request timeout in seconds"
+      default: 30
+  commands:
+    fetch:
+      desc: "Fetch data from API"
+      args:
+        - name: url
+          desc: "URL to fetch from"
+          required: true
+      options:
+        - name: method
+          short: m
+          type: str
+          desc: "HTTP method"
+          choices: ["GET", "POST", "PUT", "DELETE"]
+          default: "GET"
+        - name: headers
+          short: h
+          type: str
+          desc: "Custom headers (JSON format)"
+        - name: output
+          short: o
+          type: str
+          desc: "Output file for response"
+    process:
+      desc: "Process JSON data"
+      args:
+        - name: input
+          desc: "Input JSON file"
+          required: true
+      options:
+        - name: filter
+          short: f
+          type: str
+          desc: "JSON filter expression"
+        - name: format
+          type: str
+          desc: "Output format"
+          choices: ["json", "yaml", "csv"]
+          default: "json"
+    generate:
+      desc: "Generate UUIDs"
+      options:
+        - name: count
+          short: c
+          type: int
+          desc: "Number of UUIDs to generate"
+          default: 1
+        - name: format
+          short: f
+          type: str
+          desc: "UUID format"
+          choices: ["simple", "hyphenated", "urn"]
+          default: "hyphenated"

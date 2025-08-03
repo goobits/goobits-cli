@@ -1,0 +1,77 @@
+[package]
+name = "{{ package_name }}"
+version = "{{ version | default('1.0.0') }}"
+description = "{{ description | default(cli.description if cli else 'A CLI tool built with goobits') }}"
+authors = ["{{ author | default('') }}"]
+license = "{{ license | default('MIT') }}"
+edition = "2021"
+readme = "README.md"
+repository = "{{ repository | default('') }}"
+homepage = "{{ homepage | default('') }}"
+keywords = ["cli"{% if cli and cli.tags %}, {% for tag in cli.tags %}"{{ tag }}"{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "{{ command_name }}"
+path = "src/main.rs"
+
+[dependencies]
+# Default dependencies (may be overridden by rust_crates)
+{% set default_deps = {
+    "clap": {"version": "4.4", "features": ["derive", "color", "suggestions", "cargo"]},
+    "anyhow": "1.0",
+    "serde": {"version": "1.0", "features": ["derive"]},
+    "serde_json": "1.0",
+    "serde_yaml": "0.9",
+    "tokio": {"version": "1.0", "features": ["full"], "optional": true},
+    "dirs": "5.0",
+    "atty": "0.2",
+    "chrono": {"version": "0.4", "features": ["serde"]}
+} %}
+{% set final_deps = default_deps.copy() %}
+{% if rust_crates %}
+{% for crate_name, crate_spec in rust_crates.items() %}
+{% if final_deps.update({crate_name: crate_spec}) %}{% endif %}
+{% endfor %}
+{% endif %}
+{% for dep_name, dep_spec in final_deps.items() %}
+{% if dep_spec is mapping %}
+{% if dep_spec.optional %}
+{{ dep_name }} = { version = "{{ dep_spec.version }}"{% if dep_spec.features %}, features = {{ dep_spec.features | tojson }}{% endif %}, optional = {{ dep_spec.optional | lower }} }
+{% else %}
+{{ dep_name }} = { version = "{{ dep_spec.version }}"{% if dep_spec.features %}, features = {{ dep_spec.features | tojson }}{% endif %} }
+{% endif %}
+{% else %}
+{{ dep_name }} = "{{ dep_spec }}"
+{% endif %}
+{% endfor %}
+{% if installation and installation.extras and installation.extras.rust_crates %}
+{% for crate_name, crate_spec in installation.extras.rust_crates.items() %}
+{% if '@' in crate_spec %}
+{% set parts = crate_spec.split('@') %}
+{{ crate_name }} = "{{ parts[1] }}"
+{% elif '=' in crate_spec %}
+{{ crate_name }} = { {{ crate_spec }} }
+{% else %}
+{{ crate_name }} = "{{ crate_spec }}"
+{% endif %}
+{% endfor %}
+{% endif %}
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.0"
+tempfile = "3.8"
+
+[features]
+default = []
+async = ["tokio"]
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[package.metadata.docs.rs]
+all-features = true

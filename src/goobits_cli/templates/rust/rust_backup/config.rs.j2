@@ -1,0 +1,261 @@
+/**
+ * Configuration module for {{ display_name }}
+ * Auto-generated from {{ file_name }}
+ */
+
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+/// Application configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppConfig {
+    /// General settings
+    pub settings: Settings,
+    /// Feature flags
+    pub features: Features,
+    /// User preferences
+    pub preferences: Preferences,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Settings {
+    /// Application version
+    pub version: String,
+    /// Enable automatic updates
+    pub auto_update: bool,
+    /// Log level (debug, info, warn, error)
+    pub log_level: String,
+    /// Configuration file format (yaml, json, toml)
+    pub config_format: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Features {
+    /// Enable colored output
+    pub colored_output: bool,
+    /// Show progress bars
+    pub progress_bars: bool,
+    /// Enable interactive prompts
+    pub interactive_mode: bool,
+    /// Use Unicode symbols
+    pub unicode_symbols: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Preferences {
+    /// Default editor for file editing
+    pub editor: Option<String>,
+    /// Default output format
+    pub output_format: String,
+    /// Custom aliases for commands
+    pub aliases: HashMap<String, String>,
+    /// User-specific settings
+    pub custom: HashMap<String, String>,
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        let mut aliases = HashMap::new();
+        let mut custom = HashMap::new();
+        
+        // Add some default aliases if defined in goobits.yaml
+        {% for cmd_name, cmd_data in cli.commands.items() %}
+        {% if cmd_data.alias %}
+        aliases.insert("{{ cmd_data.alias }}".to_string(), "{{ cmd_name }}".to_string());
+        {% endif %}
+        {% endfor %}
+        
+        Self {
+            settings: Settings {
+                version: "{{ version | default('1.0.0') }}".to_string(),
+                auto_update: false,
+                log_level: "info".to_string(),
+                config_format: "yaml".to_string(),
+            },
+            features: Features {
+                colored_output: true,
+                progress_bars: true,
+                interactive_mode: true,
+                unicode_symbols: true,
+            },
+            preferences: Preferences {
+                editor: None,
+                output_format: "human".to_string(),
+                aliases,
+                custom,
+            },
+        }
+    }
+}
+
+impl AppConfig {
+    /// Load configuration from file
+    pub fn load() -> Result<Self> {
+        let config_path = Self::config_file_path()?;
+        
+        if config_path.exists() {
+            let content = std::fs::read_to_string(&config_path)
+                .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
+            
+            let config: AppConfig = serde_yaml::from_str(&content)
+                .with_context(|| "Failed to parse config file")?;
+            
+            Ok(config)
+        } else {
+            // Create default config and save it
+            let config = Self::default();
+            config.save()?;
+            Ok(config)
+        }
+    }
+    
+    /// Save configuration to file
+    pub fn save(&self) -> Result<()> {
+        let config_path = Self::config_file_path()?;
+        
+        // Ensure config directory exists
+        if let Some(parent) = config_path.parent() {
+            std::fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create config directory: {}", parent.display()))?;
+        }
+        
+        let content = serde_yaml::to_string(self)
+            .with_context(|| "Failed to serialize config")?;
+        
+        std::fs::write(&config_path, content)
+            .with_context(|| format!("Failed to write config file: {}", config_path.display()))?;
+        
+        Ok(())
+    }
+    
+    /// Get the path to the configuration file
+    pub fn config_file_path() -> Result<PathBuf> {
+        let config_dir = Self::config_dir()?;
+        Ok(config_dir.join("config.yaml"))
+    }
+    
+    /// Get the configuration directory path
+    pub fn config_dir() -> Result<PathBuf> {
+        let home_dir = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
+        
+        Ok(home_dir.join(".config").join("{{ package_name }}"))
+    }
+    
+    /// Get a custom setting by key
+    pub fn get_custom(&self, key: &str) -> Option<&String> {
+        self.preferences.custom.get(key)
+    }
+    
+    /// Set a custom setting
+    pub fn set_custom(&mut self, key: String, value: String) {
+        self.preferences.custom.insert(key, value);
+    }
+    
+    /// Get an alias for a command
+    pub fn get_alias(&self, alias: &str) -> Option<&String> {
+        self.preferences.aliases.get(alias)
+    }
+    
+    /// Add a command alias
+    pub fn add_alias(&mut self, alias: String, command: String) {
+        self.preferences.aliases.insert(alias, command);
+    }
+    
+    /// Remove a command alias
+    pub fn remove_alias(&mut self, alias: &str) -> Option<String> {
+        self.preferences.aliases.remove(alias)
+    }
+    
+    /// Check if a feature is enabled
+    pub fn is_feature_enabled(&self, feature: &str) -> bool {
+        match feature {
+            "colored_output" => self.features.colored_output,
+            "progress_bars" => self.features.progress_bars,
+            "interactive_mode" => self.features.interactive_mode,
+            "unicode_symbols" => self.features.unicode_symbols,
+            _ => false,
+        }
+    }
+    
+    /// Enable or disable a feature
+    pub fn set_feature(&mut self, feature: &str, enabled: bool) -> Result<()> {
+        match feature {
+            "colored_output" => self.features.colored_output = enabled,
+            "progress_bars" => self.features.progress_bars = enabled,
+            "interactive_mode" => self.features.interactive_mode = enabled,
+            "unicode_symbols" => self.features.unicode_symbols = enabled,
+            _ => anyhow::bail!("Unknown feature: {}", feature),
+        }
+        Ok(())
+    }
+    
+    /// Validate the configuration
+    pub fn validate(&self) -> Result<()> {
+        // Validate log level
+        match self.settings.log_level.as_str() {
+            "debug" | "info" | "warn" | "error" => {}
+            _ => anyhow::bail!("Invalid log level: {}", self.settings.log_level),
+        }
+        
+        // Validate output format
+        match self.preferences.output_format.as_str() {
+            "human" | "json" | "yaml" | "table" => {}
+            _ => anyhow::bail!("Invalid output format: {}", self.preferences.output_format),
+        }
+        
+        // Validate config format
+        match self.settings.config_format.as_str() {
+            "yaml" | "json" | "toml" => {}
+            _ => anyhow::bail!("Invalid config format: {}", self.settings.config_format),
+        }
+        
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+    
+    #[test]
+    fn test_default_config() {
+        let config = AppConfig::default();
+        assert_eq!(config.settings.version, "{{ version | default('1.0.0') }}");
+        assert!(config.features.colored_output);
+        assert_eq!(config.preferences.output_format, "human");
+    }
+    
+    #[test]
+    fn test_config_validation() {
+        let mut config = AppConfig::default();
+        assert!(config.validate().is_ok());
+        
+        config.settings.log_level = "invalid".to_string();
+        assert!(config.validate().is_err());
+    }
+    
+    #[test]
+    fn test_feature_management() {
+        let mut config = AppConfig::default();
+        
+        assert!(config.is_feature_enabled("colored_output"));
+        config.set_feature("colored_output", false).unwrap();
+        assert!(!config.is_feature_enabled("colored_output"));
+    }
+    
+    #[test]
+    fn test_alias_management() {
+        let mut config = AppConfig::default();
+        
+        config.add_alias("h".to_string(), "help".to_string());
+        assert_eq!(config.get_alias("h"), Some(&"help".to_string()));
+        
+        let removed = config.remove_alias("h");
+        assert_eq!(removed, Some("help".to_string()));
+        assert_eq!(config.get_alias("h"), None);
+    }
+}

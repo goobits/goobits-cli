@@ -1,0 +1,8 @@
+language: rust
+# Missing package_name, command_name, and other required fields
+display_name: "MissingFieldsCLI"
+description: "A Rust CLI with missing required fields for error testing"
+
+cli:
+  # Missing name, version, and commands
+  tagline: "CLI with missing fields"
