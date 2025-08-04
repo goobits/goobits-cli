@@ -40,6 +40,35 @@ class NodeJSGenerator(BaseGenerator):
         self.env.filters['json_stringify'] = json_stringify
         self.env.filters['escape_backticks'] = lambda x: x.replace('`', '\\`')
     
+    def _check_file_conflicts(self, target_files: dict) -> dict:
+        """Check for file conflicts and adjust paths if needed."""
+        import os
+        
+        adjusted_files = {}
+        warnings = []
+        
+        for filepath, content in target_files.items():
+            if filepath == "index.js" and os.path.exists(filepath):
+                # index.js exists, generate cli.js instead
+                new_filepath = "cli.js"
+                adjusted_files[new_filepath] = content
+                warnings.append(f"⚠️  Existing index.js detected. Generated cli.js instead.")
+                warnings.append(f"   Import cli.js in your index.js with: import {{ cli }} from './cli.js'; cli();")
+            elif filepath == "package.json" and os.path.exists(filepath):
+                warnings.append(f"⚠️  Existing package.json detected. Review and merge dependencies manually.")
+                adjusted_files[filepath] = content  # Still generate, but warn user
+            else:
+                adjusted_files[filepath] = content
+        
+        # Print warnings if any
+        if warnings:
+            print("\n🔍 File Conflict Detection:")
+            for warning in warnings:
+                print(f"   {warning}")
+            print()
+        
+        return adjusted_files
+    
     def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
                  config_filename: str, version: Optional[str] = None) -> str:
         """
@@ -88,11 +117,9 @@ class NodeJSGenerator(BaseGenerator):
         """Return list of files this generator creates."""
         return [
             "index.js",
-            "bin/cli.js",
+            "src/hooks.js",
             "package.json",
             "setup.sh",
-            "scripts/postinstall.js",
-            "lib/config.js",
             "README.md",
             ".gitignore"
         ]
@@ -228,57 +255,17 @@ export default cli;
         
         files = {}
         
-        # Generate main index.js file
-        try:
-            template = self.env.get_template("index.js.j2")
-            files['index.js'] = template.render(**context)
-        except TemplateNotFound:
-            files['index.js'] = self._generate_fallback_code(context)
+        # Generate main index.js file - CLI entry point (use minimal fallback)
+        files['index.js'] = self._generate_fallback_code(context)
         
-        # Generate bin/cli.js file
-        try:
-            template = self.env.get_template("bin/cli.js.j2")
-            files['bin/cli.js'] = template.render(**context)
-        except TemplateNotFound:
-            # Fallback bin wrapper
-            files['bin/cli.js'] = '''#!/usr/bin/env node
-import { cli } from '../index.js';
-cli();
-'''
+        # Generate src/hooks.js file - user's business logic (use minimal fallback)
+        files['src/hooks.js'] = self._generate_simple_hooks(context)
         
-        # Generate package.json
-        try:
-            template = self.env.get_template("package.json.j2")
-            files['package.json'] = template.render(**context)
-        except TemplateNotFound:
-            files['package.json'] = self._generate_package_json(context)
+        # Generate package.json - use minimal fallback approach
+        files['package.json'] = self._generate_package_json(context)
         
-        # Generate setup script
-        try:
-            template = self.env.get_template("setup.sh.j2")
-            files['setup.sh'] = template.render(**context)
-        except TemplateNotFound:
-            # Fallback to basic setup script
-            files['setup.sh'] = f'''#!/bin/bash
-echo "Setting up {context['display_name']}..."
-npm install
-chmod +x cli.js
-echo "Setup complete!"
-'''
-        
-        # Generate post-install script
-        try:
-            template = self.env.get_template("scripts/postinstall.js.j2")
-            files['scripts/postinstall.js'] = template.render(**context)
-        except TemplateNotFound:
-            pass  # Post-install is optional
-        
-        # Generate config library
-        try:
-            template = self.env.get_template("lib/config.js.j2")
-            files['lib/config.js'] = template.render(**context)
-        except TemplateNotFound:
-            pass  # Config library is optional
+        # Generate setup script - use minimal fallback approach
+        files['setup.sh'] = self._generate_setup_script(context)
         
         # Generate README.md
         files['README.md'] = self._generate_readme(context)
@@ -286,51 +273,142 @@ echo "Setup complete!"
         # Generate .gitignore
         files['.gitignore'] = self._generate_gitignore()
         
+        # Check for file conflicts and adjust if needed
+        files = self._check_file_conflicts(files)
+        
         return files
     
+    def _generate_simple_hooks(self, context: dict) -> str:
+        """Generate a simple hooks.js file similar to Python's app_hooks.py."""
+        cli_config = context.get('cli')
+        hooks_content = f'''/**
+ * Hook functions for {context['display_name']}
+ * Auto-generated from {context['file_name']}
+ * 
+ * Implement your business logic in these hook functions.
+ * Each command will call its corresponding hook function.
+ */
+
+'''
+        
+        # Generate hook functions for each command
+        if cli_config and hasattr(cli_config, 'commands'):
+            for cmd_name, cmd_data in cli_config.commands.items():
+                safe_cmd_name = cmd_name.replace('-', '_')
+                hooks_content += f'''/**
+ * Hook function for '{cmd_name}' command
+ * @param {{Object}} args - Command arguments and options
+ * @returns {{Promise<void>}}
+ */
+export async function on{safe_cmd_name.replace('_', '').title()}(args) {{
+    // TODO: Implement your '{cmd_name}' command logic here
+    console.log('🚀 Executing {cmd_name} command...');
+    console.log('   Command:', args.commandName);
+    
+    // Example: access raw arguments
+    if (args.rawArgs) {{
+        Object.entries(args.rawArgs).forEach(([key, value]) => {{
+            console.log(`   ${{key}}: ${{value}}`);
+        }});
+    }}
+    
+    console.log('✅ {cmd_name} command completed successfully!');
+}}
+
+'''
+        
+        # Add a catch-all hook for unhandled commands
+        hooks_content += '''/**
+ * Default hook for unhandled commands
+ * @param {Object} args - Command arguments
+ * @throws {Error} When no hook implementation is found
+ */
+export async function onUnknownCommand(args) {
+    throw new Error(`No hook implementation found for command: ${args.commandName}`);
+}
+'''
+        
+        return hooks_content
+    
+    def _generate_setup_script(self, context: dict) -> str:
+        """Generate setup.sh script for Node.js CLI."""
+        return f'''#!/bin/bash
+# Setup script for {context['display_name']}
+# Auto-generated from {context['file_name']}
+
+set -e
+
+echo "🔧 Setting up {context['display_name']}..."
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js not found. Please install Node.js first:"
+    echo "   https://nodejs.org/"
+    exit 1
+fi
+
+# Check if npm is installed
+if ! command -v npm &> /dev/null; then
+    echo "❌ npm not found. Please install npm first."
+    exit 1
+fi
+
+# Install dependencies
+echo "📦 Installing dependencies..."
+npm install
+
+if [ $? -eq 0 ]; then
+    echo "✅ Setup successful!"
+    echo "📍 CLI location: index.js"
+    echo ""
+    echo "To install globally:"
+    echo "   npm link"
+    echo ""
+    echo "To run locally:"
+    echo "   node index.js --help"
+else
+    echo "❌ Setup failed!"
+    exit 1
+fi
+'''
+    
     def _generate_package_json(self, context: dict) -> str:
-        """Generate package.json from context using template."""
-        try:
-            template = self.env.get_template("package.json.j2")
-            return template.render(**context)
-        except TemplateNotFound:
-            # Fallback to basic package.json
-            package_data = {
-                "name": context['package_name'],
-                "version": context['version'],
-                "description": context['description'],
-                "main": "index.js",
-                "bin": {
-                    context['command_name']: "./bin/cli.js"
-                },
-                "scripts": {
-                    "test": "echo \"Error: no test specified\" && exit 1",
-                    "build": "echo \"No build step required\"",
-                    "start": "node index.js",
-                    "postinstall": "node scripts/postinstall.js || true"
-                },
-                "keywords": ["cli"],
-                "author": "",
-                "license": "MIT",
-                "type": "module",
-                "dependencies": {
-                    "commander": "^11.1.0",
-                    "chalk": "^5.3.0"
-                },
-                "engines": {
-                    "node": ">=14.0.0"
-                }
+        """Generate minimal package.json from context."""
+        # Use minimal fallback approach only
+        package_data = {
+            "name": context['package_name'],
+            "version": context['version'],
+            "description": context['description'],
+            "main": "index.js",
+            "bin": {
+                context['command_name']: "./index.js"
+            },
+            "scripts": {
+                "test": "echo \"Error: no test specified\" && exit 1",
+                "start": "node index.js"
+            },
+            "keywords": ["cli"],
+            "author": "",
+            "license": "MIT",
+            "type": "module",
+            "dependencies": {
+                "commander": "^11.1.0",
+                "chalk": "^5.3.0"
+            },
+            "engines": {
+                "node": ">=14.0.0"
             }
-            
-            # Add any npm packages from installation extras
-            if context.get('installation') and hasattr(context['installation'], 'extras'):
-                if hasattr(context['installation'].extras, 'npm'):
-                    for package in context['installation'].extras.npm:
-                        if '@' in package:
-                            name, version = package.rsplit('@', 1)
-                            package_data["dependencies"][name] = f"^{version}"
-                        else:
-                            package_data["dependencies"][package] = "latest"
+        }
+        
+        # Add any npm packages from installation extras
+        if context.get('installation') and hasattr(context['installation'], 'extras'):
+            if hasattr(context['installation'].extras, 'npm'):
+                for package in context['installation'].extras.npm:
+                    if '@' in package:
+                        name, version = package.rsplit('@', 1)
+                        package_data["dependencies"][name] = f"^{version}"
+                    else:
+                        package_data["dependencies"][package] = "latest"
         
         return json.dumps(package_data, indent=2)
     
@@ -368,19 +446,18 @@ npm link
 
 {self._generate_commands_documentation(context)}
 
-## Configuration
-
-Configuration is stored in:
-- Linux/Unix: `~/.config/{context['package_name']}/config.json`
-- macOS: `~/Library/Application Support/{context['package_name']}/config.json`
-- Windows: `%APPDATA%\\{context['package_name']}\\config.json`
-
 ## Development
 
 To run in development mode:
 ```bash
-./setup.sh --dev
+# Install dependencies
+npm install
+
+# Run locally
+node index.js --help
 ```
+
+To implement command logic, edit the hook functions in `src/hooks.js`.
 
 ## License
 
