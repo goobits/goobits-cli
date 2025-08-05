@@ -2,10 +2,171 @@
 """Auto-generated from {{ file_name }}"""
 import os
 import sys
+import logging
 import importlib.util
 from pathlib import Path
 import rich_click as click
 from rich_click import RichGroup, RichCommand
+from typing import Optional, Dict, Any
+
+
+# Enhanced Error Handling Classes
+class CLIError(Exception):
+    """Base exception for CLI errors."""
+    def __init__(self, message: str, exit_code: int = 1, suggestion: Optional[str] = None):
+        self.message = message
+        self.exit_code = exit_code
+        self.suggestion = suggestion
+        super().__init__(self.message)
+
+
+class ConfigError(CLIError):
+    """Configuration-related error."""
+    def __init__(self, message: str, suggestion: Optional[str] = None):
+        super().__init__(message, exit_code=2, suggestion=suggestion)
+
+
+class HookError(CLIError):
+    """Hook execution error."""
+    def __init__(self, message: str, hook_name: Optional[str] = None):
+        self.hook_name = hook_name
+        super().__init__(message, exit_code=3, suggestion=f"Check the '{hook_name}' function in your app_hooks.py file" if hook_name else None)
+
+
+class DependencyError(CLIError):
+    """Missing dependency error."""
+    def __init__(self, message: str, dependency: str, install_command: Optional[str] = None):
+        self.dependency = dependency
+        self.install_command = install_command
+        suggestion = f"Install with: {install_command}" if install_command else f"Install the '{dependency}' package"
+        super().__init__(message, exit_code=4, suggestion=suggestion)
+
+
+# Global error handler
+def handle_cli_error(error: Exception, debug: bool = False) -> int:
+    """Handle CLI errors with appropriate messages and exit codes."""
+    if isinstance(error, CLIError):
+        click.echo(f"❌ Error: {error.message}", err=True)
+        if error.suggestion:
+            click.echo(f"💡 Suggestion: {error.suggestion}", err=True)
+        if debug:
+            import traceback
+            click.echo("\n🔍 Debug traceback:", err=True)
+            click.echo(traceback.format_exc(), err=True)
+        return error.exit_code
+    else:
+        # Unexpected errors
+        click.echo(f"❌ Unexpected error: {str(error)}", err=True)
+        click.echo("💡 This may be a bug. Please report it with the following details:", err=True)
+        if debug:
+            import traceback
+            click.echo(traceback.format_exc(), err=True)
+        else:
+            click.echo(f"   Error type: {type(error).__name__}", err=True)
+            click.echo(f"   Error message: {str(error)}", err=True)
+            click.echo("   Run with --debug for full traceback", err=True)
+        return 1
+
+
+# Set up logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(levelname)s: %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stderr)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Import generated helper modules with enhanced error handling
+_missing_dependencies = []
+
+try:
+    from .config_manager import get_config, load_config, get_config_value, set_config_value
+    HAS_CONFIG_MANAGER = True
+except ImportError as e:
+    HAS_CONFIG_MANAGER = False
+    logger.debug(f"Config manager not available: {e}")
+    _missing_dependencies.append("config_manager")
+
+try:
+    from .progress_helper import (
+        get_progress_helper, spinner, progress_bar, simple_progress,
+        print_success, print_error, print_warning, print_info,
+        with_spinner, with_progress
+    )
+    HAS_PROGRESS_HELPER = True
+except ImportError as e:
+    HAS_PROGRESS_HELPER = False
+    logger.debug(f"Progress helper not available: {e}")
+    _missing_dependencies.append("progress_helper")
+
+try:
+    from .prompts_helper import (
+        get_prompts_helper, text, password, confirm, select, multiselect,
+        integer, float_input, path
+    )
+    HAS_PROMPTS_HELPER = True
+except ImportError as e:
+    HAS_PROMPTS_HELPER = False
+    logger.debug(f"Prompts helper not available: {e}")
+    _missing_dependencies.append("prompts_helper")
+
+try:
+    from .completion_helper import (
+        get_completion_helper, generate_completion_script, install_completion,
+        get_install_instructions
+    )
+    HAS_COMPLETION_HELPER = True
+except ImportError as e:
+    HAS_COMPLETION_HELPER = False
+    logger.debug(f"Completion helper not available: {e}")
+    _missing_dependencies.append("completion_helper")
+
+# Log missing dependencies for debugging
+if _missing_dependencies:
+    logger.debug(f"Missing helper modules: {', '.join(_missing_dependencies)}")
+
+# Initialize global helpers with error handling
+try:
+    if HAS_CONFIG_MANAGER:
+        config = get_config()
+    else:
+        config = None
+except Exception as e:
+    logger.warning(f"Failed to initialize config manager: {e}")
+    config = None
+    HAS_CONFIG_MANAGER = False
+
+try:
+    if HAS_PROGRESS_HELPER:
+        progress = get_progress_helper()
+    else:
+        progress = None
+except Exception as e:
+    logger.warning(f"Failed to initialize progress helper: {e}")
+    progress = None
+    HAS_PROGRESS_HELPER = False
+
+try:
+    if HAS_PROMPTS_HELPER:
+        prompts = get_prompts_helper()
+    else:
+        prompts = None
+except Exception as e:
+    logger.warning(f"Failed to initialize prompts helper: {e}")
+    prompts = None
+    HAS_PROMPTS_HELPER = False
+
+try:
+    if HAS_COMPLETION_HELPER:
+        completion = get_completion_helper()
+    else:
+        completion = None
+except Exception as e:
+    logger.warning(f"Failed to initialize completion helper: {e}")
+    completion = None
+    HAS_COMPLETION_HELPER = False
 
 # Set up rich-click configuration globally
 click.rich_click.USE_RICH_MARKUP = True  
@@ -932,11 +1093,238 @@ WantedBy={"default.target" if not system else "multi-user.target"}
 
 {% endif %}
 
+# Shell completion commands
+@main.group()
+def completion():
+    """🔧 Shell completion management"""
+    pass
+
+# Internal completion command (hidden from help)
+@main.command()
+@click.argument('shell', type=click.Choice(['bash', 'zsh', 'fish']))
+@click.argument('current_line')
+@click.argument('cursor_pos', type=int, required=False)
+@click.option('--debug', is_flag=True, help='Debug completion engine')
+def _completion(shell, current_line, cursor_pos, debug):
+    """Internal completion command - called by shell completion scripts"""
+    try:
+        # Import completion engine
+        import os
+        import sys
+        from pathlib import Path
+        
+        # Add completion_engine to path
+        engine_path = Path(__file__).parent / "completion_engine.py"
+        
+        if engine_path.exists():
+            # Import and run the completion engine
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("completion_engine", engine_path)
+            completion_engine = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(completion_engine)
+            
+            # Get completions
+            engine = completion_engine.CompletionEngine()
+            completions = engine.get_completions(shell, current_line, cursor_pos)
+            
+            # Output completions
+            for completion in completions:
+                click.echo(completion)
+                
+        elif debug:
+            click.echo("completion_engine.py not found", err=True)
+            
+    except Exception as e:
+        if debug:
+            click.echo(f"Completion error: {e}", err=True)
+        # Silently fail in production to avoid breaking shell completion
+
+# Add this command with underscore to hide it from help
+_completion.hidden = True
+
+@completion.command()
+@click.argument('shell', type=click.Choice(['bash', 'zsh', 'fish']))
+@click.option('--output', '-o', type=click.Path(), help='Output file path')
+def generate(shell, output):
+    """Generate shell completion script"""
+    if not HAS_COMPLETION_HELPER:
+        click.echo("❌ Completion helper not available. Missing completion_helper module.")
+        return
+    
+    try:
+        script_content = generate_completion_script(shell)
+        
+        if output:
+            output_path = Path(output)
+            output_path.write_text(script_content)
+            click.echo(f"✅ {shell.title()} completion script saved to: {output_path}")
+        else:
+            click.echo(script_content)
+    except Exception as e:
+        click.echo(f"❌ Error generating {shell} completion: {e}")
+
+@completion.command()
+@click.argument('shell', type=click.Choice(['bash', 'zsh', 'fish']))
+@click.option('--user', is_flag=True, default=True, help='Install for current user (default)')
+@click.option('--system', is_flag=True, help='Install system-wide (requires sudo)')
+def install(shell, user, system):
+    """Install shell completion script"""
+    if not HAS_COMPLETION_HELPER:
+        click.echo("❌ Completion helper not available. Missing completion_helper module.")
+        return
+    
+    try:
+        user_install = not system
+        success = install_completion(shell, user_install)
+        
+        if success:
+            click.echo(f"✅ {shell.title()} completion installed successfully!")
+            
+            instructions = get_install_instructions(shell)
+            if instructions and 'reload_cmd' in instructions:
+                click.echo(f"💡 Reload your shell: {instructions['reload_cmd']}")
+        else:
+            click.echo(f"❌ Failed to install {shell} completion")
+            
+    except Exception as e:
+        click.echo(f"❌ Error installing {shell} completion: {e}")
+
+@completion.command()
+@click.argument('shell', type=click.Choice(['bash', 'zsh', 'fish']))
+def instructions(shell):
+    """Show installation instructions for shell completion"""
+    if not HAS_COMPLETION_HELPER:
+        click.echo("❌ Completion helper not available. Missing completion_helper module.")
+        return
+    
+    instructions = get_install_instructions(shell)
+    if not instructions:
+        click.echo(f"❌ No instructions available for {shell}")
+        return
+    
+    click.echo(f"📋 {shell.title()} completion installation instructions:")
+    click.echo()
+    
+    click.echo("🏠 User installation (recommended):")
+    click.echo(f"   mkdir -p {Path(instructions['user_script_path']).parent}")
+    click.echo(f"   {{ cli.name | lower | replace(' ', '-') }} completion generate {shell} > completion.{shell}")
+    click.echo(f"   cp completion.{shell} {instructions['user_script_path']}")
+    click.echo()
+    
+    click.echo("🌐 System-wide installation:")
+    click.echo(f"   {{ cli.name | lower | replace(' ', '-') }} completion generate {shell} > completion.{shell}")
+    click.echo(f"   {instructions['install_cmd']}")
+    click.echo()
+    
+    click.echo("🔄 Reload shell:")
+    click.echo(f"   {instructions['reload_cmd']}")
+
+# Configuration management commands
+@main.group()
+def config():
+    """⚙️ Configuration management"""
+    pass
+
+@config.command()
+@click.argument('key', required=False)
+def get(key):
+    """Get configuration value"""
+    if not HAS_CONFIG_MANAGER:
+        click.echo("❌ Configuration manager not available.")
+        return
+    
+    try:
+        if key:
+            value = get_config_value(key)
+            if value is not None:
+                click.echo(f"{key}: {value}")
+            else:
+                click.echo(f"❌ Configuration key '{key}' not found")
+        else:
+            # Show all configuration
+            config_data = load_config()
+            import json
+            click.echo(json.dumps(config_data, indent=2))
+    except Exception as e:
+        click.echo(f"❌ Error getting configuration: {e}")
+
+@config.command()
+@click.argument('key')
+@click.argument('value')
+def set(key, value):
+    """Set configuration value"""
+    if not HAS_CONFIG_MANAGER:
+        click.echo("❌ Configuration manager not available.")
+        return
+    
+    try:
+        # Try to parse value as JSON for complex types
+        import json
+        try:
+            parsed_value = json.loads(value)
+        except json.JSONDecodeError:
+            parsed_value = value
+        
+        success = set_config_value(key, parsed_value)
+        if success:
+            click.echo(f"✅ Set {key} = {parsed_value}")
+        else:
+            click.echo(f"❌ Failed to set configuration value")
+    except Exception as e:
+        click.echo(f"❌ Error setting configuration: {e}")
+
+@config.command()
+def reset():
+    """Reset configuration to defaults"""
+    if not HAS_CONFIG_MANAGER:
+        click.echo("❌ Configuration manager not available.")
+        return
+    
+    try:
+        if HAS_PROMPTS_HELPER:
+            if confirm("Are you sure you want to reset all configuration to defaults?"):
+                config.reset()
+                click.echo("✅ Configuration reset to defaults")
+            else:
+                click.echo("❌ Reset cancelled")
+        else:
+            config.reset()
+            click.echo("✅ Configuration reset to defaults")
+    except Exception as e:
+        click.echo(f"❌ Error resetting configuration: {e}")
+
+@config.command()
+def path():
+    """Show configuration file path"""
+    if not HAS_CONFIG_MANAGER:
+        click.echo("❌ Configuration manager not available.")
+        return
+    
+    try:
+        config_path = config.get_config_path()
+        click.echo(f"📁 Configuration file: {config_path}")
+        
+        # Check for RC files
+        rc_file = config.find_rc_file()
+        if rc_file:
+            click.echo(f"📄 Active RC file: {rc_file}")
+    except Exception as e:
+        click.echo(f"❌ Error getting configuration path: {e}")
+
 def cli_entry():
     """Entry point for the CLI when installed via pipx."""
-    # Load plugins before running the CLI
-    load_plugins(main)
-    main()
+    try:
+        # Load plugins before running the CLI
+        load_plugins(main)
+        main()
+    except KeyboardInterrupt:
+        click.echo("\n⏹️  Operation cancelled by user", err=True)
+        sys.exit(130)  # Standard exit code for Ctrl+C
+    except Exception as e:
+        # Get debug flag from command line args
+        debug = '--debug' in sys.argv
+        exit_code = handle_cli_error(e, debug)
+        sys.exit(exit_code)
 
 if __name__ == "__main__":
     cli_entry()

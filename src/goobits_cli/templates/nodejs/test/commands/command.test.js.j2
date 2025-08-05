@@ -3,10 +3,38 @@
  * Testing {{ display_name }}
  */
 
-import { test, describe, it, before, after } from 'node:test';
-import assert from 'node:assert';
-import { spawn } from 'node:child_process';
-import { promisify } from 'node:util';
+// Support both Jest and Node.js test runner
+let describe, test, it, beforeAll, afterAll, beforeEach, afterEach, expect;
+
+try {
+  // Try Jest first
+  const jestGlobals = await import('@jest/globals');
+  ({ describe, test, it, beforeAll, afterAll, beforeEach, afterEach, expect } = jestGlobals);
+} catch {
+  // Fallback to Node.js test runner
+  const nodeTest = await import('node:test');
+  const assert = await import('node:assert');
+  
+  ({ describe, test, it } = nodeTest);
+  beforeAll = nodeTest.before;
+  afterAll = nodeTest.after;
+  beforeEach = nodeTest.beforeEach;
+  afterEach = nodeTest.afterEach;
+  
+  // Create expect-like interface for Node.js assert
+  expect = (actual) => ({
+    toBe: (expected) => assert.strictEqual(actual, expected),
+    toEqual: (expected) => assert.deepStrictEqual(actual, expected),
+    toContain: (expected) => assert.ok(actual.includes(expected)),
+    toBeTruthy: () => assert.ok(actual),
+    toBeFalsy: () => assert.ok(!actual),
+    toBeGreaterThan: (expected) => assert.ok(actual > expected),
+    toBeLessThan: (expected) => assert.ok(actual < expected)
+  });
+}
+
+import { spawn } from 'child_process';
+import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -36,20 +64,20 @@ const execCommand = promisify((cmd, args, callback) => {
 describe('{{ cmd_name }} command', () => {
   const cliPath = join(__dirname, '..', '..', 'bin', 'cli.js');
   
-  before(() => {
+  beforeAll(() => {
     // Setup before tests
     console.log('Testing {{ cmd_name }} command...');
   });
   
-  after(() => {
+  afterAll(() => {
     // Cleanup after tests
   });
   
   it('should run without errors', async () => {
     const { stdout, stderr, code } = await execCommand('node', [cliPath, '{{ cmd_name }}', '--help']);
     
-    assert.strictEqual(code, 0, `Command exited with code ${code}`);
-    assert.ok(stdout.includes('{{ cmd_data.desc }}'), 'Command description not found in help output');
+    expect(code).toBe(0);
+    expect(stdout).toContain('{{ cmd_data.desc }}');
   });
   
   {% if cmd_data.args %}
@@ -58,7 +86,7 @@ describe('{{ cmd_name }} command', () => {
     {% if arg.required %}
     // Test missing required argument: {{ arg.name }}
     const { stderr: missingArgErr, code: missingArgCode } = await execCommand('node', [cliPath, '{{ cmd_name }}']);
-    assert.notStrictEqual(missingArgCode, 0, 'Command should fail when required argument is missing');
+    expect(missingArgCode).not.toBe(0);
     {% endif %}
     {% endfor %}
   });
@@ -78,11 +106,11 @@ describe('{{ cmd_name }} command', () => {
     {% if opt.type == 'flag' %}
     // Test flag option: --{{ opt.name }}
     const { code: flagCode } = await execCommand('node', [...testArgs, '--{{ opt.name }}']);
-    assert.strictEqual(flagCode, 0, 'Command should handle flag option --{{ opt.name }}');
+    expect(flagCode).toBe(0);
     {% else %}
     // Test option with value: --{{ opt.name }}
     const { code: optCode } = await execCommand('node', [...testArgs, '--{{ opt.name }}', 'test-value']);
-    assert.strictEqual(optCode, 0, 'Command should handle option --{{ opt.name }} with value');
+    expect(optCode).toBe(0);
     {% endif %}
     {% endfor %}
   });
@@ -94,8 +122,8 @@ describe('{{ cmd_name }} command', () => {
     it('should run {{ subcmd_name }} subcommand', async () => {
       const { stdout, code } = await execCommand('node', [cliPath, '{{ cmd_name }}', '{{ subcmd_name }}', '--help']);
       
-      assert.strictEqual(code, 0, `Subcommand {{ subcmd_name }} exited with code ${code}`);
-      assert.ok(stdout.includes('{{ subcmd_data.desc }}'), 'Subcommand description not found in help output');
+      expect(code).toBe(0);
+      expect(stdout).toContain('{{ subcmd_data.desc }}');
     });
     {% endfor %}
   });
@@ -105,6 +133,6 @@ describe('{{ cmd_name }} command', () => {
     // This test would require mocking the hooks module
     // For now, just verify the command structure
     const { stdout } = await execCommand('node', [cliPath, '{{ cmd_name }}', '--help']);
-    assert.ok(stdout.length > 0, 'Help output should not be empty');
+    expect(stdout.length).toBeGreaterThan(0);
   });
 });

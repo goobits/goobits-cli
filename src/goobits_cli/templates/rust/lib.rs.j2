@@ -11,10 +11,16 @@ use std::path::PathBuf;
 pub mod config;
 pub mod commands;
 pub mod utils;
+pub mod hooks;
+pub mod plugins;
+pub mod styling;
 
 // Re-export commonly used types
 pub use config::AppConfig;
 pub use commands::{Command, CommandArgs, CommandRegistry};
+pub use hooks::{HookContext, ExecutionPhase};
+pub use plugins::{Plugin, PluginInfo};
+pub use styling::{StyledOutput, ColorTheme};
 
 /// Library version
 pub const VERSION: &str = "{{ version | default('1.0.0') }}";

@@ -1,7 +1,5 @@
-/**
- * Configuration module for {{ display_name }}
- * Auto-generated from {{ file_name }}
- */
+//! Configuration module for Test Rust CLI
+//! Auto-generated from test-rust-cli.yaml
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -57,19 +55,15 @@ pub struct Preferences {
 
 impl Default for AppConfig {
     fn default() -> Self {
-        let mut aliases = HashMap::new();
-        let mut custom = HashMap::new();
+        let aliases = HashMap::new();
+        let custom = HashMap::new();
         
         // Add some default aliases if defined in goobits.yaml
-        {% for cmd_name, cmd_data in cli.commands.items() %}
-        {% if cmd_data.alias %}
-        aliases.insert("{{ cmd_data.alias }}".to_string(), "{{ cmd_name }}".to_string());
-        {% endif %}
-        {% endfor %}
+        
         
         Self {
             settings: Settings {
-                version: "{{ version | default('1.0.0') }}".to_string(),
+                version: "1.3.0".to_string(),
                 auto_update: false,
                 log_level: "info".to_string(),
                 config_format: "yaml".to_string(),
@@ -141,7 +135,7 @@ impl AppConfig {
         let home_dir = dirs::home_dir()
             .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
         
-        Ok(home_dir.join(".config").join("{{ package_name }}"))
+        Ok(home_dir.join(".config").join("test-rust-cli"))
     }
     
     /// Get a custom setting by key
@@ -187,7 +181,7 @@ impl AppConfig {
             "progress_bars" => self.features.progress_bars = enabled,
             "interactive_mode" => self.features.interactive_mode = enabled,
             "unicode_symbols" => self.features.unicode_symbols = enabled,
-            _ => anyhow::bail!("Unknown feature: {}", feature),
+            _ => anyhow::bail!("Unknown feature: {feature}"),
         }
         Ok(())
     }
@@ -219,12 +213,11 @@ impl AppConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     
     #[test]
     fn test_default_config() {
         let config = AppConfig::default();
-        assert_eq!(config.settings.version, "{{ version | default('1.0.0') }}");
+        assert_eq!(config.settings.version, "1.3.0");
         assert!(config.features.colored_output);
         assert_eq!(config.preferences.output_format, "human");
     }

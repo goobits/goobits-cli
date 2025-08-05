@@ -353,9 +353,16 @@ def build(
             
             # Rust generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
+        else:
+            # Use Python generator (default)
+            from goobits_cli.generators.python import PythonGenerator  
+            generator = PythonGenerator()
+            
+            # Python now also generates multiple files
+            all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         
-        # Handle multi-file generation for Node.js, TypeScript, and Rust
-        if language in ["nodejs", "typescript", "rust"]:
+        # Handle multi-file generation for all languages
+        if language in ["python", "nodejs", "typescript", "rust"]:
             # Write all generated files
             executable_files = all_files.pop('__executable__', [])
             for file_path, content in all_files.items():
@@ -379,45 +386,16 @@ def build(
                 
                 typer.echo(f"✅ Generated: {full_path}")
             
-            # Skip the single file generation for Node.js/TypeScript/Rust
-            cli_code = None
-        else:
-            # Use Python generator (default)
-            from goobits_cli.generators.python import PythonGenerator  
-            generator = PythonGenerator()
-            cli_code = generator.generate(goobits_config, config_path.name, version)
-            
-            # Use configured output path, with package name substitution
-            cli_output_path = goobits_config.cli_output_path.format(
-                package_name=goobits_config.package_name.replace('goobits-', '')
-            )
-        
-        # Only generate single file for Python
-        if cli_code is not None:
-            # Override with command line option if provided
-            if output:
-                cli_output_path = output
-            
-            # Resolve to full path
-            cli_path = output_dir / cli_output_path
-            
-            # Ensure parent directories exist
-            cli_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Backup existing file if it exists and backup is requested
-            backup_path = backup_file(cli_path, backup)
-            if backup_path:
-                typer.echo(f"📋 Backed up existing CLI: {backup_path}")
-            
-            # Write CLI file
-            with open(cli_path, 'w') as f:
-                f.write(cli_code)
-            
-            typer.echo(f"✅ Generated CLI script: {cli_path}")
+            # All languages now use multi-file generation
         
         
         # Extract package name and filename for pyproject.toml update (Python only)
-        if language == "python" and cli_code is not None:
+        if language == "python":
+            # Use configured output path for Python
+            cli_output_path = goobits_config.cli_output_path.format(
+                package_name=goobits_config.package_name.replace('goobits-', '')
+            )
+            
             # Extract the actual module name from the CLI output path
             # e.g., "src/ttt/cli.py" -> "ttt"
             cli_path_parts = Path(cli_output_path).parts

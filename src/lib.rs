@@ -1,7 +1,5 @@
-/**
- * Auto-generated from {{ file_name }}
- * Library module for {{ display_name }}
- */
+//! Auto-generated from test-rust-cli.yaml
+//! Library module for Test Rust CLI
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -11,6 +9,13 @@ use std::path::PathBuf;
 pub mod config;
 pub mod commands;
 pub mod utils;
+
+// Re-export commonly used types
+pub use config::AppConfig;
+pub use commands::{Command, CommandArgs, CommandRegistry};
+
+/// Library version
+pub const VERSION: &str = "1.3.0";
 
 /// Configuration structure for the CLI application
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,13 +60,13 @@ impl Config {
         let home_dir = dirs::home_dir()
             .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
         
-        Ok(home_dir.join(".config").join("{{ package_name }}"))
+        Ok(home_dir.join(".config").join("test-rust-cli"))
     }
     
     /// Create default configuration
     fn default_config(config_dir: PathBuf) -> Self {
         let mut settings = HashMap::new();
-        settings.insert("version".to_string(), "{{ version | default('1.0.0') }}".to_string());
+        settings.insert("version".to_string(), VERSION.to_string());
         settings.insert("auto_update".to_string(), "false".to_string());
         
         let mut features = HashMap::new();
@@ -119,96 +124,8 @@ pub struct PluginCommand {
     pub handler: fn(&[String]) -> Result<()>,
 }
 
-/// Hook system for command execution
-pub struct HookRegistry {
-    hooks: HashMap<String, Vec<Box<dyn Fn(&crate::Args) -> Result<()>>>>,
-}
 
-impl HookRegistry {
-    pub fn new() -> Self {
-        Self {
-            hooks: HashMap::new(),
-        }
-    }
-    
-    /// Register a hook for a command
-    pub fn register_hook<F>(&mut self, command: String, hook: F)
-    where
-        F: Fn(&crate::Args) -> Result<()> + 'static,
-    {
-        self.hooks.entry(command).or_insert_with(Vec::new).push(Box::new(hook));
-    }
-    
-    /// Execute hooks for a command
-    pub fn execute_hooks(&self, command: &str, args: &crate::Args) -> Result<()> {
-        if let Some(hooks) = self.hooks.get(command) {
-            for hook in hooks {
-                hook(args)?;
-            }
-        }
-        Ok(())
-    }
-}
-
-/// Utility functions for the CLI
-pub mod utils {
-    use super::*;
-    use std::io::{self, Write};
-    
-    /// Print a colored message to stdout
-    pub fn print_info(message: &str) {
-        println!("🔹 {}", message);
-    }
-    
-    /// Print a success message to stdout
-    pub fn print_success(message: &str) {
-        println!("✅ {}", message);
-    }
-    
-    /// Print a warning message to stderr
-    pub fn print_warning(message: &str) {
-        eprintln!("⚠️  {}", message);
-    }
-    
-    /// Print an error message to stderr
-    pub fn print_error(message: &str) {
-        eprintln!("❌ {}", message);
-    }
-    
-    /// Prompt user for input
-    pub fn prompt_input(message: &str) -> Result<String> {
-        print!("❓ {}: ", message);
-        io::stdout().flush()?;
-        
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-        Ok(input.trim().to_string())
-    }
-    
-    /// Prompt user for confirmation (y/n)
-    pub fn prompt_confirm(message: &str) -> Result<bool> {
-        loop {
-            let input = prompt_input(&format!("{} (y/n)", message))?;
-            match input.to_lowercase().as_str() {
-                "y" | "yes" => return Ok(true),
-                "n" | "no" => return Ok(false),
-                _ => println!("Please enter 'y' or 'n'"),
-            }
-        }
-    }
-    
-    /// Check if running in a TTY (interactive terminal)
-    pub fn is_tty() -> bool {
-        atty::is(atty::Stream::Stdout)
-    }
-    
-    /// Get the current timestamp as a formatted string
-    pub fn current_timestamp() -> String {
-        chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC").to_string()
-    }
-}
-
-/// Command execution context
+/// Execution context for commands
 #[derive(Debug, Clone)]
 pub struct ExecutionContext {
     pub config: Config,
@@ -232,52 +149,39 @@ impl ExecutionContext {
 }
 
 /// Base trait for command implementations
-pub trait Command {
+pub trait CommandTrait {
     fn name(&self) -> &str;
     fn description(&self) -> &str;
-    fn execute(&self, args: &crate::Args, context: &ExecutionContext) -> Result<()>;
+    fn execute(&self, context: &ExecutionContext) -> Result<()>;
 }
 
 /// Managed command trait for lifecycle-managed commands
-pub trait ManagedCommand: Command {
-    fn validate(&self, args: &crate::Args) -> Result<()>;
+pub trait ManagedCommand: CommandTrait {
+    fn validate(&self, context: &ExecutionContext) -> Result<()>;
     fn setup(&mut self, context: &ExecutionContext) -> Result<()>;
     fn cleanup(&mut self) -> Result<()>;
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     
     #[test]
     fn test_config_creation() {
-        let temp_dir = TempDir::new().unwrap();
+        let temp_dir = tempfile::TempDir::new().unwrap();
         let config = Config::default_config(temp_dir.path().to_path_buf());
         
         assert!(config.is_feature_enabled("colored_output"));
         assert!(config.is_feature_enabled("progress_bars"));
-        assert_eq!(config.get_setting("version"), Some(&"{{ version | default('1.0.0') }}".to_string()));
+        assert_eq!(config.get_setting("version"), Some(&VERSION.to_string()));
     }
     
     #[test]
-    fn test_hook_registry() {
-        let mut registry = HookRegistry::new();
+    fn test_execution_context() {
+        let config = Config::default_config(std::env::temp_dir());
+        let context = ExecutionContext::new(config).unwrap();
         
-        registry.register_hook("test".to_string(), |_args| {
-            Ok(())
-        });
-        
-        let args = crate::Args {
-            command_name: "test".to_string(),
-            {% if cli.options %}
-            {% for option in cli.options %}
-            {{ option.name | replace('-', '_') }}: {% if option.type == "flag" or option.type == "bool" %}false{% elif option.type == "int" %}0{% else %}{% if option.required is not defined or option.required %}"".to_string(){% else %}None{% endif %}{% endif %},
-            {% endfor %}
-            {% endif %}
-            raw_args: std::collections::HashMap::new(),
-        };
-        
-        assert!(registry.execute_hooks("test", &args).is_ok());
+        assert!(context.elapsed().as_nanos() > 0);
     }
 }

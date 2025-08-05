@@ -1,7 +1,5 @@
-/**
- * Commands module for {{ display_name }}
- * Auto-generated from {{ file_name }}
- */
+//! Commands module for Test Rust CLI
+//! Auto-generated from test-rust-cli.yaml
 
 use anyhow::Result;
 use crate::config::AppConfig;
@@ -19,7 +17,7 @@ pub trait Command {
     fn execute(&self, args: &CommandArgs) -> Result<()>;
     
     /// Validate command arguments before execution
-    fn validate(&self, args: &CommandArgs) -> Result<()> {
+    fn validate(&self, _args: &CommandArgs) -> Result<()> {
         // Default implementation - no validation
         Ok(())
     }
@@ -68,6 +66,7 @@ impl CommandArgs {
 }
 
 /// Command registry for managing available commands
+#[derive(Default)]
 pub struct CommandRegistry {
     commands: HashMap<String, Box<dyn Command>>,
 }
@@ -75,9 +74,7 @@ pub struct CommandRegistry {
 impl CommandRegistry {
     /// Create a new command registry
     pub fn new() -> Self {
-        Self {
-            commands: HashMap::new(),
-        }
+        Self::default()
     }
     
     /// Register a command
@@ -91,7 +88,7 @@ impl CommandRegistry {
             command.validate(args)?;
             command.execute(args)
         } else {
-            anyhow::bail!("Unknown command: {}", name)
+            anyhow::bail!("Unknown command: {name}")
         }
     }
     
@@ -107,112 +104,134 @@ impl CommandRegistry {
 }
 
 /// Built-in commands implementations
-{% for cmd_name, cmd_data in cli.commands.items() %}
-{% if not cmd_data.subcommands %}
-pub struct {{ cmd_name | title | replace('-', '') }}Command;
+pub struct HelloCommand;
 
-impl Command for {{ cmd_name | title | replace('-', '') }}Command {
+impl Command for HelloCommand {
     fn name(&self) -> &str {
-        "{{ cmd_name }}"
+        "hello"
     }
     
     fn description(&self) -> &str {
-        "{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}"
+        "Say hello to someone"
     }
     
     fn execute(&self, args: &CommandArgs) -> Result<()> {
-        println!("🚀 Executing {{ cmd_name }} command...");
+        println!("🚀 Executing hello command...");
         
-        {% if cmd_data.args %}
         // Process positional arguments
-        {% for arg in cmd_data.args %}
-        {% if arg.required %}
-        let {{ arg.name }} = args.get_arg({{ loop.index0 }})
-            .ok_or_else(|| anyhow::anyhow!("Missing required argument: {{ arg.name }}"))?;
-        println!("  {{ arg.name }}: {}", {{ arg.name }});
-        {% else %}
-        if let Some({{ arg.name }}) = args.get_arg({{ loop.index0 }}) {
-            println!("  {{ arg.name }}: {}", {{ arg.name }});
-        }
-        {% endif %}
-        {% endfor %}
-        {% endif %}
         
-        {% if cmd_data.options %}
+        let name = args.get_arg(0)
+            .ok_or_else(|| anyhow::anyhow!("Missing required argument: name"))?;
+        println!("  name: {name}");
+        
+        
         // Process options
-        {% for opt in cmd_data.options %}
-        {% if opt.type == "flag" or opt.type == "bool" %}
-        if args.has_flag("{{ opt.name }}") {
-            println!("  {{ opt.name }}: enabled");
-        }
-        {% elif opt.type == "int" %}
-        if let Some({{ opt.name | replace('-', '_') }}) = args.get_option_as_int("{{ opt.name }}") {
-            println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
-        }
-        {% else %}
-        if let Some({{ opt.name | replace('-', '_') }}) = args.get_option("{{ opt.name }}") {
-            println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
-        }
-        {% endif %}
-        {% endfor %}
-        {% endif %}
         
-        // TODO: Implement actual {{ cmd_name }} command logic here
+        if let Some(greeting) = args.get_option("greeting") {
+            println!("  greeting: {greeting}");
+        }
+        
+        if args.has_flag("verbose") {
+            println!("  verbose: enabled");
+        }
+        
+        
+        // TODO: Implement actual hello command logic here
         // This is a placeholder implementation
         
-        println!("✅ {{ cmd_name | title }} command completed successfully!");
+        println!("✅ Hello command completed successfully!");
         Ok(())
     }
     
     fn validate(&self, args: &CommandArgs) -> Result<()> {
-        {% if cmd_data.args %}
-        // Validate required arguments
-        {% for arg in cmd_data.args %}
-        {% if arg.required %}
-        if args.get_arg({{ loop.index0 }}).is_none() {
-            anyhow::bail!("Missing required argument: {{ arg.name }}");
-        }
-        {% endif %}
-        {% if arg.choices %}
-        if let Some(value) = args.get_arg({{ loop.index0 }}) {
-            let valid_choices = vec![{% for choice in arg.choices %}"{{ choice }}"{% if not loop.last %}, {% endif %}{% endfor %}];
-            if !valid_choices.contains(&value.as_str()) {
-                anyhow::bail!("Invalid value for {{ arg.name }}: {}. Valid choices: {}", value, valid_choices.join(", "));
-            }
-        }
-        {% endif %}
-        {% endfor %}
-        {% endif %}
         
-        {% if cmd_data.options %}
-        // Validate options
-        {% for opt in cmd_data.options %}
-        {% if opt.choices %}
-        if let Some(value) = args.get_option("{{ opt.name }}") {
-            let valid_choices = vec![{% for choice in opt.choices %}"{{ choice }}"{% if not loop.last %}, {% endif %}{% endfor %}];
-            if !valid_choices.contains(&value.as_str()) {
-                anyhow::bail!("Invalid value for --{{ opt.name }}: {}. Valid choices: {}", value, valid_choices.join(", "));
-            }
+        // Validate required arguments
+        
+        if args.get_arg(0).is_none() {
+            anyhow::bail!("Missing required argument: name");
         }
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+        
+        
+        // Validate options
+        
         
         Ok(())
     }
 }
-{% endif %}
-{% endfor %}
+
+
+pub struct ProcessCommand;
+
+impl Command for ProcessCommand {
+    fn name(&self) -> &str {
+        "process"
+    }
+    
+    fn description(&self) -> &str {
+        "Process a file"
+    }
+    
+    fn execute(&self, args: &CommandArgs) -> Result<()> {
+        println!("🚀 Executing process command...");
+        
+        // Process positional arguments
+        
+        let input = args.get_arg(0)
+            .ok_or_else(|| anyhow::anyhow!("Missing required argument: input"))?;
+        println!("  input: {input}");
+        
+        
+        // Process options
+        
+        if let Some(output) = args.get_option("output") {
+            println!("  output: {output}");
+        }
+        
+        if let Some(format) = args.get_option("format") {
+            println!("  format: {format}");
+        }
+        
+        
+        // TODO: Implement actual process command logic here
+        // This is a placeholder implementation
+        
+        println!("✅ Process command completed successfully!");
+        Ok(())
+    }
+    
+    fn validate(&self, args: &CommandArgs) -> Result<()> {
+        
+        // Validate required arguments
+        
+        if args.get_arg(0).is_none() {
+            anyhow::bail!("Missing required argument: input");
+        }
+        
+        
+        // Validate options
+        
+        if let Some(value) = args.get_option("format") {
+            let valid_choices = ["json", "yaml", "text"];
+            if !valid_choices.contains(&value.as_str()) {
+                anyhow::bail!("Invalid value for --format: {value}. Valid choices: {}", valid_choices.join(", "));
+            }
+        }
+        
+        
+        Ok(())
+    }
+}
+
 
 /// Initialize and return command registry with all built-in commands
 pub fn create_command_registry() -> CommandRegistry {
     let mut registry = CommandRegistry::new();
     
-    {% for cmd_name, cmd_data in cli.commands.items() %}
-    {% if not cmd_data.subcommands %}
-    registry.register({{ cmd_name | title | replace('-', '') }}Command);
-    {% endif %}
-    {% endfor %}
+    
+    registry.register(HelloCommand);
+    
+    registry.register(ProcessCommand);
+    
     
     registry
 }
@@ -251,11 +270,11 @@ mod tests {
     fn test_command_registry() {
         let registry = create_command_registry();
         
-        {% for cmd_name, cmd_data in cli.commands.items() %}
-        {% if not cmd_data.subcommands %}
-        assert!(registry.has_command("{{ cmd_name }}"));
-        {% endif %}
-        {% endfor %}
+        
+        assert!(registry.has_command("hello"));
+        
+        assert!(registry.has_command("process"));
+        
         
         let names = registry.command_names();
         assert!(!names.is_empty());

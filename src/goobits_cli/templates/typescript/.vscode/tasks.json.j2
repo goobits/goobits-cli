@@ -1,0 +1,412 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // === Build Tasks ===
+    {
+      "label": "build",
+      "type": "npm",
+      "script": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": "$tsc"
+    },
+    
+    {
+      "label": "build:fast",
+      "type": "npm",
+      "script": "build:fast",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    
+    {
+      "label": "build:watch",
+      "type": "npm",
+      "script": "build:watch",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": {
+        "owner": "typescript",
+        "source": "ts",
+        "applyTo": "closedDocuments",
+        "fileLocation": [
+          "relative",
+          "${workspaceRoot}"
+        ],
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": ".*Starting compilation in watch mode.*"
+          },
+          "endsPattern": {
+            "regexp": ".*Found \\d+ errors. Watching for file changes.*|.*Compilation complete. Watching for file changes.*"
+          }
+        }
+      }
+    },
+    
+    // === Development Tasks ===
+    {
+      "label": "dev",
+      "type": "npm",
+      "script": "dev",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": {
+        "owner": "typescript",
+        "source": "ts",
+        "applyTo": "allDocuments",
+        "fileLocation": "absolute",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Starting.*",
+          "endsPattern": "^.*Waiting for changes.*"
+        }
+      }
+    },
+    
+    {
+      "label": "dev:esbuild",
+      "type": "npm",
+      "script": "dev:esbuild",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    
+    // === Testing Tasks ===
+    {
+      "label": "test",
+      "type": "npm",
+      "script": "test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    
+    {
+      "label": "test:watch",
+      "type": "npm",
+      "script": "test:watch",
+      "group": "test",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false
+      }
+    },
+    
+    {
+      "label": "test:current-file",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "test",
+        "--",
+        "${file}"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    
+    // === Code Quality Tasks ===
+    {
+      "label": "typecheck",
+      "type": "npm",
+      "script": "typecheck",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": "$tsc-noEmit"
+    },
+    
+    {
+      "label": "typecheck:watch",
+      "type": "npm",
+      "script": "typecheck:watch",
+      "group": "build",
+      "isBackground": true,
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": {
+        "owner": "typescript",
+        "source": "ts",
+        "applyTo": "allDocuments",
+        "fileLocation": "absolute",
+        "pattern": "$tsc",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Starting compilation in watch mode.*",
+          "endsPattern": ".*Found \\d+ errors. Watching for file changes.*|.*Compilation complete. Watching for file changes.*"
+        }
+      }
+    },
+    
+    {
+      "label": "lint",
+      "type": "npm",
+      "script": "lint",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": "$eslint-stylish"
+    },
+    
+    {
+      "label": "lint:fix",
+      "type": "npm",
+      "script": "lint:fix",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": "$eslint-stylish"
+    },
+    
+    {
+      "label": "format",
+      "type": "npm",
+      "script": "format",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    
+    {
+      "label": "format:check",
+      "type": "npm",
+      "script": "format:check",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    
+    // === CLI-specific Tasks ===
+    {
+      "label": "run:cli",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "start",
+        "--",
+        "${input:cliArgs}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    
+    {% for cmd_name, cmd_data in cli.commands.items() %}
+    {
+      "label": "run:{{ cmd_name }}",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "start",
+        "--",
+        "{{ cmd_name }}"{% if cmd_data.args %},
+        {% for arg in cmd_data.args %}
+        "${input:{{ cmd_name }}_{{ arg.name }}{% if not arg.required %}_optional{% endif %}}"{% if not loop.last %},{% endif %}
+        {% endfor %}{% endif %}
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": []
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+    
+    // === Utility Tasks ===
+    {
+      "label": "clean",
+      "type": "npm",
+      "script": "clean",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    
+    {
+      "label": "analyze",
+      "type": "npm",
+      "script": "analyze",
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    
+    {
+      "label": "install",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": []
+    }
+  ],
+  
+  "inputs": [
+    {
+      "id": "cliArgs",
+      "description": "CLI arguments",
+      "default": "--help",
+      "type": "promptString"
+    }{% if cli.commands %},
+    
+    {% for cmd_name, cmd_data in cli.commands.items() %}
+    {% if cmd_data.args %}
+    {% for arg in cmd_data.args %}
+    {
+      "id": "{{ cmd_name }}_{{ arg.name }}{% if not arg.required %}_optional{% endif %}",
+      "description": "{{ arg.desc }}{% if not arg.required %} (optional){% endif %}",
+      "default": "{% if arg.choices %}{{ arg.choices[0] }}{% elif arg.type == 'number' %}1{% elif arg.type == 'boolean' %}true{% else %}test{% endif %}",
+      "type": "promptString"{% if arg.choices %},
+      "options": [
+        {% for choice in arg.choices %}
+        "{{ choice }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]{% endif %}
+    }{% if not (loop.last and cmd_name == cli.commands.keys() | list | last) %},{% endif %}
+    {% endfor %}
+    {% endif %}
+    {% endfor %}{% endif %}
+  ]
+}

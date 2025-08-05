@@ -1,8 +1,16 @@
 /**
  * Auto-generated from {{ file_name }}
  * Main CLI implementation for {{ display_name }}
+ * 
+ * Features:
+ * - Comprehensive TypeScript type definitions
+ * - Decorator-based command definition support
+ * - Advanced plugin system
+ * - Built-in validation framework
+ * - Hot reload development support
  */
 
+import 'reflect-metadata';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { readdir } from 'fs/promises';
@@ -10,105 +18,281 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
 
+// Import enhanced type definitions
+import type {
+  CommandContext,
+  GlobalOptions,
+  HookRegistry,
+  ConfigSchema,
+} from './types/cli';
+
+// Import comprehensive error handling
+import type {
+  CLIError,
+  Result,
+  CommandError,
+  HookError,
+  PluginError,
+  FileSystemError,
+  SystemError,
+} from './types/errors';
+import {
+  CLIErrorCode,
+  ExitCode,
+  ErrorSeverity,
+  createCommandError,
+  createHookError,
+  createPluginError,
+  createFileSystemError,
+  createSystemError,
+  errorManager,
+  success,
+  failure,
+  asyncResult,
+  syncResult,
+  isSuccess,
+  isFailure,
+  handleError,
+} from './lib/errors';
+
+// Import decorator system (optional)
+try {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  import { registerDecoratorCommands } from './examples/decorators';
+} catch {
+  // Decorator system not available or not used
+}
+
 const __filename: string = fileURLToPath(import.meta.url);
 const __dirname: string = dirname(__filename);
 
 // Create the main program
 const program: Command = new Command();
 
-// Type definitions
+// Legacy interface for backwards compatibility
 interface PackageJson {
-  version: string;
-  [key: string]: any;
+  readonly version: string;
+  readonly [key: string]: unknown;
 }
 
-interface AppHooks {
-  [key: string]: ((...args: any[]) => Promise<any>) | ((...args: any[]) => any) | any;
-}
+// Use the comprehensive type definitions from ./types/cli
+type AppHooks = HookRegistry;
 
-interface CommandArgs {
-  commandName: string;
-  [key: string]: any;
-}
-
+// Enhanced upgrade options with strict typing
 interface UpgradeOptions {
-  check?: boolean;
-  version?: string;
-  pre?: boolean;
-  dryRun?: boolean;
+  readonly check?: boolean;
+  readonly version?: string;
+  readonly pre?: boolean;
+  readonly dryRun?: boolean;
 }
 
-// Version helper function
-async function getVersion(): Promise<string> {
-  try {
-    const packagePath: string = join(__dirname, 'package.json');
-    const { default: pkg }: { default: PackageJson } = await import(packagePath, { assert: { type: 'json' } });
-    return pkg.version;
-  } catch (error) {
-    return '{{ version | default("1.0.0") }}';
+// Runtime configuration (will be replaced by compile-time types in production)
+const runtimeConfig: Partial<ConfigSchema> = {
+  package_name: '{{ package_name }}',
+  command_name: '{{ command_name }}',
+  display_name: '{{ display_name }}',
+  description: '{{ description }}',
+  version: '{{ version }}',
+};
+
+// Enhanced version helper function with Result pattern
+async function getVersion(): Promise<Result<string, FileSystemError>> {
+  return await asyncResult(
+    async () => {
+      const packagePath: string = join(__dirname, 'package.json');
+      
+      // Check if package.json exists
+      if (!existsSync(packagePath)) {
+        throw new Error(`Package file not found at ${packagePath}`);
+      }
+      
+      const { default: pkg }: { default: PackageJson } = await import(packagePath, { assert: { type: 'json' } });
+      
+      if (!pkg.version || typeof pkg.version !== 'string') {
+        throw new Error('Invalid or missing version in package.json');
+      }
+      
+      return pkg.version;
+    },
+    (error) => createFileSystemError(
+      error instanceof Error ? error.message : 'Failed to read version from package.json',
+      {
+        filePath: join(__dirname, 'package.json'),
+        metadata: {
+          operation: 'read',
+          cause: error,
+        },
+      }
+    )
+  );
+}
+
+// Safe version getter that returns fallback on error
+async function getVersionSafe(): Promise<string> {
+  const result = await getVersion();
+  if (isSuccess(result)) {
+    return result.data;
   }
+  
+  // Log the error but continue with fallback
+  console.debug && console.debug(chalk.yellow(`Warning: ${result.error.message}, using fallback version`));
+  return '{{ version | default("1.0.0") }}';
 }
 
-// Hooks system - try to import app_hooks module
+// Enhanced hooks system with Result pattern and type safety
 let appHooks: AppHooks | null = null;
-{% if hooks_path %}
-// Using configured hooks path: {{ hooks_path }}
-try {
-  const hooksPath: string = join(__dirname, '{{ hooks_path }}');
-  if (existsSync(hooksPath)) {
-    appHooks = await import(hooksPath);
-  }
-} catch (error: any) {
-  // No hooks module found, use default behavior
-  console.debug('Hooks module not found:', error.message);
-}
-{% else %}
-// No hooks path configured, try default locations
-try {
-  const hooksPath: string = join(__dirname, 'app_hooks.js');
-  if (existsSync(hooksPath)) {
-    appHooks = await import(hooksPath);
-  }
-} catch (error: any) {
-  // No hooks module found, use default behavior
-  console.debug('Hooks module not found:', error.message);
-}
-{% endif %}
 
-// Load commands dynamically from commands directory
-async function loadCommands(program: Command): Promise<void> {
+/**
+ * Load hooks module with comprehensive error handling
+ */
+async function loadHooks(): Promise<Result<AppHooks | null, SystemError>> {
+  {% if hooks_path %}
+  // Using configured hooks path: {{ hooks_path }}
+  const hooksPath: string = join(__dirname, '{{ hooks_path }}');
+  {% else %}
+  // No hooks path configured, try default locations
+  const hooksPath: string = join(__dirname, 'app_hooks.js');
+  {% endif %}
+
+  return await asyncResult(
+    async () => {
+      if (!existsSync(hooksPath)) {
+        console.debug && console.debug(chalk.gray(`Hooks file not found at ${hooksPath}, continuing without hooks`));
+        return null;
+      }
+
+      console.debug && console.debug(chalk.gray(`Loading hooks from ${hooksPath}`));
+      const hooksModule = await import(hooksPath);
+      
+      // Validate hooks module structure
+      if (!hooksModule || typeof hooksModule !== 'object') {
+        throw new Error('Hooks module does not export a valid object');
+      }
+
+      console.debug && console.debug(chalk.green(`✓ Hooks loaded successfully from ${hooksPath}`));
+      return hooksModule as AppHooks;
+    },
+    (error) => createSystemError(
+      `Failed to load hooks module: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        filePath: hooksPath,
+        cause: error instanceof Error ? error : new Error(String(error)),
+        metadata: {
+          operation: 'import',
+          hooksPath,
+        },
+      }
+    )
+  );
+}
+
+// Initialize hooks with error handling
+const hooksResult = await loadHooks();
+if (isSuccess(hooksResult)) {
+  appHooks = hooksResult.data;
+} else {
+  // Log warning but continue - hooks are optional
+  console.debug && console.debug(chalk.yellow(`Warning: ${hooksResult.error.message}`));
+  appHooks = null;
+}
+
+// Gracefully handle missing hooks with meaningful errors
+function getHook(hookName: string): unknown {
+  if (!appHooks) {
+    console.debug && console.debug(chalk.gray(`No hooks available, skipping ${hookName}`));
+    return null;
+  }
+  
+  const hook = appHooks[hookName];
+  if (!hook) {
+    console.debug && console.debug(chalk.gray(`Hook ${hookName} not found in hooks module`));
+    return null;
+  }
+  
+  return hook;
+}
+
+// Enhanced command loading with Result pattern and comprehensive error handling
+async function loadCommands(program: Command): Promise<Result<number, FileSystemError>> {
   const commandsDir: string = join(__dirname, 'commands');
   
-  try {
-    if (!existsSync(commandsDir)) {
-      return;
-    }
-    
-    const files: string[] = await readdir(commandsDir);
-    
-    for (const file of files) {
-      if (file.endsWith('.js') && !file.startsWith('_')) {
-        try {
-          const commandPath: string = join(commandsDir, file);
-          const { default: commandModule } = await import(commandPath);
-          
-          if (typeof commandModule === 'function') {
-            commandModule(program);
-          } else if (commandModule.register) {
-            commandModule.register(program);
+  return await asyncResult(
+    async () => {
+      if (!existsSync(commandsDir)) {
+        console.debug && console.debug(chalk.gray(`Commands directory not found at ${commandsDir}, skipping dynamic commands`));
+        return 0;
+      }
+
+      console.debug && console.debug(chalk.gray(`Loading commands from ${commandsDir}`));
+      const files: string[] = await readdir(commandsDir);
+      let loadedCount = 0;
+      const errors: string[] = [];
+      
+      for (const file of files) {
+        if (file.endsWith('.js') && !file.startsWith('_')) {
+          const commandResult = await loadSingleCommand(program, commandsDir, file);
+          if (isSuccess(commandResult)) {
+            loadedCount++;
+            console.debug && console.debug(chalk.green(`  ✓ Loaded command: ${file}`));
+          } else {
+            errors.push(`${file}: ${commandResult.error.message}`);
+            console.warn && console.warn(chalk.yellow(`  ⚠ Failed to load command ${file}: ${commandResult.error.message}`));
           }
-        } catch (error: any) {
-          console.error(`Failed to load command ${file}:`, error.message);
         }
       }
-    }
-  } catch (error: any) {
-    console.debug('Could not load commands directory:', error.message);
-  }
+      
+      if (errors.length > 0 && errors.length === files.filter(f => f.endsWith('.js') && !f.startsWith('_')).length) {
+        throw new Error(`Failed to load any commands. Errors: ${errors.join('; ')}`);
+      }
+      
+      console.debug && console.debug(chalk.green(`✓ Loaded ${loadedCount} dynamic commands`));
+      return loadedCount;
+    },
+    (error) => createFileSystemError(
+      `Failed to load commands directory: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        filePath: commandsDir,
+        cause: error instanceof Error ? error : new Error(String(error)),
+        metadata: {
+          operation: 'read',
+          directory: commandsDir,
+        },
+      }
+    )
+  );
 }
 
-// Load plugins from conventional plugin directories
-async function loadPlugins(program: Command): Promise<void> {
+// Load a single command file with proper error handling
+async function loadSingleCommand(program: Command, commandsDir: string, file: string): Promise<Result<void, SystemError>> {
+  return await asyncResult(
+    async () => {
+      const commandPath: string = join(commandsDir, file);
+      const { default: commandModule } = await import(commandPath);
+      
+      if (typeof commandModule === 'function') {
+        commandModule(program);
+      } else if (commandModule && typeof commandModule.register === 'function') {
+        commandModule.register(program);
+      } else {
+        throw new Error(`Command module ${file} does not export a function or register method`);
+      }
+    },
+    (error) => createSystemError(
+      `Failed to load command ${file}: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        filePath: join(commandsDir, file),
+        cause: error instanceof Error ? error : new Error(String(error)),
+        metadata: {
+          operation: 'import',
+          commandFile: file,
+        },
+      }
+    )
+  );
+}
+
+// Enhanced plugin loading with Result pattern and comprehensive error handling
+async function loadPlugins(program: Command): Promise<Result<number, PluginError[]>> {
   const pluginDirs: string[] = [
     // User-specific plugin directory
     join(process.env.HOME || '', '.config', 'goobits', '{{ cli.name }}', 'plugins'),
@@ -116,37 +300,101 @@ async function loadPlugins(program: Command): Promise<void> {
     join(__dirname, 'plugins'),
   ];
   
+  const errors: PluginError[] = [];
+  let totalLoaded = 0;
+  
   for (const pluginDir of pluginDirs) {
-    try {
+    const result = await loadPluginsFromDirectory(program, pluginDir);
+    if (isSuccess(result)) {
+      totalLoaded += result.data;
+    } else {
+      errors.push(...result.error);
+    }
+  }
+  
+  console.debug && console.debug(chalk.green(`✓ Loaded ${totalLoaded} plugins total`));
+  
+  if (errors.length > 0 && totalLoaded === 0) {
+    return failure(errors, false);
+  }
+  
+  return success(totalLoaded, errors.length > 0 ? errors.map(e => e.message) : undefined);
+}
+
+// Load plugins from a single directory
+async function loadPluginsFromDirectory(program: Command, pluginDir: string): Promise<Result<number, PluginError[]>> {
+  return await asyncResult(
+    async () => {
       if (!existsSync(pluginDir)) {
-        continue;
+        console.debug && console.debug(chalk.gray(`Plugin directory not found: ${pluginDir}`));
+        return 0;
       }
       
+      console.debug && console.debug(chalk.gray(`Loading plugins from ${pluginDir}`));
       const files: string[] = await readdir(pluginDir);
+      let loadedCount = 0;
+      const errors: PluginError[] = [];
       
       for (const file of files) {
         if (file.endsWith('.js') && !file.startsWith('_')) {
-          try {
-            const pluginPath: string = join(pluginDir, file);
-            const { default: pluginModule } = await import(pluginPath);
-            
-            if (typeof pluginModule === 'function') {
-              pluginModule(program);
-              console.debug(`Loaded plugin: ${file}`);
-            } else if (pluginModule.register) {
-              pluginModule.register(program);
-              console.debug(`Loaded plugin: ${file}`);
-            }
-          } catch (error: any) {
-            console.error(`Failed to load plugin ${file}:`, error.message);
+          const pluginResult = await loadSinglePlugin(program, pluginDir, file);
+          if (isSuccess(pluginResult)) {
+            loadedCount++;
+            console.debug && console.debug(chalk.green(`  ✓ Loaded plugin: ${file}`));
+          } else {
+            errors.push(pluginResult.error);
+            console.warn && console.warn(chalk.yellow(`  ⚠ Failed to load plugin ${file}: ${pluginResult.error.message}`));
           }
         }
       }
-    } catch (error: any) {
-      // Plugin directory doesn't exist or can't be read
-      console.debug(`Could not access plugin directory ${pluginDir}:`, error.message);
-    }
-  }
+      
+      if (errors.length > 0) {
+        throw errors;
+      }
+      
+      return loadedCount;
+    },
+    (error) => Array.isArray(error) ? error : [createPluginError(
+      `Failed to access plugin directory: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        filePath: pluginDir,
+        cause: error instanceof Error ? error : new Error(String(error)),
+        metadata: {
+          pluginName: 'unknown',
+          operation: 'directory-access',
+        },
+      }
+    )]
+  );
+}
+
+// Load a single plugin file with proper error handling
+async function loadSinglePlugin(program: Command, pluginDir: string, file: string): Promise<Result<void, PluginError>> {
+  return await asyncResult(
+    async () => {
+      const pluginPath: string = join(pluginDir, file);
+      const { default: pluginModule } = await import(pluginPath);
+      
+      if (typeof pluginModule === 'function') {
+        pluginModule(program);
+      } else if (pluginModule && typeof pluginModule.register === 'function') {
+        pluginModule.register(program);
+      } else {
+        throw new Error(`Plugin ${file} does not export a function or register method`);
+      }
+    },
+    (error) => createPluginError(
+      `Failed to load plugin ${file}: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        filePath: join(pluginDir, file),
+        cause: error instanceof Error ? error : new Error(String(error)),
+        metadata: {
+          pluginName: file.replace(/\.js$/, ''),
+          operation: 'load',
+        },
+      }
+    )
+  );
 }
 
 {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
@@ -191,7 +439,8 @@ async function builtinUpgradeCommand(options: UpgradeOptions): Promise<void> {
 
 // Main CLI setup
 export async function cli(): Promise<void> {
-  const version: string = await getVersion();
+  // Get version with safe fallback
+  const version: string = await getVersionSafe();
   
   program
     .name('{{ cli.name }}')
@@ -261,6 +510,38 @@ export async function cli(): Promise<void> {
     .action(builtinUpgradeCommand);
   {% endif %}
 
+  // Internal completion command (hidden from help)
+  program
+    .command('_completion <shell> <current_line> [cursor_pos]')
+    .description('Internal completion command - called by shell completion scripts')
+    .option('--debug', 'Debug completion engine')
+    .hideHelp(true)
+    .action(async (shell: string, currentLine: string, cursorPos?: string, options?: { debug?: boolean }) => {
+      try {
+        // Import completion engine
+        const enginePath = join(__dirname, 'completion_engine.js');
+        
+        if (existsSync(enginePath)) {
+          const { CompletionEngine } = await import(enginePath);
+          const engine = new CompletionEngine();
+          const completions = engine.getCompletions(shell, currentLine, cursorPos ? parseInt(cursorPos) : undefined);
+          
+          // Output completions
+          for (const completion of completions) {
+            console.log(completion);
+          }
+        } else if (options?.debug) {
+          console.error('completion_engine.js not found');
+        }
+      } catch (error: unknown) {
+        if (options?.debug) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`Completion error: ${errorMessage}`);
+        }
+        // Silently fail in production to avoid breaking shell completion
+      }
+    });
+
   // Define commands from configuration
   {% for cmd_name, cmd_data in cli.commands.items() %}
   {% if not cmd_data.subcommands %}
@@ -299,33 +580,39 @@ export async function cli(): Promise<void> {
     {% endfor %}
     {% endif %}
 
-    cmd.action(async ({% if cmd_data.args %}{{ cmd_data.args | map(attribute='name') | join(': any, ') }}: any, {% endif %}options: any, command: Command) => {
+    cmd.action(async ({% if cmd_data.args %}{{ cmd_data.args | map(attribute='name') | join(': unknown, ') }}: unknown, {% endif %}options: Record<string, unknown>, command: Command) => {
       {% if cmd_data.lifecycle == "managed" %}
       // Managed command - expect an instance of ManagedCommand
       const commandInstanceName: string = '{{ cmd_name }}Command';
       if (appHooks && appHooks[commandInstanceName]) {
         const commandInstance = appHooks[commandInstanceName];
         
-        // Prepare arguments
-        const args: CommandArgs = {
-          commandName: '{{ cmd_name }}',
-          {% if cmd_data.args %}
-          {% for arg in cmd_data.args %}
-          {{ arg.name }}: {{ arg.name }},
-          {% endfor %}
-          {% endif %}
-          ...options,
-          // Add global options
+        // Prepare strongly-typed command context
+        const globalOptions: GlobalOptions = {
           {% for option in cli.options %}
-          {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
+          {{ option.name | replace('-', '_') }}: command.parent?.opts().{{ option.name | replace('-', '_') }} as {{ option.type | to_ts_type }},
           {% endfor %}
         };
         
+        const context: CommandContext = {
+          commandName: '{{ cmd_name }}',
+          args: {
+            {% if cmd_data.args %}
+            {% for arg in cmd_data.args %}
+            {{ arg.name }}: {{ arg.name }} as {% if arg.choices %}{{ arg.choices | map('tojsonstring') | join(' | ') }}{% else %}{{ arg.type | default('string') | to_ts_type }}{% endif %},
+            {% endfor %}
+            {% endif %}
+          },
+          options: options as Record<string, unknown>,
+          globalOptions,
+        };
+        
         try {
-          const result = await commandInstance.execute(args);
+          const result = await commandInstance.execute(context);
           return result;
-        } catch (error: any) {
-          console.error(chalk.red(`Error: ${error.message}`));
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(chalk.red(`Error: ${errorMessage}`));
           process.exit(1);
         }
       } else {
@@ -338,26 +625,32 @@ export async function cli(): Promise<void> {
       if (appHooks && appHooks[hookName]) {
         const hookFunc = appHooks[hookName];
         
-        // Prepare arguments
-        const args: CommandArgs = {
-          commandName: '{{ cmd_name }}',
-          {% if cmd_data.args %}
-          {% for arg in cmd_data.args %}
-          {{ arg.name }}: {{ arg.name }},
-          {% endfor %}
-          {% endif %}
-          ...options,
-          // Add global options
+        // Prepare strongly-typed command context
+        const globalOptions: GlobalOptions = {
           {% for option in cli.options %}
-          {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
+          {{ option.name | replace('-', '_') }}: command.parent?.opts().{{ option.name | replace('-', '_') }} as {{ option.type | to_ts_type }},
           {% endfor %}
         };
         
+        const context: CommandContext = {
+          commandName: '{{ cmd_name }}',
+          args: {
+            {% if cmd_data.args %}
+            {% for arg in cmd_data.args %}
+            {{ arg.name }}: {{ arg.name }} as {% if arg.choices %}{{ arg.choices | map('tojsonstring') | join(' | ') }}{% else %}{{ arg.type | default('string') | to_ts_type }}{% endif %},
+            {% endfor %}
+            {% endif %}
+          },
+          options: options as Record<string, unknown>,
+          globalOptions,
+        };
+        
         try {
-          const result = await hookFunc(args);
+          const result = await hookFunc(context);
           return result;
-        } catch (error: any) {
-          console.error(chalk.red(`Error: ${error.message}`));
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(chalk.red(`Error: ${errorMessage}`));
           process.exit(1);
         }
       } else {
@@ -454,11 +747,25 @@ export async function cli(): Promise<void> {
   {% endif %}
   {% endfor %}
 
-  // Load dynamic commands from commands directory
-  await loadCommands(program);
+  // Load dynamic commands from commands directory with error handling
+  const commandsResult = await loadCommands(program);
+  if (isFailure(commandsResult)) {
+    console.warn && console.warn(chalk.yellow(`Warning: ${commandsResult.error.message}`));
+    if (process.env.DEBUG) {
+      console.debug && console.debug(chalk.gray('Commands loading failed, continuing without dynamic commands'));
+    }
+  }
   
-  // Load plugins
-  await loadPlugins(program);
+  // Load plugins with error handling
+  const pluginsResult = await loadPlugins(program);
+  if (isFailure(pluginsResult)) {
+    console.warn && console.warn(chalk.yellow(`Warning: Failed to load plugins`));
+    if (process.env.DEBUG) {
+      pluginsResult.error.forEach(error => {
+        console.debug && console.debug(chalk.gray(`  Plugin error: ${error.message}`));
+      });
+    }
+  }
 
   {% if cli.command_groups %}
   // Command groups for help display

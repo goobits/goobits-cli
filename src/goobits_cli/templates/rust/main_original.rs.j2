@@ -4,33 +4,34 @@
  */
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand, ArgAction};
-use std::path::PathBuf;
-use std::process;
+use clap::{Parser, Subcommand, CommandFactory};
+use std::collections::HashMap;
 
-// Import hook functions if available
-mod hooks {
-    use super::*;
-    
-    pub fn try_call_hook(command_name: &str, args: &crate::Args) -> Result<()> {
-        // Try to call external hook function
-        // This is a placeholder - in real implementation, hooks would be loaded dynamically
-        // or implemented as trait objects
-        match command_name {
-            {% for cmd_name, cmd_data in cli.commands.items() %}
-            "{{ cmd_name }}" => {
-                // Call {{ cmd_name }} hook if available
-                eprintln!("🔧 Hook placeholder for '{{ cmd_name }}' command");
-                eprintln!("   Add your implementation in hooks.rs or as an external library");
-                Ok(())
-            }
-            {% endfor %}
-            _ => {
-                anyhow::bail!("Unknown command: {}", command_name)
-            }
-        }
-    }
-}
+// Import modules when building as library
+#[cfg(feature = "lib")]
+mod config;
+#[cfg(feature = "lib")]
+mod commands;
+#[cfg(feature = "lib")]
+mod utils;
+
+// Re-export for hook functions
+#[cfg(feature = "lib")]
+pub use commands::{Command, CommandArgs};
+#[cfg(feature = "lib")]
+pub use config::AppConfig;
+
+// Import actual hook system
+mod hooks;
+use hooks::{HookRegistry, HookContext, ExecutionPhase};
+
+// Import plugin system
+mod plugins;
+use plugins::{initialize_plugins, execute_plugin_command, cleanup_plugins};
+
+// Import styling system
+mod styling;
+use styling::initialize_styling;
 
 #[derive(Parser)]
 #[command(name = "{{ command_name }}")]
@@ -76,13 +77,13 @@ enum Commands {
         {% if arg.required %}
         /// {{ arg.desc }}
         {% if arg.choices %}
-        #[arg(value_parser = clap::value_parser!(String).possible_values({{ arg.choices | json_encode | replace('"', '"') }}))]
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
         {% endif %}
         {{ arg.name }}: String,
         {% else %}
         /// {{ arg.desc }}
         {% if arg.choices %}
-        #[arg(value_parser = clap::value_parser!(String).possible_values({{ arg.choices | json_encode | replace('"', '"') }}))]
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
         {% endif %}
         {{ arg.name }}: Option<String>,
         {% endif %}
@@ -143,6 +144,13 @@ enum Commands {
 #[derive(Subcommand)]
 enum {{ cmd_name | title | replace('-', '') }}Subcommands {
     {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+    {% if subcmd_data.subcommands %}
+    /// {% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}
+    {{ subcmd_name | title | replace('-', '') }} {
+        #[command(subcommand)]
+        subcommand: {{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('-', '') }}Subcommands,
+    },
+    {% else %}
     /// {% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}
     {{ subcmd_name | title | replace('-', '') }} {
         {% if subcmd_data.args %}
@@ -150,13 +158,13 @@ enum {{ cmd_name | title | replace('-', '') }}Subcommands {
         {% if arg.required %}
         /// {{ arg.desc }}
         {% if arg.choices %}
-        #[arg(value_parser = clap::value_parser!(String).possible_values({{ arg.choices | json_encode | replace('"', '"') }}))]
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
         {% endif %}
         {{ arg.name }}: String,
         {% else %}
         /// {{ arg.desc }}
         {% if arg.choices %}
-        #[arg(value_parser = clap::value_parser!(String).possible_values({{ arg.choices | json_encode | replace('"', '"') }}))]
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
         {% endif %}
         {{ arg.name }}: Option<String>,
         {% endif %}
@@ -181,8 +189,57 @@ enum {{ cmd_name | title | replace('-', '') }}Subcommands {
         {% endfor %}
         {% endif %}
     },
+    {% endif %}
     {% endfor %}
 }
+
+{% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+{% if subcmd_data.subcommands %}
+#[derive(Subcommand)]
+enum {{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('-', '') }}Subcommands {
+    {% for subsubcmd_name, subsubcmd_data in subcmd_data.subcommands.items() %}
+    /// {% if subsubcmd_data.icon %}{{ subsubcmd_data.icon }} {% endif %}{{ subsubcmd_data.desc }}
+    {{ subsubcmd_name | title | replace('-', '') }} {
+        {% if subsubcmd_data.args %}
+        {% for arg in subsubcmd_data.args %}
+        {% if arg.required %}
+        /// {{ arg.desc }}
+        {% if arg.choices %}
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
+        {% endif %}
+        {{ arg.name }}: String,
+        {% else %}
+        /// {{ arg.desc }}
+        {% if arg.choices %}
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
+        {% endif %}
+        {{ arg.name }}: Option<String>,
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        
+        {% if subsubcmd_data.options %}
+        {% for opt in subsubcmd_data.options %}
+        {% if opt.type == "flag" or opt.type == "bool" %}
+        /// {{ opt.desc }}
+        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default | lower }}{% endif %})]
+        {{ opt.name | replace('-', '_') }}: bool,
+        {% elif opt.type == "int" %}
+        /// {{ opt.desc }}
+        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default }}{% endif %})]
+        {{ opt.name | replace('-', '_') }}: i32,
+        {% else %}
+        /// {{ opt.desc }}
+        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value = "{{ opt.default }}"{% endif %})]
+        {{ opt.name | replace('-', '_') }}: {% if opt.required is defined and opt.required %}String{% else %}Option<String>{% endif %},
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+    },
+    {% endfor %}
+}
+{% endif %}
+{% endfor %}
 {% endif %}
 {% endfor %}
 
@@ -195,11 +252,11 @@ pub struct Args {
     pub {{ option.name | replace('-', '_') }}: {% if option.type == "flag" or option.type == "bool" %}bool{% elif option.type == "int" %}i32{% else %}{% if option.required is not defined or option.required %}String{% else %}Option<String>{% endif %}{% endif %},
     {% endfor %}
     {% endif %}
-    pub raw_args: std::collections::HashMap<String, String>,
+    pub raw_args: HashMap<String, String>,
 }
 
 {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
-async fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run: bool) -> Result<()> {
+fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run: bool) -> Result<()> {
     let package_name = "{{ package_name }}";
     let display_name = "{{ display_name }}";
     let current_version = env!("CARGO_PKG_VERSION");
@@ -251,6 +308,19 @@ async fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run
 fn main() -> Result<()> {
     let cli = Cli::parse();
     
+    // Initialize configuration and hook system
+    let config = crate::config::AppConfig::load()?;
+    let config_dir = crate::config::AppConfig::config_dir()?;
+    
+    // Initialize styling system
+    initialize_styling(
+        config.is_feature_enabled("colored_output"),
+        config.is_feature_enabled("unicode_symbols")
+    );
+    
+    hooks::initialize_hooks(&config_dir)?;
+    initialize_plugins(&config)?;
+    
     // Prepare common arguments structure
     let args = Args {
         command_name: "".to_string(), // Will be set per command
@@ -259,7 +329,7 @@ fn main() -> Result<()> {
         {{ option.name | replace('-', '_') }}: cli.{{ option.name | replace('-', '_') }},
         {% endfor %}
         {% endif %}
-        raw_args: std::collections::HashMap::new(),
+        raw_args: HashMap::new(),
     };
     
     match cli.command {
@@ -282,49 +352,123 @@ fn main() -> Result<()> {
                     let mut cmd_args = args.clone();
                     cmd_args.command_name = "{{ cmd_name }}".to_string();
                     
-                    {% if cmd_data.lifecycle == "managed" %}
-                    // Managed command - would need external command instance
-                    eprintln!("🔧 Managed command '{{ cmd_name }}' requires external implementation");
-                    eprintln!("   Implement {{ cmd_name | title }}Command struct with execute() method");
+                    // Prepare hook context
+                    let mut hook_args = vec![];
+                    let mut hook_options = HashMap::new();
+                    
+                    {% if cmd_data.args %}
+                    {% for arg in cmd_data.args %}
+                    {% if arg.required %}
+                    hook_args.push({{ arg.name }}.clone());
                     {% else %}
-                    // Try to call hook, fallback to placeholder
-                    match hooks::try_call_hook("{{ cmd_name }}", &cmd_args) {
-                        Ok(_) => {}
-                        Err(_) => {
-                            // Default placeholder behavior
-                            println!("🚀 Executing {{ cmd_name }} command...");
-                            {% if cmd_data.args %}
-                            {% for arg in cmd_data.args %}
-                            {% if arg.required %}
-                            println!("  {{ arg.name }}: {}", {{ arg.name }});
-                            {% else %}
-                            if let Some(val) = {{ arg.name }} {
-                                println!("  {{ arg.name }}: {}", val);
-                            }
-                            {% endif %}
-                            {% endfor %}
-                            {% endif %}
-                            {% if cmd_data.options %}
-                            {% for opt in cmd_data.options %}
-                            {% if opt.type == "flag" or opt.type == "bool" %}
-                            println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
-                            {% elif opt.type == "int" %}
-                            println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
-                            {% else %}
-                            {% if opt.required is defined and opt.required %}
-                            println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
-                            {% else %}
-                            if let Some(val) = {{ opt.name | replace('-', '_') }} {
-                                println!("  {{ opt.name }}: {}", val);
-                            }
-                            {% endif %}
-                            {% endif %}
-                            {% endfor %}
-                            {% endif %}
-                            println!("✅ Command completed successfully!");
-                        }
+                    if let Some(val) = {{ arg.name }} {
+                        hook_args.push(val.clone());
                     }
                     {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                    
+                    {% if cmd_data.options %}
+                    {% for opt in cmd_data.options %}
+                    {% if opt.type == "flag" or opt.type == "bool" %}
+                    hook_options.insert("{{ opt.name }}".to_string(), {{ opt.name | replace('-', '_') }}.to_string());
+                    {% elif opt.type == "int" %}
+                    hook_options.insert("{{ opt.name }}".to_string(), {{ opt.name | replace('-', '_') }}.to_string());
+                    {% else %}
+                    {% if opt.required is defined and opt.required %}
+                    hook_options.insert("{{ opt.name }}".to_string(), {{ opt.name | replace('-', '_') }}.clone());
+                    {% else %}
+                    if let Some(val) = {{ opt.name | replace('-', '_') }} {
+                        hook_options.insert("{{ opt.name }}".to_string(), val.clone());
+                    }
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                    
+                    let hook_context = HookContext::new(
+                        "{{ cmd_name }}".to_string(),
+                        None,
+                        hook_args,
+                        hook_options,
+                        ExecutionPhase::PreCommand,
+                    )?;
+                    
+                    // Execute pre-command hooks
+                    if let Err(e) = hooks::execute_command_hooks("{{ cmd_name }}", ExecutionPhase::PreCommand, &hook_context) {
+                        let error_context = hook_context.with_error(&e.to_string());
+                        let _ = hooks::execute_command_hooks("{{ cmd_name }}", ExecutionPhase::OnError, &error_context);
+                        return Err(e);
+                    }
+                    
+                    // Execute the actual command
+                    let command_result = {
+                        {% if cmd_data.lifecycle == "managed" %}
+                        // Managed command - would need external command instance
+                        use crate::utils::output;
+                        output::info("🔧 Managed command '{{ cmd_name }}' requires external implementation");
+                        output::info("   Implement {{ cmd_name | title }}Command struct with execute() method");
+                        Ok(())
+                        {% else %}
+                        // Default command implementation
+                        use crate::utils::output;
+                        output::info("🚀 Executing {{ cmd_name }} command...");
+                        
+                        {% if cmd_data.args %}
+                        {% for arg in cmd_data.args %}
+                        {% if arg.required %}
+                        println!("  {{ arg.name }}: {}", {{ arg.name }});
+                        {% else %}
+                        if let Some(val) = {{ arg.name }} {
+                            println!("  {{ arg.name }}: {}", val);
+                        }
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                        {% if cmd_data.options %}
+                        {% for opt in cmd_data.options %}
+                        {% if opt.type == "flag" or opt.type == "bool" %}
+                        println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
+                        {% elif opt.type == "int" %}
+                        println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
+                        {% else %}
+                        {% if opt.required is defined and opt.required %}
+                        println!("  {{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
+                        {% else %}
+                        if let Some(val) = {{ opt.name | replace('-', '_') }} {
+                            println!("  {{ opt.name }}: {}", val);
+                        }
+                        {% endif %}
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                        
+                        output::success("Command completed successfully!");
+                        Ok(())
+                        {% endif %}
+                    };
+                    
+                    // Execute post-command hooks
+                    let post_context = HookContext::new(
+                        "{{ cmd_name }}".to_string(),
+                        None,
+                        hook_args,
+                        hook_options,
+                        if command_result.is_ok() { ExecutionPhase::OnSuccess } else { ExecutionPhase::OnError },
+                    )?;
+                    
+                    match &command_result {
+                        Ok(_) => {
+                            let _ = hooks::execute_command_hooks("{{ cmd_name }}", ExecutionPhase::PostCommand, &post_context);
+                            let _ = hooks::execute_command_hooks("{{ cmd_name }}", ExecutionPhase::OnSuccess, &post_context);
+                        }
+                        Err(e) => {
+                            let error_context = post_context.with_error(&e.to_string());
+                            let _ = hooks::execute_command_hooks("{{ cmd_name }}", ExecutionPhase::OnError, &error_context);
+                        }
+                    }
+                    
+                    command_result?;
                 }
                 {% else %}
                 Commands::{{ cmd_name | title | replace('-', '') }} { subcommand } => {
@@ -391,10 +535,7 @@ fn main() -> Result<()> {
                 
                 {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
                 Commands::Upgrade { check, version, pre, dry_run } => {
-                    let rt = tokio::runtime::Runtime::new().context("Failed to create async runtime")?;
-                    rt.block_on(async {
-                        handle_upgrade(check, version, pre, dry_run).await
-                    })?;
+                    handle_upgrade(check, version, pre, dry_run)?;
                 }
                 {% endif %}
             }

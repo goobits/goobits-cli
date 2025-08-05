@@ -3,7 +3,7 @@
  * Auto-generated from {{ file_name }}
  */
 
-use anyhow::Result;
+use crate::errors::{CliResult, CommandError};
 use crate::config::AppConfig;
 use std::collections::HashMap;
 
@@ -16,10 +16,10 @@ pub trait Command {
     fn description(&self) -> &str;
     
     /// Execute the command with given arguments
-    fn execute(&self, args: &CommandArgs) -> Result<()>;
+    fn execute(&self, args: &CommandArgs) -> CliResult<()>;
     
     /// Validate command arguments before execution
-    fn validate(&self, args: &CommandArgs) -> Result<()> {
+    fn validate(&self, args: &CommandArgs) -> CliResult<()> {
         // Default implementation - no validation
         Ok(())
     }

@@ -1,6 +1,6 @@
 [project]
 name = "goobits-cli"
-version = "1.3.0"
+version = "1.4.0"
 description = "Multi-language CLI generator supporting Python, Node.js, and TypeScript."
 dependencies = [ "pyyaml", "jinja2", "pydantic", "typer", "toml", "rich-click",]
 
