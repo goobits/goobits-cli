@@ -68,11 +68,12 @@ class BaseGenerator(ABC):
                 'hooks_path': config.hooks_path,
             }
         else:  # ConfigSchema
+            cli = config.cli
             return {
-                'cli_config': config.cli,
-                'package_name': "",
-                'command_name': "",
-                'display_name': "",
+                'cli_config': cli,
+                'package_name': cli.name if cli else "",
+                'command_name': cli.name if cli else "",
+                'display_name': cli.name if cli else "",
                 'installation': None,
                 'hooks_path': None,
             }

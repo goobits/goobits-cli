@@ -33,12 +33,13 @@ path = "src/main.rs"
     "indicatif": "0.17",
     "tabled": "0.15",
     "libloading": "0.8",
-    "once_cell": "1.19"
+    "once_cell": "1.19",
+    "dialoguer": "0.11"
 } %}
 {% set final_deps = default_deps.copy() %}
 {% if rust_crates %}
 {% for crate_name, crate_spec in rust_crates.items() %}
-{% if final_deps.update({crate_name: crate_spec}) %}{% endif %}
+{% set _ = final_deps.update({crate_name: crate_spec}) %}
 {% endfor %}
 {% endif %}
 {% for dep_name, dep_spec in final_deps.items() %}

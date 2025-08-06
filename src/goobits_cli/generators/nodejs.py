@@ -8,6 +8,7 @@ import typer
 
 from . import BaseGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
+from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
 
 
 class NodeJSGenerator(BaseGenerator):
@@ -39,6 +40,9 @@ class NodeJSGenerator(BaseGenerator):
         
         self.env.filters['json_stringify'] = json_stringify
         self.env.filters['escape_backticks'] = lambda x: x.replace('`', '\\`')
+        self.env.filters['align_header_items'] = align_header_items
+        self.env.filters['format_icon_spacing'] = format_icon_spacing
+        self.env.filters['align_setup_steps'] = align_setup_steps
     
     def _check_file_conflicts(self, target_files: dict) -> dict:
         """Check for file conflicts and adjust paths if needed."""
@@ -121,7 +125,17 @@ class NodeJSGenerator(BaseGenerator):
             "package.json",
             "setup.sh",
             "README.md",
-            ".gitignore"
+            ".gitignore",
+            "cli.js",
+            "bin/cli.js",
+            "lib/errors.js",
+            "lib/config.js",
+            "lib/completion.js",
+            "lib/formatter.js",
+            "lib/progress.js",
+            "lib/prompts.js",
+            "lib/plugin-manager.js",
+            "completion_engine.js"
         ]
     
     def get_default_output_path(self, package_name: str) -> str:
@@ -255,17 +269,63 @@ export default cli;
         
         files = {}
         
-        # Generate main index.js file - CLI entry point (use minimal fallback)
-        files['index.js'] = self._generate_fallback_code(context)
+        # Generate main index.js file - CLI entry point
+        try:
+            template = self.env.get_template("index.js.j2")
+            files['index.js'] = template.render(**context)
+        except TemplateNotFound:
+            files['index.js'] = self._generate_fallback_code(context)
         
-        # Generate src/hooks.js file - user's business logic (use minimal fallback)
+        # Generate src/hooks.js file - user's business logic
         files['src/hooks.js'] = self._generate_simple_hooks(context)
         
-        # Generate package.json - use minimal fallback approach
-        files['package.json'] = self._generate_package_json(context)
+        # Generate package.json
+        try:
+            template = self.env.get_template("package.json.j2")
+            files['package.json'] = template.render(**context)
+        except TemplateNotFound:
+            files['package.json'] = self._generate_package_json(context)
         
-        # Generate setup script - use minimal fallback approach
-        files['setup.sh'] = self._generate_setup_script(context)
+        # Generate setup script
+        try:
+            template = self.env.get_template("setup.sh.j2")
+            files['setup.sh'] = template.render(**context)
+        except TemplateNotFound:
+            files['setup.sh'] = self._generate_setup_script(context)
+        
+        # Generate helper library files
+        helper_files = [
+            'lib/errors.js',
+            'lib/config.js',
+            'lib/completion.js',
+            'lib/formatter.js',
+            'lib/progress.js',
+            'lib/prompts.js',
+            'lib/plugin-manager.js',
+            'completion_engine.js'
+        ]
+        
+        for helper_file in helper_files:
+            try:
+                template = self.env.get_template(f"{helper_file}.j2")
+                files[helper_file] = template.render(**context)
+            except TemplateNotFound:
+                # Skip if template doesn't exist - these are optional helper files
+                pass
+        
+        # Generate bin/cli.js if template exists
+        try:
+            template = self.env.get_template("bin/cli.js.j2")
+            files['bin/cli.js'] = template.render(**context)
+        except TemplateNotFound:
+            pass
+        
+        # Generate cli.js as alternative entry point
+        try:
+            template = self.env.get_template("cli.js.j2")
+            files['cli.js'] = template.render(**context)
+        except TemplateNotFound:
+            pass
         
         # Generate README.md
         files['README.md'] = self._generate_readme(context)

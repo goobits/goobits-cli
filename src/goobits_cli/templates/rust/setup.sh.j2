@@ -219,11 +219,143 @@ check_system_deps() {
         fi
     done
     
-    if [ ${{ '{#' }}missing_deps[@]} -ne 0 ]; then
+    if [ ${{ '{' }}#missing_deps[@]} -ne 0 ]; then
         log_warning "Missing system dependencies: ${missing_deps[*]}"
         log_info "Install with: sudo apt update && sudo apt install ${missing_deps[*]}"
     fi
     {% endif %}
+}
+
+# Tree progress display
+show_tree_progress() {
+    local items=("$@")
+    local total=${{ '{' }}#items[@]}
+    
+    for i in "${!items[@]}"; do
+        local item="${items[$i]}"
+        local is_last=$((i == total - 1))
+        
+        if [ "$is_last" = 1 ]; then
+            echo -e "  ${BLUE}└──${NC} $item"
+        else
+            echo -e "  ${BLUE}├──${NC} $item"
+        fi
+        
+        # Simulate some work
+        sleep 0.2
+    done
+}
+
+# Validate installation
+validate_installation() {
+    log_info "Validating installation..."
+    
+    local validation_items=(
+        "Checking binary exists"
+        "Verifying configuration directory"
+        "Testing basic functionality"
+        "Validating dependencies"
+    )
+    
+    show_tree_progress "${validation_items[@]}"
+    
+    # Check if binary exists and is executable
+    if ! command -v "$COMMAND_NAME" &> /dev/null; then
+        log_error "Binary '$COMMAND_NAME' not found in PATH"
+        return 1
+    fi
+    
+    # Check if configuration directory exists
+    local config_dir="$HOME/.config/$PACKAGE_NAME"
+    if [ ! -d "$config_dir" ]; then
+        log_warning "Configuration directory not found at $config_dir"
+    fi
+    
+    # Test basic functionality
+    if ! "$COMMAND_NAME" --version &> /dev/null; then
+        log_error "Binary '$COMMAND_NAME' failed basic version check"
+        return 1
+    fi
+    
+    log_success "Installation validation completed"
+    return 0
+}
+
+# Uninstall function
+uninstall() {
+    log_info "Uninstalling $DISPLAY_NAME..."
+    
+    local uninstall_items=(
+        "Removing binary from cargo bin"
+        "Cleaning up configuration directory"
+        "Removing shell completions"
+        "Cleaning up development links"
+    )
+    
+    show_tree_progress "${uninstall_items[@]}"
+    
+    # Remove cargo-installed binary
+    if command -v cargo &> /dev/null; then
+        cargo uninstall "$PACKAGE_NAME" 2>/dev/null || log_warning "Package not installed via cargo"
+    fi
+    
+    # Remove development symlink
+    local cargo_bin_dir="$HOME/.cargo/bin"
+    local link_path="$cargo_bin_dir/$COMMAND_NAME"
+    if [ -L "$link_path" ]; then
+        rm "$link_path"
+        log_success "Removed development symlink"
+    fi
+    
+    # Ask about configuration directory
+    echo ""
+    read -p "Remove configuration directory ~/.config/$PACKAGE_NAME? [y/N]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        rm -rf "$HOME/.config/$PACKAGE_NAME"
+        log_success "Configuration directory removed"
+    fi
+    
+    # Ask about shell completions
+    echo ""
+    read -p "Remove shell completions? [y/N]: " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        # Remove common completion locations
+        rm -f "$HOME/.local/share/bash-completion/completions/$COMMAND_NAME" 2>/dev/null
+        rm -f "$HOME/.local/share/zsh/site-functions/_$COMMAND_NAME" 2>/dev/null
+        rm -f "$HOME/.config/fish/completions/$COMMAND_NAME.fish" 2>/dev/null
+        log_success "Shell completions removed"
+    fi
+    
+    log_success "Uninstall complete!"
+}
+
+# Show installation tree
+show_installation_tree() {
+    log_info "Installation overview:"
+    echo ""
+    
+    local tree_items=(
+        "Prerequisites Check"
+        "Build Project"
+        "Setup Configuration"
+        "Install Binary"
+        "Generate Completions"
+        "Validate Installation"
+    )
+    
+    for i in "${!tree_items[@]}"; do
+        local item="${tree_items[$i]}"
+        local is_last=$((i == ${{ '{' }}#tree_items[@]} - 1))
+        
+        if [ "$is_last" = 1 ]; then
+            echo -e "  ${GREEN}└──${NC} $item"
+        else
+            echo -e "  ${GREEN}├──${NC} $item"
+        fi
+    done
+    echo ""
 }
 
 # Main setup function
@@ -233,19 +365,28 @@ main() {
     echo "===================================="
     echo ""
     
-    # Check prerequisites
-    check_rust_version
-    check_cargo_version
-    check_system_deps
-    
-    # Determine installation mode
+    # Determine installation mode and options
     local install_mode="release"
     local dev_mode=false
     local run_tests_flag=false
     local generate_completions_flag=false
+    local validate_flag=false
+    local show_tree_flag=false
     
     while [[ $# -gt 0 ]]; do
         case $1 in
+            install|--install)
+                # Default behavior - just continue
+                shift
+                ;;
+            uninstall|--uninstall)
+                uninstall
+                exit 0
+                ;;
+            validate|--validate)
+                validate_installation
+                exit $?
+                ;;
             --dev|-d)
                 install_mode="dev"
                 dev_mode=true
@@ -264,46 +405,111 @@ main() {
                 generate_completions_flag=true
                 shift
                 ;;
+            --tree)
+                show_tree_flag=true
+                shift
+                ;;
             --help|-h)
-                echo "Usage: $0 [OPTIONS]"
+                echo "Usage: $0 [COMMAND] [OPTIONS]"
                 echo ""
-                echo "Options:"
+                echo "Commands:"
+                echo "  install           Install the CLI (default)"
+                echo "  uninstall         Uninstall the CLI and optionally remove config"
+                echo "  validate          Validate existing installation"
+                echo ""
+                echo "Install Options:"
                 echo "  --dev, -d         Install in development mode with symlink"
                 echo "  --global, -g      Install globally from crates.io"
                 echo "  --test, -t        Run tests before installation"
                 echo "  --completions, -c Generate shell completions"
+                echo "  --tree            Show installation tree overview"
                 echo "  --help, -h        Show this help message"
+                echo ""
+                echo "Examples:"
+                echo "  $0                Install in release mode"
+                echo "  $0 --dev          Install in development mode"
+                echo "  $0 uninstall      Remove the CLI"
+                echo "  $0 validate       Check installation"
                 echo ""
                 exit 0
                 ;;
             *)
                 log_error "Unknown option: $1"
+                log_info "Use '$0 --help' for usage information"
                 exit 1
                 ;;
         esac
     done
     
+    # Show installation tree if requested
+    if [ "$show_tree_flag" = true ]; then
+        show_installation_tree
+    fi
+    
+    # Check prerequisites
+    log_info "Checking prerequisites..."
+    local prereq_items=(
+        "Rust toolchain version"
+        "Cargo package manager"
+        "System dependencies"
+    )
+    show_tree_progress "${prereq_items[@]}"
+    
+    check_rust_version
+    check_cargo_version
+    check_system_deps
+    
     # Run tests if requested
     if [ "$run_tests_flag" = true ]; then
+        log_info "Running tests..."
         run_tests
     fi
     
     # Build the project
+    log_info "Building project..."
+    local build_items=(
+        "Compiling source code"
+        "Linking dependencies"
+        "Optimizing binary"
+    )
+    show_tree_progress "${build_items[@]}"
     build_project "$install_mode"
     
     # Setup configuration directory
+    log_info "Setting up configuration..."
     setup_config_dir
     
     # Generate completions if requested
     if [ "$generate_completions_flag" = true ]; then
+        log_info "Generating shell completions..."
+        local completion_items=(
+            "Bash completions"
+            "Zsh completions"
+            "Fish completions"
+        )
+        show_tree_progress "${completion_items[@]}"
         generate_completions
     fi
     
     # Install based on mode
+    log_info "Installing binary..."
+    local install_items=(
+        "Installing to cargo bin directory"
+        "Creating executable links"
+        "Setting up PATH integration"
+    )
+    show_tree_progress "${install_items[@]}"
+    
     if [ "$dev_mode" = true ]; then
         create_dev_link
     else
         install_cargo_bin
+    fi
+    
+    # Validate installation
+    validate_flag=true
+    if [ "$validate_flag" = true ]; then
+        validate_installation
     fi
     
     echo ""

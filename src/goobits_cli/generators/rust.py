@@ -134,7 +134,18 @@ class RustGenerator(BaseGenerator):
         """Return list of files this generator creates."""
         return [
             "src/main.rs",
+            "src/lib.rs",
             "src/hooks.rs",
+            "src/config.rs",
+            "src/commands.rs",
+            "src/errors.rs",
+            "src/utils.rs",
+            "src/completion_engine.rs",
+            "src/progress.rs",
+            "src/prompts.rs",
+            "src/styling.rs",
+            "src/plugins.rs",
+            "src/tests.rs",
             "Cargo.toml",
             "setup.sh",
             "README.md",
@@ -319,10 +330,42 @@ fn main() -> Result<()> {
             files['setup.sh'] = self._generate_setup_script(context)
         
         # Generate README.md
-        files['README.md'] = self._generate_readme(context)
+        try:
+            template = self.env.get_template("README.md.j2")
+            files['README.md'] = template.render(**context)
+        except TemplateNotFound:
+            files['README.md'] = self._generate_readme(context)
         
         # Generate .gitignore
         files['.gitignore'] = self._generate_gitignore()
+        
+        # Generate all helper modules from templates
+        helper_templates = [
+            ('src/lib.rs', 'lib.rs.j2'),
+            ('src/config.rs', 'config.rs.j2'),
+            ('src/commands.rs', 'commands.rs.j2'),
+            ('src/errors.rs', 'errors.rs.j2'),
+            ('src/utils.rs', 'utils.rs.j2'),
+            ('src/completion_engine.rs', 'completion_engine.rs.j2'),
+            ('src/progress.rs', 'progress.rs.j2'),
+            ('src/prompts.rs', 'prompts.rs.j2'),
+            ('src/styling.rs', 'styling.rs.j2'),
+            ('src/plugins.rs', 'plugins.rs.j2'),
+            ('src/tests.rs', 'tests.rs.j2')
+        ]
+        
+        for output_file, template_name in helper_templates:
+            try:
+                template = self.env.get_template(template_name)
+                files[output_file] = template.render(**context)
+            except TemplateNotFound:
+                # Skip if template doesn't exist, but log for debugging
+                print(f"⚠️  Template {template_name} not found, skipping {output_file}")
+            except Exception as e:
+                # Log template rendering errors
+                print(f"⚠️  Error rendering {template_name}: {str(e)}")
+                import traceback
+                traceback.print_exc()
         
         # Check for file conflicts and adjust if needed
         files = self._check_file_conflicts(files)

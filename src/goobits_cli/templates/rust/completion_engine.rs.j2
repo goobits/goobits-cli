@@ -320,7 +320,7 @@ impl CompletionEngine {
         }
         
         // Built-in commands
-        let mut builtin_commands = vec!["help", "version"];
+        let mut builtin_commands = vec!["help", "version", "completion", "config"];
         
         // Check if upgrade is enabled
         let upgrade_enabled = self.config.cli
@@ -343,6 +343,27 @@ impl CompletionEngine {
             None => return Vec::new(),
         };
         
+        // Handle built-in commands first
+        match command.as_str() {
+            "completion" => {
+                return vec![
+                    "generate".to_string(),
+                    "install".to_string(),
+                    "instructions".to_string(),
+                ];
+            }
+            "config" => {
+                return vec![
+                    "get".to_string(),
+                    "set".to_string(),
+                    "reset".to_string(),
+                    "path".to_string(),
+                ];
+            }
+            _ => {}
+        }
+        
+        // Handle user-defined commands
         let cli_commands = match &self.config.cli {
             Some(cli) => cli.commands.as_ref().unwrap_or(&HashMap::new()),
             None => return Vec::new(),
@@ -421,7 +442,37 @@ impl CompletionEngine {
             None => return Vec::new(),
         };
         
-        // Find option configuration
+        // Handle built-in command option completions
+        if let Some(command) = &context.current_command {
+            match (command.as_str(), option) {
+                ("completion", "shell") => {
+                    return vec![
+                        "bash".to_string(),
+                        "zsh".to_string(),
+                        "fish".to_string(),
+                        "powershell".to_string(),
+                    ];
+                }
+                ("config", "format") => {
+                    return vec![
+                        "json".to_string(),
+                        "yaml".to_string(),
+                        "plain".to_string(),
+                    ];
+                }
+                ("config", "value-type") => {
+                    return vec![
+                        "string".to_string(),
+                        "int".to_string(),
+                        "float".to_string(),
+                        "bool".to_string(),
+                    ];
+                }
+                _ => {}
+            }
+        }
+        
+        // Find option configuration for user-defined commands
         let option_config = match self.find_option_config(option, context) {
             Some(config) => config,
             None => return Vec::new(),
@@ -434,7 +485,7 @@ impl CompletionEngine {
             if let Some(choices) = &option_config.choices {
                 return choices.clone();
             }
-        } else if option_type == "file" || matches!(option, "config" | "file" | "input") {
+        } else if option_type == "file" || matches!(option, "config" | "file" | "input" | "output") {
             return self.get_file_completions();
         } else if option_type == "dir" || matches!(option, "directory" | "dir" | "output-dir") {
             return self.get_directory_completions();

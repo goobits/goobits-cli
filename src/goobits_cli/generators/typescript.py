@@ -2,9 +2,11 @@
 
 from pathlib import Path
 from typing import Dict, List, Optional
+from jinja2 import TemplateNotFound
 
 from .nodejs import NodeJSGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
+from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
 
 
 class TypeScriptGenerator(NodeJSGenerator):
@@ -40,6 +42,9 @@ class TypeScriptGenerator(NodeJSGenerator):
         self.env.filters['camelCase'] = self._to_camel_case
         self.env.filters['PascalCase'] = self._to_pascal_case
         self.env.filters['kebab-case'] = self._to_kebab_case
+        self.env.filters['align_header_items'] = align_header_items
+        self.env.filters['format_icon_spacing'] = format_icon_spacing
+        self.env.filters['align_setup_steps'] = align_setup_steps
     
     def _to_typescript_type(self, python_type: str) -> str:
         """Convert Python type hints to TypeScript types."""
@@ -122,7 +127,25 @@ class TypeScriptGenerator(NodeJSGenerator):
             "tsconfig.json",
             "setup.sh",
             "README.md",
-            ".gitignore"
+            ".gitignore",
+            "cli.ts",
+            "bin/cli.ts",
+            "lib/errors.ts",
+            "lib/config.ts",
+            "lib/completion.ts",
+            "lib/progress.ts",
+            "lib/prompts.ts",
+            "lib/decorators.ts",
+            "completion_engine.ts",
+            "tsconfig.build.json",
+            "esbuild.config.js",
+            "rollup.config.js",
+            "webpack.config.js",
+            "types/cli.d.ts",
+            "types/decorators.d.ts",
+            "types/errors.d.ts",
+            "types/plugins.d.ts",
+            "types/validators.d.ts"
         ]
     
     def get_default_output_path(self, package_name: str) -> str:
@@ -158,20 +181,100 @@ class TypeScriptGenerator(NodeJSGenerator):
         
         files = {}
         
-        # Generate main index.ts file - CLI entry point (use minimal fallback)
-        files['index.ts'] = self._generate_fallback_typescript_code(context)
+        # Generate main index.ts file - CLI entry point
+        try:
+            template = self.env.get_template("index.ts.j2")
+            files['index.ts'] = template.render(**context)
+        except TemplateNotFound:
+            files['index.ts'] = self._generate_fallback_typescript_code(context)
         
-        # Generate src/hooks.ts file - user's business logic (use minimal fallback)
+        # Generate src/hooks.ts file - user's business logic
         files['src/hooks.ts'] = self._generate_simple_hooks(context)
         
-        # Generate package.json - use minimal fallback approach
-        files['package.json'] = self._generate_typescript_package_json(context)
+        # Generate package.json
+        try:
+            template = self.env.get_template("package.json.j2")
+            files['package.json'] = template.render(**context)
+        except TemplateNotFound:
+            files['package.json'] = self._generate_typescript_package_json(context)
         
-        # Generate tsconfig.json - use minimal fallback approach
-        files['tsconfig.json'] = self._generate_tsconfig(context)
+        # Generate tsconfig.json
+        try:
+            template = self.env.get_template("tsconfig.json.j2")
+            files['tsconfig.json'] = template.render(**context)
+        except TemplateNotFound:
+            files['tsconfig.json'] = self._generate_tsconfig(context)
         
-        # Generate setup script - use minimal fallback approach
-        files['setup.sh'] = self._generate_typescript_setup_script(context)
+        # Generate setup script
+        try:
+            template = self.env.get_template("setup.sh.j2")
+            files['setup.sh'] = template.render(**context)
+        except TemplateNotFound:
+            files['setup.sh'] = self._generate_typescript_setup_script(context)
+        
+        # Generate helper library files
+        helper_files = [
+            'lib/errors.ts',
+            'lib/config.ts',
+            'lib/completion.ts',
+            'lib/progress.ts',
+            'lib/prompts.ts',
+            'lib/decorators.ts',
+            'completion_engine.ts'
+        ]
+        
+        for helper_file in helper_files:
+            try:
+                template = self.env.get_template(f"{helper_file}.j2")
+                files[helper_file] = template.render(**context)
+            except TemplateNotFound:
+                # Skip if template doesn't exist - these are optional helper files
+                pass
+        
+        # Generate TypeScript-specific files
+        ts_files = [
+            'tsconfig.build.json',
+            'esbuild.config.js',
+            'rollup.config.js',
+            'webpack.config.js'
+        ]
+        
+        for ts_file in ts_files:
+            try:
+                template = self.env.get_template(f"{ts_file}.j2")
+                files[ts_file] = template.render(**context)
+            except TemplateNotFound:
+                pass
+        
+        # Generate type definition files
+        type_files = [
+            'types/cli.d.ts',
+            'types/decorators.d.ts',
+            'types/errors.d.ts',
+            'types/plugins.d.ts',
+            'types/validators.d.ts'
+        ]
+        
+        for type_file in type_files:
+            try:
+                template = self.env.get_template(f"{type_file}.j2")
+                files[type_file] = template.render(**context)
+            except TemplateNotFound:
+                pass
+        
+        # Generate bin/cli.ts if template exists
+        try:
+            template = self.env.get_template("bin/cli.ts.j2")
+            files['bin/cli.ts'] = template.render(**context)
+        except TemplateNotFound:
+            pass
+        
+        # Generate cli.ts as alternative entry point
+        try:
+            template = self.env.get_template("cli.ts.j2")
+            files['cli.ts'] = template.render(**context)
+        except TemplateNotFound:
+            pass
         
         # Generate README.md
         files['README.md'] = self._generate_readme(config, is_typescript=True)

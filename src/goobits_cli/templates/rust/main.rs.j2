@@ -125,6 +125,18 @@ enum Commands {
     {% endif %}
     {% endfor %}
     
+    /// Shell completion management
+    Completion {
+        #[command(subcommand)]
+        subcommand: CompletionCommands,
+    },
+    
+    /// Configuration management
+    Config {
+        #[command(subcommand)]
+        subcommand: ConfigCommands,
+    },
+    
     {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
     /// Upgrade {{ display_name }} to the latest version
     Upgrade {
@@ -149,7 +161,7 @@ enum Commands {
     /// Internal completion command - called by shell completion scripts
     #[command(hide = true)]
     #[clap(name = "_completion")]
-    Completion {
+    InternalCompletion {
         /// Shell type (bash, zsh, fish)
         shell: String,
         
@@ -269,6 +281,97 @@ enum {{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('
 {% endif %}
 {% endfor %}
 
+#[derive(Subcommand)]
+enum CompletionCommands {
+    /// Generate completion script for a shell
+    Generate {
+        /// Shell to generate completions for
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new(["bash", "zsh", "fish", "powershell"]))]
+        shell: String,
+        
+        /// Output the completion script to a file instead of stdout
+        #[arg(long, short)]
+        output: Option<String>,
+        
+        /// Enable verbose output
+        #[arg(long, short)]
+        verbose: bool,
+    },
+    
+    /// Install completions for current user
+    Install {
+        /// Shell to install completions for
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new(["bash", "zsh", "fish", "powershell"]))]
+        shell: String,
+        
+        /// Install system-wide instead of user-only
+        #[arg(long)]
+        system: bool,
+        
+        /// Force overwrite existing completions
+        #[arg(long, short)]
+        force: bool,
+    },
+    
+    /// Show instructions for manual completion installation
+    Instructions {
+        /// Shell to show instructions for
+        #[arg(value_parser = clap::builder::PossibleValuesParser::new(["bash", "zsh", "fish", "powershell"]))]
+        shell: String,
+        
+        /// Show system-wide installation instructions
+        #[arg(long)]
+        system: bool,
+    },
+}
+
+#[derive(Subcommand)]
+enum ConfigCommands {
+    /// Get configuration value
+    Get {
+        /// Configuration key to retrieve (optional, shows all if not specified)
+        key: Option<String>,
+        
+        /// Output format
+        #[arg(long, value_parser = clap::builder::PossibleValuesParser::new(["json", "yaml", "plain"]))]
+        format: Option<String>,
+    },
+    
+    /// Set configuration value
+    Set {
+        /// Configuration key to set
+        key: String,
+        
+        /// Value to set
+        value: String,
+        
+        /// Data type of the value
+        #[arg(long, value_parser = clap::builder::PossibleValuesParser::new(["string", "int", "float", "bool"]))]
+        value_type: Option<String>,
+    },
+    
+    /// Reset configuration to defaults
+    Reset {
+        /// Specific key to reset (resets all if not specified)
+        key: Option<String>,
+        
+        /// Skip confirmation prompt
+        #[arg(long, short)]
+        yes: bool,
+    },
+    
+    /// Show configuration file path
+    Path {
+        /// Show directory path instead of file path
+        #[arg(long)]
+        dir: bool,
+        
+        /// Create the config file/directory if it doesn't exist
+        #[arg(long)]
+        create: bool,
+    },
+}
+
 // Arguments structure for hook functions
 #[derive(Debug, Clone)]
 pub struct Args {
@@ -338,8 +441,8 @@ fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run: bool
 }
 {% endif %}
 
-/// Handle shell completion requests
-fn handle_completion(shell: &str, current_line: &str, cursor_pos: Option<usize>, debug: bool) -> CliResult<()> {
+/// Handle internal shell completion requests (called by completion scripts)
+fn handle_internal_completion(shell: &str, current_line: &str, cursor_pos: Option<usize>, debug: bool) -> CliResult<()> {
     // Import completion engine at runtime
     mod completion_engine;
     
@@ -518,14 +621,45 @@ fn run() -> CliResult<()> {
                 {% endif %}
                 {% endfor %}
                 
+                Commands::Completion { subcommand } => {
+                    match subcommand {
+                        CompletionCommands::Generate { shell, output, verbose } => {
+                            handle_completion_generate(&shell, output.as_deref(), verbose)?;
+                        }
+                        CompletionCommands::Install { shell, system, force } => {
+                            handle_completion_install(&shell, system, force)?;
+                        }
+                        CompletionCommands::Instructions { shell, system } => {
+                            handle_completion_instructions(&shell, system)?;
+                        }
+                    }
+                }
+                
+                Commands::Config { subcommand } => {
+                    match subcommand {
+                        ConfigCommands::Get { key, format } => {
+                            handle_config_get(key.as_deref(), format.as_deref())?;
+                        }
+                        ConfigCommands::Set { key, value, value_type } => {
+                            handle_config_set(&key, &value, value_type.as_deref())?;
+                        }
+                        ConfigCommands::Reset { key, yes } => {
+                            handle_config_reset(key.as_deref(), yes)?;
+                        }
+                        ConfigCommands::Path { dir, create } => {
+                            handle_config_path(dir, create)?;
+                        }
+                    }
+                }
+                
                 {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
                 Commands::Upgrade { check, version, pre, dry_run } => {
                     handle_upgrade(check, version, pre, dry_run)?;
                 }
                 {% endif %}
                 
-                Commands::Completion { shell, current_line, cursor_pos, debug } => {
-                    handle_completion(&shell, &current_line, cursor_pos, debug)?;
+                Commands::InternalCompletion { shell, current_line, cursor_pos, debug } => {
+                    handle_internal_completion(&shell, &current_line, cursor_pos, debug)?;
                 }
             }
         }
@@ -741,6 +875,582 @@ fn execute_{{ cmd_name | replace('-', '_') }}_command(
 }
 {% endif %}
 {% endfor %}
+
+/// Handle completion generate command
+fn handle_completion_generate(shell: &str, output: Option<&str>, verbose: bool) -> CliResult<()> {
+    use std::io::Write;
+    
+    if verbose {
+        utils::output::info(&format!("Generating {} completion script...", shell));
+    }
+    
+    // Generate completion script based on shell type
+    let completion_script = match shell {
+        "bash" => generate_bash_completion(),
+        "zsh" => generate_zsh_completion(),
+        "fish" => generate_fish_completion(),
+        "powershell" => generate_powershell_completion(),
+        _ => return Err(CliError::Command(errors::CommandError::InvalidArgument {
+            arg: "shell".to_string(),
+            value: shell.to_string(),
+            expected: "one of: bash, zsh, fish, powershell".to_string(),
+        })),
+    };
+    
+    match output {
+        Some(file_path) => {
+            // Write to file
+            let mut file = std::fs::File::create(file_path)
+                .map_err(|e| CliError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Failed to create output file '{}': {}", file_path, e)
+                )))?;
+            
+            file.write_all(completion_script.as_bytes())
+                .map_err(|e| CliError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Failed to write to output file '{}': {}", file_path, e)
+                )))?;
+            
+            utils::output::success(&format!("Completion script written to: {}", file_path));
+        }
+        None => {
+            // Write to stdout
+            print!("{}", completion_script);
+        }
+    }
+    
+    Ok(())
+}
+
+/// Handle completion install command
+fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResult<()> {
+    use std::fs;
+    use std::path::PathBuf;
+    
+    utils::output::info(&format!("Installing {} completions...", shell));
+    
+    // Determine completion paths based on shell and scope
+    let (completion_dir, completion_file) = match shell {
+        "bash" => {
+            let dir = if system {
+                PathBuf::from("/etc/bash_completion.d")
+            } else {
+                dirs::home_dir()
+                    .ok_or_else(|| CliError::Environment {
+                        message: "Could not determine home directory".to_string(),
+                    })?
+                    .join(".local/share/bash-completion/completions")
+            };
+            (dir, format!("{}", "{{ command_name }}"))
+        }
+        "zsh" => {
+            let dir = if system {
+                PathBuf::from("/usr/local/share/zsh/site-functions")
+            } else {
+                dirs::home_dir()
+                    .ok_or_else(|| CliError::Environment {
+                        message: "Could not determine home directory".to_string(),
+                    })?
+                    .join(".local/share/zsh/site-functions")
+            };
+            (dir, format!("_{}", "{{ command_name }}"))
+        }
+        "fish" => {
+            let dir = if system {
+                PathBuf::from("/usr/share/fish/completions")
+            } else {
+                dirs::home_dir()
+                    .ok_or_else(|| CliError::Environment {
+                        message: "Could not determine home directory".to_string(),
+                    })?
+                    .join(".config/fish/completions")
+            };
+            (dir, format!("{}.fish", "{{ command_name }}"))
+        }
+        "powershell" => {
+            return Err(CliError::Command(errors::CommandError::ExecutionFailed {
+                command: "completion install".to_string(),
+                reason: "PowerShell completion installation not supported on this platform".to_string(),
+            }));
+        }
+        _ => return Err(CliError::Command(errors::CommandError::InvalidArgument {
+            arg: "shell".to_string(),
+            value: shell.to_string(),
+            expected: "one of: bash, zsh, fish, powershell".to_string(),
+        })),
+    };
+    
+    let completion_path = completion_dir.join(&completion_file);
+    
+    // Check if completion already exists
+    if completion_path.exists() && !force {
+        return Err(CliError::Command(errors::CommandError::ExecutionFailed {
+            command: "completion install".to_string(),
+            reason: format!(
+                "Completion already exists at {}. Use --force to overwrite.",
+                completion_path.display()
+            ),
+        }));
+    }
+    
+    // Create completion directory if it doesn't exist
+    if let Some(parent) = completion_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| CliError::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to create completion directory '{}': {}", parent.display(), e)
+            )))?;
+    }
+    
+    // Generate completion script
+    let completion_script = match shell {
+        "bash" => generate_bash_completion(),
+        "zsh" => generate_zsh_completion(),
+        "fish" => generate_fish_completion(),
+        _ => unreachable!(),
+    };
+    
+    // Write completion script
+    fs::write(&completion_path, completion_script)
+        .map_err(|e| CliError::Io(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("Failed to write completion file '{}': {}", completion_path.display(), e)
+        )))?;
+    
+    utils::output::success(&format!(
+        "Completion installed at: {}",
+        completion_path.display()
+    ));
+    
+    // Provide activation instructions
+    match shell {
+        "bash" => {
+            if !system {
+                utils::output::info("Add the following to your ~/.bashrc:");
+                utils::output::info(&format!(
+                    "  source {}",
+                    completion_path.display()
+                ));
+            }
+        }
+        "zsh" => {
+            if !system {
+                utils::output::info("Ensure ~/.local/share/zsh/site-functions is in your $fpath");
+                utils::output::info("Add to ~/.zshrc if needed:");
+                utils::output::info("  fpath=(~/.local/share/zsh/site-functions $fpath)");
+            }
+        }
+        "fish" => {
+            utils::output::info("Fish completions are automatically loaded");
+        }
+        _ => {}
+    }
+    
+    Ok(())
+}
+
+/// Handle completion instructions command
+fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
+    let scope = if system { "system-wide" } else { "user" };
+    
+    utils::output::info(&format!("Manual {} completion installation instructions ({})", shell, scope));
+    println!();
+    
+    match shell {
+        "bash" => {
+            if system {
+                println!("1. Generate completion script:");
+                println!("   {} completion generate bash | sudo tee /etc/bash_completion.d/{}", "{{ command_name }}", "{{ command_name }}");
+                println!();
+                println!("2. Reload bash completions:");
+                println!("   source /etc/bash_completion");
+            } else {
+                println!("1. Create completion directory:");
+                println!("   mkdir -p ~/.local/share/bash-completion/completions");
+                println!();
+                println!("2. Generate completion script:");
+                println!("   {} completion generate bash > ~/.local/share/bash-completion/completions/{}", "{{ command_name }}", "{{ command_name }}");
+                println!();
+                println!("3. Add to ~/.bashrc:");
+                println!("   source ~/.local/share/bash-completion/completions/{}",  "{{ command_name }}");
+            }
+        }
+        "zsh" => {
+            if system {
+                println!("1. Generate completion script:");
+                println!("   {} completion generate zsh | sudo tee /usr/local/share/zsh/site-functions/_{}", "{{ command_name }}", "{{ command_name }}");
+                println!();
+                println!("2. Reload zsh completions:");
+                println!("   autoload -U compinit && compinit");
+            } else {
+                println!("1. Create completion directory:");
+                println!("   mkdir -p ~/.local/share/zsh/site-functions");
+                println!();
+                println!("2. Generate completion script:");
+                println!("   {} completion generate zsh > ~/.local/share/zsh/site-functions/_{}", "{{ command_name }}", "{{ command_name }}");
+                println!();
+                println!("3. Add to ~/.zshrc (if not already present):");
+                println!("   fpath=(~/.local/share/zsh/site-functions $fpath)");
+                println!("   autoload -U compinit && compinit");
+            }
+        }
+        "fish" => {
+            if system {
+                println!("1. Generate completion script:");
+                println!("   {} completion generate fish | sudo tee /usr/share/fish/completions/{}.fish", "{{ command_name }}", "{{ command_name }}");
+            } else {
+                println!("1. Create completion directory:");
+                println!("   mkdir -p ~/.config/fish/completions");
+                println!();
+                println!("2. Generate completion script:");
+                println!("   {} completion generate fish > ~/.config/fish/completions/{}.fish", "{{ command_name }}", "{{ command_name }}");
+            }
+            println!();
+            println!("Fish completions are automatically loaded when the shell starts.");
+        }
+        "powershell" => {
+            println!("1. Generate completion script:");
+            println!("   {} completion generate powershell > {}_completion.ps1", "{{ command_name }}", "{{ command_name }}");
+            println!();
+            println!("2. Add to PowerShell profile:");
+            println!("   . ./{}_completion.ps1", "{{ command_name }}");
+            println!();
+            println!("Note: You may need to adjust ExecutionPolicy:");
+            println!("   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser");
+        }
+        _ => return Err(CliError::Command(errors::CommandError::InvalidArgument {
+            arg: "shell".to_string(),
+            value: shell.to_string(),
+            expected: "one of: bash, zsh, fish, powershell".to_string(),
+        })),
+    }
+    
+    println!();
+    utils::output::info("After installation, restart your shell or source your profile to enable completions.");
+    
+    Ok(())
+}
+
+/// Handle config get command
+fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
+    let config = crate::config::AppConfig::load()
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+            message: format!("Failed to load configuration: {}", e),
+        }))?;
+    
+    let output_format = format.unwrap_or("plain");
+    
+    match key {
+        Some(key_name) => {
+            // Get specific key
+            match config.get_value(key_name) {
+                Some(value) => {
+                    match output_format {
+                        "json" => {
+                            let json_value = serde_json::json!({key_name: value});
+                            println!("{}", serde_json::to_string_pretty(&json_value)
+                                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+                                    message: format!("Failed to format as JSON: {}", e),
+                                }))?);
+                        }
+                        "yaml" => {
+                            let yaml_map = std::collections::HashMap::<String, serde_yaml::Value>::from([(key_name.to_string(), value.clone())]);
+                            println!("{}", serde_yaml::to_string(&yaml_map)
+                                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+                                    message: format!("Failed to format as YAML: {}", e),
+                                }))?);
+                        }
+                        "plain" | _ => {
+                            println!("{}", value.as_str().unwrap_or(&value.to_string()));
+                        }
+                    }
+                }
+                None => {
+                    return Err(CliError::Config(errors::ConfigError::KeyNotFound {
+                        key: key_name.to_string(),
+                    }));
+                }
+            }
+        }
+        None => {
+            // Get all configuration
+            let all_config = config.to_map();
+            
+            match output_format {
+                "json" => {
+                    println!("{}", serde_json::to_string_pretty(&all_config)
+                        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+                            message: format!("Failed to format as JSON: {}", e),
+                        }))?);
+                }
+                "yaml" => {
+                    println!("{}", serde_yaml::to_string(&all_config)
+                        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+                            message: format!("Failed to format as YAML: {}", e),
+                        }))?);
+                }
+                "plain" | _ => {
+                    utils::output::info("Configuration values:");
+                    for (key, value) in all_config {
+                        utils::output::key_value(&key, &value.as_str().unwrap_or(&value.to_string()));
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+/// Handle config set command
+fn handle_config_set(key: &str, value: &str, value_type: Option<&str>) -> CliResult<()> {
+    let mut config = crate::config::AppConfig::load()
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+            message: format!("Failed to load configuration: {}", e),
+        }))?;
+    
+    // Parse value based on type
+    let parsed_value = match value_type.unwrap_or("string") {
+        "string" => serde_yaml::Value::String(value.to_string()),
+        "int" => {
+            let int_val: i64 = value.parse()
+                .map_err(|_| CliError::Config(errors::ConfigError::ValidationFailed {
+                    message: format!("Invalid integer value: {}", value),
+                }))?;
+            serde_yaml::Value::Number(serde_yaml::Number::from(int_val))
+        }
+        "float" => {
+            let float_val: f64 = value.parse()
+                .map_err(|_| CliError::Config(errors::ConfigError::ValidationFailed {
+                    message: format!("Invalid float value: {}", value),
+                }))?;
+            serde_yaml::Value::Number(serde_yaml::Number::from(float_val))
+        }
+        "bool" => {
+            let bool_val: bool = value.parse()
+                .map_err(|_| CliError::Config(errors::ConfigError::ValidationFailed {
+                    message: format!("Invalid boolean value: {} (use true/false)", value),
+                }))?;
+            serde_yaml::Value::Bool(bool_val)
+        }
+        _ => return Err(CliError::Config(errors::ConfigError::ValidationFailed {
+            message: format!("Invalid value type: {}", value_type.unwrap()),
+        })),
+    };
+    
+    // Set the value
+    config.set_value(key, parsed_value)
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+            message: format!("Failed to set configuration value: {}", e),
+        }))?;
+    
+    // Save the configuration
+    config.save()
+        .map_err(|e| CliError::Config(errors::ConfigError::SaveFailed {
+            message: format!("Failed to save configuration: {}", e),
+        }))?;
+    
+    utils::output::success(&format!("Configuration value set: {} = {}", key, value));
+    
+    Ok(())
+}
+
+/// Handle config reset command
+fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
+    let config_path = crate::config::AppConfig::config_path()
+        .map_err(|e| CliError::Environment {
+            message: format!("Could not determine configuration path: {}", e),
+        })?;
+    
+    match key {
+        Some(key_name) => {
+            // Reset specific key
+            if !yes {
+                // TODO: Add prompts helper and use confirmation
+                println!("Reset configuration key '{}' to default value? [y/N]: ", key_name);
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)
+                    .map_err(|e| CliError::Io(e))?;
+                
+                if !input.trim().to_lowercase().starts_with('y') {
+                    utils::output::info("Reset cancelled.");
+                    return Ok(());
+                }
+            }
+            
+            let mut config = crate::config::AppConfig::load()
+                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+                    message: format!("Failed to load configuration: {}", e),
+                }))?;
+            
+            config.reset_key(key_name)
+                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
+                    message: format!("Failed to reset configuration key: {}", e),
+                }))?;
+            
+            config.save()
+                .map_err(|e| CliError::Config(errors::ConfigError::SaveFailed {
+                    message: format!("Failed to save configuration: {}", e),
+                }))?;
+            
+            utils::output::success(&format!("Configuration key '{}' reset to default", key_name));
+        }
+        None => {
+            // Reset entire configuration
+            if !yes {
+                println!("Reset entire configuration to defaults? This will remove all custom settings. [y/N]: ");
+                let mut input = String::new();
+                std::io::stdin().read_line(&mut input)
+                    .map_err(|e| CliError::Io(e))?;
+                
+                if !input.trim().to_lowercase().starts_with('y') {
+                    utils::output::info("Reset cancelled.");
+                    return Ok(());
+                }
+            }
+            
+            // Remove config file to reset to defaults
+            if config_path.exists() {
+                std::fs::remove_file(&config_path)
+                    .map_err(|e| CliError::Io(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("Failed to remove configuration file '{}': {}", config_path.display(), e)
+                    )))?;
+            }
+            
+            utils::output::success("Configuration reset to defaults");
+        }
+    }
+    
+    Ok(())
+}
+
+/// Handle config path command
+fn handle_config_path(dir: bool, create: bool) -> CliResult<()> {
+    if dir {
+        let config_dir = crate::config::AppConfig::config_dir()
+            .map_err(|e| CliError::Environment {
+                message: format!("Could not determine configuration directory: {}", e),
+            })?;
+        
+        if create && !config_dir.exists() {
+            std::fs::create_dir_all(&config_dir)
+                .map_err(|e| CliError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Failed to create configuration directory '{}': {}", config_dir.display(), e)
+                )))?;
+            utils::output::success(&format!("Created configuration directory: {}", config_dir.display()));
+        }
+        
+        println!("{}", config_dir.display());
+    } else {
+        let config_path = crate::config::AppConfig::config_path()
+            .map_err(|e| CliError::Environment {
+                message: format!("Could not determine configuration path: {}", e),
+            })?;
+        
+        if create {
+            // Create directory if needed
+            if let Some(parent) = config_path.parent() {
+                if !parent.exists() {
+                    std::fs::create_dir_all(parent)
+                        .map_err(|e| CliError::Io(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!("Failed to create configuration directory '{}': {}", parent.display(), e)
+                        )))?;
+                }
+            }
+            
+            // Create config file if it doesn't exist
+            if !config_path.exists() {
+                let default_config = crate::config::AppConfig::default();
+                default_config.save()
+                    .map_err(|e| CliError::Config(errors::ConfigError::SaveFailed {
+                        message: format!("Failed to create configuration file: {}", e),
+                    }))?;
+                utils::output::success(&format!("Created configuration file: {}", config_path.display()));
+            }
+        }
+        
+        println!("{}", config_path.display());
+    }
+    
+    Ok(())
+}
+
+// Helper functions for generating completion scripts
+fn generate_bash_completion() -> String {
+    {% raw %}format!(r#"#!/bin/bash
+# Bash completion for {}
+# Generated by goobits-cli
+
+_{}_completion() {{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${{COMP_WORDS[COMP_CWORD]}}"
+    prev="${{COMP_WORDS[COMP_CWORD-1]}}"
+    
+    # Get completions from the CLI
+    local completions
+    completions=$({} _completion bash "${{COMP_LINE}}" "${{COMP_POINT}}" 2>/dev/null)
+    
+    # Convert completions to array
+    COMPREPLY=( $(compgen -W "${{completions}}" -- "${{cur}}") )
+    
+    return 0
+}}
+
+complete -F _{}_completion {}
+"#{% endraw %}, "{{ command_name }}", "{{ command_name | replace('-', '_') }}", "{{ command_name }}", "{{ command_name | replace('-', '_') }}", "{{ command_name }}")
+}
+
+fn generate_zsh_completion() -> String {
+    {% raw %}format!(r#"#compdef {}
+# Zsh completion for {}
+# Generated by goobits-cli
+
+_{}_completion() {{
+    local state line
+    local -a completions
+    
+    # Get completions from the CLI
+    completions=($({} _completion zsh "${{words[*]}}" "${{CURSOR}}" 2>/dev/null))
+    
+    # Provide completions
+    compadd -a completions
+}}
+
+_{}_completion "$@"
+"#{% endraw %}, "{{ command_name }}", "{{ command_name }}", "{{ command_name | replace('-', '_') }}", "{{ command_name }}", "{{ command_name | replace('-', '_') }}")
+}
+
+fn generate_fish_completion() -> String {
+    {% raw %}format!(r#"# Fish completion for {}
+# Generated by goobits-cli
+
+complete -c {} -f -a "({} _completion fish (commandline -cp) (commandline -C) 2>/dev/null)"
+"#{% endraw %}, "{{ command_name }}", "{{ command_name }}", "{{ command_name }}")
+}
+
+fn generate_powershell_completion() -> String {
+    {% raw %}format!(r#"# PowerShell completion for {}
+# Generated by goobits-cli
+
+Register-ArgumentCompleter -Native -CommandName {} -ScriptBlock {{
+    param($commandLine, $wordToComplete, $cursorPosition)
+    
+    try {{
+        $completions = & {} _completion powershell $commandLine $cursorPosition 2>$null
+        $completions | ForEach-Object {{
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }}
+    }} catch {{
+        # Silently ignore errors
+    }}
+}}
+"#{% endraw %}, "{{ command_name }}", "{{ command_name }}", "{{ command_name }}")
+}
 
 /// Handle application errors with appropriate formatting and exit codes
 fn handle_application_error(error: &CliError) {
