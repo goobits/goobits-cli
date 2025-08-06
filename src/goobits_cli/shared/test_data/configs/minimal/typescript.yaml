@@ -1,0 +1,36 @@
+package_name: "minimal-typescript-cli"
+command_name: "mints"
+display_name: "MinimalTypeScriptCLI"
+description: "A minimal TypeScript CLI for testing generation"
+language: typescript
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+installation:
+  pypi_name: "minimal-typescript-cli"
+  github_repo: "example/minimal-typescript-cli"
+
+shell_integration:
+  alias: "mt"
+
+validation:
+  minimum_disk_space_mb: 50
+
+messages:
+  install_success: "MinimalTypeScriptCLI installed successfully!"
+
+cli:
+  name: "MinimalTypeScriptCLI"
+  tagline: "A minimal TypeScript CLI for testing"
+  version: "0.1.0"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true

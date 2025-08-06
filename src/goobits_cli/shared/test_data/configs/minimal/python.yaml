@@ -1,0 +1,35 @@
+package_name: "minimal-python-cli"
+command_name: "minpy"
+display_name: "MinimalPythonCLI"
+description: "A minimal Python CLI for testing generation"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+installation:
+  pypi_name: "minimal-python-cli"
+  github_repo: "example/minimal-python-cli"
+
+shell_integration:
+  alias: "mp"
+
+validation:
+  minimum_disk_space_mb: 50
+
+messages:
+  install_success: "MinimalPythonCLI installed successfully!"
+
+cli:
+  name: "MinimalPythonCLI"
+  tagline: "A minimal Python CLI for testing"
+  version: "0.1.0"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true

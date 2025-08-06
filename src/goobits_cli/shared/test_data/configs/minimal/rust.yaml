@@ -1,0 +1,36 @@
+package_name: "minimal-rust-cli"
+command_name: "minrs"
+display_name: "MinimalRustCLI"
+description: "A minimal Rust CLI for testing generation"
+language: rust
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+installation:
+  pypi_name: "minimal-rust-cli"
+  github_repo: "example/minimal-rust-cli"
+
+shell_integration:
+  alias: "mr"
+
+validation:
+  minimum_disk_space_mb: 50
+
+messages:
+  install_success: "MinimalRustCLI installed successfully!"
+
+cli:
+  name: "MinimalRustCLI"
+  tagline: "A minimal Rust CLI for testing"
+  version: "0.1.0"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true

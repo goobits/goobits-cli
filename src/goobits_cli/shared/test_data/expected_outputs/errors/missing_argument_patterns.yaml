@@ -1,0 +1,34 @@
+# Expected error patterns when required arguments are missing
+
+python:
+  patterns:
+    - "Missing argument"
+    - "Usage:"
+    - "Error"
+  exit_code: 2
+
+nodejs:
+  patterns:
+    - "error"
+    - "required"
+    - "missing"
+  exit_code: 1
+
+typescript:
+  patterns:
+    - "error"
+    - "required" 
+    - "missing"
+  exit_code: 1
+
+rust:
+  patterns:
+    - "error:"
+    - "required"
+    - "argument"
+  exit_code: 1
+
+# Common characteristics:
+# - Non-zero exit code
+# - Mention of missing/required
+# - Usage information or help hint

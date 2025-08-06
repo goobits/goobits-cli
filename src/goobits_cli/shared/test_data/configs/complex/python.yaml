@@ -1,0 +1,94 @@
+package_name: "complex-python-cli"
+command_name: "complexpython"
+display_name: "ComplexPythonCLI"
+description: "A complex Python CLI for comprehensive testing"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+installation:
+  pypi_name: "complex-python-cli"
+  github_repo: "example/complex-python-cli"
+
+shell_integration:
+  alias: "cpy"
+
+validation:
+  minimum_disk_space_mb: 200
+
+messages:
+  install_success: "ComplexPythonCLI installed successfully!"
+
+cli:
+  name: "ComplexPythonCLI"
+  tagline: "A comprehensive Python CLI for testing"
+  version: "2.0.0"
+  options:
+    - name: verbose
+      short: v
+      type: flag
+      desc: "Enable verbose output"
+    - name: debug
+      type: flag
+      desc: "Enable debug mode"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true
+      options:
+        - name: count
+          short: n
+          type: int
+          desc: "Number of greetings"
+          default: 1
+    build:
+      desc: "Build the project"
+      options:
+        - name: output
+          short: o
+          type: str
+          desc: "Output directory"
+          default: "./output"
+        - name: force
+          type: flag
+          desc: "Force overwrite existing files"
+    deploy:
+      desc: "Deploy the application"
+      args:
+        - name: environment
+          desc: "Target environment"
+          required: true
+      options:
+        - name: dry_run
+          type: flag
+          desc: "Preview deployment without executing"
+    server:
+      desc: "Server management"
+      subcommands:
+        start:
+          desc: "Start the server"
+          options:
+            - name: port
+              short: p
+              type: int
+              desc: "Port number"
+              default: 8000
+            - name: daemon
+              short: d
+              type: flag
+              desc: "Run as daemon"
+        stop:
+          desc: "Stop the server"
+          options:
+            - name: graceful
+              short: g
+              type: flag
+              desc: "Graceful shutdown"
+        status:
+          desc: "Check server status"

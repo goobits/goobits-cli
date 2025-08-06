@@ -1,0 +1,9 @@
+Usage: cli [OPTIONS] COMMAND [ARGS]...
+
+A minimal CLI for testing
+
+Options:
+--help    Show this message and exit.
+
+Commands:
+greet     Greet someone
