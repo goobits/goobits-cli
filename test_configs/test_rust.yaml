@@ -1,0 +1,43 @@
+name: RustTestCLI
+version: "1.0.0"
+author: Test Author
+email: test@example.com
+description: Test Rust CLI
+language: rust
+
+installation:
+  crate_name: rust-test-cli
+  development_path: "."
+
+cli:
+  name: rusttest-cli
+  about: A test Rust CLI
+  version: "1.0.0"
+  
+  commands:
+    - name: hello
+      about: Say hello
+      args:
+        - name: name
+          help: Name to greet
+          required: true
+          
+    - name: config
+      about: Manage configuration
+      subcommands:
+        - name: get
+          about: Get config value
+          args:
+            - name: key
+              help: Config key
+              required: true
+              
+        - name: set
+          about: Set config value
+          args:
+            - name: key
+              help: Config key
+              required: true
+            - name: value
+              help: Config value
+              required: true

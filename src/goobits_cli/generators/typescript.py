@@ -7,6 +7,8 @@ from jinja2 import TemplateNotFound
 from .nodejs import NodeJSGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
 from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
+from ..shared.components import DocumentationGenerator, create_documentation_generator
+from ..shared.test_utils.validation import ValidationResult, TestDataValidator
 
 
 class TypeScriptGenerator(NodeJSGenerator):
@@ -45,6 +47,10 @@ class TypeScriptGenerator(NodeJSGenerator):
         self.env.filters['align_header_items'] = align_header_items
         self.env.filters['format_icon_spacing'] = format_icon_spacing
         self.env.filters['align_setup_steps'] = align_setup_steps
+        
+        # Initialize shared components
+        self.doc_generator = None  # Will be initialized when config is available
+        self.validator = TestDataValidator()
     
     def _to_typescript_type(self, python_type: str) -> str:
         """Convert Python type hints to TypeScript types."""
@@ -85,6 +91,60 @@ class TypeScriptGenerator(NodeJSGenerator):
             return text
         # Replace underscores and spaces with hyphens, convert to lowercase
         return text.replace('_', '-').replace(' ', '-').lower()
+    
+    def _validate_config(self, config: any) -> ValidationResult:
+        """Validate TypeScript-specific configuration.
+        
+        Args:
+            config: Configuration object to validate
+            
+        Returns:
+            ValidationResult with any errors or warnings
+        """
+        result = ValidationResult(passed=True, errors=[], warnings=[], details={})
+        
+        # Extract CLI config
+        cli_config = None
+        if hasattr(config, 'cli'):
+            cli_config = config.cli
+        elif isinstance(config, dict) and 'cli' in config:
+            cli_config = config['cli']
+        
+        if not cli_config:
+            result.add_error("No CLI configuration found")
+            return result
+        
+        # Validate TypeScript-specific requirements
+        if hasattr(cli_config, 'commands'):
+            for cmd_name, cmd_data in cli_config.commands.items():
+                # Check for valid command names in TypeScript context
+                if '-' in cmd_name and '_' in cmd_name:
+                    result.add_warning(
+                        f"Command '{cmd_name}' mixes hyphens and underscores. "
+                        "Consider using consistent naming (kebab-case recommended)."
+                    )
+                
+                # Validate TypeScript compatibility for options
+                if hasattr(cmd_data, 'options') and cmd_data.options:
+                    for opt in cmd_data.options:
+                        if hasattr(opt, 'type') and opt.type not in ['str', 'int', 'float', 'bool', 'flag', 'list']:
+                            result.add_warning(
+                                f"Option '{opt.name}' has type '{opt.type}' which may need custom handling in TypeScript"
+                            )
+        
+        # Check for TypeScript-specific installation requirements
+        if hasattr(config, 'installation'):
+            installation = config.installation
+            if hasattr(installation, 'extras') and hasattr(installation.extras, 'npm'):
+                # Validate npm packages
+                for pkg in installation.extras.npm:
+                    if '@types/' in pkg and pkg not in ['@types/node']:
+                        result.details.setdefault('type_packages', []).append(pkg)
+        
+        result.details['language'] = 'typescript'
+        result.details['framework'] = 'commander.js'
+        
+        return result
     
     def _check_file_conflicts(self, target_files: dict) -> dict:
         """Check for file conflicts and adjust paths if needed."""
@@ -163,10 +223,17 @@ class TypeScriptGenerator(NodeJSGenerator):
         metadata = self._extract_config_metadata(config)
         cli_config = metadata['cli_config']
         
-        # Validate configuration
-        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
-            if not cli_config:
-                raise ValueError("No CLI configuration found")
+        # Run validation
+        validation_result = self._validate_config(config)
+        if not validation_result.passed:
+            error_msg = "Configuration validation failed:\n"
+            for error in validation_result.errors:
+                error_msg += f"  - {error}\n"
+            raise ValueError(error_msg)
+        
+        # Log warnings if any
+        for warning in validation_result.warnings:
+            print(f"⚠️  {warning}")
         
         # Prepare context for template rendering
         context = {
@@ -180,6 +247,10 @@ class TypeScriptGenerator(NodeJSGenerator):
             'installation': metadata['installation'],
             'hooks_path': metadata['hooks_path'],
         }
+        
+        # Initialize documentation generator with config
+        config_dict = config.model_dump() if hasattr(config, 'model_dump') else config
+        self.doc_generator = create_documentation_generator('typescript', config_dict)
         
         files = {}
         
@@ -278,8 +349,12 @@ class TypeScriptGenerator(NodeJSGenerator):
         except TemplateNotFound:
             pass
         
-        # Generate README.md
-        files['README.md'] = self._generate_readme(config, is_typescript=True)
+        # Generate README.md using shared documentation generator
+        try:
+            files['README.md'] = self.doc_generator.generate_readme()
+        except Exception:
+            # Fallback to original method if shared generator fails
+            files['README.md'] = self._generate_readme(config, is_typescript=True)
         
         # Generate .gitignore
         files['.gitignore'] = self._generate_gitignore(is_typescript=True)
@@ -609,3 +684,59 @@ echo "TypeScript CLI setup complete!"
             "useTabs": False
         }
         return json.dumps(prettier_config, indent=2)
+    
+    def generate_error_message(self, error_type: str, **kwargs) -> str:
+        """Generate TypeScript-appropriate error messages using shared component.
+        
+        Args:
+            error_type: Type of error
+            **kwargs: Error-specific parameters
+            
+        Returns:
+            Formatted error message for TypeScript
+        """
+        if self.doc_generator:
+            return self.doc_generator.generate_error_message(error_type, **kwargs)
+        
+        # Fallback error messages
+        error_templates = {
+            'missing_dependency': 'Error: Missing dependency {package}. Run: npm install {package}',
+            'permission_error': 'Error: Permission denied. Try running with appropriate permissions.',
+            'type_error': 'TypeError: Expected {expected}, got {actual}',
+            'compilation_error': 'TypeScript compilation error: {message}'
+        }
+        
+        template = error_templates.get(error_type, f'Error: {error_type}')
+        try:
+            return template.format(**kwargs)
+        except KeyError:
+            return template
+    
+    def supports_feature(self, feature: str) -> bool:
+        """Check if TypeScript supports a specific feature.
+        
+        Args:
+            feature: Feature name to check
+            
+        Returns:
+            True if TypeScript supports the feature
+        """
+        if self.doc_generator:
+            return self.doc_generator.supports_feature(feature)
+        
+        # TypeScript-specific feature support
+        typescript_features = {
+            'type_safety': True,
+            'async_await': True,
+            'decorators': True,
+            'interfaces': True,
+            'generics': True,
+            'enums': True,
+            'modules': True,
+            'completion_support': True,
+            'virtual_env': False,  # Uses node_modules instead
+            'compiled_language': True,
+            'strict_mode': True
+        }
+        
+        return typescript_features.get(feature, False)

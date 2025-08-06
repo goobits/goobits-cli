@@ -13,6 +13,7 @@ from ..formatter import (
     align_examples, format_multiline_text, escape_for_docstring,
     align_setup_steps, format_icon_spacing, align_header_items
 )
+from ..shared.components.doc_generator import DocumentationGenerator
 
 
 # Custom Exception Classes for Better Error Handling
@@ -110,6 +111,9 @@ class PythonGenerator(BaseGenerator):
         
         # Initialize generated files storage
         self._generated_files = {}
+        
+        # Initialize shared components
+        self.doc_generator = None  # Will be initialized when config is available
     
     def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
                  config_filename: str, version: Optional[str] = None) -> str:
@@ -127,6 +131,10 @@ class PythonGenerator(BaseGenerator):
         # Extract metadata using base class helper
         metadata = self._extract_config_metadata(config)
         cli_config = metadata['cli_config']
+        
+        # Initialize DocumentationGenerator with config
+        config_dict = config.model_dump() if hasattr(config, 'model_dump') else config.dict()
+        self.doc_generator = DocumentationGenerator(language='python', config=config_dict)
         
         # Validate configuration before building - only validate CLI for GoobitsConfigSchema
         try:

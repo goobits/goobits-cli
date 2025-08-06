@@ -8,6 +8,7 @@ import typer
 
 from . import BaseGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
+from ..shared.components.doc_generator import DocumentationGenerator
 
 
 class RustGenerator(BaseGenerator):
@@ -26,6 +27,9 @@ class RustGenerator(BaseGenerator):
             # If rust subdirectory doesn't exist, use main templates dir
             self.env = Environment(loader=FileSystemLoader(fallback_dir))
             self.template_missing = True
+        
+        # Initialize shared documentation generator (will be set when generate is called)
+        self.doc_generator = None
         
         # Add custom filters (these may need Rust specific versions later)
         def json_stringify(x):
@@ -120,6 +124,10 @@ class RustGenerator(BaseGenerator):
             'hooks_path': metadata['hooks_path'],
             'rust_crates': getattr(config, 'rust_crates', {}) if hasattr(config, 'rust_crates') else {},
         }
+        
+        # Initialize documentation generator with the config
+        config_dict = context.copy()
+        self.doc_generator = DocumentationGenerator('rust', config_dict)
         
         # Try to load Rust specific template
         try:
@@ -297,6 +305,10 @@ fn main() -> Result<()> {
             'hooks_path': metadata['hooks_path'],
             'rust_crates': getattr(config, 'rust_crates', {}) if hasattr(config, 'rust_crates') else {},
         }
+        
+        # Initialize documentation generator with the config
+        config_dict = context.copy()
+        self.doc_generator = DocumentationGenerator('rust', config_dict)
         
         files = {}
         
@@ -521,8 +533,29 @@ fi
 '''
     
     def _generate_readme(self, context: dict) -> str:
-        """Generate README.md for the Rust CLI."""
-        return f"""# {context['display_name']}
+        """Generate README.md for the Rust CLI using shared documentation generator."""
+        # Create a config dict that the DocumentationGenerator expects
+        config = {
+            'package_name': context['package_name'],
+            'command_name': context['command_name'],
+            'display_name': context['display_name'],
+            'description': context['description'],
+            'version': context['version'],
+            'cli': context.get('cli'),
+            'installation': context.get('installation', {}),
+            'rust_crates': context.get('rust_crates', {})
+        }
+        
+        # Initialize documentation generator if not already done
+        if not self.doc_generator:
+            self.doc_generator = DocumentationGenerator('rust', config)
+        
+        # Try to use the shared documentation generator
+        try:
+            return self.doc_generator.generate_readme()
+        except Exception:
+            # Fall back to manual generation if shared generator fails
+            return f"""# {context['display_name']}
 
 {context['description']}
 

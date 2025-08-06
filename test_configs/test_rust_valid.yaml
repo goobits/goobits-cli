@@ -1,0 +1,49 @@
+package_name: "test-rust-cli"
+command_name: "testrust"
+display_name: "TestRustCLI"
+description: "Test Rust CLI for verification"
+language: rust
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required: []
+  optional: []
+
+installation:
+  pypi_name: "test-rust-cli"  # Required even for Rust
+  crate_name: "test-rust-cli"
+  development_path: "."
+
+shell_integration:
+  enabled: false
+  alias: "trs"
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 50
+
+messages:
+  install_success: "Test Rust CLI installed successfully!"
+  install_dev_success: "Test Rust CLI installed in dev mode!"
+  upgrade_success: "Test Rust CLI upgraded!"
+  uninstall_success: "Test Rust CLI uninstalled!"
+
+cli:
+  name: "TestRustCLI"
+  tagline: "Test Rust CLI for verification"
+  version: "1.0.0"
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting"
+          default: "Hello"

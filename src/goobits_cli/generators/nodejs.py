@@ -2,13 +2,25 @@
 
 import json
 from pathlib import Path
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Any
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 import typer
 
 from . import BaseGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
 from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
+
+# Phase 2 shared components (to be created)
+# from ..shared.components.validation_framework import ValidationRunner, ValidationMode
+# from ..shared.components.validators import (
+#     CommandValidator, ArgumentValidator, OptionValidator,
+#     ConfigurationValidator, HookValidator
+# )
+try:
+    from ..shared.components.doc_generator import DocumentationGenerator
+except ImportError:
+    # Phase 2 components not yet available
+    DocumentationGenerator = None
 
 
 class NodeJSGenerator(BaseGenerator):
@@ -27,6 +39,10 @@ class NodeJSGenerator(BaseGenerator):
             # If nodejs subdirectory doesn't exist, use main templates dir
             self.env = Environment(loader=FileSystemLoader(fallback_dir))
             self.template_missing = True
+        
+        # Initialize shared components (Phase 2)
+        # self.validation_runner = ValidationRunner()
+        self.doc_generator = None  # Will be initialized per generation with config
         
         # Add custom filters (these may need Node.js specific versions later)
         def json_stringify(x):
@@ -73,6 +89,53 @@ class NodeJSGenerator(BaseGenerator):
         
         return adjusted_files
     
+    def _validate_configuration(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                               cli_config: Optional[ConfigSchema]) -> None:
+        """Validate configuration using shared validators when available.
+        
+        Args:
+            config: The configuration object
+            cli_config: The CLI configuration extracted from config
+            
+        Raises:
+            ValueError: If configuration is invalid
+        """
+        # Phase 2: Use ConfigurationValidator when available
+        # if self.validation_runner:
+        #     validator = ConfigurationValidator()
+        #     result = self.validation_runner.validate(validator, config)
+        #     if not result.is_valid:
+        #         raise ValueError(f"Configuration validation failed: {result.errors}")
+        
+        # Current validation logic
+        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
+            if not cli_config:
+                raise ValueError("No CLI configuration found")
+        
+        # Additional validations can be added here
+        if cli_config:
+            # Validate commands
+            if hasattr(cli_config, 'commands') and cli_config.commands:
+                for cmd_name, cmd_data in cli_config.commands.items():
+                    # Phase 2: Use CommandValidator
+                    # if self.validation_runner:
+                    #     cmd_validator = CommandValidator()
+                    #     cmd_result = self.validation_runner.validate(cmd_validator, cmd_data)
+                    #     if not cmd_result.is_valid:
+                    #         raise ValueError(f"Command '{cmd_name}' validation failed: {cmd_result.errors}")
+                    
+                    # Validate arguments
+                    if hasattr(cmd_data, 'args') and cmd_data.args:
+                        for arg in cmd_data.args:
+                            # Phase 2: Use ArgumentValidator
+                            pass
+                    
+                    # Validate options
+                    if hasattr(cmd_data, 'options') and cmd_data.options:
+                        for opt in cmd_data.options:
+                            # Phase 2: Use OptionValidator
+                            pass
+    
     def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
                  config_filename: str, version: Optional[str] = None) -> str:
         """
@@ -91,9 +154,7 @@ class NodeJSGenerator(BaseGenerator):
         cli_config = metadata['cli_config']
         
         # Validate configuration
-        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
-            if not cli_config:
-                raise ValueError("No CLI configuration found")
+        self._validate_configuration(config, cli_config)
         
         # Prepare context for template rendering
         context = {
@@ -250,9 +311,15 @@ export default cli;
         cli_config = metadata['cli_config']
         
         # Validate configuration
-        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
-            if not cli_config:
-                raise ValueError("No CLI configuration found")
+        self._validate_configuration(config, cli_config)
+        
+        # Initialize documentation generator for this generation
+        try:
+            config_dict = config.model_dump() if hasattr(config, 'model_dump') else config.dict()
+            self.doc_generator = DocumentationGenerator('nodejs', config_dict)
+        except Exception:
+            # If initialization fails, doc_generator remains None and we use fallback methods
+            pass
         
         # Prepare context for template rendering
         context = {
@@ -474,6 +541,15 @@ fi
     
     def _generate_readme(self, context: dict) -> str:
         """Generate README.md for the Node.js CLI."""
+        # Use DocumentationGenerator if available
+        if self.doc_generator and DocumentationGenerator:
+            try:
+                return self.doc_generator.generate_readme()
+            except Exception:
+                # Fallback to manual generation if doc_generator fails
+                pass
+        
+        # Fallback to existing implementation
         return f"""# {context['display_name']}
 
 {context['description']}

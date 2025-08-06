@@ -1,0 +1,45 @@
+name: PythonTestCLI
+version: "1.0.0"
+author: Test Author
+email: test@example.com
+description: Test Python CLI
+language: python
+
+installation:
+  pypi_name: python-test-cli
+  development_path: "."
+  extras:
+    python: ["dev"]
+
+cli:
+  name: pytest-cli
+  about: A test Python CLI
+  version: "1.0.0"
+  
+  commands:
+    - name: hello
+      about: Say hello
+      args:
+        - name: name
+          help: Name to greet
+          required: true
+          
+    - name: config
+      about: Manage configuration
+      subcommands:
+        - name: get
+          about: Get config value
+          args:
+            - name: key
+              help: Config key
+              required: true
+              
+        - name: set
+          about: Set config value
+          args:
+            - name: key
+              help: Config key
+              required: true
+            - name: value
+              help: Config value
+              required: true

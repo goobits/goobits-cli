@@ -1,0 +1,32 @@
+# Basic Goobits CLI Configuration
+package_name: minimal_example
+command_name: minimal_example
+display_name: "Minimal_Example"
+description: "A CLI tool built with Goobits"
+
+# Language selection (python, nodejs, typescript, or rust)
+language: python
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+
+cli:
+  name: minimal_example
+  tagline: "Your awesome CLI tool"
+  commands:
+    hello:
+      desc: "Say hello"
+      is_default: true
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: false
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting"
+          default: "Hello"
