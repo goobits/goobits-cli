@@ -10,13 +10,33 @@ from . import BaseGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
 from ..shared.components.doc_generator import DocumentationGenerator
 
+# Universal Template System imports
+try:
+    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.renderers.rust_renderer import RustRenderer as UniversalRustRenderer
+    UNIVERSAL_TEMPLATES_AVAILABLE = True
+except ImportError:
+    UNIVERSAL_TEMPLATES_AVAILABLE = False
+
 
 class RustGenerator(BaseGenerator):
     """CLI code generator for Rust using clap framework."""
     
-    def __init__(self):
-        """Initialize the Rust generator with Jinja2 environment."""
-        # Set up Jinja2 environment for Rust templates
+    def __init__(self, use_universal_templates: bool = False):
+        """Initialize the Rust generator with Jinja2 environment.
+        
+        Args:
+            use_universal_templates: If True, use Universal Template System
+        """
+        self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
+        
+        # Initialize Universal Template System if requested
+        if self.use_universal_templates:
+            self.universal_engine = UniversalTemplateEngine()
+            self.rust_renderer = UniversalRustRenderer()
+            self.universal_engine.register_renderer(self.rust_renderer)
+        
+        # Set up Jinja2 environment for Rust templates (legacy mode)
         template_dir = Path(__file__).parent.parent / "templates" / "rust"
         fallback_dir = Path(__file__).parent.parent / "templates"
         
@@ -45,6 +65,9 @@ class RustGenerator(BaseGenerator):
         self.env.filters['escape_quotes'] = lambda x: x.replace('"', '\\"')
         self.env.filters['snake_case'] = self._to_snake_case
         self.env.filters['kebab_case'] = self._to_kebab_case
+        
+        # Initialize generated files storage
+        self._generated_files = {}
     
     def _to_snake_case(self, text: str) -> str:
         """Convert text to snake_case."""
@@ -93,6 +116,76 @@ class RustGenerator(BaseGenerator):
                  config_filename: str, version: Optional[str] = None) -> str:
         """
         Generate Rust CLI code from configuration.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated Rust CLI code
+        """
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            return self._generate_with_universal_templates(config, config_filename, version)
+        
+        # Fall back to legacy implementation
+        return self._generate_legacy(config, config_filename, version)
+    
+    def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                                         config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate using Universal Template System.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated Rust CLI code
+        """
+        try:
+            # Convert config to GoobitsConfigSchema if needed
+            if isinstance(config, ConfigSchema):
+                # Create minimal GoobitsConfigSchema for universal system
+                goobits_config = GoobitsConfigSchema(
+                    package_name=getattr(config, 'package_name', config.cli.name),
+                    command_name=getattr(config, 'command_name', config.cli.name),
+                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
+                    cli=config,
+                    installation=getattr(config, 'installation', None)
+                )
+            else:
+                goobits_config = config
+                
+            # Generate using universal engine
+            output_dir = Path(".")
+            generated_files = self.universal_engine.generate_cli(
+                goobits_config, "rust", output_dir
+            )
+            
+            # Store generated files
+            self._generated_files = {}
+            for file_path, content in generated_files.items():
+                # Extract relative filename for compatibility
+                relative_path = Path(file_path).name
+                self._generated_files[relative_path] = content
+            
+            # Return main Rust file for backward compatibility
+            main_file = next((content for path, content in generated_files.items() 
+                            if "main.rs" in path or "lib.rs" in path), "")
+            return main_file
+            
+        except Exception as e:
+            # Fall back to legacy mode if universal templates fail
+            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            return self._generate_legacy(config, config_filename, version)
+    
+    def _generate_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                        config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate using legacy template system.
         
         Args:
             config: The configuration object
@@ -274,6 +367,28 @@ fn main() -> Result<()> {
                           config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
         """
         Generate all files needed for the Rust CLI.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Dictionary mapping file paths to their contents
+        """
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            # Generate main file to populate _generated_files
+            self.generate(config, config_filename, version)
+            return self._generated_files
+        
+        # Legacy implementation
+        return self._generate_all_files_legacy(config, config_filename, version)
+    
+    def _generate_all_files_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                                  config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
+        """
+        Generate all files using legacy template system.
         
         Args:
             config: The configuration object

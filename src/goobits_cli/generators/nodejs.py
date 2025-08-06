@@ -10,6 +10,14 @@ from . import BaseGenerator
 from ..schemas import ConfigSchema, GoobitsConfigSchema
 from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
 
+# Universal Template System imports
+try:
+    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
+    UNIVERSAL_TEMPLATES_AVAILABLE = True
+except ImportError:
+    UNIVERSAL_TEMPLATES_AVAILABLE = False
+
 # Phase 2 shared components (to be created)
 # from ..shared.components.validation_framework import ValidationRunner, ValidationMode
 # from ..shared.components.validators import (
@@ -26,9 +34,21 @@ except ImportError:
 class NodeJSGenerator(BaseGenerator):
     """CLI code generator for Node.js using Commander.js framework."""
     
-    def __init__(self):
-        """Initialize the Node.js generator with Jinja2 environment."""
-        # Set up Jinja2 environment for Node.js templates
+    def __init__(self, use_universal_templates: bool = False):
+        """Initialize the Node.js generator with Jinja2 environment.
+        
+        Args:
+            use_universal_templates: If True, use Universal Template System
+        """
+        self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
+        
+        # Initialize Universal Template System if requested
+        if self.use_universal_templates:
+            self.universal_engine = UniversalTemplateEngine()
+            self.nodejs_renderer = UniversalNodeJSRenderer()
+            self.universal_engine.register_renderer(self.nodejs_renderer)
+        
+        # Set up Jinja2 environment for Node.js templates (legacy mode)
         template_dir = Path(__file__).parent.parent / "templates" / "nodejs"
         fallback_dir = Path(__file__).parent.parent / "templates"
         
@@ -59,6 +79,9 @@ class NodeJSGenerator(BaseGenerator):
         self.env.filters['align_header_items'] = align_header_items
         self.env.filters['format_icon_spacing'] = format_icon_spacing
         self.env.filters['align_setup_steps'] = align_setup_steps
+        
+        # Initialize generated files storage
+        self._generated_files = {}
     
     def _check_file_conflicts(self, target_files: dict) -> dict:
         """Check for file conflicts and adjust paths if needed."""
@@ -140,6 +163,76 @@ class NodeJSGenerator(BaseGenerator):
                  config_filename: str, version: Optional[str] = None) -> str:
         """
         Generate Node.js CLI code from configuration.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated Node.js CLI code
+        """
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            return self._generate_with_universal_templates(config, config_filename, version)
+        
+        # Fall back to legacy implementation
+        return self._generate_legacy(config, config_filename, version)
+    
+    def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                                         config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate using Universal Template System.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated Node.js CLI code
+        """
+        try:
+            # Convert config to GoobitsConfigSchema if needed
+            if isinstance(config, ConfigSchema):
+                # Create minimal GoobitsConfigSchema for universal system
+                goobits_config = GoobitsConfigSchema(
+                    package_name=getattr(config, 'package_name', config.cli.name),
+                    command_name=getattr(config, 'command_name', config.cli.name),
+                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
+                    cli=config,
+                    installation=getattr(config, 'installation', None)
+                )
+            else:
+                goobits_config = config
+                
+            # Generate using universal engine
+            output_dir = Path(".")
+            generated_files = self.universal_engine.generate_cli(
+                goobits_config, "nodejs", output_dir
+            )
+            
+            # Store generated files
+            self._generated_files = {}
+            for file_path, content in generated_files.items():
+                # Extract relative filename for compatibility
+                relative_path = Path(file_path).name
+                self._generated_files[relative_path] = content
+            
+            # Return main entry file for backward compatibility
+            main_file = next((content for path, content in generated_files.items() 
+                            if "index.js" in path or "cli.js" in path), "")
+            return main_file
+            
+        except Exception as e:
+            # Fall back to legacy mode if universal templates fail
+            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            return self._generate_legacy(config, config_filename, version)
+    
+    def _generate_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                        config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate using legacy template system.
         
         Args:
             config: The configuration object
@@ -297,6 +390,28 @@ export default cli;
                           config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
         """
         Generate all files needed for the Node.js CLI.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Dictionary mapping file paths to their contents
+        """
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            # Generate main file to populate _generated_files
+            self.generate(config, config_filename, version)
+            return self._generated_files
+        
+        # Legacy implementation
+        return self._generate_all_files_legacy(config, config_filename, version)
+    
+    def _generate_all_files_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                                  config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
+        """
+        Generate all files using legacy template system.
         
         Args:
             config: The configuration object

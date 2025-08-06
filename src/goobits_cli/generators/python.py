@@ -15,6 +15,14 @@ from ..formatter import (
 )
 from ..shared.components.doc_generator import DocumentationGenerator
 
+# Universal Template System imports
+try:
+    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.renderers.python_renderer import PythonRenderer
+    UNIVERSAL_TEMPLATES_AVAILABLE = True
+except ImportError:
+    UNIVERSAL_TEMPLATES_AVAILABLE = False
+
 
 # Custom Exception Classes for Better Error Handling
 class PythonGeneratorError(Exception):
@@ -74,9 +82,21 @@ class ValidationError(PythonGeneratorError):
 class PythonGenerator(BaseGenerator):
     """CLI code generator for Python using Typer framework."""
     
-    def __init__(self):
-        """Initialize the Python generator with Jinja2 environment."""
-        # Set up Jinja2 environment
+    def __init__(self, use_universal_templates: bool = False):
+        """Initialize the Python generator with Jinja2 environment.
+        
+        Args:
+            use_universal_templates: If True, use Universal Template System
+        """
+        self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
+        
+        # Initialize Universal Template System if requested
+        if self.use_universal_templates:
+            self.universal_engine = UniversalTemplateEngine()
+            self.python_renderer = PythonRenderer()
+            self.universal_engine.register_renderer(self.python_renderer)
+        
+        # Set up Jinja2 environment for legacy mode
         template_dir = Path(__file__).parent.parent / "templates"
         
         if not template_dir.exists():
@@ -119,6 +139,76 @@ class PythonGenerator(BaseGenerator):
                  config_filename: str, version: Optional[str] = None) -> str:
         """
         Generate Python CLI code from configuration.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated Python CLI code
+        """
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            return self._generate_with_universal_templates(config, config_filename, version)
+        
+        # Fall back to legacy implementation
+        return self._generate_legacy(config, config_filename, version)
+    
+    def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                                         config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate using Universal Template System.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated Python CLI code
+        """
+        try:
+            # Convert config to GoobitsConfigSchema if needed
+            if isinstance(config, ConfigSchema):
+                # Create minimal GoobitsConfigSchema for universal system
+                goobits_config = GoobitsConfigSchema(
+                    package_name=getattr(config, 'package_name', config.cli.name),
+                    command_name=getattr(config, 'command_name', config.cli.name),
+                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
+                    cli=config,
+                    installation=getattr(config, 'installation', None)
+                )
+            else:
+                goobits_config = config
+                
+            # Generate using universal engine
+            output_dir = Path(".")
+            generated_files = self.universal_engine.generate_cli(
+                goobits_config, "python", output_dir
+            )
+            
+            # Store generated files
+            self._generated_files = {}
+            for file_path, content in generated_files.items():
+                # Extract relative filename for compatibility
+                relative_path = Path(file_path).name
+                self._generated_files[relative_path] = content
+            
+            # Return main CLI file for backward compatibility
+            main_cli_file = next((content for path, content in generated_files.items() 
+                                if "cli.py" in path), "")
+            return main_cli_file
+            
+        except Exception as e:
+            # Fall back to legacy mode if universal templates fail
+            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            return self._generate_legacy(config, config_filename, version)
+    
+    def _generate_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                        config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate using legacy template system.
         
         Args:
             config: The configuration object
@@ -238,10 +328,14 @@ class PythonGenerator(BaseGenerator):
             Dictionary mapping file paths to their contents
         """
         try:
-            # Generate all files using the existing method
+            # Generate main file first to populate _generated_files
             self.generate(config, config_filename, version)
             
-            # Return the generated files
+            # For universal templates, files are already generated
+            if self.use_universal_templates and self._generated_files:
+                return self._generated_files
+            
+            # For legacy mode, return the stored files
             return self._generated_files
         except Exception as e:
             # Wrap and re-raise any errors

@@ -1,0 +1,682 @@
+{# Universal Error Handler Template
+   
+   This template generates error handling patterns and utilities
+   appropriate for each language's conventions and best practices.
+   
+   Variables expected:
+   - language: Target language
+   - project: Project metadata
+   - error_types: Optional custom error type definitions
+#}
+
+{%- if language == 'python' -%}
+"""
+Error handling utilities for {{ project.name }}
+"""
+
+import sys
+import traceback
+from typing import Optional, Any, Dict
+from enum import Enum
+
+class ExitCode(Enum):
+    """Standard exit codes for the CLI."""
+    SUCCESS = 0
+    GENERAL_ERROR = 1
+    USAGE_ERROR = 2
+    CONFIG_ERROR = 3
+    NETWORK_ERROR = 4
+    PERMISSION_ERROR = 5
+    FILE_NOT_FOUND = 6
+
+class CliError(Exception):
+    """Base exception class for CLI errors."""
+    
+    def __init__(self, message: str, exit_code: ExitCode = ExitCode.GENERAL_ERROR, 
+                 details: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.message = message
+        self.exit_code = exit_code
+        self.details = details or {}
+
+class UsageError(CliError):
+    """Raised when command usage is incorrect."""
+    
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message, ExitCode.USAGE_ERROR, details)
+
+class ConfigError(CliError):
+    """Raised when configuration is invalid or missing."""
+    
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message, ExitCode.CONFIG_ERROR, details)
+
+class NetworkError(CliError):
+    """Raised when network operations fail."""
+    
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message, ExitCode.NETWORK_ERROR, details)
+
+class PermissionError(CliError):
+    """Raised when permission is denied."""
+    
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message, ExitCode.PERMISSION_ERROR, details)
+
+class FileNotFoundError(CliError):
+    """Raised when a required file is not found."""
+    
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message, ExitCode.FILE_NOT_FOUND, details)
+
+class ErrorHandler:
+    """Centralized error handling for the CLI."""
+    
+    def __init__(self, debug: bool = False, verbose: bool = False):
+        self.debug = debug
+        self.verbose = verbose
+    
+    def handle_error(self, error: Exception, context: Optional[str] = None) -> None:
+        """
+        Handle an error and exit the program with appropriate code.
+        
+        Args:
+            error: The exception that occurred
+            context: Optional context information
+        """
+        if isinstance(error, CliError):
+            self._handle_cli_error(error, context)
+        else:
+            self._handle_unexpected_error(error, context)
+    
+    def _handle_cli_error(self, error: CliError, context: Optional[str] = None) -> None:
+        """Handle a known CLI error."""
+        message = f"Error: {error.message}"
+        if context:
+            message = f"{context}: {message}"
+        
+        print(message, file=sys.stderr)
+        
+        if self.verbose and error.details:
+            print("Additional details:", file=sys.stderr)
+            for key, value in error.details.items():
+                print(f"  {key}: {value}", file=sys.stderr)
+        
+        if self.debug:
+            traceback.print_exc()
+        
+        sys.exit(error.exit_code.value)
+    
+    def _handle_unexpected_error(self, error: Exception, context: Optional[str] = None) -> None:
+        """Handle an unexpected error."""
+        message = f"Unexpected error: {str(error)}"
+        if context:
+            message = f"{context}: {message}"
+        
+        print(message, file=sys.stderr)
+        
+        if self.debug or self.verbose:
+            traceback.print_exc()
+        else:
+            print("Run with --debug for more details", file=sys.stderr)
+        
+        sys.exit(ExitCode.GENERAL_ERROR.value)
+    
+    def warn(self, message: str, details: Optional[Dict[str, Any]] = None) -> None:
+        """Issue a warning without exiting."""
+        print(f"Warning: {message}", file=sys.stderr)
+        
+        if self.verbose and details:
+            for key, value in details.items():
+                print(f"  {key}: {value}", file=sys.stderr)
+
+def handle_keyboard_interrupt():
+    """Handle Ctrl+C gracefully."""
+    print("\nOperation cancelled by user", file=sys.stderr)
+    sys.exit(ExitCode.GENERAL_ERROR.value)
+
+# Global error handler instance
+_error_handler = None
+
+def get_error_handler() -> ErrorHandler:
+    """Get the global error handler instance."""
+    global _error_handler
+    if _error_handler is None:
+        _error_handler = ErrorHandler()
+    return _error_handler
+
+def set_error_handler(handler: ErrorHandler) -> None:
+    """Set the global error handler instance."""
+    global _error_handler
+    _error_handler = handler
+
+{%- elif language == 'nodejs' -%}
+/**
+ * Error handling utilities for {{ project.name }}
+ */
+
+const util = require('util');
+
+// Standard exit codes
+const ExitCode = {
+    SUCCESS: 0,
+    GENERAL_ERROR: 1,
+    USAGE_ERROR: 2,
+    CONFIG_ERROR: 3,
+    NETWORK_ERROR: 4,
+    PERMISSION_ERROR: 5,
+    FILE_NOT_FOUND: 6
+};
+
+class CliError extends Error {
+    constructor(message, exitCode = ExitCode.GENERAL_ERROR, details = {}) {
+        super(message);
+        this.name = 'CliError';
+        this.exitCode = exitCode;
+        this.details = details;
+        Error.captureStackTrace(this, CliError);
+    }
+}
+
+class UsageError extends CliError {
+    constructor(message, details = {}) {
+        super(message, ExitCode.USAGE_ERROR, details);
+        this.name = 'UsageError';
+    }
+}
+
+class ConfigError extends CliError {
+    constructor(message, details = {}) {
+        super(message, ExitCode.CONFIG_ERROR, details);
+        this.name = 'ConfigError';
+    }
+}
+
+class NetworkError extends CliError {
+    constructor(message, details = {}) {
+        super(message, ExitCode.NETWORK_ERROR, details);
+        this.name = 'NetworkError';
+    }
+}
+
+class PermissionError extends CliError {
+    constructor(message, details = {}) {
+        super(message, ExitCode.PERMISSION_ERROR, details);
+        this.name = 'PermissionError';
+    }
+}
+
+class FileNotFoundError extends CliError {
+    constructor(message, details = {}) {
+        super(message, ExitCode.FILE_NOT_FOUND, details);
+        this.name = 'FileNotFoundError';
+    }
+}
+
+class ErrorHandler {
+    constructor(options = {}) {
+        this.debug = options.debug || false;
+        this.verbose = options.verbose || false;
+    }
+
+    handleError(error, context = null) {
+        if (error instanceof CliError) {
+            this._handleCliError(error, context);
+        } else {
+            this._handleUnexpectedError(error, context);
+        }
+    }
+
+    _handleCliError(error, context) {
+        let message = `Error: ${error.message}`;
+        if (context) {
+            message = `${context}: ${message}`;
+        }
+
+        console.error(message);
+
+        if (this.verbose && Object.keys(error.details).length > 0) {
+            console.error('Additional details:');
+            for (const [key, value] of Object.entries(error.details)) {
+                console.error(`  ${key}: ${value}`);
+            }
+        }
+
+        if (this.debug) {
+            console.error(error.stack);
+        }
+
+        process.exit(error.exitCode);
+    }
+
+    _handleUnexpectedError(error, context) {
+        let message = `Unexpected error: ${error.message}`;
+        if (context) {
+            message = `${context}: ${message}`;
+        }
+
+        console.error(message);
+
+        if (this.debug || this.verbose) {
+            console.error(error.stack);
+        } else {
+            console.error('Run with --debug for more details');
+        }
+
+        process.exit(ExitCode.GENERAL_ERROR);
+    }
+
+    warn(message, details = {}) {
+        console.error(`Warning: ${message}`);
+
+        if (this.verbose && Object.keys(details).length > 0) {
+            for (const [key, value] of Object.entries(details)) {
+                console.error(`  ${key}: ${value}`);
+            }
+        }
+    }
+}
+
+function handleKeyboardInterrupt() {
+    console.error('\nOperation cancelled by user');
+    process.exit(ExitCode.GENERAL_ERROR);
+}
+
+// Set up global error handlers
+process.on('SIGINT', handleKeyboardInterrupt);
+process.on('SIGTERM', handleKeyboardInterrupt);
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(ExitCode.GENERAL_ERROR);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(ExitCode.GENERAL_ERROR);
+});
+
+// Global error handler instance
+let _errorHandler = null;
+
+function getErrorHandler() {
+    if (!_errorHandler) {
+        _errorHandler = new ErrorHandler();
+    }
+    return _errorHandler;
+}
+
+function setErrorHandler(handler) {
+    _errorHandler = handler;
+}
+
+module.exports = {
+    ExitCode,
+    CliError,
+    UsageError,
+    ConfigError,
+    NetworkError,
+    PermissionError,
+    FileNotFoundError,
+    ErrorHandler,
+    handleKeyboardInterrupt,
+    getErrorHandler,
+    setErrorHandler
+};
+
+{%- elif language == 'typescript' -%}
+/**
+ * Error handling utilities for {{ project.name }}
+ */
+
+// Standard exit codes
+export enum ExitCode {
+    SUCCESS = 0,
+    GENERAL_ERROR = 1,
+    USAGE_ERROR = 2,
+    CONFIG_ERROR = 3,
+    NETWORK_ERROR = 4,
+    PERMISSION_ERROR = 5,
+    FILE_NOT_FOUND = 6
+}
+
+export class CliError extends Error {
+    public readonly exitCode: ExitCode;
+    public readonly details: Record<string, any>;
+
+    constructor(message: string, exitCode: ExitCode = ExitCode.GENERAL_ERROR, details: Record<string, any> = {}) {
+        super(message);
+        this.name = 'CliError';
+        this.exitCode = exitCode;
+        this.details = details;
+        Error.captureStackTrace(this, CliError);
+    }
+}
+
+export class UsageError extends CliError {
+    constructor(message: string, details: Record<string, any> = {}) {
+        super(message, ExitCode.USAGE_ERROR, details);
+        this.name = 'UsageError';
+    }
+}
+
+export class ConfigError extends CliError {
+    constructor(message: string, details: Record<string, any> = {}) {
+        super(message, ExitCode.CONFIG_ERROR, details);
+        this.name = 'ConfigError';
+    }
+}
+
+export class NetworkError extends CliError {
+    constructor(message: string, details: Record<string, any> = {}) {
+        super(message, ExitCode.NETWORK_ERROR, details);
+        this.name = 'NetworkError';
+    }
+}
+
+export class PermissionError extends CliError {
+    constructor(message: string, details: Record<string, any> = {}) {
+        super(message, ExitCode.PERMISSION_ERROR, details);
+        this.name = 'PermissionError';
+    }
+}
+
+export class FileNotFoundError extends CliError {
+    constructor(message: string, details: Record<string, any> = {}) {
+        super(message, ExitCode.FILE_NOT_FOUND, details);
+        this.name = 'FileNotFoundError';
+    }
+}
+
+interface ErrorHandlerOptions {
+    debug?: boolean;
+    verbose?: boolean;
+}
+
+export class ErrorHandler {
+    private debug: boolean;
+    private verbose: boolean;
+
+    constructor(options: ErrorHandlerOptions = {}) {
+        this.debug = options.debug || false;
+        this.verbose = options.verbose || false;
+    }
+
+    public handleError(error: Error, context?: string): never {
+        if (error instanceof CliError) {
+            this.handleCliError(error, context);
+        } else {
+            this.handleUnexpectedError(error, context);
+        }
+        // TypeScript requires this even though we never reach here
+        process.exit(ExitCode.GENERAL_ERROR);
+    }
+
+    private handleCliError(error: CliError, context?: string): never {
+        let message = `Error: ${error.message}`;
+        if (context) {
+            message = `${context}: ${message}`;
+        }
+
+        console.error(message);
+
+        if (this.verbose && Object.keys(error.details).length > 0) {
+            console.error('Additional details:');
+            for (const [key, value] of Object.entries(error.details)) {
+                console.error(`  ${key}: ${value}`);
+            }
+        }
+
+        if (this.debug) {
+            console.error(error.stack);
+        }
+
+        process.exit(error.exitCode);
+    }
+
+    private handleUnexpectedError(error: Error, context?: string): never {
+        let message = `Unexpected error: ${error.message}`;
+        if (context) {
+            message = `${context}: ${message}`;
+        }
+
+        console.error(message);
+
+        if (this.debug || this.verbose) {
+            console.error(error.stack);
+        } else {
+            console.error('Run with --debug for more details');
+        }
+
+        process.exit(ExitCode.GENERAL_ERROR);
+    }
+
+    public warn(message: string, details: Record<string, any> = {}): void {
+        console.error(`Warning: ${message}`);
+
+        if (this.verbose && Object.keys(details).length > 0) {
+            for (const [key, value] of Object.entries(details)) {
+                console.error(`  ${key}: ${value}`);
+            }
+        }
+    }
+}
+
+export function handleKeyboardInterrupt(): void {
+    console.error('\nOperation cancelled by user');
+    process.exit(ExitCode.GENERAL_ERROR);
+}
+
+// Set up global error handlers
+process.on('SIGINT', handleKeyboardInterrupt);
+process.on('SIGTERM', handleKeyboardInterrupt);
+
+process.on('uncaughtException', (error: Error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(ExitCode.GENERAL_ERROR);
+});
+
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(ExitCode.GENERAL_ERROR);
+});
+
+// Global error handler instance
+let _errorHandler: ErrorHandler | null = null;
+
+export function getErrorHandler(): ErrorHandler {
+    if (!_errorHandler) {
+        _errorHandler = new ErrorHandler();
+    }
+    return _errorHandler;
+}
+
+export function setErrorHandler(handler: ErrorHandler): void {
+    _errorHandler = handler;
+}
+
+{%- elif language == 'rust' -%}
+use std::fmt;
+use std::process;
+
+#[derive(Debug, Clone, Copy)]
+pub enum ExitCode {
+    Success = 0,
+    GeneralError = 1,
+    UsageError = 2,
+    ConfigError = 3,
+    NetworkError = 4,
+    PermissionError = 5,
+    FileNotFound = 6,
+}
+
+impl ExitCode {
+    pub fn as_i32(&self) -> i32 {
+        *self as i32
+    }
+}
+
+#[derive(Debug)]
+pub struct CliError {
+    message: String,
+    exit_code: ExitCode,
+    details: std::collections::HashMap<String, String>,
+}
+
+impl CliError {
+    pub fn new(message: String, exit_code: ExitCode) -> Self {
+        Self {
+            message,
+            exit_code,
+            details: std::collections::HashMap::new(),
+        }
+    }
+
+    pub fn with_details(mut self, details: std::collections::HashMap<String, String>) -> Self {
+        self.details = details;
+        self
+    }
+
+    pub fn add_detail<K: Into<String>, V: Into<String>>(mut self, key: K, value: V) -> Self {
+        self.details.insert(key.into(), value.into());
+        self
+    }
+
+    pub fn exit_code(&self) -> ExitCode {
+        self.exit_code
+    }
+
+    pub fn details(&self) -> &std::collections::HashMap<String, String> {
+        &self.details
+    }
+}
+
+impl fmt::Display for CliError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for CliError {}
+
+// Convenience constructors
+pub fn usage_error(message: String) -> CliError {
+    CliError::new(message, ExitCode::UsageError)
+}
+
+pub fn config_error(message: String) -> CliError {
+    CliError::new(message, ExitCode::ConfigError)
+}
+
+pub fn network_error(message: String) -> CliError {
+    CliError::new(message, ExitCode::NetworkError)
+}
+
+pub fn permission_error(message: String) -> CliError {
+    CliError::new(message, ExitCode::PermissionError)
+}
+
+pub fn file_not_found_error(message: String) -> CliError {
+    CliError::new(message, ExitCode::FileNotFound)
+}
+
+pub struct ErrorHandler {
+    debug: bool,
+    verbose: bool,
+}
+
+impl ErrorHandler {
+    pub fn new(debug: bool, verbose: bool) -> Self {
+        Self { debug, verbose }
+    }
+
+    pub fn handle_error(&self, error: &dyn std::error::Error, context: Option<&str>) -> ! {
+        if let Some(cli_error) = error.downcast_ref::<CliError>() {
+            self.handle_cli_error(cli_error, context);
+        } else {
+            self.handle_unexpected_error(error, context);
+        }
+    }
+
+    fn handle_cli_error(&self, error: &CliError, context: Option<&str>) -> ! {
+        let message = if let Some(ctx) = context {
+            format!("{}: Error: {}", ctx, error.message)
+        } else {
+            format!("Error: {}", error.message)
+        };
+
+        eprintln!("{}", message);
+
+        if self.verbose && !error.details.is_empty() {
+            eprintln!("Additional details:");
+            for (key, value) in &error.details {
+                eprintln!("  {}: {}", key, value);
+            }
+        }
+
+        if self.debug {
+            eprintln!("{:?}", error);
+        }
+
+        process::exit(error.exit_code.as_i32());
+    }
+
+    fn handle_unexpected_error(&self, error: &dyn std::error::Error, context: Option<&str>) -> ! {
+        let message = if let Some(ctx) = context {
+            format!("{}: Unexpected error: {}", ctx, error)
+        } else {
+            format!("Unexpected error: {}", error)
+        };
+
+        eprintln!("{}", message);
+
+        if self.debug || self.verbose {
+            eprintln!("{:?}", error);
+        } else {
+            eprintln!("Run with --debug for more details");
+        }
+
+        process::exit(ExitCode::GeneralError.as_i32());
+    }
+
+    pub fn warn(&self, message: &str, details: Option<&std::collections::HashMap<String, String>>) {
+        eprintln!("Warning: {}", message);
+
+        if self.verbose {
+            if let Some(detail_map) = details {
+                for (key, value) in detail_map {
+                    eprintln!("  {}: {}", key, value);
+                }
+            }
+        }
+    }
+}
+
+pub fn handle_keyboard_interrupt() -> ! {
+    eprintln!("\nOperation cancelled by user");
+    process::exit(ExitCode::GeneralError.as_i32());
+}
+
+// Global error handler
+static mut ERROR_HANDLER: Option<ErrorHandler> = None;
+static mut ERROR_HANDLER_INIT: std::sync::Once = std::sync::Once::new();
+
+pub fn get_error_handler() -> &'static ErrorHandler {
+    unsafe {
+        ERROR_HANDLER_INIT.call_once(|| {
+            ERROR_HANDLER = Some(ErrorHandler::new(false, false));
+        });
+        ERROR_HANDLER.as_ref().unwrap()
+    }
+}
+
+pub fn set_error_handler(handler: ErrorHandler) {
+    unsafe {
+        ERROR_HANDLER = Some(handler);
+    }
+}
+
+// Result type alias for convenience
+pub type CliResult<T> = Result<T, CliError>;
+
+{%- endif -%}

@@ -10,13 +10,32 @@ from ..formatter import align_header_items, format_icon_spacing, align_setup_ste
 from ..shared.components import DocumentationGenerator, create_documentation_generator
 from ..shared.test_utils.validation import ValidationResult, TestDataValidator
 
+# Universal Template System imports
+try:
+    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.renderers.typescript_renderer import TypeScriptRenderer as UniversalTypeScriptRenderer
+    UNIVERSAL_TEMPLATES_AVAILABLE = True
+except ImportError:
+    UNIVERSAL_TEMPLATES_AVAILABLE = False
+
 
 class TypeScriptGenerator(NodeJSGenerator):
     """CLI code generator for TypeScript using Commander.js framework."""
     
-    def __init__(self):
-        """Initialize the TypeScript generator with TypeScript-specific templates."""
-        super().__init__()
+    def __init__(self, use_universal_templates: bool = False):
+        """Initialize the TypeScript generator with TypeScript-specific templates.
+        
+        Args:
+            use_universal_templates: If True, use Universal Template System
+        """
+        # Pass universal templates flag to parent
+        super().__init__(use_universal_templates)
+        
+        # Initialize Universal Template System if requested and available
+        if use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE:
+            # Override the nodejs renderer with typescript renderer
+            self.typescript_renderer = UniversalTypeScriptRenderer()
+            self.universal_engine.register_renderer(self.typescript_renderer)
         
         # Override template directory to use TypeScript templates
         template_dir = Path(__file__).parent.parent / "templates" / "typescript"
@@ -51,6 +70,72 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Initialize shared components
         self.doc_generator = None  # Will be initialized when config is available
         self.validator = TestDataValidator()
+    
+    def _generate_with_universal_templates(self, config, config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Override to use TypeScript language in universal templates.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated TypeScript CLI code
+        """
+        try:
+            # Convert config to GoobitsConfigSchema if needed
+            if isinstance(config, ConfigSchema):
+                # Create minimal GoobitsConfigSchema for universal system
+                from ..schemas import GoobitsConfigSchema
+                goobits_config = GoobitsConfigSchema(
+                    package_name=getattr(config, 'package_name', config.cli.name),
+                    command_name=getattr(config, 'command_name', config.cli.name),
+                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
+                    cli=config,
+                    installation=getattr(config, 'installation', None)
+                )
+            else:
+                goobits_config = config
+                
+            # Generate using universal engine with TypeScript language
+            from pathlib import Path
+            output_dir = Path(".")
+            generated_files = self.universal_engine.generate_cli(
+                goobits_config, "typescript", output_dir
+            )
+            
+            # Store generated files
+            self._generated_files = {}
+            for file_path, content in generated_files.items():
+                # Extract relative filename for compatibility
+                relative_path = Path(file_path).name
+                self._generated_files[relative_path] = content
+            
+            # Return main entry file for backward compatibility
+            main_file = next((content for path, content in generated_files.items() 
+                            if "index.ts" in path or "cli.ts" in path), "")
+            return main_file
+            
+        except Exception as e:
+            # Fall back to legacy mode if universal templates fail
+            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            return self._generate_legacy_typescript(config, config_filename, version)
+    
+    def _generate_legacy_typescript(self, config, config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate TypeScript CLI using legacy parent implementation with TypeScript-specific handling.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated TypeScript CLI code
+        """
+        # Use parent's legacy generation but ensure we get TypeScript output
+        return super()._generate_legacy(config, config_filename, version)
     
     def _to_typescript_type(self, python_type: str) -> str:
         """Convert Python type hints to TypeScript types."""

@@ -280,6 +280,11 @@ def build(
         False,
         "--backup",
         help="Create backup files (.bak) when overwriting existing files"
+    ),
+    universal_templates: bool = typer.Option(
+        False,
+        "--universal-templates",
+        help="Use Universal Template System (experimental)"
     )
 ):
     """
@@ -317,6 +322,12 @@ def build(
         typer.echo("💡 Backups disabled (use --backup to create .bak files)")
         typer.echo("💡 Ensure your changes are committed to git before proceeding")
     
+    # Show universal templates status
+    if universal_templates:
+        typer.echo("🧪 Using Universal Template System (experimental)")
+    else:
+        typer.echo("📝 Using legacy template system")
+    
     # Load goobits configuration
     goobits_config = load_goobits_config(config_path)
     
@@ -337,26 +348,26 @@ def build(
         # Route to different generators based on language
         if language == "nodejs":
             from goobits_cli.generators.nodejs import NodeJSGenerator
-            generator = NodeJSGenerator()
+            generator = NodeJSGenerator(use_universal_templates=universal_templates)
             
             # Node.js generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         elif language == "typescript":
             from goobits_cli.generators.typescript import TypeScriptGenerator
-            generator = TypeScriptGenerator()
+            generator = TypeScriptGenerator(use_universal_templates=universal_templates)
             
             # TypeScript generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         elif language == "rust":
             from goobits_cli.generators.rust import RustGenerator
-            generator = RustGenerator()
+            generator = RustGenerator(use_universal_templates=universal_templates)
             
             # Rust generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         else:
             # Use Python generator (default)
             from goobits_cli.generators.python import PythonGenerator  
-            generator = PythonGenerator()
+            generator = PythonGenerator(use_universal_templates=universal_templates)
             
             # Python now also generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
