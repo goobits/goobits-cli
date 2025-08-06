@@ -1,0 +1,181 @@
+suite_name: error-handling
+description: Tests for consistent error handling across languages
+
+setup:
+  goobits_config: ../test-cli-config.yaml
+  cleanup: true
+
+tests:
+  - name: fail_default_exit_code
+    description: Fail command returns default exit code
+    command: fail
+    exit_code: 1
+    stderr:
+      contains:
+        - "Command failed with exit code 1"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "Error: Command failed"
+      typescript:
+        stderr:
+          contains:
+            - "Error: Command failed"
+      rust:
+        stderr:
+          contains:
+            - "Error: Command failed"
+            
+  - name: fail_custom_exit_code
+    description: Fail command with custom exit code
+    command: fail --code 42
+    exit_code: 42
+    stderr:
+      contains:
+        - "42"
+        
+  - name: invalid_option_value_type
+    description: Invalid option value type shows error
+    command: fail --code notanumber
+    exit_code: 2
+    stderr:
+      contains:
+        - "invalid"
+    language_overrides:
+      python:
+        stderr:
+          contains:
+            - "Invalid value for '--code'"
+            - "is not a valid integer"
+      nodejs:
+        stderr:
+          contains:
+            - "option '--code' argument 'notanumber' is invalid"
+      typescript:
+        stderr:
+          contains:
+            - "option '--code' argument 'notanumber' is invalid"
+      rust:
+        stderr:
+          contains:
+            - "invalid value 'notanumber'"
+            - "invalid digit found in string"
+            
+  - name: multiple_values_for_single_arg
+    description: Multiple values for single argument shows error
+    command: hello World Universe
+    exit_code: 2
+    stderr:
+      contains:
+        - "unexpected"
+    language_overrides:
+      python:
+        stderr:
+          contains:
+            - "unexpected extra arguments"
+      nodejs:
+        stderr:
+          contains:
+            - "error: too many arguments"
+      typescript:
+        stderr:
+          contains:
+            - "error: too many arguments"
+      rust:
+        stderr:
+          contains:
+            - "unexpected argument 'Universe'"
+            
+  - name: unknown_option
+    description: Unknown option shows error
+    command: hello World --unknown
+    exit_code: 2
+    stderr:
+      contains:
+        - "unknown"
+        - "option"
+    language_overrides:
+      python:
+        stderr:
+          contains:
+            - "no such option: --unknown"
+      nodejs:
+        stderr:
+          contains:
+            - "error: unknown option '--unknown'"
+      typescript:
+        stderr:
+          contains:
+            - "error: unknown option '--unknown'"
+      rust:
+        stderr:
+          contains:
+            - "unexpected argument '--unknown'"
+            
+  - name: subcommand_unknown
+    description: Unknown subcommand shows error
+    command: config unknown
+    exit_code: 2
+    stderr:
+      contains:
+        - "unknown"
+    language_overrides:
+      python:
+        stderr:
+          contains:
+            - "Invalid choice: 'unknown'"
+      nodejs:
+        stderr:
+          contains:
+            - "error: unknown command 'unknown'"
+      typescript:
+        stderr:
+          contains:
+            - "error: unknown command 'unknown'"
+      rust:
+        stderr:
+          contains:
+            - "unrecognized subcommand 'unknown'"
+            
+  - name: file_not_found_error
+    description: File operations with non-existent file
+    command: file delete /tmp/does-not-exist-$$$.txt
+    exit_code: 1
+    stderr:
+      contains:
+        - "not found"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "ENOENT"
+      typescript:
+        stderr:
+          contains:
+            - "ENOENT"
+      rust:
+        stderr:
+          contains:
+            - "No such file or directory"
+            
+  - name: permission_denied_simulation
+    description: File creation in restricted directory
+    command: file create /root/test.txt --content "test"
+    exit_code: 1
+    stderr:
+      contains:
+        - "Permission denied"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "EACCES"
+      typescript:
+        stderr:
+          contains:
+            - "EACCES"
+      rust:
+        stderr:
+          contains:
+            - "Permission denied"

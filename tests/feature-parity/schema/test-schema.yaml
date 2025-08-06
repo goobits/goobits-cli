@@ -1,0 +1,181 @@
+# Feature Parity Test Schema
+# This schema defines the structure for YAML-based feature parity tests
+
+schema_version: "1.0"
+description: |
+  Schema for defining feature parity tests across Python, Node.js, TypeScript, and Rust CLIs.
+  Each test suite contains tests that verify consistent behavior across all implementations.
+
+test_suite:
+  type: object
+  required:
+    - suite_name
+    - description
+    - tests
+  properties:
+    suite_name:
+      type: string
+      description: Name of the test suite
+      
+    description:
+      type: string
+      description: What this test suite verifies
+      
+    setup:
+      type: object
+      description: Optional setup configuration
+      properties:
+        goobits_config:
+          type: string
+          description: Path to goobits.yaml file to use (relative to test file)
+        working_dir:
+          type: string
+          description: Working directory for test execution
+        cleanup:
+          type: boolean
+          description: Whether to clean up generated files after tests
+          default: true
+          
+    tests:
+      type: array
+      description: List of test cases
+      items:
+        type: object
+        required:
+          - name
+          - command
+        properties:
+          name:
+            type: string
+            description: Test name
+            
+          description:
+            type: string
+            description: What this test verifies
+            
+          command:
+            type: string
+            description: Command to execute (without the CLI name prefix)
+            
+          stdin:
+            type: string
+            description: Optional input to provide via stdin
+            
+          env:
+            type: object
+            description: Environment variables to set
+            additionalProperties:
+              type: string
+              
+          exit_code:
+            type: integer
+            description: Expected exit code
+            default: 0
+            
+          stdout:
+            type: object
+            description: Expected stdout verification
+            properties:
+              contains:
+                type: array
+                description: Strings that must be present in stdout
+                items:
+                  type: string
+              not_contains:
+                type: array
+                description: Strings that must NOT be present in stdout
+                items:
+                  type: string
+              matches:
+                type: string
+                description: Regex pattern that stdout must match
+              exact:
+                type: string
+                description: Exact expected stdout (use for simple outputs)
+                
+          stderr:
+            type: object
+            description: Expected stderr verification (same structure as stdout)
+            properties:
+              contains:
+                type: array
+                items:
+                  type: string
+              not_contains:
+                type: array
+                items:
+                  type: string
+              matches:
+                type: string
+              exact:
+                type: string
+                
+          files:
+            type: object
+            description: File system expectations
+            properties:
+              created:
+                type: array
+                description: Files that should be created
+                items:
+                  type: string
+              modified:
+                type: array
+                description: Files that should be modified
+                items:
+                  type: string
+              deleted:
+                type: array
+                description: Files that should be deleted
+                items:
+                  type: string
+              content:
+                type: object
+                description: Expected file content checks
+                additionalProperties:
+                  type: object
+                  properties:
+                    contains:
+                      type: array
+                      items:
+                        type: string
+                    matches:
+                      type: string
+                    exact:
+                      type: string
+                      
+          skip_languages:
+            type: array
+            description: Languages to skip this test for (if behavior differs)
+            items:
+              enum: ["python", "nodejs", "typescript", "rust"]
+              
+          language_overrides:
+            type: object
+            description: Language-specific test overrides
+            properties:
+              python:
+                $ref: "#/test_override"
+              nodejs:
+                $ref: "#/test_override"
+              typescript:
+                $ref: "#/test_override"
+              rust:
+                $ref: "#/test_override"
+
+test_override:
+  type: object
+  description: Override test expectations for a specific language
+  properties:
+    exit_code:
+      type: integer
+    stdout:
+      $ref: "#/test_suite/properties/tests/items/properties/stdout"
+    stderr:
+      $ref: "#/test_suite/properties/tests/items/properties/stderr"
+    skip:
+      type: boolean
+      description: Skip this test for this language
+    skip_reason:
+      type: string
+      description: Reason for skipping

@@ -1,0 +1,130 @@
+suite_name: advanced-features
+description: Tests for advanced CLI features like subcommands, groups, and hooks
+
+setup:
+  goobits_config: ../test-cli-config.yaml
+  cleanup: true
+
+tests:
+  - name: nested_subcommand_help
+    description: Help for nested subcommands
+    command: config get --help
+    stdout:
+      contains:
+        - "get"
+        - "Get config value"
+        - "key"
+        
+  - name: subcommand_execution
+    description: Execute subcommand successfully
+    command: config list
+    exit_code: 0
+    stdout:
+      contains:
+        - "theme"
+        - "api_key"
+        - "timeout"
+        
+  - name: file_create_with_content
+    description: Create file with content
+    command: file create /tmp/test-$$.txt --content "Hello from test"
+    exit_code: 0
+    files:
+      created:
+        - /tmp/test-$$.txt
+      content:
+        /tmp/test-$$.txt:
+          exact: "Hello from test"
+          
+  - name: file_create_empty
+    description: Create empty file
+    command: file create /tmp/empty-$$.txt
+    exit_code: 0
+    files:
+      created:
+        - /tmp/empty-$$.txt
+        
+  - name: file_delete_existing
+    description: Delete existing file
+    command: file delete /tmp/test-$$.txt
+    exit_code: 0
+    files:
+      deleted:
+        - /tmp/test-$$.txt
+        
+  - name: global_option_with_subcommand
+    description: Global options work with subcommands
+    command: --verbose config list
+    exit_code: 0
+    stdout:
+      contains:
+        - "theme"
+        - "api_key"
+        
+  - name: short_and_long_options
+    description: Both short and long options work
+    command: hello -g Hi World
+    stdout:
+      contains:
+        - "Hi World"
+        
+  - name: option_with_equals_syntax
+    description: Options with equals syntax
+    command: hello World --greeting=Howdy
+    stdout:
+      contains:
+        - "Howdy World"
+    language_overrides:
+      nodejs:
+        skip: true
+        skip_reason: "Equals syntax handling varies in Node.js"
+      typescript:
+        skip: true
+        skip_reason: "Equals syntax handling varies in TypeScript"
+        
+  - name: multiple_global_options
+    description: Multiple global options together
+    command: --verbose --config /tmp/custom.yaml hello World
+    exit_code: 0
+    stdout:
+      contains:
+        - "Hello World"
+        
+  - name: command_aliasing
+    description: Command aliases work (if configured)
+    command: hi World
+    exit_code: 2  # Should fail as 'hi' is not configured
+    stderr:
+      contains:
+        - "hi"
+    skip_languages: ["all"]
+    skip_reason: "Aliases not configured in test CLI"
+    
+  - name: environment_variable_override
+    description: Environment variables can override config
+    command: config get theme
+    env:
+      TEST_CLI_THEME: "dark"
+    stdout:
+      contains:
+        - "dark"
+    skip_languages: ["nodejs", "typescript", "rust"]
+    skip_reason: "Environment variable overrides need hook implementation"
+    
+  - name: hook_execution_verification
+    description: Verify hooks are called
+    command: hello TestUser
+    stdout:
+      contains:
+        - "Hello TestUser"
+    # This verifies that the hook system works but actual behavior depends on hook implementation
+    
+  - name: stdin_input_handling
+    description: Commands can read from stdin
+    command: echo -
+    stdin: "Input from stdin"
+    stdout:
+      contains:
+        - "Input from stdin"
+    skip_languages: ["all"]
+    skip_reason: "Stdin reading requires specific implementation in hooks"

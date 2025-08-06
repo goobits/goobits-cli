@@ -1,0 +1,145 @@
+suite_name: config-commands
+description: Tests for configuration management commands
+
+setup:
+  goobits_config: ../test-cli-config.yaml
+  cleanup: true
+
+tests:
+  - name: config_help
+    description: Config command help
+    command: config --help
+    stdout:
+      contains:
+        - "config"
+        - "Manage configuration"
+        - "Commands:"
+        - "get"
+        - "set"
+        - "list"
+        - "reset"
+        
+  - name: config_get_help
+    description: Config get subcommand help
+    command: config get --help
+    stdout:
+      contains:
+        - "get"
+        - "Get config value"
+        - "key"
+        - "Config key"
+        
+  - name: config_set_help
+    description: Config set subcommand help
+    command: config set --help
+    stdout:
+      contains:
+        - "set"
+        - "Set config value"
+        - "key"
+        - "value"
+        
+  - name: config_list_default
+    description: List default configuration
+    command: config list
+    stdout:
+      contains:
+        - "theme"
+        - "default"
+        - "api_key"
+        - "timeout"
+        - "30"
+        
+  - name: config_get_existing
+    description: Get existing config value
+    command: config get theme
+    stdout:
+      contains:
+        - "theme"
+        - "default"
+        
+  - name: config_get_nonexistent
+    description: Get non-existent config key
+    command: config get nonexistent
+    exit_code: 1
+    stderr:
+      contains:
+        - "not found"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "Config key 'nonexistent' not found"
+      typescript:
+        stderr:
+          contains:
+            - "Config key 'nonexistent' not found"
+      rust:
+        stderr:
+          contains:
+            - "Config key not found: nonexistent"
+            
+  - name: config_set_new_value
+    description: Set a config value
+    command: config set theme dark
+    stdout:
+      contains:
+        - "theme"
+        - "dark"
+        
+  - name: config_set_then_get
+    description: Set and then get a config value
+    command: config set api_key test123
+    stdout:
+      contains:
+        - "api_key"
+        - "test123"
+        
+  - name: config_reset_with_force
+    description: Reset config with force flag
+    command: config reset --force
+    stdout:
+      contains:
+        - "reset"
+        
+  - name: config_reset_without_force
+    description: Reset config without force flag requires confirmation
+    command: config reset
+    stdin: "n\n"
+    exit_code: 0
+    stdout:
+      contains:
+        - "Are you sure"
+    language_overrides:
+      nodejs:
+        skip: true
+        skip_reason: "Interactive prompts need special handling in Node.js"
+      typescript:
+        skip: true
+        skip_reason: "Interactive prompts need special handling in TypeScript"
+      rust:
+        skip: true
+        skip_reason: "Interactive prompts need special handling in Rust"
+        
+  - name: config_set_missing_value
+    description: Config set without value shows error
+    command: config set theme
+    exit_code: 2
+    stderr:
+      contains:
+        - "required"
+        - "value"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "error: missing required argument 'value'"
+      typescript:
+        stderr:
+          contains:
+            - "error: missing required argument 'value'"
+      rust:
+        stderr:
+          contains:
+            - "error: the following required arguments were not provided"
+            - "<VALUE>"
