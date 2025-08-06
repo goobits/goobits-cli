@@ -435,7 +435,7 @@ export const cli = asyncErrorHandler(async function cli() {
     .command('_completion <shell> <current_line> [cursor_pos]')
     .description('Internal completion command - called by shell completion scripts')
     .option('--debug', 'Debug completion engine')
-    .hideHelp(true)
+    .hidden(true)
     .action(async (shell, currentLine, cursorPos, options) => {
       try {
         // Import completion engine
