@@ -512,10 +512,8 @@ export async function cli(): Promise<void> {
 
   // Internal completion command (hidden from help)
   program
-    .command('_completion <shell> <current_line> [cursor_pos]')
-    .description('Internal completion command - called by shell completion scripts')
+    .command('_completion <shell> <current_line> [cursor_pos]', { hidden: true })
     .option('--debug', 'Debug completion engine')
-    .hidden(true)
     .action(async (shell: string, currentLine: string, cursorPos?: string, options?: { debug?: boolean }) => {
       try {
         // Import completion engine

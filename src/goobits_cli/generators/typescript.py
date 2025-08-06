@@ -128,6 +128,8 @@ class TypeScriptGenerator(NodeJSGenerator):
             "setup.sh",
             "README.md",
             ".gitignore",
+            ".eslintrc.json",
+            ".prettierrc",
             "cli.ts",
             "bin/cli.ts",
             "lib/errors.ts",
@@ -281,6 +283,12 @@ class TypeScriptGenerator(NodeJSGenerator):
         
         # Generate .gitignore
         files['.gitignore'] = self._generate_gitignore(is_typescript=True)
+        
+        # Generate .eslintrc.json
+        files['.eslintrc.json'] = self._generate_eslintrc()
+        
+        # Generate .prettierrc
+        files['.prettierrc'] = self._generate_prettierrc()
         
         # Check for file conflicts and adjust if needed
         files = self._check_file_conflicts(files)
@@ -561,3 +569,43 @@ npm install
 npm run build
 echo "TypeScript CLI setup complete!"
 '''
+    
+    def _generate_eslintrc(self) -> str:
+        """Generate .eslintrc.json for TypeScript projects."""
+        import json
+        eslint_config = {
+            "parser": "@typescript-eslint/parser",
+            "extends": [
+                "eslint:recommended",
+                "@typescript-eslint/recommended"
+            ],
+            "plugins": ["@typescript-eslint"],
+            "env": {
+                "node": True,
+                "es2022": True
+            },
+            "parserOptions": {
+                "ecmaVersion": 2022,
+                "sourceType": "module"
+            },
+            "rules": {
+                "@typescript-eslint/no-unused-vars": "error",
+                "@typescript-eslint/no-explicit-any": "warn",
+                "prefer-const": "error",
+                "no-var": "error"
+            }
+        }
+        return json.dumps(eslint_config, indent=2)
+    
+    def _generate_prettierrc(self) -> str:
+        """Generate .prettierrc for TypeScript projects."""
+        import json
+        prettier_config = {
+            "semi": True,
+            "trailingComma": "es5",
+            "singleQuote": True,
+            "printWidth": 80,
+            "tabWidth": 2,
+            "useTabs": False
+        }
+        return json.dumps(prettier_config, indent=2)
