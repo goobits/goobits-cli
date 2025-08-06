@@ -1,0 +1,345 @@
+# Error Code Standards Schema
+# Defines standardized error codes, categories, and handling patterns across all languages
+# Agent B - Operational Patterns
+
+schema_version: "1.0.0"
+description: "Universal error handling patterns and exit code standards"
+
+# Standard Exit Codes
+# Based on BSD sysexits.h and common CLI conventions
+exit_codes:
+  SUCCESS: 0                    # Successful completion
+  GENERAL_ERROR: 1              # General errors
+  MISUSE: 2                     # Command misuse (invalid args/options)
+  CONFIG_ERROR: 3               # Configuration file errors
+  HOOK_ERROR: 4                 # Hook execution failures
+  PLUGIN_ERROR: 5               # Plugin loading/execution errors
+  DEPENDENCY_ERROR: 6           # Missing dependencies
+  NETWORK_ERROR: 7              # Network/API failures
+  PERMISSION_ERROR: 77          # Permission denied
+  OS_FILE_MISSING: 78           # OS file/command not found
+  SOFTWARE_ERROR: 70            # Internal software error
+  CANCELLED: 130                # User cancellation (Ctrl+C)
+
+# Error Categories
+# Groups related errors for consistent handling
+error_categories:
+  user_input:
+    description: "Errors caused by invalid user input"
+    codes: [MISUSE]
+    severity: "low"
+    recoverable: true
+    display_suggestions: true
+    
+  configuration:
+    description: "Configuration file and setup errors"
+    codes: [CONFIG_ERROR]
+    severity: "high"
+    recoverable: true
+    display_suggestions: true
+    
+  system_integration:
+    description: "Errors interacting with system resources"
+    codes: [PERMISSION_ERROR, OS_FILE_MISSING, DEPENDENCY_ERROR]
+    severity: "high"
+    recoverable: false
+    display_suggestions: true
+    
+  runtime_execution:
+    description: "Errors during command execution"
+    codes: [HOOK_ERROR, PLUGIN_ERROR, GENERAL_ERROR]
+    severity: "medium"
+    recoverable: false
+    display_suggestions: true
+    
+  external_services:
+    description: "Network and external service errors"
+    codes: [NETWORK_ERROR]
+    severity: "medium"
+    recoverable: true
+    display_suggestions: true
+    
+  user_cancellation:
+    description: "User-initiated cancellation"
+    codes: [CANCELLED]
+    severity: "low"
+    recoverable: false
+    display_suggestions: false
+    
+  internal_errors:
+    description: "Internal software errors"
+    codes: [SOFTWARE_ERROR]
+    severity: "critical"
+    recoverable: false
+    display_suggestions: false
+
+# Error Message Formatting Standards
+error_message_format:
+  structure:
+    prefix: "symbol + severity"           # ✗ Error:
+    message: "clear_description"          # What went wrong
+    context: "relevant_details"           # Command, file, etc.
+    suggestions: "actionable_items"       # How to fix
+    
+  severity_symbols:
+    info: "ℹ"                           # Information
+    warning: "⚠"                        # Warning
+    error: "✗"                          # Error
+    critical: "💥"                      # Critical/Fatal
+    
+  color_coding:
+    info: "blue"
+    warning: "yellow" 
+    error: "red"
+    critical: "red_bold"
+    
+  suggestion_format:
+    prefix: "Suggestions:"
+    item_format: "  {index}. {suggestion}"
+    max_suggestions: 3
+
+# Language-Specific Error Handling Patterns
+language_patterns:
+  python:
+    exception_hierarchy: |
+      Exception
+        ├── CLIError (base)
+        │   ├── ConfigError
+        │   ├── HookError
+        │   ├── ValidationError
+        │   └── CommandNotFoundError
+        └── SystemExit (for clean exits)
+        
+    error_context:
+      type: "Exception attributes"
+      properties:
+        - "message: str"
+        - "exit_code: int"
+        - "context: Dict[str, Any]"
+        - "suggestions: List[str]"
+        - "cause: Optional[Exception]"
+        
+    handling_pattern: |
+      try:
+          # Command logic
+      except CLIError as e:
+          display_error(e)
+          sys.exit(e.exit_code)
+      except Exception as e:
+          display_error(CLIError.general(str(e)))
+          sys.exit(1)
+          
+  nodejs:
+    error_classes: |
+      Error
+        ├── CLIError (base class)
+        │   ├── ConfigError
+        │   ├── HookError
+        │   ├── ValidationError
+        │   └── CommandNotFoundError
+        └── Native errors (wrapped)
+        
+    error_context:
+      type: "Class properties"
+      properties:
+        - "message: string"
+        - "code: number"
+        - "context: object"
+        - "timestamp: Date"
+        - "cause: Error | null"
+        
+    handling_pattern: |
+      try {
+          // Command logic
+      } catch (error) {
+          if (error instanceof CLIError) {
+              handleError(error);
+              process.exit(error.code);
+          }
+          handleError(new CLIError(error.message));
+          process.exit(1);
+      }
+      
+  typescript:
+    error_types: |
+      Result<T, E> pattern with:
+      - Success<T>: { success: true, data: T }
+      - Failure<E>: { success: false, error: E }
+      
+    error_context:
+      type: "Interface-based"
+      properties:
+        - "code: CLIErrorCode"
+        - "message: string"
+        - "severity: ErrorSeverity"
+        - "context?: Record<string, unknown>"
+        - "cause?: Error"
+        
+    handling_pattern: |
+      const result = await executeCommand(args);
+      if (!result.success) {
+          await errorManager.handle(result.error);
+          process.exit(getExitCode(result.error));
+      }
+      
+  rust:
+    error_enums: |
+      enum CLIError {
+          Config { message: String, path: Option<PathBuf> },
+          Hook { hook_name: String, message: String },
+          Validation { field: String, value: String },
+          // ... other variants
+      }
+      
+    error_context:
+      type: "Enum variants with structured data"
+      properties:
+        - "Error trait implementation"
+        - "Display trait for user messages"  
+        - "Debug trait for detailed output"
+        - "Source trait for error chains"
+        
+    handling_pattern: |
+      match execute_command(args) {
+          Ok(_) => std::process::exit(0),
+          Err(error) => {
+              error_handler.display_error(&error);
+              std::process::exit(error.exit_code().code());
+          }
+      }
+
+# Error Recovery Patterns
+recovery_strategies:
+  retry_with_backoff:
+    description: "Retry operations that might succeed on subsequent attempts"
+    applicable_to: [NETWORK_ERROR, DEPENDENCY_ERROR]
+    parameters:
+      max_attempts: 3
+      base_delay_ms: 1000
+      backoff_factor: 2
+      max_delay_ms: 30000
+      
+  fallback_defaults:
+    description: "Use default values when configuration is invalid"
+    applicable_to: [CONFIG_ERROR]
+    parameters:
+      preserve_user_config: false
+      create_backup: true
+      notify_user: true
+      
+  graceful_degradation:
+    description: "Continue with reduced functionality"
+    applicable_to: [PLUGIN_ERROR, HOOK_ERROR]
+    parameters:
+      skip_failed_plugins: true
+      log_degradation: true
+      warn_user: true
+      
+  user_prompts:
+    description: "Ask user for clarification or correction"
+    applicable_to: [MISUSE, CONFIG_ERROR]
+    parameters:
+      max_retry_prompts: 2
+      provide_suggestions: true
+      allow_skip: true
+
+# Validation Rules
+validation_patterns:
+  required_fields:
+    - "All error types must have exit_code mapping"
+    - "All error messages must be localizable"
+    - "All errors must provide context for debugging"
+    
+  message_guidelines:
+    - "Start with what went wrong (not what was expected)"
+    - "Be specific about the problem location"
+    - "Avoid technical jargon in user-facing messages"
+    - "Include relevant values in context, not in message"
+    
+  suggestion_guidelines:
+    - "Provide actionable next steps"
+    - "Order by likelihood of success"
+    - "Include exact commands when possible"
+    - "Limit to 3 most relevant suggestions"
+
+# Cross-Platform Considerations
+platform_differences:
+  windows:
+    path_separators: "Use Path.join() or equivalent"
+    file_permissions: "Check with fs.access() before operations"
+    exit_codes: "Standard codes work with cmd.exe and PowerShell"
+    
+  macos:
+    case_sensitivity: "File paths are case-insensitive by default"
+    permissions: "May require additional user prompts for file access"
+    terminal_colors: "Full ANSI color support"
+    
+  linux:
+    permissions: "Standard POSIX permission model"
+    file_systems: "Various filesystems with different limitations"
+    signals: "Standard POSIX signal handling"
+
+# Testing Requirements
+testing_standards:
+  unit_tests:
+    - "Each error type creation and formatting"
+    - "Exit code mapping correctness"
+    - "Context preservation through error chains"
+    - "Suggestion generation logic"
+    
+  integration_tests:
+    - "Error propagation through command hierarchy"
+    - "Recovery strategy effectiveness"
+    - "Cross-platform error display consistency"
+    - "Error logging and debugging output"
+    
+  error_scenarios:
+    - "Missing configuration files"
+    - "Invalid configuration syntax" 
+    - "Permission denied operations"
+    - "Network connectivity issues"
+    - "Hook execution failures"
+    - "Plugin loading errors"
+    - "Invalid user input combinations"
+
+# Monitoring and Observability
+error_tracking:
+  error_codes_as_metrics: "Track error code frequency"
+  context_preservation: "Log full error context for debugging"
+  user_impact_tracking: "Distinguish user errors from system errors"
+  error_trend_analysis: "Monitor error patterns over time"
+
+# Migration Strategy
+migration_from_current:
+  assessment:
+    - "Inventory current error handling approaches"
+    - "Map existing errors to standard categories"
+    - "Identify missing error contexts"
+    
+  implementation_phases:
+    phase1: "Standardize exit codes across all languages"
+    phase2: "Implement consistent error message formatting"
+    phase3: "Add recovery strategies where applicable"
+    phase4: "Enhance error context and suggestions"
+    
+  compatibility:
+    - "Maintain backward compatibility for existing hooks"
+    - "Preserve current command-line behavior"
+    - "Allow gradual migration of error handling"
+
+# Notes for Agent Coordination
+coordination_notes:
+  with_command_structure:
+    - "Error context should include current command name"
+    - "Command validation errors use MISUSE category"
+    - "Hidden commands should not appear in error suggestions"
+    
+  with_config_management:
+    - "Configuration errors provide file path in context"
+    - "Config validation uses structured error messages"
+    - "Environment variable errors include variable name"
+    
+  with_completion_system:
+    - "Completion errors should not interrupt user flow"
+    - "Failed completion falls back to basic file completion"
+    - "Completion errors logged but not displayed"
