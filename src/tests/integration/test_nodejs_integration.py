@@ -11,7 +11,7 @@ import shutil
 
 from goobits_cli.main import load_goobits_config
 from goobits_cli.generators.nodejs import NodeJSGenerator
-from tests.helpers import determine_language, generate_cli
+from conftest import determine_language, generate_cli
 
 
 class TestNodeJSIntegration:

@@ -17,7 +17,7 @@ import shutil
 import os
 
 from goobits_cli.main import load_goobits_config
-from tests.helpers import generate_cli
+from conftest import generate_cli
 
 
 class TestNodeJSE2E:
@@ -195,11 +195,13 @@ class TestNodeJSE2E:
         assert "# NodeJSTestCLI" in readme_content
         assert "## Installation" in readme_content
         assert "## Usage" in readme_content
-        assert "## Commands" in readme_content
+        # The new generator uses "### Basic Commands" instead of "## Commands"
+        assert "### Basic Commands" in readme_content
         
-        # Check basic structure
-        assert "Installation" in readme_content
-        assert "Usage" in readme_content
+        # Check that commands are documented
+        assert "nodejstestcli init" in readme_content
+        assert "nodejstestcli deploy" in readme_content
+        assert "nodejstestcli server" in readme_content
     
     @pytest.mark.skipif(shutil.which('node') is None, reason="Node.js not installed")
     def test_global_options_inheritance(self, temp_nodejs_project):

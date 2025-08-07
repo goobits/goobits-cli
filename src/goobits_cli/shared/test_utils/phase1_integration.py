@@ -10,7 +10,16 @@ from pathlib import Path
 
 from goobits_cli.main import load_goobits_config
 from goobits_cli.schemas import GoobitsConfigSchema
-from tests.helpers import generate_cli
+
+# Import from the test conftest.py file
+import sys
+from pathlib import Path
+
+# Add tests directory to path to import from conftest
+tests_dir = Path(__file__).parents[4] / "tests"
+sys.path.insert(0, str(tests_dir))
+
+from conftest import generate_cli
 
 from .fixtures import TestFixtures, fixtures
 from .comparison_tools import CrossLanguageComparator, ComparisonResult
@@ -389,8 +398,7 @@ def validate_phase1_compatibility():
     """Validate that shared utilities are compatible with Phase 1 tests."""
     try:
         # Test that we can import Phase 1 components
-        from tests.helpers import generate_cli, determine_language
-        from tests.test_helpers import create_test_goobits_config
+        from conftest import generate_cli, determine_language, create_test_goobits_config
         
         # Test basic fixture integration
         fixtures = TestFixtures()

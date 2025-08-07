@@ -19,7 +19,7 @@ import os
 import time
 
 from goobits_cli.main import load_goobits_config
-from tests.helpers import generate_cli
+from conftest import generate_cli
 
 
 class TestRustGeneratorE2E:

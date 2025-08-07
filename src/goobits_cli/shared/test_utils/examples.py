@@ -28,7 +28,15 @@ from goobits_cli.shared.test_utils import (
 )
 
 # Import Phase 1 testing framework
-from tests.helpers import generate_cli
+# Import from the test conftest.py file
+import sys
+from pathlib import Path
+
+# Add tests directory to path to import from conftest
+tests_dir = Path(__file__).parents[4] / "tests"
+sys.path.insert(0, str(tests_dir))
+
+from conftest import generate_cli
 
 
 class ExampleTestSuite:

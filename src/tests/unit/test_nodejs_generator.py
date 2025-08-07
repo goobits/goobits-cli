@@ -7,7 +7,7 @@ import shutil
 
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema
-from tests.test_helpers import create_test_goobits_config
+from conftest import create_test_goobits_config
 
 
 class TestNodeJSGenerator:

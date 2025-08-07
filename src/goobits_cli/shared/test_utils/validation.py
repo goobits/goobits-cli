@@ -237,7 +237,15 @@ class FrameworkIntegrationValidator:
         
         # Test imports
         try:
-            from tests.helpers import generate_cli, determine_language
+            # Import from the test conftest.py file
+            import sys
+            from pathlib import Path
+            
+            # Add tests directory to path to import from conftest
+            tests_dir = Path(__file__).parents[4] / "tests"
+            sys.path.insert(0, str(tests_dir))
+            
+            from conftest import generate_cli, determine_language
             result.details['phase1_helpers_imported'] = True
         except ImportError as e:
             result.add_error(f"Cannot import Phase 1 helpers: {e}")
