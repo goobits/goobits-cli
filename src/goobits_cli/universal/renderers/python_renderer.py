@@ -109,6 +109,12 @@ class PythonRenderer(LanguageRenderer):
             "python_docstring": self._python_docstring_filter,
         }
     
+    def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
+        """Check if CLI has interactive mode features."""
+        features = cli_schema.get("features", {})
+        interactive_mode = features.get("interactive_mode", {})
+        return interactive_mode.get("enabled", False)
+    
     def render_component(self, component_name: str, template_content: str, 
                         context: Dict[str, Any]) -> str:
         """
@@ -128,6 +134,10 @@ class PythonRenderer(LanguageRenderer):
             trim_blocks=True,
             lstrip_blocks=True
         )
+        
+        # Add built-in filters
+        env.filters['repr'] = repr
+        env.filters['tojson'] = lambda x: str(x) if x is not None else 'null'
         
         # Add custom filters
         env.filters.update(self.get_custom_filters())
@@ -152,14 +162,21 @@ class PythonRenderer(LanguageRenderer):
             Dictionary mapping component names to output file paths
         """
         package_name = ir["project"]["package_name"].replace("-", "_")
+        cli_name = ir.get("cli", {}).get("root_command", {}).get("name", "cli").replace("-", "_")
         
-        return {
+        output = {
             "command_handler": f"{package_name}/cli.py",
             "config_manager": f"{package_name}/config.py",
             "completion_engine": f"{package_name}/completion.py",
             "error_handler": f"{package_name}/errors.py",
             "hook_system": "hooks.py",  # User-implementable hook template
         }
+        
+        # Add interactive mode if enabled
+        if self._has_interactive_features(ir.get("cli", {})):
+            output["interactive_mode"] = f"{package_name}/{cli_name}_interactive.py"
+        
+        return output
     
     def _get_python_imports(self, ir: Dict[str, Any]) -> List[str]:
         """Generate required Python imports based on IR."""
@@ -184,6 +201,11 @@ class PythonRenderer(LanguageRenderer):
         
         if self._has_completion_features(cli_schema):
             imports.append("import subprocess")
+        
+        if self._has_interactive_features(cli_schema):
+            imports.append("import cmd")
+            imports.append("import shlex")
+            imports.append("import readline")
         
         return imports
     

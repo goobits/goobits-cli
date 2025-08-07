@@ -129,7 +129,9 @@ class RustRenderer(LanguageRenderer):
         Returns:
             Dictionary mapping component names to output file paths
         """
-        return {
+        cli_name = ir.get("cli", {}).get("root_command", {}).get("name", "cli").replace("-", "_")
+        
+        output = {
             # Core Rust files
             "command_handler": "src/main.rs",
             "config_manager": "src/config.rs", 
@@ -148,6 +150,12 @@ class RustRenderer(LanguageRenderer):
             # Installation script
             "setup_script": "setup.sh",
         }
+        
+        # Add interactive mode if enabled
+        if self._has_interactive_features(ir.get("cli", {})):
+            output["interactive_mode"] = f"src/{cli_name}_interactive.rs"
+        
+        return output
     
     def _transform_cli_schema(self, cli_schema: Dict[str, Any]) -> Dict[str, Any]:
         """Transform CLI schema with Rust-specific type information"""
@@ -414,3 +422,9 @@ class RustRenderer(LanguageRenderer):
             processed_lines.pop()
         
         return '\n'.join(processed_lines) + '\n' if processed_lines else ''
+    
+    def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
+        """Check if CLI has interactive mode features."""
+        features = cli_schema.get("features", {})
+        interactive_mode = features.get("interactive_mode", {})
+        return interactive_mode.get("enabled", False)

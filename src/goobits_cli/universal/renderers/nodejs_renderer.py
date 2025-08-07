@@ -141,7 +141,9 @@ class NodeJSRenderer(LanguageRenderer):
         Returns:
             Dictionary mapping component names to output file paths
         """
-        return {
+        cli_name = ir.get("cli", {}).get("root_command", {}).get("name", "cli").replace("-", "_")
+        
+        output = {
             "command_handler": "cli.js",
             "hook_system": "src/hooks.js", 
             "config_manager": "lib/config.js",
@@ -154,6 +156,13 @@ class NodeJSRenderer(LanguageRenderer):
             "readme": "README.md",
             "gitignore": ".gitignore",
         }
+        
+        # Add interactive mode if enabled (use enhanced version for Node.js)
+        if self._has_interactive_features(ir.get("cli", {})):
+            output["interactive_mode"] = f"{cli_name}_interactive.js"
+            output["interactive_mode_enhanced"] = f"{cli_name}_interactive_enhanced.js"
+        
+        return output
     
     # Private helper methods
     
@@ -217,6 +226,14 @@ class NodeJSRenderer(LanguageRenderer):
             "chalk": "^5.3.0",
         }
         
+        # Add enhanced interactive mode dependencies if interactive features are enabled
+        if self._has_interactive_features(ir.get("cli", {})):
+            dependencies.update({
+                "chalk": "^5.3.0",  # Already included but ensure version
+                # Built-in modules don't need explicit dependencies:
+                # readline, fs, path, os, child_process
+            })
+        
         # Add NPM dependencies from IR
         npm_deps = ir["dependencies"].get("npm", [])
         for dep in npm_deps:
@@ -245,6 +262,13 @@ class NodeJSRenderer(LanguageRenderer):
             "import fs from 'fs';",
             "import { spawn, execSync } from 'child_process';",
         ]
+        
+        # Add enhanced interactive mode imports if interactive features are enabled
+        if self._has_interactive_features(ir.get("cli", {})):
+            imports.extend([
+                "import readline from 'readline';",
+                "import os from 'os';",
+            ])
         
         # Add conditional imports based on available dependencies
         npm_deps = ir["dependencies"].get("npm", [])
@@ -514,3 +538,9 @@ class NodeJSRenderer(LanguageRenderer):
             return "array"
         else:
             return "string"
+    
+    def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
+        """Check if CLI has interactive mode features."""
+        features = cli_schema.get("features", {})
+        interactive_mode = features.get("interactive_mode", {})
+        return interactive_mode.get("enabled", False)

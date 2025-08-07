@@ -134,7 +134,9 @@ class TypeScriptRenderer(LanguageRenderer):
         Returns:
             Mapping of component names to output file paths
         """
-        return {
+        cli_name = ir.get("cli", {}).get("root_command", {}).get("name", "cli").replace("-", "_")
+        
+        output = {
             # Main CLI files
             'command_handler': 'cli.ts',
             'hook_system': 'src/hooks.ts',
@@ -177,6 +179,12 @@ class TypeScriptRenderer(LanguageRenderer):
             'readme': 'README.md',
             'gitignore': '.gitignore'
         }
+        
+        # Add interactive mode if enabled
+        if self._has_interactive_features(ir.get("cli", {})):
+            output["interactive_mode"] = f"{cli_name}_interactive.ts"
+        
+        return output
     
     def _add_custom_filters(self) -> None:
         """Add TypeScript-specific filters to Jinja2 environment."""
@@ -526,3 +534,9 @@ class TypeScriptRenderer(LanguageRenderer):
     def _needs_interface_exports(self, ir: Dict[str, Any]) -> bool:
         """Check if interfaces should be exported."""
         return True  # Default to exporting for TypeScript libraries
+    
+    def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
+        """Check if CLI has interactive mode features."""
+        features = cli_schema.get("features", {})
+        interactive_mode = features.get("interactive_mode", {})
+        return interactive_mode.get("enabled", False)

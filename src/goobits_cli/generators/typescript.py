@@ -70,6 +70,10 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Initialize shared components
         self.doc_generator = None  # Will be initialized when config is available
         self.validator = TestDataValidator()
+        
+        # Initialize TypeScript interactive utilities
+        from ..universal.interactive.typescript_utils import TypeScriptInteractiveRenderer
+        self.interactive_renderer = None
     
     def _generate_with_universal_templates(self, config, config_filename: str, version: Optional[str] = None) -> str:
         """
@@ -277,6 +281,7 @@ class TypeScriptGenerator(NodeJSGenerator):
             ".prettierrc",
             "cli.ts",
             "bin/cli.ts",
+            "interactive_mode.ts",  # Enhanced TypeScript interactive mode
             "lib/errors.ts",
             "lib/config.ts",
             "lib/completion.ts",
@@ -336,6 +341,10 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Initialize documentation generator with config
         config_dict = config.model_dump() if hasattr(config, 'model_dump') else config
         self.doc_generator = create_documentation_generator('typescript', config_dict)
+        
+        # Initialize interactive renderer with CLI config
+        from ..universal.interactive.typescript_utils import TypeScriptInteractiveRenderer
+        self.interactive_renderer = TypeScriptInteractiveRenderer(context)
         
         files = {}
         
@@ -426,6 +435,17 @@ class TypeScriptGenerator(NodeJSGenerator):
             files['bin/cli.ts'] = template.render(**context)
         except TemplateNotFound:
             pass
+        
+        # Generate interactive mode with enhanced TypeScript features
+        try:
+            template = self.env.get_template("interactive_mode.ts.j2")
+            enhanced_context = {**context}
+            if self.interactive_renderer:
+                enhanced_context.update(self.interactive_renderer.get_enhanced_template_context())
+            files['interactive_mode.ts'] = template.render(**enhanced_context)
+        except TemplateNotFound:
+            # Generate basic interactive mode as fallback
+            files['interactive_mode.ts'] = self._generate_fallback_interactive_mode(context)
         
         # Generate cli.ts as alternative entry point
         try:
@@ -825,3 +845,112 @@ echo "TypeScript CLI setup complete!"
         }
         
         return typescript_features.get(feature, False)
+    
+    def _generate_fallback_interactive_mode(self, context: dict) -> str:
+        """Generate fallback interactive mode when enhanced template is missing."""
+        return f'''#!/usr/bin/env node
+/**
+ * Interactive mode for {context['display_name']}
+ * Basic fallback implementation
+ */
+
+import * as readline from 'readline';
+import * as hooks from './src/hooks.js';
+
+interface Command {{
+    description: string;
+    handler: (args: string[]) => Promise<void> | void;
+}}
+
+class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
+    private rl: readline.Interface;
+    private commands: Record<string, Command>;
+    private commandHistory: string[] = [];
+    
+    constructor() {{
+        this.rl = readline.createInterface({{
+            input: process.stdin,
+            output: process.stdout,
+            prompt: '{context['command_name']}> ',
+            completer: this.completer.bind(this)
+        }});
+        
+        this.commands = {{
+            'help': {{
+                description: 'Show available commands',
+                handler: this.handleHelp.bind(this)
+            }},
+            'exit': {{
+                description: 'Exit interactive mode',
+                handler: this.handleExit.bind(this)
+            }},
+            'quit': {{
+                description: 'Exit interactive mode',
+                handler: this.handleExit.bind(this)
+            }}
+        }};
+    }}
+    
+    start(): void {{
+        console.log("Welcome to {context['display_name']} interactive mode. Type 'help' for commands, 'exit' to quit.");
+        
+        this.rl.prompt();
+        
+        this.rl.on('line', async (line: string) => {{
+            const trimmed = line.trim();
+            if (!trimmed) {{
+                this.rl.prompt();
+                return;
+            }}
+            
+            this.commandHistory.push(trimmed);
+            const [cmd, ...args] = trimmed.split(/\\s+/);
+            
+            if (this.commands[cmd]) {{
+                try {{
+                    await this.commands[cmd].handler(args);
+                }} catch (error) {{
+                    console.error('Error:', (error as Error).message);
+                }}
+            }} else {{
+                console.log(`Unknown command: ${{cmd}}`);
+                console.log("Type 'help' for available commands");
+            }}
+            
+            this.rl.prompt();
+        }});
+        
+        this.rl.on('close', () => {{
+            console.log('\\nGoodbye!');
+            process.exit(0);
+        }});
+    }}
+    
+    private completer(line: string): [string[], string] {{
+        const completions = Object.keys(this.commands);
+        const hits = completions.filter((c) => c.startsWith(line));
+        return [hits.length ? hits : completions, line];
+    }}
+    
+    private handleHelp(args: string[]): void {{
+        console.log('\\nAvailable commands:');
+        for (const [cmd, info] of Object.entries(this.commands)) {{
+            console.log(`  ${{cmd.padEnd(15)}} ${{info.description}}`);
+        }}
+        console.log();
+    }}
+    
+    private handleExit(args: string[]): void {{
+        this.rl.close();
+    }}
+}}
+
+export function runInteractive(): void {{
+    const interactive = new {context['display_name'].replace('-', '').replace(' ', '')}Interactive();
+    interactive.start();
+}}
+
+if (require.main === module) {{
+    runInteractive();
+}}
+'''

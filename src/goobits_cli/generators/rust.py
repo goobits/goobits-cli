@@ -246,6 +246,7 @@ class RustGenerator(BaseGenerator):
             "src/prompts.rs",
             "src/styling.rs",
             "src/plugins.rs",
+            "src/interactive_mode.rs",
             "src/tests.rs",
             "Cargo.toml",
             "setup.sh",
@@ -478,7 +479,8 @@ fn main() -> Result<()> {
             ('src/prompts.rs', 'prompts.rs.j2'),
             ('src/styling.rs', 'styling.rs.j2'),
             ('src/plugins.rs', 'plugins.rs.j2'),
-            ('src/tests.rs', 'tests.rs.j2')
+            ('src/tests.rs', 'tests.rs.j2'),
+            ('src/interactive_mode.rs', 'interactive_mode.rs.j2')
         ]
         
         for output_file, template_name in helper_templates:
@@ -515,7 +517,10 @@ fn main() -> Result<()> {
                 },
                 "dependencies": {
                     "clap": {"version": "4.0", "features": ["derive"]},
-                    "anyhow": "1.0"
+                    "anyhow": "1.0",
+                    "rustyline": "14.0",
+                    "dirs": "5.0",
+                    "serde_json": "1.0"
                 },
                 "bin": [
                     {

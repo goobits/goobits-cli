@@ -11,6 +11,21 @@ from typing import Dict, Any, List, Optional
 import jinja2
 from ..schemas import GoobitsConfigSchema
 
+# Import performance optimization components
+try:
+    from .performance.cache import TemplateCache
+    from .performance.lazy_loader import LazyLoader
+    PERFORMANCE_AVAILABLE = True
+except ImportError:
+    PERFORMANCE_AVAILABLE = False
+    # Create placeholder classes for when performance features aren't available
+    class TemplateCache:
+        def __init__(self, *args, **kwargs):
+            pass
+    class LazyLoader:
+        def __init__(self, *args, **kwargs):
+            pass
+
 
 class LanguageRenderer(ABC):
     """
@@ -165,21 +180,70 @@ class UniversalTemplateEngine:
     
     This class orchestrates the entire process of converting a Goobits
     configuration into language-specific CLI implementations using
-    universal component templates.
+    universal component templates with performance optimizations.
     """
     
-    def __init__(self, components_dir: Optional[Path] = None):
+    def __init__(self, components_dir: Optional[Path] = None, 
+                 template_cache: Optional[TemplateCache] = None,
+                 enable_lazy_loading: bool = True):
         """
         Initialize the universal template engine.
         
         Args:
             components_dir: Path to components directory, defaults to built-in components
+            template_cache: Optional template cache for performance optimization
+            enable_lazy_loading: Whether to enable lazy loading of components
         """
         self.component_registry = ComponentRegistry(components_dir)
         self.renderers: Dict[str, LanguageRenderer] = {}
         
-        # Load components on initialization
+        # Performance optimization components
+        if PERFORMANCE_AVAILABLE and template_cache is not None:
+            self.template_cache = template_cache
+            self.performance_enabled = True
+        else:
+            self.template_cache = None
+            self.performance_enabled = False
+        
+        # Lazy loading setup
+        if enable_lazy_loading and PERFORMANCE_AVAILABLE:
+            self.lazy_loader = LazyLoader()
+            self._register_lazy_components()
+        else:
+            self.lazy_loader = None
+            # Load components immediately if no lazy loading
+            self.component_registry.load_components()
+    
+    def _register_lazy_components(self):
+        """Register components for lazy loading"""
+        if not self.lazy_loader:
+            return
+        
+        # Register component loading
+        self.lazy_loader.register(
+            "component_registry",
+            lambda: self._load_component_registry(),
+            dependencies=[]
+        )
+        
+        # Register renderer components
+        for language in ["python", "nodejs", "typescript", "rust"]:
+            self.lazy_loader.register(
+                f"{language}_renderer",
+                lambda lang=language: self._create_renderer(lang),
+                dependencies=["component_registry"]
+            )
+    
+    def _load_component_registry(self):
+        """Load component registry (for lazy loading)"""
         self.component_registry.load_components()
+        return self.component_registry
+    
+    def _create_renderer(self, language: str):
+        """Create a renderer for the specified language (for lazy loading)"""
+        # This would normally import and create the appropriate renderer
+        # For now, return a placeholder
+        return None
     
     def register_renderer(self, renderer: LanguageRenderer) -> None:
         """
@@ -211,8 +275,25 @@ class UniversalTemplateEngine:
         
         renderer = self.renderers[language]
         
-        # Build intermediate representation
-        ir = self._build_intermediate_representation(config)
+        # Use lazy loading if available
+        if self.lazy_loader:
+            # Ensure component registry is loaded
+            self.lazy_loader.get_component("component_registry")
+        
+        # Build intermediate representation (with caching if available)
+        ir_cache_key = f"ir_{hash(str(config.model_dump()))}"
+        
+        if self.performance_enabled and self.template_cache:
+            # Try to get cached IR
+            cached_ir = self.template_cache._cache.get(ir_cache_key)
+            if cached_ir:
+                ir = cached_ir
+            else:
+                ir = self._build_intermediate_representation(config)
+                # Cache the IR for future use
+                self.template_cache._cache.put(ir_cache_key, ir, ttl=300)  # 5 min cache
+        else:
+            ir = self._build_intermediate_representation(config)
         
         # Get language-specific context
         context = renderer.get_template_context(ir)
@@ -220,10 +301,23 @@ class UniversalTemplateEngine:
         # Get output structure
         output_structure = renderer.get_output_structure(ir)
         
-        # Render all components
+        # Render all components with performance optimization
         generated_files = {}
         for component_name, output_path in output_structure.items():
             if self.component_registry.has_component(component_name):
+                # Use cached template if available
+                if self.performance_enabled and self.template_cache:
+                    template_path = self.component_registry.components_dir / f"{component_name}.j2"
+                    if template_path.exists():
+                        rendered_content = self.template_cache.render_template(
+                            template_path, context
+                        )
+                        if rendered_content is not None:
+                            full_output_path = output_dir / output_path
+                            generated_files[str(full_output_path)] = rendered_content
+                            continue
+                
+                # Fallback to regular rendering
                 template_content = self.component_registry.get_component(component_name)
                 rendered_content = renderer.render_component(
                     component_name, template_content, context
