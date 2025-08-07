@@ -20,11 +20,11 @@ A comprehensive guide for Rust developers using Goobits to generate production-r
 ### Installation
 
 ```bash
-# Install goobits globally
-npm install -g goobits-cli
+# Install goobits globally using pipx (recommended)
+pipx install goobits-cli
 
-# Or use npx
-npx goobits-cli init my-rust-cli
+# Or install in virtual environment
+pip install goobits-cli
 ```
 
 ### Your First Rust CLI
@@ -32,55 +32,88 @@ npx goobits-cli init my-rust-cli
 Create a `goobits.yaml` file:
 
 ```yaml
-app_name: task-manager
+package_name: task-manager
+command_name: taskman
+display_name: "Task Manager CLI"
+description: "A powerful task management CLI built with Rust"
 language: rust
-rust_binary_name: taskman
-commands:
-  - name: add
-    description: Add a new task
-    arguments:
-      - name: title
-        type: string
-        required: true
-        description: Task title
-    options:
-      - name: priority
-        type: choice
-        choices: [low, medium, high]
-        default: medium
-        description: Task priority
-      - name: due
-        type: string
-        description: Due date (YYYY-MM-DD)
-  - name: list
-    description: List all tasks
-    options:
-      - name: status
-        type: choice
-        choices: [pending, completed, all]
-        default: pending
-      - name: sort
-        type: choice
-        choices: [date, priority, title]
-        default: date
+version: "1.0.0"
+
+# Rust dependencies
+installation:
+  extras:
+    rust: ["serde", "chrono", "anyhow", "tokio"]
+
+# CLI structure  
+cli:
+  name: taskman
+  tagline: "Manage your tasks efficiently"
+  commands:
+    add:
+      desc: "Add a new task"
+      args:
+        - name: title
+          desc: "Task title"
+          required: true
+      options:
+        - name: priority
+          short: p
+          desc: "Task priority"
+          choices: ["low", "medium", "high"]
+          default: "medium"
+        - name: due
+          short: d
+          desc: "Due date (YYYY-MM-DD)"
+    list:
+      desc: "List all tasks"
+      options:
+        - name: status
+          short: s
+          desc: "Filter by status"
+          choices: ["pending", "completed", "all"]
+          default: "pending"
+        - name: sort
+          desc: "Sort order"
+          choices: ["date", "priority", "title"]
+          default: "date"
 ```
 
 Generate your CLI:
 
 ```bash
-goobits generate
+# Generate using stable templates
+goobits build
+
+# Generate using Universal Template System (experimental)
+goobits build --universal-templates
 
 # This creates:
-# ├── Cargo.toml
+# ├── Cargo.toml       # Rust package configuration
 # ├── src/
-# │   ├── main.rs      # CLI entry point with clap
+# │   ├── main.rs      # CLI entry point with Clap
 # │   ├── lib.rs       # Library module
 # │   ├── config.rs    # Configuration management
-# │   ├── commands.rs  # Command registry
+# │   ├── commands.rs  # Command implementations
+# │   ├── errors.rs    # Error handling
+# │   ├── hooks.rs     # Your business logic hooks
 # │   └── utils.rs     # Utility functions
-# ├── .gitignore
-# ├── LICENSE
-# └── README.md
+# ├── setup.sh         # Installation script
+# ├── README.md        # Auto-generated documentation
+# └── .gitignore       # Rust-specific ignores
+```
+
+Test your CLI:
+
+```bash
+# Install dependencies and build
+./setup.sh --dev
+
+# Test your CLI
+taskman add "Learn Rust" --priority high --due 2024-12-31
+taskman list --status pending
+
+# Launch interactive mode (if built with --universal-templates)
+taskman --interactive
 ```
 
 ### Implement Your Business Logic

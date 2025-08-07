@@ -69,7 +69,11 @@ cli:
 
 3. **Generate your CLI:**
 ```bash
+# Generate using legacy templates (stable)
 goobits build
+
+# Generate using Universal Template System (experimental)
+goobits build --universal-templates
 ```
 
 This creates:
@@ -124,7 +128,10 @@ export async function onGreet(args) {
 ./setup.sh --dev
 
 # Test your CLI
-awesome greet World --style excited
+awesome greet "World" --style excited
+
+# Launch interactive mode (if generated with --universal-templates)
+awesome --interactive
 ```
 
 ## Understanding the Architecture
