@@ -34,7 +34,8 @@ path = "src/main.rs"
     "tabled": "0.15",
     "libloading": "0.8",
     "once_cell": "1.19",
-    "dialoguer": "0.11"
+    "dialoguer": {"version": "0.11", "features": ["fuzzy-select", "completion"]},
+    "rustyline": "13.0"
 } %}
 {% set final_deps = default_deps.copy() %}
 {% if rust_crates %}

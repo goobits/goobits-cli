@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Option {
+pub struct CliOption {
     pub name: String,
     pub short: Option<String>,
     #[serde(rename = "type")]
@@ -31,14 +31,14 @@ pub struct Argument {
 pub struct Command {
     pub desc: Option<String>,
     pub args: Option<Vec<Argument>>,
-    pub options: Option<Vec<Option>>,
+    pub options: Option<Vec<CliOption>>,
     pub subcommands: Option<HashMap<String, Command>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CliConfig {
     pub commands: Option<HashMap<String, Command>>,
-    pub options: Option<Vec<Option>>,
+    pub options: Option<Vec<CliOption>>,
     pub enable_upgrade_command: Option<bool>,
 }
 
@@ -496,7 +496,7 @@ impl CompletionEngine {
         Vec::new()
     }
 
-    fn find_option_config(&self, option_name: &str, context: &Context) -> Option<Option> {
+    fn find_option_config(&self, option_name: &str, context: &Context) -> Option<CliOption> {
         // Check global options
         if let Some(cli) = &self.config.cli {
             if let Some(global_options) = &cli.options {

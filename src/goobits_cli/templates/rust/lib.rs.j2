@@ -10,10 +10,15 @@ use std::path::PathBuf;
 
 pub mod config;
 pub mod commands;
+pub mod errors;
 pub mod utils;
 pub mod hooks;
 pub mod plugins;
 pub mod styling;
+pub mod progress;
+pub mod prompts;
+pub mod completion_engine;
+pub mod interactive_mode;
 
 // Re-export commonly used types
 pub use config::AppConfig;
@@ -107,29 +112,6 @@ impl Config {
     pub fn set_feature(&mut self, feature: String, enabled: bool) {
         self.features.insert(feature, enabled);
     }
-}
-
-/// Plugin trait for extending CLI functionality
-pub trait Plugin {
-    /// Get the plugin name
-    fn name(&self) -> &str;
-    
-    /// Get the plugin version
-    fn version(&self) -> &str;
-    
-    /// Initialize the plugin
-    fn init(&mut self, config: &Config) -> Result<()>;
-    
-    /// Register commands with the CLI
-    fn register_commands(&self) -> Vec<PluginCommand>;
-}
-
-/// Command provided by a plugin
-#[derive(Debug, Clone)]
-pub struct PluginCommand {
-    pub name: String,
-    pub description: String,
-    pub handler: fn(&[String]) -> Result<()>,
 }
 
 /// Hook system for command execution

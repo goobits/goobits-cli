@@ -150,7 +150,7 @@ class TestRustGeneratorE2E:
         # Check basic structure
         assert '[package]' in cargo_content
         assert 'name = "basic-rust-cli"' in cargo_content
-        assert 'version = "0.1.0"' in cargo_content
+        assert 'version = "1.0.0"' in cargo_content
         assert '[dependencies]' in cargo_content
         assert 'clap' in cargo_content
         assert '[[bin]]' in cargo_content

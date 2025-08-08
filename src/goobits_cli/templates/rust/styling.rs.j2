@@ -4,7 +4,7 @@
  */
 
 use anyhow::Result;
-use console::{Color, Style, Term, Emoji};
+use console::{Color, Style, Term};
 use indicatif::{ProgressBar, ProgressStyle};
 use tabled::{Table, Tabled, settings::{Alignment, Style as TableStyle}};
 use std::io::{self, Write};
@@ -13,21 +13,19 @@ use std::collections::HashMap;
 
 /// Emoji definitions for consistent styling
 pub mod emoji {
-    use console::Emoji;
-    
-    pub static SUCCESS: Emoji<'_, '_> = Emoji("✅ ", "");
-    pub static ERROR: Emoji<'_, '_> = Emoji("❌ ", "");
-    pub static WARNING: Emoji<'_, '_> = Emoji("⚠️  ", "");
-    pub static INFO: Emoji<'_, '_> = Emoji("🔹 ", "");
-    pub static PROGRESS: Emoji<'_, '_> = Emoji("🔄 ", "");
-    pub static ROCKET: Emoji<'_, '_> = Emoji("🚀 ", "");
-    pub static WRENCH: Emoji<'_, '_> = Emoji("🔧 ", "");
-    pub static LIGHTBULB: Emoji<'_, '_> = Emoji("💡 ", "");
-    pub static QUESTION: Emoji<'_, '_> = Emoji("❓ ", "");
-    pub static CHECK: Emoji<'_, '_> = Emoji("✓ ", "");
-    pub static CROSS: Emoji<'_, '_> = Emoji("✗ ", "");
-    pub static ARROW: Emoji<'_, '_> = Emoji("→ ", "");
-    pub static SPARKLES: Emoji<'_, '_> = Emoji("✨ ", "");
+    pub const SUCCESS: &str = "✅ ";
+    pub const ERROR: &str = "❌ ";
+    pub const WARNING: &str = "⚠️  ";
+    pub const INFO: &str = "🔹 ";
+    pub const PROGRESS: &str = "🔄 ";
+    pub const ROCKET: &str = "🚀 ";
+    pub const WRENCH: &str = "🔧 ";
+    pub const LIGHTBULB: &str = "💡 ";
+    pub const QUESTION: &str = "❓ ";
+    pub const CHECK: &str = "✓ ";
+    pub const CROSS: &str = "✗ ";
+    pub const ARROW: &str = "→ ";
+    pub const SPARKLES: &str = "✨ ";
 }
 
 /// Color theme for the CLI

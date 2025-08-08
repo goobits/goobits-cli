@@ -3,7 +3,6 @@
  * Auto-generated from {{ file_name }}
  */
 
-use anyhow::{Context, Result};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -11,6 +10,7 @@ use libloading::{Library, Symbol};
 use serde::{Deserialize, Serialize};
 use crate::config::AppConfig;
 use crate::commands::{Command, CommandArgs};
+use crate::errors::{CliResult, CLIError};
 
 /// Plugin trait that all plugins must implement
 pub trait Plugin: Send + Sync {
@@ -27,7 +27,7 @@ pub trait Plugin: Send + Sync {
     fn author(&self) -> &str;
     
     /// Initialize the plugin with configuration
-    fn init(&mut self, config: &AppConfig) -> Result<()>;
+    fn init(&mut self, config: &AppConfig) -> CliResult<()>;
     
     /// Register commands that this plugin provides
     fn register_commands(&self) -> Vec<Box<dyn Command>>;
@@ -38,12 +38,12 @@ pub trait Plugin: Send + Sync {
     }
     
     /// Handle plugin-specific configuration updates
-    fn configure(&mut self, _config: &serde_json::Value) -> Result<()> {
+    fn configure(&mut self, _config: &serde_json::Value) -> CliResult<()> {
         Ok(())
     }
     
     /// Cleanup when plugin is unloaded
-    fn cleanup(&mut self) -> Result<()> {
+    fn cleanup(&mut self) -> CliResult<()> {
         Ok(())
     }
 }
@@ -71,12 +71,13 @@ pub struct DynamicPlugin {
 
 impl DynamicPlugin {
     /// Load a plugin from a dynamic library
-    pub fn load(library_path: &Path, metadata: PluginMetadata) -> Result<Self> {
+    pub fn load(library_path: &Path, metadata: PluginMetadata) -> CliResult<Self> {
         unsafe {
-            let library = Library::new(library_path)?;
+            let library = Library::new(library_path)
+                .map_err(|e| CLIError::plugin(&metadata.name, format!("Failed to load library: {}", e)))?;
             let create_plugin: Symbol<fn() -> Box<dyn Plugin>> = library
                 .get(metadata.entry_point.as_bytes())
-                .with_context(|| format!("Failed to find entry point '{}' in plugin", metadata.entry_point))?;
+                .map_err(|e| CLIError::plugin(&metadata.name, format!("Failed to find entry point '{}': {}", metadata.entry_point, e)))?;
             
             let plugin = create_plugin();
             
@@ -154,7 +155,7 @@ impl Plugin for CorePlugin {
         "{{ author | default('goobits-cli') }}"
     }
     
-    fn init(&mut self, _config: &AppConfig) -> Result<()> {
+    fn init(&mut self, _config: &AppConfig) -> CliResult<()> {
         Ok(())
     }
     
@@ -197,7 +198,7 @@ impl Plugin for ConfigPlugin {
         "{{ author | default('goobits-cli') }}"
     }
     
-    fn init(&mut self, _config: &AppConfig) -> Result<()> {
+    fn init(&mut self, _config: &AppConfig) -> CliResult<()> {
         Ok(())
     }
     
@@ -244,7 +245,7 @@ impl Plugin for {{ plugin_name | title }}Plugin {
         "{{ plugin_config.author | default(author | default('goobits-cli')) }}"
     }
     
-    fn init(&mut self, _config: &AppConfig) -> Result<()> {
+    fn init(&mut self, _config: &AppConfig) -> CliResult<()> {
         // TODO: Initialize {{ plugin_name }} plugin
         Ok(())
     }
@@ -278,7 +279,7 @@ impl Command for ConfigGetCommand {
         "Get a configuration value"
     }
     
-    fn execute(&self, args: &CommandArgs) -> Result<()> {
+    fn execute(&self, args: &CommandArgs) -> CliResult<()> {
         if let Some(key) = args.get_arg(0) {
             let config = &args.config;
             if let Some(value) = config.get_custom(key) {
@@ -287,14 +288,14 @@ impl Command for ConfigGetCommand {
                 println!("Configuration key '{}' not found", key);
             }
         } else {
-            anyhow::bail!("Configuration key is required");
+            return Err(CLIError::plugin("built-in", "Configuration key is required"));
         }
         Ok(())
     }
     
-    fn validate(&self, args: &CommandArgs) -> Result<()> {
+    fn validate(&self, args: &CommandArgs) -> CliResult<()> {
         if args.get_arg(0).is_none() {
-            anyhow::bail!("Configuration key is required");
+            return Err(CLIError::plugin("built-in", "Configuration key is required"));
         }
         Ok(())
     }
@@ -315,11 +316,11 @@ impl Command for ConfigSetCommand {
         "Set a configuration value"
     }
     
-    fn execute(&self, args: &CommandArgs) -> Result<()> {
+    fn execute(&self, args: &CommandArgs) -> CliResult<()> {
         let key = args.get_arg(0)
-            .ok_or_else(|| anyhow::anyhow!("Configuration key is required"))?;
+            .ok_or_else(|| CLIError::plugin("built-in", "Configuration key is required"))?;
         let value = args.get_arg(1)
-            .ok_or_else(|| anyhow::anyhow!("Configuration value is required"))?;
+            .ok_or_else(|| CLIError::plugin("built-in", "Configuration value is required"))?;
         
         let mut config = args.config.clone();
         config.set_custom(key.clone(), value.clone());
@@ -329,12 +330,12 @@ impl Command for ConfigSetCommand {
         Ok(())
     }
     
-    fn validate(&self, args: &CommandArgs) -> Result<()> {
+    fn validate(&self, args: &CommandArgs) -> CliResult<()> {
         if args.get_arg(0).is_none() {
-            anyhow::bail!("Configuration key is required");
+            return Err(CLIError::plugin("built-in", "Configuration key is required"));
         }
         if args.get_arg(1).is_none() {
-            anyhow::bail!("Configuration value is required");
+            return Err(CLIError::plugin("built-in", "Configuration value is required"));
         }
         Ok(())
     }
@@ -355,7 +356,7 @@ impl Command for ConfigListCommand {
         "List all configuration values"
     }
     
-    fn execute(&self, args: &CommandArgs) -> Result<()> {
+    fn execute(&self, args: &CommandArgs) -> CliResult<()> {
         let config = &args.config;
         
         println!("Configuration:");
@@ -390,7 +391,7 @@ impl PluginRegistry {
     }
     
     /// Initialize the registry with built-in plugins
-    pub fn init(&mut self, config: &AppConfig) -> Result<()> {
+    pub fn init(&mut self, config: &AppConfig) -> CliResult<()> {
         // Load built-in plugins
         let mut builtin_plugins = BuiltinPlugins::all();
         for plugin in &mut builtin_plugins {
@@ -411,8 +412,8 @@ impl PluginRegistry {
     }
     
     /// Load dynamic plugins from the plugins directory
-    fn load_dynamic_plugins(&mut self, config: &AppConfig) -> Result<()> {
-        let plugins_dir = config.config_dir()?.join("plugins");
+    fn load_dynamic_plugins(&mut self, config: &AppConfig) -> CliResult<()> {
+        let plugins_dir = AppConfig::config_dir()?.join("plugins");
         if !plugins_dir.exists() {
             return Ok(());
         }
@@ -436,7 +437,7 @@ impl PluginRegistry {
     }
     
     /// Load a plugin from its manifest file
-    fn load_plugin_from_manifest(&mut self, manifest_path: &Path, config: &AppConfig) -> Result<()> {
+    fn load_plugin_from_manifest(&mut self, manifest_path: &Path, config: &AppConfig) -> CliResult<()> {
         let content = std::fs::read_to_string(manifest_path)?;
         let metadata: PluginMetadata = serde_json::from_str(&content)?;
         
@@ -451,7 +452,7 @@ impl PluginRegistry {
         let library_path = plugin_dir.join(&metadata.entry_point);
         
         if !library_path.exists() {
-            anyhow::bail!("Plugin library not found: {}", library_path.display());
+            return Err(CLIError::plugin("dynamic", format!("Plugin library not found: {}", library_path.display())));
         }
         
         // Load the dynamic plugin
@@ -490,12 +491,12 @@ impl PluginRegistry {
     }
     
     /// Execute a plugin command
-    pub fn execute_command(&self, name: &str, args: &CommandArgs) -> Result<()> {
+    pub fn execute_command(&self, name: &str, args: &CommandArgs) -> CliResult<()> {
         if let Some(command) = self.get_command(name) {
             command.validate(args)?;
             command.execute(args)
         } else {
-            anyhow::bail!("Unknown plugin command: {}", name)
+            return Err(CLIError::plugin("registry", format!("Unknown plugin command: {}", name)))
         }
     }
     
@@ -541,7 +542,7 @@ impl PluginRegistry {
     }
     
     /// Unload all plugins and cleanup
-    pub fn cleanup(&mut self) -> Result<()> {
+    pub fn cleanup(&mut self) -> CliResult<()> {
         for plugin in &mut self.builtin_plugins {
             plugin.cleanup()?;
         }
@@ -569,7 +570,7 @@ pub struct PluginInfo {
 static PLUGIN_REGISTRY: Mutex<Option<PluginRegistry>> = Mutex::new(None);
 
 /// Initialize the global plugin registry
-pub fn initialize_plugins(config: &AppConfig) -> Result<()> {
+pub fn initialize_plugins(config: &AppConfig) -> CliResult<()> {
     let mut registry = PluginRegistry::new();
     registry.init(config)?;
     
@@ -580,12 +581,12 @@ pub fn initialize_plugins(config: &AppConfig) -> Result<()> {
 }
 
 /// Execute a plugin command using the global registry
-pub fn execute_plugin_command(command: &str, args: &CommandArgs) -> Result<()> {
+pub fn execute_plugin_command(command: &str, args: &CommandArgs) -> CliResult<()> {
     let global_registry = PLUGIN_REGISTRY.lock().unwrap();
     if let Some(ref registry) = *global_registry {
         registry.execute_command(command, args)
     } else {
-        anyhow::bail!("Plugin registry not initialized")
+        return Err(CLIError::plugin("registry", "Plugin registry not initialized"))
     }
 }
 
@@ -620,7 +621,7 @@ pub fn list_plugin_commands() -> Vec<(String, String)> {
 }
 
 /// Cleanup plugins
-pub fn cleanup_plugins() -> Result<()> {
+pub fn cleanup_plugins() -> CliResult<()> {
     let mut global_registry = PLUGIN_REGISTRY.lock().unwrap();
     if let Some(ref mut registry) = *global_registry {
         registry.cleanup()?;

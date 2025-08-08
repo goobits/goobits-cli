@@ -1,0 +1,41 @@
+package_name: test-rust-cli
+command_name: test-rust-cli
+display_name: "Test Rust CLI"
+description: "A test Rust CLI"
+language: rust
+
+python:
+  version: ">=3.8"
+
+dependencies:
+  python:
+    - click
+    - rich
+
+installation:
+  pypi_name: test-rust-cli
+  development_path: "."
+
+shell_integration:
+  completion: true
+  alias: "trc"
+
+validation:
+  command_names: strict
+  option_names: strict
+  argument_types: true
+
+messages:
+  use_unicode: true
+
+cli:
+  name: test-rust-cli
+  tagline: "Test Rust CLI"
+  commands:
+    hello:
+      desc: "Hello command"
+      options:
+        - name: "--name"
+          type: str
+          desc: "Name to greet"
+          default: "World"

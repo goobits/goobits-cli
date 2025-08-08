@@ -42,10 +42,16 @@ class RustGenerator(BaseGenerator):
         
         # Try rust subdirectory first, fallback to main templates
         if template_dir.exists():
-            self.env = Environment(loader=FileSystemLoader([template_dir, fallback_dir]))
+            self.env = Environment(
+                loader=FileSystemLoader([template_dir, fallback_dir]),
+                extensions=['jinja2.ext.do']
+            )
         else:
             # If rust subdirectory doesn't exist, use main templates dir
-            self.env = Environment(loader=FileSystemLoader(fallback_dir))
+            self.env = Environment(
+                loader=FileSystemLoader(fallback_dir),
+                extensions=['jinja2.ext.do']
+            )
             self.template_missing = True
         
         # Initialize shared documentation generator (will be set when generate is called)
@@ -212,7 +218,7 @@ class RustGenerator(BaseGenerator):
             'command_name': metadata['command_name'],
             'display_name': metadata['display_name'],
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
-            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '0.1.0'),
+            'version': version or (cli_config.app.version if cli_config and hasattr(cli_config, 'app') and hasattr(cli_config.app, 'version') else '1.0.0'),
             'installation': metadata['installation'],
             'hooks_path': metadata['hooks_path'],
             'rust_crates': getattr(config, 'rust_crates', {}) if hasattr(config, 'rust_crates') else {},
@@ -416,7 +422,7 @@ fn main() -> Result<()> {
             'command_name': metadata['command_name'],
             'display_name': metadata['display_name'],
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
-            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '0.1.0'),
+            'version': version or (cli_config.app.version if cli_config and hasattr(cli_config, 'app') and hasattr(cli_config.app, 'version') else '1.0.0'),
             'installation': metadata['installation'],
             'hooks_path': metadata['hooks_path'],
             'rust_crates': getattr(config, 'rust_crates', {}) if hasattr(config, 'rust_crates') else {},
