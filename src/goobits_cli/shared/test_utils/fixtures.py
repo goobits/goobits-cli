@@ -202,7 +202,7 @@ class TestFixtures:
                     'name': f'Minimal{language.title()}CLI',
                     'tagline': f'A minimal {language} CLI',
                     'version': '0.1.0',
-                    'commands': {'greet': self.common_commands['greet'].dict()}
+                    'commands': {'greet': self.common_commands['greet'].model_dump()}
                 }
             }
             
@@ -226,11 +226,11 @@ class TestFixtures:
                     'name': f'Basic{language.title()}CLI',
                     'tagline': f'A basic {language} CLI for testing',
                     'version': '1.0.0',
-                    'options': [self.common_options['verbose'].dict()],
+                    'options': [self.common_options['verbose'].model_dump()],
                     'commands': {
-                        'greet': self.common_commands['greet'].dict(),
-                        'build': self.common_commands['build'].dict(),
-                        'info': self.common_commands['info'].dict()
+                        'greet': self.common_commands['greet'].model_dump(),
+                        'build': self.common_commands['build'].model_dump(),
+                        'info': self.common_commands['info'].model_dump()
                     }
                 }
             }
@@ -256,16 +256,16 @@ class TestFixtures:
                     'tagline': f'A comprehensive {language} CLI for testing',
                     'version': '2.0.0',
                     'options': [
-                        self.common_options['verbose'].dict(),
-                        self.common_options['debug'].dict()
+                        self.common_options['verbose'].model_dump(),
+                        self.common_options['debug'].model_dump()
                     ],
                     'commands': {
-                        'greet': self.common_commands['greet'].dict(),
-                        'build': self.common_commands['build'].dict(),
-                        'test': self.common_commands['test'].dict(),
-                        'info': self.common_commands['info'].dict(),
-                        'deploy': self.common_commands['deploy'].dict(),
-                        'server': self.common_commands['server'].dict()
+                        'greet': self.common_commands['greet'].model_dump(),
+                        'build': self.common_commands['build'].model_dump(),
+                        'test': self.common_commands['test'].model_dump(),
+                        'info': self.common_commands['info'].model_dump(),
+                        'deploy': self.common_commands['deploy'].model_dump(),
+                        'server': self.common_commands['server'].model_dump()
                     }
                 }
             }
@@ -391,7 +391,7 @@ def create_test_config(
     
     if custom_commands:
         config_data['cli']['commands'].update({
-            name: cmd.dict() for name, cmd in custom_commands.items()
+            name: cmd.model_dump() for name, cmd in custom_commands.items()
         })
     
     # Convert to proper schema objects

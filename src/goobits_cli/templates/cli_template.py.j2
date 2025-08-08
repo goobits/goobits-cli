@@ -182,7 +182,7 @@ click.rich_click.SHOW_METAVARS_COLUMN = {{ cli.config.show_metavars_column if cl
 click.rich_click.APPEND_METAVARS_HELP = {{ cli.config.append_metavars_help if cli.config else True }}
 click.rich_click.STYLE_ERRORS_SUGGESTION = "#ff5555"
 click.rich_click.ERRORS_SUGGESTION = "Try running the '--help' flag for more information."
-click.rich_click.ERRORS_EPILOGUE = "To find out more, visit https://github.com/anthropics/claude-code"
+click.rich_click.ERRORS_EPILOGUE = "To find out more, visit {{ project_url | default('https://github.com/your-org/your-project') }}"
 click.rich_click.MAX_WIDTH = 120  # Set reasonable width
 click.rich_click.WIDTH = 120  # Set consistent width
 click.rich_click.COLOR_SYSTEM = "auto"
@@ -326,7 +326,7 @@ def load_plugins(cli_group):
     # Define plugin directories to search
     plugin_dirs = [
         # User-specific plugin directory
-        Path.home() / ".config" / "goobits" / "{{ cli.name }}" / "plugins",
+        Path.home() / ".config" / "{{ package_name }}" / "{{ cli.name }}" / "plugins",
         # Local plugin directory (same as script)
         Path(__file__).parent / "plugins",
     ]

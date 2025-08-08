@@ -293,8 +293,7 @@ class PythonGenerator(BaseGenerator):
             "progress_helper.py.j2", 
             "prompts_helper.py.j2",
             "completion_engine.py.j2",
-            # Temporarily disable completion helper due to Jinja2 parsing issues
-            # "completion_helper.py.j2"
+            "completion_helper.py.j2"
         ]
         
         for template_name in helper_templates:
@@ -351,8 +350,7 @@ class PythonGenerator(BaseGenerator):
             "progress_helper.py",
             "prompts_helper.py",
             "completion_engine.py",
-            # Temporarily disable completion helper
-            # "completion_helper.py"
+            "completion_helper.py"
         ]
     
     def get_default_output_path(self, package_name: str) -> str:
