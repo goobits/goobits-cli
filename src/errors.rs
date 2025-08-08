@@ -1,6 +1,6 @@
 /**
- * Error handling for {{ display_name }}
- * Auto-generated from {{ file_name }}
+ * Error handling for Test Rust CLI
+ * Auto-generated from test-rust-verification.yaml
  */
 
 use anyhow::{Context, Result};
@@ -189,42 +189,6 @@ pub enum CLIError {
         source: std::io::Error,
     },
 
-    #[error("Invalid format: {message}")]
-    InvalidFormat {
-        message: String,
-        format_type: Option<String>,
-        expected: Option<String>,
-    },
-
-    #[error("Validation failed: {message}")]
-    ValidationFailed {
-        message: String,
-        field: Option<String>,
-        value: Option<String>,
-    },
-
-    #[error("Write failed: {message}")]
-    WriteFailed {
-        message: String,
-        path: Option<std::path::PathBuf>,
-        #[source]
-        source: Option<std::io::Error>,
-    },
-
-    #[error("Directory creation failed: {message}")]
-    DirectoryCreationFailed {
-        message: String,
-        path: Option<std::path::PathBuf>,
-        #[source]
-        source: Option<std::io::Error>,
-    },
-
-    #[error("Exit with code {code}")]
-    Exit {
-        code: i32,
-        message: Option<String>,
-    },
-
     #[error("General error: {message}")]
     General {
         message: String,
@@ -258,22 +222,6 @@ impl CLIError {
             CLIError::Cancelled { .. } => ExitCode::Cancelled,
             CLIError::CommandNotFound { .. } => ExitCode::Misuse,
             CLIError::Io { .. } => ExitCode::GeneralError,
-            CLIError::InvalidFormat { .. } => ExitCode::Misuse,
-            CLIError::ValidationFailed { .. } => ExitCode::Misuse,
-            CLIError::WriteFailed { .. } => ExitCode::GeneralError,
-            CLIError::DirectoryCreationFailed { .. } => ExitCode::GeneralError,
-            CLIError::Exit { code, .. } => match *code {
-                0 => ExitCode::Success,
-                1 => ExitCode::GeneralError,
-                2 => ExitCode::Misuse,
-                3 => ExitCode::ConfigError,
-                4 => ExitCode::HookError,
-                5 => ExitCode::PluginError,
-                6 => ExitCode::DependencyError,
-                7 => ExitCode::NetworkError,
-                130 => ExitCode::Cancelled,
-                _ => ExitCode::GeneralError,
-            },
             CLIError::General { .. } => ExitCode::GeneralError,
         }
     }
@@ -290,11 +238,6 @@ impl CLIError {
             CLIError::Cancelled { .. } => ErrorSeverity::Low,
             CLIError::CommandNotFound { .. } => ErrorSeverity::Low,
             CLIError::Io { .. } => ErrorSeverity::Medium,
-            CLIError::InvalidFormat { .. } => ErrorSeverity::Low,
-            CLIError::ValidationFailed { .. } => ErrorSeverity::Low,
-            CLIError::WriteFailed { .. } => ErrorSeverity::Medium,
-            CLIError::DirectoryCreationFailed { .. } => ErrorSeverity::Medium,
-            CLIError::Exit { .. } => ErrorSeverity::Low,
             CLIError::General { .. } => ErrorSeverity::Medium,
         }
     }
@@ -322,10 +265,19 @@ impl CLIError {
                 "Refer to the help documentation",
                 "Use --help for command usage",
             ],
-            CLIError::Dependency { .. } => vec![
-                "Install the missing dependency",
-                "Check the installation documentation",
-            ]
+            CLIError::Dependency { dependency, install_command, .. } => {
+                if let Some(cmd) = install_command {
+                    vec![
+                        "Install the missing dependency",
+                        &format!("Run: {}", cmd),
+                    ]
+                } else {
+                    vec![
+                        &format!("Install the {} dependency", dependency),
+                        "Check the installation documentation",
+                    ]
+                }
+            }
             CLIError::Network { .. } => vec![
                 "Check your internet connection",
                 "Verify the URL is correct",
@@ -344,26 +296,6 @@ impl CLIError {
                 "Verify the path exists",
                 "Ensure sufficient disk space",
             ],
-            CLIError::InvalidFormat { .. } => vec![
-                "Check the input format",
-                "Refer to the documentation for examples",
-            ]
-            CLIError::ValidationFailed { .. } => vec![
-                "Check the input values",
-                "Ensure all required fields are provided",
-                "Verify the value constraints",
-            ],
-            CLIError::WriteFailed { .. } => vec![
-                "Check file permissions",
-                "Ensure the directory exists",
-                "Verify sufficient disk space",
-            ],
-            CLIError::DirectoryCreationFailed { .. } => vec![
-                "Check directory permissions",
-                "Ensure the parent directory exists",
-                "Verify sufficient disk space",
-            ],
-            CLIError::Exit { .. } => vec!["Process exited with an error code"],
             CLIError::General { .. } => vec![
                 "Run with --debug for more details",
                 "Check the logs for more information",
@@ -464,58 +396,6 @@ impl CLIError {
             message: message.into(),
             path: None,
             source,
-        }
-    }
-
-    /// Create an invalid format error
-    pub fn invalid_format<S: Into<String>>(message: S) -> Self {
-        CLIError::InvalidFormat {
-            message: message.into(),
-            format_type: None,
-            expected: None,
-        }
-    }
-
-    /// Create a validation failed error
-    pub fn validation_failed<S: Into<String>>(message: S) -> Self {
-        CLIError::ValidationFailed {
-            message: message.into(),
-            field: None,
-            value: None,
-        }
-    }
-
-    /// Create a write failed error
-    pub fn write_failed<S: Into<String>>(message: S) -> Self {
-        CLIError::WriteFailed {
-            message: message.into(),
-            path: None,
-            source: None,
-        }
-    }
-
-    /// Create a directory creation failed error
-    pub fn directory_creation_failed<S: Into<String>>(message: S) -> Self {
-        CLIError::DirectoryCreationFailed {
-            message: message.into(),
-            path: None,
-            source: None,
-        }
-    }
-
-    /// Create an exit error
-    pub fn exit(code: i32) -> Self {
-        CLIError::Exit {
-            code,
-            message: None,
-        }
-    }
-
-    /// Create an exit error with message
-    pub fn exit_with_message<S: Into<String>>(code: i32, message: S) -> Self {
-        CLIError::Exit {
-            code,
-            message: Some(message.into()),
         }
     }
 }
@@ -680,26 +560,6 @@ pub fn cancelled_error<S: Into<String>>(message: S) -> CLIError {
 
 pub fn general_error<S: Into<String>>(message: S) -> CLIError {
     CLIError::general(message)
-}
-
-pub fn invalid_format_error<S: Into<String>>(message: S) -> CLIError {
-    CLIError::invalid_format(message)
-}
-
-pub fn validation_failed_error<S: Into<String>>(message: S) -> CLIError {
-    CLIError::validation_failed(message)
-}
-
-pub fn write_failed_error<S: Into<String>>(message: S) -> CLIError {
-    CLIError::write_failed(message)
-}
-
-pub fn directory_creation_failed_error<S: Into<String>>(message: S) -> CLIError {
-    CLIError::directory_creation_failed(message)
-}
-
-pub fn exit_error(code: i32) -> CLIError {
-    CLIError::exit(code)
 }
 
 /// Suggest similar commands using Levenshtein distance

@@ -1,5 +1,7 @@
-//! Auto-generated from test-rust-cli.yaml
-//! Library module for Test Rust CLI
+/**
+ * Auto-generated from test-rust-verification.yaml
+ * Library module for Test Rust CLI
+ */
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -8,14 +10,25 @@ use std::path::PathBuf;
 
 pub mod config;
 pub mod commands;
+pub mod errors;
 pub mod utils;
+pub mod hooks;
+pub mod plugins;
+pub mod styling;
+pub mod progress;
+pub mod prompts;
+pub mod completion_engine;
+pub mod interactive_mode;
 
 // Re-export commonly used types
 pub use config::AppConfig;
 pub use commands::{Command, CommandArgs, CommandRegistry};
+pub use hooks::{HookContext, ExecutionPhase};
+pub use plugins::{Plugin, PluginInfo};
+pub use styling::{StyledOutput, ColorTheme};
 
 /// Library version
-pub const VERSION: &str = "1.3.0";
+pub const VERSION: &str = "2.0.0-beta.1";
 
 /// Configuration structure for the CLI application
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,29 +114,36 @@ impl Config {
     }
 }
 
-/// Plugin trait for extending CLI functionality
-pub trait Plugin {
-    /// Get the plugin name
-    fn name(&self) -> &str;
-    
-    /// Get the plugin version
-    fn version(&self) -> &str;
-    
-    /// Initialize the plugin
-    fn init(&mut self, config: &Config) -> Result<()>;
-    
-    /// Register commands with the CLI
-    fn register_commands(&self) -> Vec<PluginCommand>;
+/// Hook system for command execution
+pub struct HookRegistry {
+    hooks: HashMap<String, Vec<Box<dyn Fn(&Args) -> Result<()>>>>,
 }
 
-/// Command provided by a plugin
-#[derive(Debug, Clone)]
-pub struct PluginCommand {
-    pub name: String,
-    pub description: String,
-    pub handler: fn(&[String]) -> Result<()>,
+impl HookRegistry {
+    pub fn new() -> Self {
+        Self {
+            hooks: HashMap::new(),
+        }
+    }
+    
+    /// Register a hook for a command
+    pub fn register_hook<F>(&mut self, command: String, hook: F)
+    where
+        F: Fn(&Args) -> Result<()> + 'static,
+    {
+        self.hooks.entry(command).or_insert_with(Vec::new).push(Box::new(hook));
+    }
+    
+    /// Execute hooks for a command
+    pub fn execute_hooks(&self, command: &str, args: &Args) -> Result<()> {
+        if let Some(hooks) = self.hooks.get(command) {
+            for hook in hooks {
+                hook(args)?;
+            }
+        }
+        Ok(())
+    }
 }
-
 
 /// Execution context for commands
 #[derive(Debug, Clone)]
@@ -148,28 +168,36 @@ impl ExecutionContext {
     }
 }
 
+/// Arguments structure for command execution
+#[derive(Debug, Clone)]
+pub struct Args {
+    pub command_name: String,
+    
+    pub raw_args: HashMap<String, String>,
+}
+
 /// Base trait for command implementations
 pub trait CommandTrait {
     fn name(&self) -> &str;
     fn description(&self) -> &str;
-    fn execute(&self, context: &ExecutionContext) -> Result<()>;
+    fn execute(&self, args: &Args, context: &ExecutionContext) -> Result<()>;
 }
 
 /// Managed command trait for lifecycle-managed commands
 pub trait ManagedCommand: CommandTrait {
-    fn validate(&self, context: &ExecutionContext) -> Result<()>;
+    fn validate(&self, args: &Args) -> Result<()>;
     fn setup(&mut self, context: &ExecutionContext) -> Result<()>;
     fn cleanup(&mut self) -> Result<()>;
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
     
     #[test]
     fn test_config_creation() {
-        let temp_dir = tempfile::TempDir::new().unwrap();
+        let temp_dir = TempDir::new().unwrap();
         let config = Config::default_config(temp_dir.path().to_path_buf());
         
         assert!(config.is_feature_enabled("colored_output"));
@@ -178,10 +206,19 @@ mod tests {
     }
     
     #[test]
-    fn test_execution_context() {
-        let config = Config::default_config(std::env::temp_dir());
-        let context = ExecutionContext::new(config).unwrap();
+    fn test_hook_registry() {
+        let mut registry = HookRegistry::new();
         
-        assert!(context.elapsed().as_nanos() > 0);
+        registry.register_hook("test".to_string(), |_args| {
+            Ok(())
+        });
+        
+        let args = Args {
+            command_name: "test".to_string(),
+            
+            raw_args: HashMap::new(),
+        };
+        
+        assert!(registry.execute_hooks("test", &args).is_ok());
     }
 }

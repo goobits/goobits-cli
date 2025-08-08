@@ -1,7 +1,9 @@
-//! Configuration module for Test Rust CLI
-//! Auto-generated from test-rust-cli.yaml
+/**
+ * Configuration module for Test Rust CLI
+ * Auto-generated from test-rust-verification.yaml
+ */
 
-use anyhow::{Context, Result};
+use crate::errors::{CliResult, ConfigError, CLIError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -55,15 +57,19 @@ pub struct Preferences {
 
 impl Default for AppConfig {
     fn default() -> Self {
-        let aliases = HashMap::new();
-        let custom = HashMap::new();
+        let mut aliases = HashMap::new();
+        let mut custom = HashMap::new();
         
         // Add some default aliases if defined in goobits.yaml
         
         
+        
+        
+        
+        
         Self {
             settings: Settings {
-                version: "1.3.0".to_string(),
+                version: "2.0.0-beta.1".to_string(),
                 auto_update: false,
                 log_level: "info".to_string(),
                 config_format: "yaml".to_string(),
@@ -85,57 +91,232 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
-    /// Load configuration from file
-    pub fn load() -> Result<Self> {
-        let config_path = Self::config_file_path()?;
+    /// Load configuration from multiple possible locations and formats
+    pub fn load() -> Result<Self, ConfigError> {
+        // Search for configuration files in order of preference
+        let search_paths = Self::get_config_search_paths()?;
         
-        if config_path.exists() {
-            let content = std::fs::read_to_string(&config_path)
-                .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
-            
-            let config: AppConfig = serde_yaml::from_str(&content)
-                .with_context(|| "Failed to parse config file")?;
-            
-            Ok(config)
-        } else {
-            // Create default config and save it
-            let config = Self::default();
-            config.save()?;
-            Ok(config)
+        for (path, format) in search_paths {
+            if path.exists() {
+                let content = std::fs::read_to_string(&path)
+                    .map_err(|e| ConfigError::config(format!("Failed to read config file {}: {}", path.display(), e)))?;
+                
+                let config = match format.as_str() {
+                    "yaml" | "yml" => serde_yaml::from_str::<AppConfig>(&content)
+                        .map_err(|e| ConfigError::InvalidFormat {
+                            path: path.clone(),
+                            reason: format!("YAML parsing error: {}", e),
+                        })?,
+                    "json" => serde_json::from_str::<AppConfig>(&content)
+                        .map_err(|e| ConfigError::InvalidFormat {
+                            path: path.clone(),
+                            reason: format!("JSON parsing error: {}", e),
+                        })?,
+                    "toml" => toml::from_str::<AppConfig>(&content)
+                        .map_err(|e| ConfigError::InvalidFormat {
+                            path: path.clone(),
+                            reason: format!("TOML parsing error: {}", e),
+                        })?,
+                    _ => {
+                        return Err(ConfigError::InvalidFormat {
+                            path: path.clone(),
+                            reason: format!("Unsupported config format: {}", format),
+                        });
+                    }
+                };
+                
+                // Validate the loaded configuration
+                config.validate()?;
+                
+                return Ok(config);
+            }
         }
+        
+        // No config file found, create default
+        let config = Self::default();
+        config.save().map_err(|e| match e {
+            CLIError::config("Failed to create configuration directory") => e,
+            CLIError::config("Failed to write configuration") => e,
+            _ => ConfigError::ValidationFailed {
+                message: "Failed to create default configuration".to_string(),
+            },
+        })?;
+        Ok(config)
+    }
+    
+    /// Get search paths for configuration files in order of preference
+    fn get_config_search_paths() -> Result<Vec<(PathBuf, String)>, ConfigError> {
+        let mut paths = Vec::new();
+        
+        // 1. Current directory (highest priority)
+        let current_dir = std::env::current_dir()
+            .map_err(|e| ConfigError::ValidationFailed {
+                message: format!("Cannot access current directory: {}", e),
+            })?;
+        paths.push((current_dir.join(".test-rust-cli.yaml"), "yaml".to_string()));
+        paths.push((current_dir.join(".test-rust-cli.yml"), "yaml".to_string()));
+        paths.push((current_dir.join(".test-rust-cli.json"), "json".to_string()));
+        paths.push((current_dir.join(".test-rust-cli.toml"), "toml".to_string()));
+        paths.push((current_dir.join("test-rust-cli.yaml"), "yaml".to_string()));
+        paths.push((current_dir.join("test-rust-cli.yml"), "yaml".to_string()));
+        paths.push((current_dir.join("test-rust-cli.json"), "json".to_string()));
+        paths.push((current_dir.join("test-rust-cli.toml"), "toml".to_string()));
+        
+        // 2. User config directory
+        let config_dir = Self::config_dir()?;
+        paths.push((config_dir.join("config.yaml"), "yaml".to_string()));
+        paths.push((config_dir.join("config.yml"), "yaml".to_string()));
+        paths.push((config_dir.join("config.json"), "json".to_string()));
+        paths.push((config_dir.join("config.toml"), "toml".to_string()));
+        
+        // 3. XDG config directory (Linux/Unix)
+        if let Ok(xdg_config) = std::env::var("XDG_CONFIG_HOME") {
+            let xdg_dir = PathBuf::from(xdg_config).join("test-rust-cli");
+            paths.push((xdg_dir.join("config.yaml"), "yaml".to_string()));
+            paths.push((xdg_dir.join("config.yml"), "yaml".to_string()));
+            paths.push((xdg_dir.join("config.json"), "json".to_string()));
+            paths.push((xdg_dir.join("config.toml"), "toml".to_string()));
+        }
+        
+        // 4. Home directory RC files
+        if let Some(home_dir) = dirs::home_dir() {
+            paths.push((home_dir.join(".test-rust-clirc"), "yaml".to_string()));
+            paths.push((home_dir.join(".test-rust-clirc.yaml"), "yaml".to_string()));
+            paths.push((home_dir.join(".test-rust-clirc.yml"), "yaml".to_string()));
+            paths.push((home_dir.join(".test-rust-clirc.json"), "json".to_string()));
+            paths.push((home_dir.join(".test-rust-clirc.toml"), "toml".to_string()));
+        }
+        
+        // 5. System-wide config (Unix-like systems)
+        #[cfg(unix)]
+        {
+            paths.push((PathBuf::from("/etc/test-rust-cli/config.yaml"), "yaml".to_string()));
+            paths.push((PathBuf::from("/etc/test-rust-cli/config.yml"), "yaml".to_string()));
+            paths.push((PathBuf::from("/etc/test-rust-cli/config.json"), "json".to_string()));
+            paths.push((PathBuf::from("/etc/test-rust-cli/config.toml"), "toml".to_string()));
+        }
+        
+        Ok(paths)
     }
     
     /// Save configuration to file
-    pub fn save(&self) -> Result<()> {
+    pub fn save(&self) -> Result<(), ConfigError> {
+        // Validate before saving
+        self.validate()?;
+        
         let config_path = Self::config_file_path()?;
         
         // Ensure config directory exists
         if let Some(parent) = config_path.parent() {
             std::fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create config directory: {}", parent.display()))?;
+                .map_err(|e| ConfigError::DirectoryCreationFailed {
+                    path: parent.to_path_buf(),
+                    reason: e.to_string(),
+                })?;
         }
         
         let content = serde_yaml::to_string(self)
-            .with_context(|| "Failed to serialize config")?;
+            .map_err(|e| ConfigError::WriteFailed {
+                path: config_path.clone(),
+                reason: format!("Serialization failed: {}", e),
+            })?;
         
         std::fs::write(&config_path, content)
-            .with_context(|| format!("Failed to write config file: {}", config_path.display()))?;
+            .map_err(|e| ConfigError::WriteFailed {
+                path: config_path.clone(),
+                reason: format!("File write failed: {}", e),
+            })?;
         
         Ok(())
     }
     
     /// Get the path to the configuration file
-    pub fn config_file_path() -> Result<PathBuf> {
+    pub fn config_file_path() -> CliResult<PathBuf> {
         let config_dir = Self::config_dir()?;
         Ok(config_dir.join("config.yaml"))
     }
     
     /// Get the configuration directory path
-    pub fn config_dir() -> Result<PathBuf> {
+    pub fn config_dir() -> CliResult<PathBuf> {
         let home_dir = dirs::home_dir()
-            .ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
+            .ok_or_else(|| CLIError::config("Could not determine home directory"))?;
         
         Ok(home_dir.join(".config").join("test-rust-cli"))
+    }
+    
+    /// List all available configuration files (for debugging/info)
+    pub fn list_config_files() -> CliResult<Vec<(PathBuf, String, bool)>> {
+        let search_paths = Self::get_config_search_paths()?;
+        let mut found_files = Vec::new();
+        
+        for (path, format) in search_paths {
+            let exists = path.exists();
+            found_files.push((path, format, exists));
+        }
+        
+        Ok(found_files)
+    }
+    
+    /// Get the configuration file that would be loaded (highest priority existing file)
+    pub fn get_active_config_file() -> CliResult<Option<(PathBuf, String)>> {
+        let search_paths = Self::get_config_search_paths()?;
+        
+        for (path, format) in search_paths {
+            if path.exists() {
+                return Ok(Some((path, format)));
+            }
+        }
+        
+        Ok(None)
+    }
+    
+    /// Save configuration to file in the specified format
+    pub fn save_as(&self, format: &str) -> CliResult<()> {
+        // Validate before saving
+        self.validate()?;
+        
+        let config_dir = Self::config_dir()?;
+        std::fs::create_dir_all(&config_dir)
+            .map_err(|e| CLIError::io(format!("Failed to create config directory: {}", config_dir.display()), e))?;
+        
+        let (filename, content) = match format {
+            "yaml" | "yml" => {
+                let content = serde_yaml::to_string(self)
+                    .map_err(|e| ConfigError::WriteFailed {
+                        path: config_dir.join("config.yaml"),
+                        reason: format!("YAML serialization failed: {}", e),
+                    })?;
+                ("config.yaml", content)
+            },
+            "json" => {
+                let content = serde_json::to_string_pretty(self)
+                    .map_err(|e| ConfigError::WriteFailed {
+                        path: config_dir.join("config.json"),
+                        reason: format!("JSON serialization failed: {}", e),
+                    })?;
+                ("config.json", content)
+            },
+            "toml" => {
+                let content = toml::to_string_pretty(self)
+                    .map_err(|e| ConfigError::WriteFailed {
+                        path: config_dir.join("config.toml"),
+                        reason: format!("TOML serialization failed: {}", e),
+                    })?;
+                ("config.toml", content)
+            },
+            _ => {
+                return Err(ConfigError::InvalidFormat {
+                    path: config_dir.clone(),
+                    reason: format!("Unsupported config format: {}", format),
+                });
+            }
+        };
+        
+        let config_path = config_dir.join(filename);
+        std::fs::write(&config_path, content)
+            .map_err(|e| CLIError::io(format!("Failed to write config file: {}", config_path.display()), e))?;
+        
+        Ok(())
     }
     
     /// Get a custom setting by key
@@ -175,51 +356,179 @@ impl AppConfig {
     }
     
     /// Enable or disable a feature
-    pub fn set_feature(&mut self, feature: &str, enabled: bool) -> Result<()> {
+    pub fn set_feature(&mut self, feature: &str, enabled: bool) -> CliResult<()> {
         match feature {
             "colored_output" => self.features.colored_output = enabled,
             "progress_bars" => self.features.progress_bars = enabled,
             "interactive_mode" => self.features.interactive_mode = enabled,
             "unicode_symbols" => self.features.unicode_symbols = enabled,
-            _ => anyhow::bail!("Unknown feature: {feature}"),
+            _ => {
+                return Err(CLIError::validation("feature", feature, "must be one of: colored_output, progress_bars, interactive_mode, or unicode_symbols"));
+            }
         }
         Ok(())
     }
     
     /// Validate the configuration
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate(&self) -> CliResult<()> {
         // Validate log level
         match self.settings.log_level.as_str() {
             "debug" | "info" | "warn" | "error" => {}
-            _ => anyhow::bail!("Invalid log level: {}", self.settings.log_level),
+            _ => {
+                return Err(CLIError::validation("log_level", &self.settings.log_level, "must be one of: debug, info, warn, or error"));
+            }
         }
         
         // Validate output format
         match self.preferences.output_format.as_str() {
             "human" | "json" | "yaml" | "table" => {}
-            _ => anyhow::bail!("Invalid output format: {}", self.preferences.output_format),
+            _ => {
+                return Err(CLIError::validation("output_format", &self.preferences.output_format, "must be one of: human, json, yaml, or table"));
+            }
         }
         
         // Validate config format
         match self.settings.config_format.as_str() {
             "yaml" | "json" | "toml" => {}
-            _ => anyhow::bail!("Invalid config format: {}", self.settings.config_format),
+            _ => {
+                return Err(CLIError::validation("config_format", &self.settings.config_format, "must be one of: yaml, json, or toml"));
+            }
         }
+        
+        // Validate version format (basic semantic version check)
+        if !is_valid_semver(&self.settings.version) {
+            return Err(CLIError::validation("version", &self.settings.version, "must be a semantic version (e.g., 1.0.0)"));
+        }
+        
+        // Validate editor if specified
+        if let Some(editor) = &self.preferences.editor {
+            if editor.is_empty() {
+                return Err(CLIError::validation("editor", editor, "must be a non-empty editor command"));
+            }
+        }
+        
+        Ok(())
+    }
+    
+    /// Merge configuration from another source
+    pub fn merge(&mut self, other: &AppConfig) -> CliResult<()> {
+        // Validate the other config first
+        other.validate()?;
+        
+        // Merge settings (other takes precedence)
+        if other.settings.version != "2.0.0-beta.1" {
+            self.settings.version = other.settings.version.clone();
+        }
+        self.settings.auto_update = other.settings.auto_update;
+        self.settings.log_level = other.settings.log_level.clone();
+        self.settings.config_format = other.settings.config_format.clone();
+        
+        // Merge features
+        self.features = other.features.clone();
+        
+        // Merge preferences (extend collections)
+        if other.preferences.editor.is_some() {
+            self.preferences.editor = other.preferences.editor.clone();
+        }
+        self.preferences.output_format = other.preferences.output_format.clone();
+        
+        // Merge aliases and custom settings (other takes precedence)
+        for (key, value) in &other.preferences.aliases {
+            self.preferences.aliases.insert(key.clone(), value.clone());
+        }
+        
+        for (key, value) in &other.preferences.custom {
+            self.preferences.custom.insert(key.clone(), value.clone());
+        }
+        
+        // Validate the merged result
+        self.validate()?;
+        
+        Ok(())
+    }
+    
+    /// Reset configuration to defaults
+    pub fn reset(&mut self) {
+        *self = Self::default();
+    }
+    
+    /// Export configuration for backup or transfer
+    pub fn export(&self, format: &str) -> CliResult<String> {
+        // Validate before export
+        self.validate()?;
+        
+        match format {
+            "yaml" | "yml" => {
+                serde_yaml::to_string(self)
+                    .map_err(|e| CLIError::config(format!("YAML serialization failed: {}", e)))
+            }
+            "json" => {
+                serde_json::to_string_pretty(self)
+                    .map_err(|e| CLIError::config(format!("JSON serialization failed: {}", e)))
+            }
+            "toml" => {
+                toml::to_string_pretty(self)
+                    .map_err(|e| CLIError::config(format!("TOML serialization failed: {}", e)))
+            }
+            _ => Err(CLIError::config(format!("Unsupported export format: {}", format)))
+        }
+    }
+    
+    /// Import configuration from string
+    pub fn import(&mut self, content: &str, format: &str) -> CliResult<()> {
+        let imported_config = match format {
+            "yaml" | "yml" => {
+                serde_yaml::from_str::<AppConfig>(content)
+                    .map_err(|e| CLIError::config(format!("YAML parsing failed: {}", e)))?
+            }
+            "json" => {
+                serde_json::from_str::<AppConfig>(content)
+                    .map_err(|e| CLIError::config(format!("JSON parsing failed: {}", e)))?
+            }
+            "toml" => {
+                toml::from_str::<AppConfig>(content)
+                    .map_err(|e| CLIError::config(format!("TOML parsing failed: {}", e)))?
+            }
+            _ => {
+                return Err(CLIError::config(format!("Unsupported import format: {}", format)));
+            }
+        };
+        
+        // Merge the imported configuration
+        self.merge(&imported_config)?;
         
         Ok(())
     }
 }
 
+/// Helper function to validate semantic version strings
+fn is_valid_semver(version: &str) -> bool {
+    let parts: Vec<&str> = version.split('.').collect();
+    if parts.len() != 3 {
+        return false;
+    }
+    
+    for part in parts {
+        if part.parse::<u32>().is_err() {
+            return false;
+        }
+    }
+    
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
     
     #[test]
     fn test_default_config() {
         let config = AppConfig::default();
-        assert_eq!(config.settings.version, "1.3.0");
+        assert_eq!(config.settings.version, "2.0.0-beta.1");
         assert!(config.features.colored_output);
         assert_eq!(config.preferences.output_format, "human");
+        assert!(config.validate().is_ok());
     }
     
     #[test]
@@ -227,7 +536,18 @@ mod tests {
         let mut config = AppConfig::default();
         assert!(config.validate().is_ok());
         
+        // Test invalid log level
         config.settings.log_level = "invalid".to_string();
+        assert!(config.validate().is_err());
+        
+        // Fix and test invalid output format
+        config.settings.log_level = "info".to_string();
+        config.preferences.output_format = "invalid".to_string();
+        assert!(config.validate().is_err());
+        
+        // Fix and test invalid version
+        config.preferences.output_format = "human".to_string();
+        config.settings.version = "not.a.version".to_string();
         assert!(config.validate().is_err());
     }
     
@@ -236,8 +556,11 @@ mod tests {
         let mut config = AppConfig::default();
         
         assert!(config.is_feature_enabled("colored_output"));
-        config.set_feature("colored_output", false).unwrap();
+        assert!(config.set_feature("colored_output", false).is_ok());
         assert!(!config.is_feature_enabled("colored_output"));
+        
+        // Test invalid feature
+        assert!(config.set_feature("invalid_feature", true).is_err());
     }
     
     #[test]
@@ -250,5 +573,53 @@ mod tests {
         let removed = config.remove_alias("h");
         assert_eq!(removed, Some("help".to_string()));
         assert_eq!(config.get_alias("h"), None);
+    }
+    
+    #[test]
+    fn test_semver_validation() {
+        assert!(is_valid_semver("1.0.0"));
+        assert!(is_valid_semver("0.1.2"));
+        assert!(is_valid_semver("10.20.30"));
+        assert!(!is_valid_semver("1.0"));
+        assert!(!is_valid_semver("1.0.0.0"));
+        assert!(!is_valid_semver("1.a.0"));
+        assert!(!is_valid_semver(""));
+    }
+    
+    #[test]
+    fn test_config_merge() {
+        let mut config1 = AppConfig::default();
+        let mut config2 = AppConfig::default();
+        
+        config2.settings.log_level = "debug".to_string();
+        config2.features.colored_output = false;
+        config2.add_alias("test".to_string(), "command".to_string());
+        
+        assert!(config1.merge(&config2).is_ok());
+        assert_eq!(config1.settings.log_level, "debug");
+        assert!(!config1.features.colored_output);
+        assert_eq!(config1.get_alias("test"), Some(&"command".to_string()));
+    }
+    
+    #[test]
+    fn test_export_import() {
+        let config = AppConfig::default();
+        
+        // Test YAML export/import
+        let yaml_export = config.export("yaml").unwrap();
+        let mut imported_config = AppConfig::default();
+        imported_config.settings.log_level = "debug".to_string(); // Make it different
+        
+        assert!(imported_config.import(&yaml_export, "yaml").is_ok());
+        // After import, it should be merged, so log_level might be overridden
+        
+        // Test JSON export/import
+        let json_export = config.export("json").unwrap();
+        let mut json_config = AppConfig::default();
+        assert!(json_config.import(&json_export, "json").is_ok());
+        
+        // Test invalid format
+        assert!(config.export("invalid").is_err());
+        assert!(imported_config.import("invalid content", "yaml").is_err());
     }
 }

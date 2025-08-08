@@ -40,7 +40,11 @@ path = "src/main.rs"
 {% set final_deps = default_deps.copy() %}
 {% if rust_crates %}
 {% for crate_name, crate_spec in rust_crates.items() %}
+{% if crate_name == 'tokio' and crate_spec is mapping %}
+{% set _ = final_deps.update({crate_name: {'version': crate_spec.version, 'features': crate_spec.features, 'optional': true}}) %}
+{% else %}
 {% set _ = final_deps.update({crate_name: crate_spec}) %}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% for dep_name, dep_spec in final_deps.items() %}

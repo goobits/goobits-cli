@@ -1,6 +1,6 @@
 /**
- * Auto-generated from {{ file_name }}
- * Main CLI implementation for {{ display_name }}
+ * Auto-generated from test-rust-verification.yaml
+ * Main CLI implementation for Test Rust CLI
  */
 
 use anyhow::Context;
@@ -10,7 +10,7 @@ use std::process;
 
 // Import error handling
 mod errors;
-use errors::{CliResult, CLIError, ExitCode};
+use errors::{CliResult, CliError, ExitCode, formatting};
 
 // Import modules when building as library
 #[cfg(feature = "lib")]
@@ -42,33 +42,14 @@ use styling::initialize_styling;
 mod utils;
 
 #[derive(Parser)]
-#[command(name = "{{ command_name }}")]
-#[command(about = "{{ cli.tagline if cli.tagline else description }}")]
-#[command(long_about = "{{ cli.description if cli.description else description }}")]
-#[command(version = "{{ version | default('1.0.0') }}")]
-#[command(author = "{{ author | default('') }}")]
-{% if cli and cli.enable_recursive_help %}
-#[command(help_template = "{about}\n\n{usage-heading} {usage}\n\n{all-args}{after-help}")]
-{% endif %}
+#[command(name = "testcli")]
+#[command(about = "A simple test CLI")]
+#[command(long_about = "Test CLI for verifying Rust compilation")]
+#[command(version = "2.0.0-beta.1")]
+#[command(author = "")]
+
 struct Cli {
-    {% if cli.options %}
-    // Global options
-    {% for option in cli.options %}
-    {% if option.type == "flag" %}
-    /// {{ option.desc }}
-    #[arg(long = "{{ option.name }}"{% if option.short %}, short = '{{ option.short }}'{% endif %}{% if option.default %}, default_value_t = {{ option.default | lower }}{% endif %})]
-    pub {{ option.name | replace('-', '_') }}: bool,
-    {% elif option.type == "int" %}
-    /// {{ option.desc }}
-    #[arg(long = "{{ option.name }}"{% if option.short %}, short = '{{ option.short }}'{% endif %}{% if option.default %}, default_value_t = {{ option.default }}{% endif %})]
-    pub {{ option.name | replace('-', '_') }}: i32,
-    {% else %}
-    /// {{ option.desc }}
-    #[arg(long = "{{ option.name }}"{% if option.short %}, short = '{{ option.short }}'{% endif %}{% if option.default %}, default_value = "{{ option.default }}"{% endif %})]
-    pub {{ option.name | replace('-', '_') }}: {% if option.required is not defined or option.required %}String{% else %}Option<String>{% endif %},
-    {% endif %}
-    {% endfor %}
-    {% endif %}
+    
     
     #[command(subcommand)]
     command: Option<Commands>,
@@ -76,54 +57,40 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    {% for cmd_name, cmd_data in cli.commands.items() %}
-    {% if not cmd_data.subcommands %}
-    /// {% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}
-    {{ cmd_name | title | replace('-', '') }} {
-        {% if cmd_data.args %}
-        {% for arg in cmd_data.args %}
-        {% if arg.required %}
-        /// {{ arg.desc }}
-        {% if arg.choices %}
-        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
-        {% endif %}
-        {{ arg.name }}: String,
-        {% else %}
-        /// {{ arg.desc }}
-        {% if arg.choices %}
-        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
-        {% endif %}
-        {{ arg.name }}: Option<String>,
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+    
+    
+    /// Simple hello command
+    Hello {
         
-        {% if cmd_data.options %}
-        {% for opt in cmd_data.options %}
-        {% if opt.type == "flag" or opt.type == "bool" %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default | lower }}{% endif %})]
-        {{ opt.name | replace('-', '_') }}: bool,
-        {% elif opt.type == "int" %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default }}{% endif %})]
-        {{ opt.name | replace('-', '_') }}: i32,
-        {% else %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value = "{{ opt.default }}"{% endif %})]
-        {{ opt.name | replace('-', '_') }}: {% if opt.required is defined and opt.required %}String{% else %}Option<String>{% endif %},
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+        
+        
+        /// Name to greet
+        
+        name: String,
+        
+        
+        
+        
+        
+        
+        
+        /// Shout the greeting
+        #[arg(long = "--loud", short = '-l')]
+        __loud: bool,
+        
+        
+        
     },
-    {% else %}
-    /// {% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}
-    {{ cmd_name | title | replace('-', '') }} {
+    
+    
+    
+    /// Manage configuration
+    Config {
         #[command(subcommand)]
-        subcommand: {{ cmd_name | title | replace('-', '') }}Subcommands,
+        subcommand: ConfigSubcommands,
     },
-    {% endif %}
-    {% endfor %}
+    
+    
     
     /// Shell completion management
     Completion {
@@ -137,8 +104,8 @@ enum Commands {
         subcommand: ConfigCommands,
     },
     
-    {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
-    /// Upgrade {{ display_name }} to the latest version
+    
+    /// Upgrade Test Rust CLI to the latest version
     Upgrade {
         /// Check for updates without installing
         #[arg(long)]
@@ -156,7 +123,7 @@ enum Commands {
         #[arg(long)]
         dry_run: bool,
     },
-    {% endif %}
+    
     
     /// Internal completion command - called by shell completion scripts
     #[command(hide = true)]
@@ -177,109 +144,62 @@ enum Commands {
     },
 }
 
-{% for cmd_name, cmd_data in cli.commands.items() %}
-{% if cmd_data.subcommands %}
+
+
+
+
 #[derive(Subcommand)]
-enum {{ cmd_name | title | replace('-', '') }}Subcommands {
-    {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
-    {% if subcmd_data.subcommands %}
-    /// {% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}
-    {{ subcmd_name | title | replace('-', '') }} {
-        #[command(subcommand)]
-        subcommand: {{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('-', '') }}Subcommands,
-    },
-    {% else %}
-    /// {% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}
-    {{ subcmd_name | title | replace('-', '') }} {
-        {% if subcmd_data.args %}
-        {% for arg in subcmd_data.args %}
-        {% if arg.required %}
-        /// {{ arg.desc }}
-        {% if arg.choices %}
-        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
-        {% endif %}
-        {{ arg.name }}: String,
-        {% else %}
-        /// {{ arg.desc }}
-        {% if arg.choices %}
-        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
-        {% endif %}
-        {{ arg.name }}: Option<String>,
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+enum ConfigSubcommands {
+    
+    
+    /// Get config value
+    Get {
         
-        {% if subcmd_data.options %}
-        {% for opt in subcmd_data.options %}
-        {% if opt.type == "flag" or opt.type == "bool" %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default | lower }}{% endif %})]
-        {{ opt.name | replace('-', '_') }}: bool,
-        {% elif opt.type == "int" %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default }}{% endif %})]
-        {{ opt.name | replace('-', '_') }}: i32,
-        {% else %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value = "{{ opt.default }}"{% endif %})]
-        {{ opt.name | replace('-', '_') }}: {% if opt.required is defined and opt.required %}String{% else %}Option<String>{% endif %},
-        {% endif %}
-        {% endfor %}
-        {% endif %}
+        
+        
+        /// Config key
+        
+        key: String,
+        
+        
+        
+        
+        
     },
-    {% endif %}
-    {% endfor %}
+    
+    
+    
+    /// Set config value
+    Set {
+        
+        
+        
+        /// Config key
+        
+        key: String,
+        
+        
+        
+        /// Config value
+        
+        value: String,
+        
+        
+        
+        
+        
+    },
+    
+    
 }
 
-{% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
-{% if subcmd_data.subcommands %}
-#[derive(Subcommand)]
-enum {{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('-', '') }}Subcommands {
-    {% for subsubcmd_name, subsubcmd_data in subcmd_data.subcommands.items() %}
-    /// {% if subsubcmd_data.icon %}{{ subsubcmd_data.icon }} {% endif %}{{ subsubcmd_data.desc }}
-    {{ subsubcmd_name | title | replace('-', '') }} {
-        {% if subsubcmd_data.args %}
-        {% for arg in subsubcmd_data.args %}
-        {% if arg.required %}
-        /// {{ arg.desc }}
-        {% if arg.choices %}
-        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
-        {% endif %}
-        {{ arg.name }}: String,
-        {% else %}
-        /// {{ arg.desc }}
-        {% if arg.choices %}
-        #[arg(value_parser = clap::builder::PossibleValuesParser::new({{ arg.choices | tojson }}))]
-        {% endif %}
-        {{ arg.name }}: Option<String>,
-        {% endif %}
-        {% endfor %}
-        {% endif %}
-        
-        {% if subsubcmd_data.options %}
-        {% for opt in subsubcmd_data.options %}
-        {% if opt.type == "flag" or opt.type == "bool" %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default | lower }}{% endif %})]
-        {{ opt.name | replace('-', '_') }}: bool,
-        {% elif opt.type == "int" %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value_t = {{ opt.default }}{% endif %})]
-        {{ opt.name | replace('-', '_') }}: i32,
-        {% else %}
-        /// {{ opt.desc }}
-        #[arg(long = "{{ opt.name }}"{% if opt.short %}, short = '{{ opt.short }}'{% endif %}{% if opt.default %}, default_value = "{{ opt.default }}"{% endif %})]
-        {{ opt.name | replace('-', '_') }}: {% if opt.required is defined and opt.required %}String{% else %}Option<String>{% endif %},
-        {% endif %}
-        {% endfor %}
-        {% endif %}
-    },
-    {% endfor %}
-}
-{% endif %}
-{% endfor %}
-{% endif %}
-{% endfor %}
+
+
+
+
+
+
+
 
 #[derive(Subcommand)]
 enum CompletionCommands {
@@ -376,18 +296,14 @@ enum ConfigCommands {
 #[derive(Debug, Clone)]
 pub struct Args {
     pub command_name: String,
-    {% if cli.options %}
-    {% for option in cli.options %}
-    pub {{ option.name | replace('-', '_') }}: {% if option.type == "flag" or option.type == "bool" %}bool{% elif option.type == "int" %}i32{% else %}{% if option.required is not defined or option.required %}String{% else %}Option<String>{% endif %}{% endif %},
-    {% endfor %}
-    {% endif %}
+    
     pub raw_args: HashMap<String, String>,
 }
 
-{% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
+
 fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run: bool) -> CliResult<()> {
-    let package_name = "{{ package_name }}";
-    let display_name = "{{ display_name }}";
+    let package_name = "test-rust-cli";
+    let display_name = "Test Rust CLI";
     let current_version = env!("CARGO_PKG_VERSION");
     
     utils::output::info(&format!("Current version: {}", current_version));
@@ -422,18 +338,24 @@ fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run: bool
     }
     
     let status = cmd.status()
-        .map_err(|e| CLIError::hook("cargo install", format!("Command execution failed: {}", e)))?;
+        .map_err(|e| CliError::Command(errors::CommandError::ExecutionFailed {
+            command: "cargo install".to_string(),
+            reason: e.to_string(),
+        }))?;
     
     if status.success() {
         utils::output::success(&format!("{} upgraded successfully!", display_name));
-        utils::output::info(&format!("Run '{} --version' to verify the new version.", "{{ command_name }}"));
+        utils::output::info(&format!("Run '{} --version' to verify the new version.", "testcli"));
     } else {
-        return Err(CLIError::hook("cargo install", "Upgrade command failed"));
+        return Err(CliError::Command(errors::CommandError::ExecutionFailed {
+            command: "cargo install".to_string(),
+            reason: "Upgrade command failed".to_string(),
+        }));
     }
     
     Ok(())
 }
-{% endif %}
+
 
 /// Handle internal shell completion requests (called by completion scripts)
 fn handle_internal_completion(shell: &str, current_line: &str, cursor_pos: Option<usize>, debug: bool) -> CliResult<()> {
@@ -458,9 +380,9 @@ fn handle_internal_completion(shell: &str, current_line: &str, cursor_pos: Optio
 fn main() {
     // Set up panic hook for better error reporting
     std::panic::set_hook(Box::new(|panic_info| {
-        eprintln!("💥 {{ display_name }} encountered an unexpected error:");
+        eprintln!("💥 Test Rust CLI encountered an unexpected error:");
         eprintln!("{}", panic_info);
-        eprintln!("\n🐛 This is likely a bug. Please report it at: {{ repository | default('https://github.com/your-org/your-repo') }}");
+        eprintln!("\n🐛 This is likely a bug. Please report it at: https://github.com/your-org/your-repo");
         process::exit(ExitCode::GeneralError as i32);
     }));
 
@@ -474,11 +396,11 @@ fn run() -> CliResult<()> {
     
     // Initialize configuration and hook system
     let config = crate::config::AppConfig::load()
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
             message: format!("Failed to load configuration: {}", e),
         }))?;
     let config_dir = crate::config::AppConfig::config_dir()
-        .map_err(|e| CLIError::Environment {
+        .map_err(|e| CliError::Environment {
             message: format!("Could not determine configuration directory: {}", e),
         })?;
     
@@ -489,124 +411,134 @@ fn run() -> CliResult<()> {
     );
     
     hooks::initialize_hooks(&config_dir)
-        .map_err(|e| CLIError::hook("system", format!("Failed to initialize hooks in {}: {}", config_dir.display(), e)))?;
+        .map_err(|e| CliError::Hook(errors::HookError::LoadFailed {
+            name: "system".to_string(),
+            path: config_dir.clone(),
+            reason: e.to_string(),
+        }))?;
     initialize_plugins(&config)
-        .map_err(|e| CLIError::plugin("system", format!("Failed to initialize plugins: {}", e)))?;
+        .map_err(|e| CliError::Plugin(errors::PluginError::InitializationFailed {
+            name: "system".to_string(),
+            reason: e.to_string(),
+        }))?;
     
     // Prepare common arguments structure
     let args = Args {
         command_name: "".to_string(), // Will be set per command
-        {% if cli.options %}
-        {% for option in cli.options %}
-        {{ option.name | replace('-', '_') }}: cli.{{ option.name | replace('-', '_') }},
-        {% endfor %}
-        {% endif %}
+        
         raw_args: HashMap::new(),
     };
     
     match cli.command {
         Some(command) => {
             match command {
-                {% for cmd_name, cmd_data in cli.commands.items() %}
-                {% if not cmd_data.subcommands %}
-                Commands::{{ cmd_name | title | replace('-', '') }} { 
-                    {% if cmd_data.args %}
-                    {% for arg in cmd_data.args %}
-                    {{ arg.name }},
-                    {% endfor %}
-                    {% endif %}
-                    {% if cmd_data.options %}
-                    {% for opt in cmd_data.options %}
-                    {{ opt.name | replace('-', '_') }},
-                    {% endfor %}
-                    {% endif %}
+                
+                
+                Commands::Hello { 
+                    
+                    
+                    name,
+                    
+                    
+                    
+                    
+                    __loud,
+                    
+                    
                 } => {
-                    execute_command_with_hooks("{{ cmd_name }}", args.clone(), || {
-                        execute_{{ cmd_name | replace('-', '_') }}_command(
-                            {% if cmd_data.args %}
-                            {% for arg in cmd_data.args %}
-                            {% if arg.required %}
-                            &{{ arg.name }},
-                            {% else %}
-                            {{ arg.name }}.as_deref(),
-                            {% endif %}
-                            {% endfor %}
-                            {% endif %}
-                            {% if cmd_data.options %}
-                            {% for opt in cmd_data.options %}
-                            {% if opt.type == "flag" or opt.type == "bool" %}
-                            {{ opt.name | replace('-', '_') }},
-                            {% elif opt.type == "int" %}
-                            {{ opt.name | replace('-', '_') }},
-                            {% else %}
-                            {% if opt.required is defined and opt.required %}
-                            &{{ opt.name | replace('-', '_') }},
-                            {% else %}
-                            {{ opt.name | replace('-', '_') }}.as_deref(),
-                            {% endif %}
-                            {% endif %}
-                            {% endfor %}
-                            {% endif %}
+                    execute_command_with_hooks("hello", args.clone(), || {
+                        execute_hello_command(
+                            
+                            
+                            
+                            &name,
+                            
+                            
+                            
+                            
+                            
+                            
+                            __loud,
+                            
+                            
+                            
                         )
                     })?;
                 }
-                {% else %}
-                Commands::{{ cmd_name | title | replace('-', '') }} { subcommand } => {
+                
+                
+                
+                Commands::Config { subcommand } => {
                     match subcommand {
-                        {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
-                        {{ cmd_name | title | replace('-', '') }}Subcommands::{{ subcmd_name | title | replace('-', '') }} {
-                            {% if subcmd_data.args %}
-                            {% for arg in subcmd_data.args %}
-                            {{ arg.name }},
-                            {% endfor %}
-                            {% endif %}
-                            {% if subcmd_data.options %}
-                            {% for opt in subcmd_data.options %}
-                            {{ opt.name | replace('-', '_') }},
-                            {% endfor %}
-                            {% endif %}
+                        
+                        ConfigSubcommands::Get {
+                            
+                            
+                            key,
+                            
+                            
+                            
                         } => {
                             let mut cmd_args = args.clone();
-                            cmd_args.command_name = "{{ subcmd_name }}".to_string();
+                            cmd_args.command_name = "get".to_string();
                             
                             // Try to call hook, fallback to placeholder
-                            match hooks::try_call_hook("{{ cmd_name }}_{{ subcmd_name }}", &cmd_args) {
+                            match hooks::try_call_hook("config_get", &cmd_args) {
                                 Ok(_) => {}
                                 Err(_) => {
-                                    execute_{{ cmd_name | replace('-', '_') }}_{{ subcmd_name | replace('-', '_') }}_command(
-                                        {% if subcmd_data.args %}
-                                        {% for arg in subcmd_data.args %}
-                                        {% if arg.required %}
-                                        &{{ arg.name }},
-                                        {% else %}
-                                        {{ arg.name }}.as_deref(),
-                                        {% endif %}
-                                        {% endfor %}
-                                        {% endif %}
-                                        {% if subcmd_data.options %}
-                                        {% for opt in subcmd_data.options %}
-                                        {% if opt.type == "flag" or opt.type == "bool" %}
-                                        {{ opt.name | replace('-', '_') }},
-                                        {% elif opt.type == "int" %}
-                                        {{ opt.name | replace('-', '_') }},
-                                        {% else %}
-                                        {% if opt.required is defined and opt.required %}
-                                        &{{ opt.name | replace('-', '_') }},
-                                        {% else %}
-                                        {{ opt.name | replace('-', '_') }}.as_deref(),
-                                        {% endif %}
-                                        {% endif %}
-                                        {% endfor %}
-                                        {% endif %}
+                                    execute_config_get_command(
+                                        
+                                        
+                                        
+                                        &key,
+                                        
+                                        
+                                        
+                                        
                                     )?;
                                 }
                             }
                         }
-                        {% endfor %}
+                        
+                        ConfigSubcommands::Set {
+                            
+                            
+                            key,
+                            
+                            value,
+                            
+                            
+                            
+                        } => {
+                            let mut cmd_args = args.clone();
+                            cmd_args.command_name = "set".to_string();
+                            
+                            // Try to call hook, fallback to placeholder
+                            match hooks::try_call_hook("config_set", &cmd_args) {
+                                Ok(_) => {}
+                                Err(_) => {
+                                    execute_config_set_command(
+                                        
+                                        
+                                        
+                                        &key,
+                                        
+                                        
+                                        
+                                        &value,
+                                        
+                                        
+                                        
+                                        
+                                    )?;
+                                }
+                            }
+                        }
+                        
                     }
                 }
-                {% endif %}
-                {% endfor %}
+                
+                
                 
                 Commands::Completion { subcommand } => {
                     match subcommand {
@@ -639,11 +571,11 @@ fn run() -> CliResult<()> {
                     }
                 }
                 
-                {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
+                
                 Commands::Upgrade { check, version, pre, dry_run } => {
                     handle_upgrade(check, version, pre, dry_run)?;
                 }
-                {% endif %}
+                
                 
                 Commands::InternalCompletion { shell, current_line, cursor_pos, debug } => {
                     handle_internal_completion(&shell, &current_line, cursor_pos, debug)?;
@@ -651,31 +583,21 @@ fn run() -> CliResult<()> {
             }
         }
         None => {
-            {% set has_default = namespace(value=false) %}
-            {% for cmd_name, cmd_data in cli.commands.items() %}
-            {% if cmd_data.is_default %}
-            {% set has_default.value = true %}
-            // Default command: {{ cmd_name }}
-            let mut cmd_args = args.clone();
-            cmd_args.command_name = "{{ cmd_name }}".to_string();
             
-            match hooks::try_call_hook("{{ cmd_name }}", &cmd_args) {
-                Ok(_) => {}
-                Err(_) => {
-                    execute_{{ cmd_name | replace('-', '_') }}_command(/* default args */)?;
-                }
-            }
-            {% endif %}
-            {% endfor %}
-            {% if not has_default.value %}
+            
+            
+            
+            
+            
+            
             // No default command, show help
             let mut cmd = Cli::command();
-            cmd.print_help().map_err(|e| CLIError::Application {
+            cmd.print_help().map_err(|e| CliError::Application {
                 message: "Failed to print help".to_string(),
                 context: Some(e.to_string()),
             })?;
             println!();
-            {% endif %}
+            
         }
     }
     
@@ -694,7 +616,7 @@ where
         vec![], // args would be populated from actual command arguments
         HashMap::new(), // options would be populated from actual command options
         ExecutionPhase::PreCommand,
-    ).map_err(|e| CLIError::hook(
+    ).map_err(|e| CliError::Hook(errors::HookError::ExecutionFailed {
         name: command_name.to_string(),
         phase: "context_creation".to_string(),
         reason: e.to_string(),
@@ -704,7 +626,7 @@ where
     if let Err(e) = hooks::execute_command_hooks(command_name, ExecutionPhase::PreCommand, &hook_context) {
         let error_context = hook_context.with_error(&e.to_string());
         let _ = hooks::execute_command_hooks(command_name, ExecutionPhase::OnError, &error_context);
-        return Err(CLIError::hook(
+        return Err(CliError::Hook(errors::HookError::ExecutionFailed {
             name: command_name.to_string(),
             phase: "pre-command".to_string(),
             reason: e.to_string(),
@@ -721,7 +643,7 @@ where
         vec![],
         HashMap::new(),
         if command_result.is_ok() { ExecutionPhase::OnSuccess } else { ExecutionPhase::OnError },
-    ).map_err(|e| CLIError::hook(
+    ).map_err(|e| CliError::Hook(errors::HookError::ExecutionFailed {
         name: command_name.to_string(),
         phase: "post_context_creation".to_string(),
         reason: e.to_string(),
@@ -741,127 +663,73 @@ where
     command_result
 }
 
-{% for cmd_name, cmd_data in cli.commands.items() %}
-{% if not cmd_data.subcommands %}
-/// Execute {{ cmd_name }} command with proper error handling
-fn execute_{{ cmd_name | replace('-', '_') }}_command(
-    {% if cmd_data.args %}
-    {% for arg in cmd_data.args %}
-    {% if arg.required %}
-    {{ arg.name }}: &str,
-    {% else %}
-    {{ arg.name }}: Option<&str>,
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-    {% if cmd_data.options %}
-    {% for opt in cmd_data.options %}
-    {% if opt.type == "flag" or opt.type == "bool" %}
-    {{ opt.name | replace('-', '_') }}: bool,
-    {% elif opt.type == "int" %}
-    {{ opt.name | replace('-', '_') }}: i32,
-    {% else %}
-    {% if opt.required is defined and opt.required %}
-    {{ opt.name | replace('-', '_') }}: &str,
-    {% else %}
-    {{ opt.name | replace('-', '_') }}: Option<&str>,
-    {% endif %}
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-) -> CliResult<()> {
-    {% if cmd_data.lifecycle == "managed" %}
-    // Managed command - would need external command instance
-    utils::output::info("🔧 Managed command '{{ cmd_name }}' requires external implementation");
-    utils::output::info("   Implement {{ cmd_name | title }}Command struct with execute() method");
+
+
+/// Execute hello command with proper error handling
+fn execute_hello_command(
     
-    return Err(CLIError::hook(
-        command: "{{ cmd_name }}".to_string(),
-        reason: "Managed command not implemented".to_string(),
-    }));
-    {% else %}
+    
+    
+    name: &str,
+    
+    
+    
+    
+    
+    
+    __loud: bool,
+    
+    
+    
+) -> CliResult<()> {
+    
     // Default command implementation with validation
-    utils::output::info("🚀 Executing {{ cmd_name }} command...");
+    utils::output::info("🚀 Executing hello command...");
     
     // Validate command arguments
-    {% if cmd_data.args %}
-    {% for arg in cmd_data.args %}
-    {% if arg.required %}
-    if {{ arg.name }}.is_empty() {
-        return Err(CLIError::Command(errors::CommandError::MissingArgument {
-            arg: "{{ arg.name }}".to_string(),
+    
+    
+    
+    if name.is_empty() {
+        return Err(CliError::Command(errors::CommandError::MissingArgument {
+            arg: "name".to_string(),
         }));
     }
-    {% endif %}
-    {% if arg.choices %}
-    {
-        let valid_choices = vec![{% for choice in arg.choices %}"{{ choice }}"{% if not loop.last %}, {% endif %}{% endfor %}];
-        {% if arg.required %}
-        if !valid_choices.contains(&{{ arg.name }}) {
-            return Err(CLIError::Command(errors::CommandError::InvalidArgument {
-                arg: "{{ arg.name }}".to_string(),
-                value: {{ arg.name }}.to_string(),
-                expected: format!("one of: {}", valid_choices.join(", ")),
-            }));
-        }
-        {% else %}
-        if let Some(value) = {{ arg.name }} {
-            if !valid_choices.contains(&value) {
-                return Err(CLIError::Command(errors::CommandError::InvalidArgument {
-                    arg: "{{ arg.name }}".to_string(),
-                    value: value.to_string(),
-                    expected: format!("one of: {}", valid_choices.join(", ")),
-                }));
-            }
-        }
-        {% endif %}
-    }
-    {% endif %}
-    {% endfor %}
-    {% endif %}
+    
+    
+    
+    
     
     // Display command execution information
-    {% if cmd_data.args %}
-    {% for arg in cmd_data.args %}
-    {% if arg.required %}
-    utils::output::key_value("{{ arg.name }}", {{ arg.name }});
-    {% else %}
-    if let Some(value) = {{ arg.name }} {
-        utils::output::key_value("{{ arg.name }}", value);
-    }
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-    {% if cmd_data.options %}
-    {% for opt in cmd_data.options %}
-    {% if opt.type == "flag" or opt.type == "bool" %}
-    if {{ opt.name | replace('-', '_') }} {
-        utils::output::key_value("{{ opt.name }}", "enabled");
-    }
-    {% elif opt.type == "int" %}
-    utils::output::key_value("{{ opt.name }}", &{{ opt.name | replace('-', '_') }}.to_string());
-    {% else %}
-    {% if opt.required is defined and opt.required %}
-    utils::output::key_value("{{ opt.name }}", {{ opt.name | replace('-', '_') }});
-    {% else %}
-    if let Some(value) = {{ opt.name | replace('-', '_') }} {
-        utils::output::key_value("{{ opt.name }}", value);
-    }
-    {% endif %}
-    {% endif %}
-    {% endfor %}
-    {% endif %}
     
-    // TODO: Implement actual {{ cmd_name }} command logic here
+    
+    
+    utils::output::key_value("name", name);
+    
+    
+    
+    
+    
+    
+    if __loud {
+        utils::output::key_value("--loud", "enabled");
+    }
+    
+    
+    
+    
+    // TODO: Implement actual hello command logic here
     // This is a placeholder implementation
     
-    utils::output::success("{{ cmd_name | title }} command completed successfully!");
-    {% endif %}
+    utils::output::success("Hello command completed successfully!");
+    
     
     Ok(())
 }
-{% endif %}
-{% endfor %}
+
+
+
+
 
 /// Handle completion generate command
 fn handle_completion_generate(shell: &str, output: Option<&str>, verbose: bool) -> CliResult<()> {
@@ -877,7 +745,7 @@ fn handle_completion_generate(shell: &str, output: Option<&str>, verbose: bool) 
         "zsh" => generate_zsh_completion(),
         "fish" => generate_fish_completion(),
         "powershell" => generate_powershell_completion(),
-        _ => return Err(CLIError::Command(errors::CommandError::InvalidArgument {
+        _ => return Err(CliError::Command(errors::CommandError::InvalidArgument {
             arg: "shell".to_string(),
             value: shell.to_string(),
             expected: "one of: bash, zsh, fish, powershell".to_string(),
@@ -888,13 +756,13 @@ fn handle_completion_generate(shell: &str, output: Option<&str>, verbose: bool) 
         Some(file_path) => {
             // Write to file
             let mut file = std::fs::File::create(file_path)
-                .map_err(|e| CLIError::Io(std::io::Error::new(
+                .map_err(|e| CliError::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     format!("Failed to create output file '{}': {}", file_path, e)
                 )))?;
             
             file.write_all(completion_script.as_bytes())
-                .map_err(|e| CLIError::Io(std::io::Error::new(
+                .map_err(|e| CliError::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     format!("Failed to write to output file '{}': {}", file_path, e)
                 )))?;
@@ -924,44 +792,44 @@ fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResul
                 PathBuf::from("/etc/bash_completion.d")
             } else {
                 dirs::home_dir()
-                    .ok_or_else(|| CLIError::Environment {
+                    .ok_or_else(|| CliError::Environment {
                         message: "Could not determine home directory".to_string(),
                     })?
                     .join(".local/share/bash-completion/completions")
             };
-            (dir, format!("{}", "{{ command_name }}"))
+            (dir, format!("{}", "testcli"))
         }
         "zsh" => {
             let dir = if system {
                 PathBuf::from("/usr/local/share/zsh/site-functions")
             } else {
                 dirs::home_dir()
-                    .ok_or_else(|| CLIError::Environment {
+                    .ok_or_else(|| CliError::Environment {
                         message: "Could not determine home directory".to_string(),
                     })?
                     .join(".local/share/zsh/site-functions")
             };
-            (dir, format!("_{}", "{{ command_name }}"))
+            (dir, format!("_{}", "testcli"))
         }
         "fish" => {
             let dir = if system {
                 PathBuf::from("/usr/share/fish/completions")
             } else {
                 dirs::home_dir()
-                    .ok_or_else(|| CLIError::Environment {
+                    .ok_or_else(|| CliError::Environment {
                         message: "Could not determine home directory".to_string(),
                     })?
                     .join(".config/fish/completions")
             };
-            (dir, format!("{}.fish", "{{ command_name }}"))
+            (dir, format!("{}.fish", "testcli"))
         }
         "powershell" => {
-            return Err(CLIError::hook(
+            return Err(CliError::Command(errors::CommandError::ExecutionFailed {
                 command: "completion install".to_string(),
                 reason: "PowerShell completion installation not supported on this platform".to_string(),
             }));
         }
-        _ => return Err(CLIError::Command(errors::CommandError::InvalidArgument {
+        _ => return Err(CliError::Command(errors::CommandError::InvalidArgument {
             arg: "shell".to_string(),
             value: shell.to_string(),
             expected: "one of: bash, zsh, fish, powershell".to_string(),
@@ -972,7 +840,7 @@ fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResul
     
     // Check if completion already exists
     if completion_path.exists() && !force {
-        return Err(CLIError::hook(
+        return Err(CliError::Command(errors::CommandError::ExecutionFailed {
             command: "completion install".to_string(),
             reason: format!(
                 "Completion already exists at {}. Use --force to overwrite.",
@@ -984,7 +852,7 @@ fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResul
     // Create completion directory if it doesn't exist
     if let Some(parent) = completion_path.parent() {
         fs::create_dir_all(parent)
-            .map_err(|e| CLIError::Io(std::io::Error::new(
+            .map_err(|e| CliError::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!("Failed to create completion directory '{}': {}", parent.display(), e)
             )))?;
@@ -1000,7 +868,7 @@ fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResul
     
     // Write completion script
     fs::write(&completion_path, completion_script)
-        .map_err(|e| CLIError::Io(std::io::Error::new(
+        .map_err(|e| CliError::Io(std::io::Error::new(
             std::io::ErrorKind::Other,
             format!("Failed to write completion file '{}': {}", completion_path.display(), e)
         )))?;
@@ -1048,7 +916,7 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
         "bash" => {
             if system {
                 println!("1. Generate completion script:");
-                println!("   {} completion generate bash | sudo tee /etc/bash_completion.d/{}", "{{ command_name }}", "{{ command_name }}");
+                println!("   {} completion generate bash | sudo tee /etc/bash_completion.d/{}", "testcli", "testcli");
                 println!();
                 println!("2. Reload bash completions:");
                 println!("   source /etc/bash_completion");
@@ -1057,16 +925,16 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
                 println!("   mkdir -p ~/.local/share/bash-completion/completions");
                 println!();
                 println!("2. Generate completion script:");
-                println!("   {} completion generate bash > ~/.local/share/bash-completion/completions/{}", "{{ command_name }}", "{{ command_name }}");
+                println!("   {} completion generate bash > ~/.local/share/bash-completion/completions/{}", "testcli", "testcli");
                 println!();
                 println!("3. Add to ~/.bashrc:");
-                println!("   source ~/.local/share/bash-completion/completions/{}",  "{{ command_name }}");
+                println!("   source ~/.local/share/bash-completion/completions/{}",  "testcli");
             }
         }
         "zsh" => {
             if system {
                 println!("1. Generate completion script:");
-                println!("   {} completion generate zsh | sudo tee /usr/local/share/zsh/site-functions/_{}", "{{ command_name }}", "{{ command_name }}");
+                println!("   {} completion generate zsh | sudo tee /usr/local/share/zsh/site-functions/_{}", "testcli", "testcli");
                 println!();
                 println!("2. Reload zsh completions:");
                 println!("   autoload -U compinit && compinit");
@@ -1075,7 +943,7 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
                 println!("   mkdir -p ~/.local/share/zsh/site-functions");
                 println!();
                 println!("2. Generate completion script:");
-                println!("   {} completion generate zsh > ~/.local/share/zsh/site-functions/_{}", "{{ command_name }}", "{{ command_name }}");
+                println!("   {} completion generate zsh > ~/.local/share/zsh/site-functions/_{}", "testcli", "testcli");
                 println!();
                 println!("3. Add to ~/.zshrc (if not already present):");
                 println!("   fpath=(~/.local/share/zsh/site-functions $fpath)");
@@ -1085,28 +953,28 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
         "fish" => {
             if system {
                 println!("1. Generate completion script:");
-                println!("   {} completion generate fish | sudo tee /usr/share/fish/completions/{}.fish", "{{ command_name }}", "{{ command_name }}");
+                println!("   {} completion generate fish | sudo tee /usr/share/fish/completions/{}.fish", "testcli", "testcli");
             } else {
                 println!("1. Create completion directory:");
                 println!("   mkdir -p ~/.config/fish/completions");
                 println!();
                 println!("2. Generate completion script:");
-                println!("   {} completion generate fish > ~/.config/fish/completions/{}.fish", "{{ command_name }}", "{{ command_name }}");
+                println!("   {} completion generate fish > ~/.config/fish/completions/{}.fish", "testcli", "testcli");
             }
             println!();
             println!("Fish completions are automatically loaded when the shell starts.");
         }
         "powershell" => {
             println!("1. Generate completion script:");
-            println!("   {} completion generate powershell > {}_completion.ps1", "{{ command_name }}", "{{ command_name }}");
+            println!("   {} completion generate powershell > {}_completion.ps1", "testcli", "testcli");
             println!();
             println!("2. Add to PowerShell profile:");
-            println!("   . ./{}_completion.ps1", "{{ command_name }}");
+            println!("   . ./{}_completion.ps1", "testcli");
             println!();
             println!("Note: You may need to adjust ExecutionPolicy:");
             println!("   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser");
         }
-        _ => return Err(CLIError::Command(errors::CommandError::InvalidArgument {
+        _ => return Err(CliError::Command(errors::CommandError::InvalidArgument {
             arg: "shell".to_string(),
             value: shell.to_string(),
             expected: "one of: bash, zsh, fish, powershell".to_string(),
@@ -1122,7 +990,7 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
 /// Handle config get command
 fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
     let config = crate::config::AppConfig::load()
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
             message: format!("Failed to load configuration: {}", e),
         }))?;
     
@@ -1137,14 +1005,14 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
                         "json" => {
                             let json_value = serde_json::json!({key_name: value});
                             println!("{}", serde_json::to_string_pretty(&json_value)
-                                .map_err(|e| CLIError::validation_failed(
+                                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
                                     message: format!("Failed to format as JSON: {}", e),
                                 }))?);
                         }
                         "yaml" => {
                             let yaml_map = std::collections::HashMap::<String, serde_yaml::Value>::from([(key_name.to_string(), value.clone())]);
                             println!("{}", serde_yaml::to_string(&yaml_map)
-                                .map_err(|e| CLIError::validation_failed(
+                                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
                                     message: format!("Failed to format as YAML: {}", e),
                                 }))?);
                         }
@@ -1154,7 +1022,7 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
                     }
                 }
                 None => {
-                    return Err(CLIError::Config(errors::ConfigError::KeyNotFound {
+                    return Err(CliError::Config(errors::ConfigError::KeyNotFound {
                         key: key_name.to_string(),
                     }));
                 }
@@ -1167,13 +1035,13 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
             match output_format {
                 "json" => {
                     println!("{}", serde_json::to_string_pretty(&all_config)
-                        .map_err(|e| CLIError::validation_failed(
+                        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
                             message: format!("Failed to format as JSON: {}", e),
                         }))?);
                 }
                 "yaml" => {
                     println!("{}", serde_yaml::to_string(&all_config)
-                        .map_err(|e| CLIError::validation_failed(
+                        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
                             message: format!("Failed to format as YAML: {}", e),
                         }))?);
                 }
@@ -1193,7 +1061,7 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
 /// Handle config set command
 fn handle_config_set(key: &str, value: &str, value_type: Option<&str>) -> CliResult<()> {
     let mut config = crate::config::AppConfig::load()
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
             message: format!("Failed to load configuration: {}", e),
         }))?;
     
@@ -1202,39 +1070,39 @@ fn handle_config_set(key: &str, value: &str, value_type: Option<&str>) -> CliRes
         "string" => serde_yaml::Value::String(value.to_string()),
         "int" => {
             let int_val: i64 = value.parse()
-                .map_err(|_| CLIError::validation_failed(
+                .map_err(|_| CliError::Config(errors::ConfigError::ValidationFailed {
                     message: format!("Invalid integer value: {}", value),
                 }))?;
             serde_yaml::Value::Number(serde_yaml::Number::from(int_val))
         }
         "float" => {
             let float_val: f64 = value.parse()
-                .map_err(|_| CLIError::validation_failed(
+                .map_err(|_| CliError::Config(errors::ConfigError::ValidationFailed {
                     message: format!("Invalid float value: {}", value),
                 }))?;
             serde_yaml::Value::Number(serde_yaml::Number::from(float_val))
         }
         "bool" => {
             let bool_val: bool = value.parse()
-                .map_err(|_| CLIError::validation_failed(
+                .map_err(|_| CliError::Config(errors::ConfigError::ValidationFailed {
                     message: format!("Invalid boolean value: {} (use true/false)", value),
                 }))?;
             serde_yaml::Value::Bool(bool_val)
         }
-        _ => return Err(CLIError::validation_failed(
+        _ => return Err(CliError::Config(errors::ConfigError::ValidationFailed {
             message: format!("Invalid value type: {}", value_type.unwrap()),
         })),
     };
     
     // Set the value
     config.set_value(key, parsed_value)
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
             message: format!("Failed to set configuration value: {}", e),
         }))?;
     
     // Save the configuration
     config.save()
-        .map_err(|e| CLIError::Config(errors::ConfigError::SaveFailed {
+        .map_err(|e| CliError::Config(errors::ConfigError::SaveFailed {
             message: format!("Failed to save configuration: {}", e),
         }))?;
     
@@ -1246,7 +1114,7 @@ fn handle_config_set(key: &str, value: &str, value_type: Option<&str>) -> CliRes
 /// Handle config reset command
 fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
     let config_path = crate::config::AppConfig::config_path()
-        .map_err(|e| CLIError::Environment {
+        .map_err(|e| CliError::Environment {
             message: format!("Could not determine configuration path: {}", e),
         })?;
     
@@ -1258,7 +1126,7 @@ fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
                 println!("Reset configuration key '{}' to default value? [y/N]: ", key_name);
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)
-                    .map_err(|e| CLIError::Io(e))?;
+                    .map_err(|e| CliError::Io(e))?;
                 
                 if !input.trim().to_lowercase().starts_with('y') {
                     utils::output::info("Reset cancelled.");
@@ -1267,17 +1135,17 @@ fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
             }
             
             let mut config = crate::config::AppConfig::load()
-                .map_err(|e| CLIError::validation_failed(
+                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
                     message: format!("Failed to load configuration: {}", e),
                 }))?;
             
             config.reset_key(key_name)
-                .map_err(|e| CLIError::validation_failed(
+                .map_err(|e| CliError::Config(errors::ConfigError::ValidationFailed {
                     message: format!("Failed to reset configuration key: {}", e),
                 }))?;
             
             config.save()
-                .map_err(|e| CLIError::Config(errors::ConfigError::SaveFailed {
+                .map_err(|e| CliError::Config(errors::ConfigError::SaveFailed {
                     message: format!("Failed to save configuration: {}", e),
                 }))?;
             
@@ -1289,7 +1157,7 @@ fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
                 println!("Reset entire configuration to defaults? This will remove all custom settings. [y/N]: ");
                 let mut input = String::new();
                 std::io::stdin().read_line(&mut input)
-                    .map_err(|e| CLIError::Io(e))?;
+                    .map_err(|e| CliError::Io(e))?;
                 
                 if !input.trim().to_lowercase().starts_with('y') {
                     utils::output::info("Reset cancelled.");
@@ -1300,7 +1168,7 @@ fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
             // Remove config file to reset to defaults
             if config_path.exists() {
                 std::fs::remove_file(&config_path)
-                    .map_err(|e| CLIError::Io(std::io::Error::new(
+                    .map_err(|e| CliError::Io(std::io::Error::new(
                         std::io::ErrorKind::Other,
                         format!("Failed to remove configuration file '{}': {}", config_path.display(), e)
                     )))?;
@@ -1317,13 +1185,13 @@ fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
 fn handle_config_path(dir: bool, create: bool) -> CliResult<()> {
     if dir {
         let config_dir = crate::config::AppConfig::config_dir()
-            .map_err(|e| CLIError::Environment {
+            .map_err(|e| CliError::Environment {
                 message: format!("Could not determine configuration directory: {}", e),
             })?;
         
         if create && !config_dir.exists() {
             std::fs::create_dir_all(&config_dir)
-                .map_err(|e| CLIError::Io(std::io::Error::new(
+                .map_err(|e| CliError::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     format!("Failed to create configuration directory '{}': {}", config_dir.display(), e)
                 )))?;
@@ -1333,7 +1201,7 @@ fn handle_config_path(dir: bool, create: bool) -> CliResult<()> {
         println!("{}", config_dir.display());
     } else {
         let config_path = crate::config::AppConfig::config_path()
-            .map_err(|e| CLIError::Environment {
+            .map_err(|e| CliError::Environment {
                 message: format!("Could not determine configuration path: {}", e),
             })?;
         
@@ -1342,7 +1210,7 @@ fn handle_config_path(dir: bool, create: bool) -> CliResult<()> {
             if let Some(parent) = config_path.parent() {
                 if !parent.exists() {
                     std::fs::create_dir_all(parent)
-                        .map_err(|e| CLIError::Io(std::io::Error::new(
+                        .map_err(|e| CliError::Io(std::io::Error::new(
                             std::io::ErrorKind::Other,
                             format!("Failed to create configuration directory '{}': {}", parent.display(), e)
                         )))?;
@@ -1353,7 +1221,7 @@ fn handle_config_path(dir: bool, create: bool) -> CliResult<()> {
             if !config_path.exists() {
                 let default_config = crate::config::AppConfig::default();
                 default_config.save()
-                    .map_err(|e| CLIError::Config(errors::ConfigError::SaveFailed {
+                    .map_err(|e| CliError::Config(errors::ConfigError::SaveFailed {
                         message: format!("Failed to create configuration file: {}", e),
                     }))?;
                 utils::output::success(&format!("Created configuration file: {}", config_path.display()));
@@ -1368,7 +1236,7 @@ fn handle_config_path(dir: bool, create: bool) -> CliResult<()> {
 
 // Helper functions for generating completion scripts
 fn generate_bash_completion() -> String {
-    {% raw %}format!(r#"#!/bin/bash
+    format!(r#"#!/bin/bash
 # Bash completion for {}
 # Generated by goobits-cli
 
@@ -1389,11 +1257,11 @@ _{}_completion() {{
 }}
 
 complete -F _{}_completion {}
-"#{% endraw %}, "{{ command_name }}", "{{ command_name | replace('-', '_') }}", "{{ command_name }}", "{{ command_name | replace('-', '_') }}", "{{ command_name }}")
+"#, "testcli", "testcli", "testcli", "testcli", "testcli")
 }
 
 fn generate_zsh_completion() -> String {
-    {% raw %}format!(r#"#compdef {}
+    format!(r#"#compdef {}
 # Zsh completion for {}
 # Generated by goobits-cli
 
@@ -1409,19 +1277,19 @@ _{}_completion() {{
 }}
 
 _{}_completion "$@"
-"#{% endraw %}, "{{ command_name }}", "{{ command_name }}", "{{ command_name | replace('-', '_') }}", "{{ command_name }}", "{{ command_name | replace('-', '_') }}")
+"#, "testcli", "testcli", "testcli", "testcli", "testcli")
 }
 
 fn generate_fish_completion() -> String {
-    {% raw %}format!(r#"# Fish completion for {}
+    format!(r#"# Fish completion for {}
 # Generated by goobits-cli
 
 complete -c {} -f -a "({} _completion fish (commandline -cp) (commandline -C) 2>/dev/null)"
-"#{% endraw %}, "{{ command_name }}", "{{ command_name }}", "{{ command_name }}")
+"#, "testcli", "testcli", "testcli")
 }
 
 fn generate_powershell_completion() -> String {
-    {% raw %}format!(r#"# PowerShell completion for {}
+    format!(r#"# PowerShell completion for {}
 # Generated by goobits-cli
 
 Register-ArgumentCompleter -Native -CommandName {} -ScriptBlock {{
@@ -1436,11 +1304,11 @@ Register-ArgumentCompleter -Native -CommandName {} -ScriptBlock {{
         # Silently ignore errors
     }}
 }}
-"#{% endraw %}, "{{ command_name }}", "{{ command_name }}", "{{ command_name }}")
+"#, "testcli", "testcli", "testcli")
 }
 
 /// Handle application errors with appropriate formatting and exit codes
-fn handle_application_error(error: &CLIError) {
+fn handle_application_error(error: &CliError) {
     // Initialize styling if not already done (fallback)
     if std::panic::catch_unwind(|| styling::output()).is_err() {
         initialize_styling(true, true);

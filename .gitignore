@@ -1,53 +1,24 @@
-# Virtual environments
-venv/
-env/
-.venv/
-test_env/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Rust
 /target/
+**/*.rs.bk
 Cargo.lock
 
-# IDEs
-.vscode/
+# IDE files
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Testing
-.coverage
-.pytest_cache/
-.mypy_cache/
-.tox/
-htmlcov/
+# Environment variables
+.env
+.env.local
 
 # Logs
 *.log
-logs/
-EOF < /dev/null
+
+# Build artifacts
+/release/
+/debug/

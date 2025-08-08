@@ -1,6 +1,6 @@
 /**
- * Hook system for {{ display_name }}
- * Auto-generated from {{ file_name }}
+ * Hook system for Test Rust CLI
+ * Auto-generated from test-rust-verification.yaml
  */
 
 use anyhow::Result;
@@ -104,31 +104,43 @@ impl DynamicHook {
 pub struct BuiltinHooks;
 
 impl BuiltinHooks {
-    {% for cmd_name, cmd_data in cli.commands.items() %}
-    /// Pre-command hook for {{ cmd_name }}
-    pub fn pre_{{ cmd_name | replace('-', '_') }}(context: &HookContext) -> Result<()> {
-        // Default pre-command behavior for {{ cmd_name }}
-        {% if cmd_data.hooks and cmd_data.hooks.pre %}
-        println!("🔧 Running pre-{{ cmd_name }} hook");
-        // TODO: Implement {{ cmd_data.hooks.pre }} behavior
-        {% else %}
+    
+    /// Pre-command hook for hello
+    pub fn pre_hello(context: &HookContext) -> Result<()> {
+        // Default pre-command behavior for hello
+        
         // No specific pre-command hook defined
-        {% endif %}
+        
         Ok(())
     }
     
-    /// Post-command hook for {{ cmd_name }}
-    pub fn post_{{ cmd_name | replace('-', '_') }}(context: &HookContext) -> Result<()> {
-        // Default post-command behavior for {{ cmd_name }}
-        {% if cmd_data.hooks and cmd_data.hooks.post %}
-        println!("🔧 Running post-{{ cmd_name }} hook");
-        // TODO: Implement {{ cmd_data.hooks.post }} behavior
-        {% else %}
+    /// Post-command hook for hello
+    pub fn post_hello(context: &HookContext) -> Result<()> {
+        // Default post-command behavior for hello
+        
         // No specific post-command hook defined
-        {% endif %}
+        
         Ok(())
     }
-    {% endfor %}
+    
+    /// Pre-command hook for config
+    pub fn pre_config(context: &HookContext) -> Result<()> {
+        // Default pre-command behavior for config
+        
+        // No specific pre-command hook defined
+        
+        Ok(())
+    }
+    
+    /// Post-command hook for config
+    pub fn post_config(context: &HookContext) -> Result<()> {
+        // Default post-command behavior for config
+        
+        // No specific post-command hook defined
+        
+        Ok(())
+    }
+    
     
     /// Global pre-command hook
     pub fn global_pre_command(context: &HookContext) -> Result<()> {
@@ -193,12 +205,17 @@ impl HookRegistry {
     }
     
     fn register_builtin_hooks(&mut self) {
-        {% for cmd_name, cmd_data in cli.commands.items() %}
-        let mut {{ cmd_name | replace('-', '_') }}_hooks = HashMap::new();
-        {{ cmd_name | replace('-', '_') }}_hooks.insert(ExecutionPhase::PreCommand, BuiltinHooks::pre_{{ cmd_name | replace('-', '_') }} as HookFn);
-        {{ cmd_name | replace('-', '_') }}_hooks.insert(ExecutionPhase::PostCommand, BuiltinHooks::post_{{ cmd_name | replace('-', '_') }} as HookFn);
-        self.builtin_hooks.insert("{{ cmd_name }}".to_string(), {{ cmd_name | replace('-', '_') }}_hooks);
-        {% endfor %}
+        
+        let mut hello_hooks = HashMap::new();
+        hello_hooks.insert(ExecutionPhase::PreCommand, BuiltinHooks::pre_hello as HookFn);
+        hello_hooks.insert(ExecutionPhase::PostCommand, BuiltinHooks::post_hello as HookFn);
+        self.builtin_hooks.insert("hello".to_string(), hello_hooks);
+        
+        let mut config_hooks = HashMap::new();
+        config_hooks.insert(ExecutionPhase::PreCommand, BuiltinHooks::pre_config as HookFn);
+        config_hooks.insert(ExecutionPhase::PostCommand, BuiltinHooks::post_config as HookFn);
+        self.builtin_hooks.insert("config".to_string(), config_hooks);
+        
     }
     
     fn register_global_hooks(&mut self) {
@@ -306,38 +323,51 @@ struct HookDefinition {
 static HOOK_REGISTRY: Mutex<Option<HookRegistry>> = Mutex::new(None);
 
 // Command-specific modules for hook implementations
-{% for cmd_name, cmd_data in cli.commands.items() %}
-pub mod {{ cmd_name | replace('-', '_') }} {
+
+pub mod hello {
     use anyhow::Result;
     use serde::{Deserialize, Serialize};
     
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Args {
-        {% for arg in cmd_data.args %}
-        pub {{ arg.name | replace('-', '_') }}: String,
-        {% endfor %}
-        {% for opt in cmd_data.options %}
-        {% if opt.type == 'flag' %}
-        pub {{ opt.name | replace('-', '_') }}: bool,
-        {% else %}
-        pub {{ opt.name | replace('-', '_') }}: {% if opt.type == 'int' %}i64{% elif opt.type == 'float' %}f64{% else %}Option<String>{% endif %},
-        {% endif %}
-        {% endfor %}
+        
+        pub name: String,
+        
+        
+        
+        pub __loud: Option<String>,
+        
+        
     }
     
     pub fn execute(args: Args) -> Result<()> {
-        // TODO: Implement {{ cmd_name }} command logic
-        {% if cmd_name == 'greet' %}
-        println!("Greet command executed");
-        {% elif cmd_name == 'info' %}
-        println!("Info command executed");
-        {% else %}
-        println!("Executing {{ cmd_name }} command");
-        {% endif %}
+        // TODO: Implement hello command logic
+        
+        println!("Executing hello command");
+        
         Ok(())
     }
 }
-{% endfor %}
+
+pub mod config {
+    use anyhow::Result;
+    use serde::{Deserialize, Serialize};
+    
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct Args {
+        
+        
+    }
+    
+    pub fn execute(args: Args) -> Result<()> {
+        // TODO: Implement config command logic
+        
+        println!("Executing config command");
+        
+        Ok(())
+    }
+}
+
 
 /// Initialize the global hook registry
 pub fn initialize_hooks(config_dir: &PathBuf) -> Result<()> {
@@ -387,9 +417,11 @@ mod tests {
         let registry = HookRegistry::new();
         
         // Test that built-in hooks are registered
-        {% for cmd_name, cmd_data in cli.commands.items() %}
-        assert!(registry.builtin_hooks.contains_key("{{ cmd_name }}"));
-        {% endfor %}
+        
+        assert!(registry.builtin_hooks.contains_key("hello"));
+        
+        assert!(registry.builtin_hooks.contains_key("config"));
+        
         
         // Test global hooks
         assert!(registry.global_hooks.contains_key(&ExecutionPhase::PreCommand));

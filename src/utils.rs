@@ -1,153 +1,110 @@
-//! Utility functions for Test Rust CLI
-//! Auto-generated from test-rust-cli.yaml
+/**
+ * Utility functions for Test Rust CLI
+ * Auto-generated from test-rust-verification.yaml
+ */
 
 use anyhow::{Context, Result};
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-/// Terminal output utilities
+/// Terminal output utilities using the styling system
 pub mod output {
-    use super::*;
+    use crate::styling;
     
     /// Print an informational message
     pub fn info(message: &str) {
-        if is_tty() {
-            println!("🔹 {message}");
-        } else {
-            println!("INFO: {message}");
-        }
+        let _ = styling::output().info(message);
     }
     
     /// Print a success message
     pub fn success(message: &str) {
-        if is_tty() {
-            println!("✅ {message}");
-        } else {
-            println!("SUCCESS: {message}");
-        }
+        let _ = styling::output().success(message);
     }
     
     /// Print a warning message
     pub fn warning(message: &str) {
-        if is_tty() {
-            eprintln!("⚠️  {message}");
-        } else {
-            eprintln!("WARNING: {message}");
-        }
+        let _ = styling::output().warning(message);
     }
     
     /// Print an error message
     pub fn error(message: &str) {
-        if is_tty() {
-            eprintln!("❌ {message}");
-        } else {
-            eprintln!("ERROR: {message}");
-        }
+        let _ = styling::output().error(message);
     }
     
     /// Print a debug message (only in debug builds)
     pub fn debug(message: &str) {
-        #[cfg(debug_assertions)]
-        {
-            if is_tty() {
-                eprintln!("🔧 DEBUG: {message}");
-            } else {
-                eprintln!("DEBUG: {message}");
-            }
-        }
+        let _ = styling::output().debug(message);
     }
     
     /// Print a progress message
     pub fn progress(message: &str) {
-        if is_tty() {
-            print!("🔄 {message}...");
-        } else {
-            print!("PROGRESS: {message}...");
-        }
-        io::stdout().flush().unwrap_or_default();
+        let _ = styling::output().progress(message);
     }
     
     /// Complete a progress message
     pub fn progress_done() {
-        println!(" ✓");
+        let _ = styling::output().progress_done();
     }
     
     /// Fail a progress message
     pub fn progress_failed() {
-        println!(" ✗");
+        let _ = styling::output().progress_failed();
+    }
+    
+    /// Print a header
+    pub fn header(title: &str) {
+        let _ = styling::output().header(title);
+    }
+    
+    /// Print a subheader
+    pub fn subheader(title: &str) {
+        let _ = styling::output().subheader(title);
+    }
+    
+    /// Print a list item
+    pub fn list_item(item: &str) {
+        let _ = styling::output().list_item(item);
+    }
+    
+    /// Print a key-value pair
+    pub fn key_value(key: &str, value: &str) {
+        let _ = styling::output().key_value(key, value);
+    }
+    
+    /// Print JSON output
+    pub fn json(data: &serde_json::Value) {
+        let _ = styling::output().json(data);
     }
 }
 
-/// Input/interaction utilities
+/// Input/interaction utilities using the styling system
 pub mod input {
     use super::*;
+    use crate::styling::InputPrompt;
     
     /// Prompt user for input
     pub fn prompt(message: &str) -> Result<String> {
-        if is_tty() {
-            print!("❓ {message}: ");
-        } else {
-            print!("PROMPT {message}: ");
-        }
-        io::stdout().flush()?;
-        
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-        Ok(input.trim().to_string())
+        let prompt = InputPrompt::new();
+        prompt.text(message)
     }
     
     /// Prompt user for input with a default value
     pub fn prompt_with_default(message: &str, default: &str) -> Result<String> {
-        if is_tty() {
-            print!("❓ {message} [{default}]: ");
-        } else {
-            print!("PROMPT {message} [{default}]: ");
-        }
-        io::stdout().flush()?;
-        
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-        let input = input.trim();
-        
-        if input.is_empty() {
-            Ok(default.to_string())
-        } else {
-            Ok(input.to_string())
-        }
+        let prompt = InputPrompt::new();
+        prompt.text_with_default(message, default)
     }
     
     /// Prompt user for confirmation (y/n)
     pub fn confirm(message: &str) -> Result<bool> {
-        loop {
-            let input = prompt(&format!("{message} (y/n)"))?;
-            match input.to_lowercase().as_str() {
-                "y" | "yes" => return Ok(true),
-                "n" | "no" => return Ok(false),
-                _ => {
-                    output::warning("Please enter 'y' or 'n'");
-                    continue;
-                }
-            }
-        }
+        let prompt = InputPrompt::new();
+        prompt.confirm(message)
     }
     
     /// Prompt user to select from a list of options
     pub fn select(message: &str, options: &[&str]) -> Result<usize> {
-        println!("❓ {message}");
-        for (i, option) in options.iter().enumerate() {
-            println!("  {}. {option}", i + 1);
-        }
-        
-        loop {
-            let input = prompt("Enter selection number")?;
-            if let Ok(selection) = input.parse::<usize>() {
-                if selection > 0 && selection <= options.len() {
-                    return Ok(selection - 1);
-                }
-            }
-            output::warning(&format!("Please enter a number between 1 and {}", options.len()));
-        }
+        let prompt = InputPrompt::new();
+        prompt.select(message, options)
     }
 }
 
@@ -243,7 +200,7 @@ pub mod process {
             .args(args)
             .stdin(Stdio::null())
             .status()
-            .with_context(|| format!("Failed to execute: {command} {}", args.join(" ")))?;
+            .with_context(|| format!("Failed to execute: {} {}", command, args.join(" ")))?;
         
         Ok(status.success())
     }
@@ -254,13 +211,13 @@ pub mod process {
             .args(args)
             .stdin(Stdio::null())
             .output()
-            .with_context(|| format!("Failed to execute: {command} {}", args.join(" ")))?;
+            .with_context(|| format!("Failed to execute: {} {}", command, args.join(" ")))?;
         
         if output.status.success() {
             Ok(String::from_utf8_lossy(&output.stdout).to_string())
         } else {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            anyhow::bail!("Command failed: {stderr}");
+            anyhow::bail!("Command failed: {}", stderr);
         }
     }
     
@@ -269,7 +226,7 @@ pub mod process {
         let status = Command::new(command)
             .args(args)
             .status()
-            .with_context(|| format!("Failed to execute: {command} {}", args.join(" ")))?;
+            .with_context(|| format!("Failed to execute: {} {}", command, args.join(" ")))?;
         
         Ok(status.success())
     }
@@ -291,11 +248,11 @@ pub mod string {
     /// Convert string to snake_case
     pub fn to_snake_case(s: &str) -> String {
         let mut result = String::new();
-        let chars = s.chars();
+        let mut chars = s.chars().peekable();
         
-        for ch in chars {
+        while let Some(ch) = chars.next() {
             if ch.is_uppercase() {
-                if !result.is_empty() && !result.ends_with('_') {
+                if !result.is_empty() && result.chars().last() != Some('_') {
                     result.push('_');
                 }
                 result.push(ch.to_lowercase().next().unwrap());
@@ -312,11 +269,11 @@ pub mod string {
     /// Convert string to kebab-case
     pub fn to_kebab_case(s: &str) -> String {
         let mut result = String::new();
-        let chars = s.chars();
+        let mut chars = s.chars().peekable();
         
-        for ch in chars {
+        while let Some(ch) = chars.next() {
             if ch.is_uppercase() {
-                if !result.is_empty() && !result.ends_with('-') {
+                if !result.is_empty() && result.chars().last() != Some('-') {
                     result.push('-');
                 }
                 result.push(ch.to_lowercase().next().unwrap());
@@ -351,7 +308,7 @@ pub mod time {
         let secs = duration.as_secs();
         
         if secs < 60 {
-            format!("{secs}s")
+            format!("{}s", secs)
         } else if secs < 3600 {
             format!("{}m{}s", secs / 60, secs % 60)
         } else {
@@ -372,7 +329,7 @@ pub mod time {
         use chrono::{DateTime, Utc};
         
         let dt = DateTime::<Utc>::from_timestamp(timestamp as i64, 0)
-            .unwrap_or_else(Utc::now);
+            .unwrap_or_else(|| Utc::now());
         
         dt.format("%Y-%m-%d %H:%M:%S UTC").to_string()
     }

@@ -1,0 +1,29 @@
+name: test-rust-cli
+version: "1.0.0"
+description: Test CLI for Rust verification
+author: Test Author
+language: rust
+
+setup:
+  rust:
+    crate_name: test_rust_cli
+    rust_version: "1.75"
+
+cli:
+  name: testcli
+  description: Test CLI for verification
+  version: "1.0.0"
+  
+  commands:
+    - name: hello
+      description: Say hello
+      args:
+        - name: name
+          description: Name to greet
+          required: true
+          type: string
+      options:
+        - name: --loud
+          description: Shout the greeting
+          type: boolean
+          default: false
