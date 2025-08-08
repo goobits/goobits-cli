@@ -70,6 +70,8 @@ def dependency_to_dict(dep):
         return {'name': dep, 'type': 'command'}
     elif hasattr(dep, 'model_dump'):
         return dep.model_dump()
+    elif hasattr(dep, 'dict'):
+        return dep.dict()
     elif isinstance(dep, dict):
         return dep
     else:

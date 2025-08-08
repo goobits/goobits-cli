@@ -326,7 +326,7 @@ def load_plugins(cli_group):
     # Define plugin directories to search
     plugin_dirs = [
         # User-specific plugin directory
-        Path.home() / ".config" / "{{ package_name }}" / "{{ cli.name }}" / "plugins",
+        Path.home() / ".config" / "{{ package_name }}" / "plugins",
         # Local plugin directory (same as script)
         Path(__file__).parent / "plugins",
     ]

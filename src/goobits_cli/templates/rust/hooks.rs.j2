@@ -106,7 +106,7 @@ pub struct BuiltinHooks;
 impl BuiltinHooks {
     {% for cmd_name, cmd_data in cli.commands.items() %}
     /// Pre-command hook for {{ cmd_name }}
-    pub fn pre_{{ cmd_name | replace('-', '_') }}(context: &HookContext) -> Result<()> {
+    pub fn pre_{{ cmd_name | replace('-', '_') }}(_context: &HookContext) -> Result<()> {
         // Default pre-command behavior for {{ cmd_name }}
         {% if cmd_data.hooks and cmd_data.hooks.pre %}
         println!("🔧 Running pre-{{ cmd_name }} hook");
@@ -118,7 +118,7 @@ impl BuiltinHooks {
     }
     
     /// Post-command hook for {{ cmd_name }}
-    pub fn post_{{ cmd_name | replace('-', '_') }}(context: &HookContext) -> Result<()> {
+    pub fn post_{{ cmd_name | replace('-', '_') }}(_context: &HookContext) -> Result<()> {
         // Default post-command behavior for {{ cmd_name }}
         {% if cmd_data.hooks and cmd_data.hooks.post %}
         println!("🔧 Running post-{{ cmd_name }} hook");
@@ -325,7 +325,7 @@ pub mod {{ cmd_name | replace('-', '_') }} {
         {% endfor %}
     }
     
-    pub fn execute(args: Args) -> Result<()> {
+    pub fn execute(_args: Args) -> Result<()> {
         // TODO: Implement {{ cmd_name }} command logic
         {% if cmd_name == 'greet' %}
         println!("Greet command executed");

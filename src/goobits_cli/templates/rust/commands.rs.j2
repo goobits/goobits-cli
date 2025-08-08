@@ -19,7 +19,7 @@ pub trait Command: Send + Sync {
     fn execute(&self, args: &CommandArgs) -> CliResult<()>;
     
     /// Validate command arguments before execution
-    fn validate(&self, args: &CommandArgs) -> CliResult<()> {
+    fn validate(&self, _args: &CommandArgs) -> CliResult<()> {
         // Default implementation - no validation
         Ok(())
     }

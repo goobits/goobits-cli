@@ -438,7 +438,7 @@ impl TableFormatter {
     }
     
     /// Create a table with custom headers and rows
-    pub fn custom_table(headers: &[&str], rows: &[Vec<String>]) -> String {
+    pub fn custom_table(_headers: &[&str], rows: &[Vec<String>]) -> String {
         if rows.is_empty() {
             return "No data to display".to_string();
         }

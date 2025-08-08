@@ -200,7 +200,7 @@ def align_header_items(items: List) -> List[dict]:
     for item in items:
         if hasattr(item, 'dict'):
             # Pydantic model
-            dict_items.append(item.dict())
+            dict_items.append(item.model_dump())
         elif hasattr(item, '__dict__'):
             # Regular object
             dict_items.append(vars(item))

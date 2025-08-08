@@ -358,7 +358,7 @@ class UniversalTemplateEngine:
             "installation": {
                 "pypi_name": getattr(config.installation, "pypi_name", config.package_name),
                 "development_path": getattr(config.installation, "development_path", "."),
-                "extras": getattr(config.installation, "extras", {}).model_dump() if hasattr(getattr(config.installation, "extras", {}), 'model_dump') else {},
+                "extras": getattr(config.installation, "extras", {}).model_dump() if hasattr(getattr(config.installation, "extras", {}), 'model_dump') else getattr(config.installation, "extras", {}).dict() if hasattr(getattr(config.installation, "extras", {}), 'dict') else {},
             },
             "dependencies": self._extract_dependencies(config),
             "metadata": {

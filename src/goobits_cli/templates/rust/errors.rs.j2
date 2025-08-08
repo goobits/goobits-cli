@@ -3,7 +3,7 @@
  * Auto-generated from {{ file_name }}
  */
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use std::collections::HashMap;
 use std::fmt;
 use std::error::Error;
@@ -325,7 +325,7 @@ impl CLIError {
             CLIError::Dependency { .. } => vec![
                 "Install the missing dependency",
                 "Check the installation documentation",
-            ]
+            ],
             CLIError::Network { .. } => vec![
                 "Check your internet connection",
                 "Verify the URL is correct",
@@ -347,7 +347,7 @@ impl CLIError {
             CLIError::InvalidFormat { .. } => vec![
                 "Check the input format",
                 "Refer to the documentation for examples",
-            ]
+            ],
             CLIError::ValidationFailed { .. } => vec![
                 "Check the input values",
                 "Ensure all required fields are provided",

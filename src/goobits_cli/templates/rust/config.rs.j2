@@ -67,6 +67,10 @@ impl Default for AppConfig {
         {% endif %}
         {% endfor %}
         
+        // Ensure variables are considered mutable even if no aliases are defined
+        aliases.reserve(1);
+        custom.reserve(1);
+        
         Self {
             settings: Settings {
                 version: "{{ version | default('1.0.0') }}".to_string(),

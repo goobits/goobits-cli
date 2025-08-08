@@ -339,7 +339,7 @@ class TypeScriptGenerator(NodeJSGenerator):
         }
         
         # Initialize documentation generator with config
-        config_dict = config.model_dump() if hasattr(config, 'model_dump') else config
+        config_dict = config.model_dump() if hasattr(config, 'model_dump') else config.dict()
         self.doc_generator = create_documentation_generator('typescript', config_dict)
         
         # Initialize interactive renderer with CLI config
