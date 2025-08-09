@@ -1,11 +1,11 @@
 # Basic Goobits CLI Configuration
-package_name: minimal_example
-command_name: minimal_example
-display_name: "Minimal_Example"
+package_name: test_typescript_cli
+command_name: test_typescript_cli
+display_name: "Test_Typescript_Cli"
 description: "A CLI tool built with Goobits"
 
-# Language selection (python, nodejs, typescript, or rust)
-language: python
+# Language selection (python, nodejs, or typescript)
+language: typescript
 
 python:
   minimum_version: "3.8"
@@ -15,7 +15,7 @@ dependencies:
     - pipx
 
 cli:
-  name: minimal_example
+  name: test_typescript_cli
   tagline: "Your awesome CLI tool"
   commands:
     hello:
