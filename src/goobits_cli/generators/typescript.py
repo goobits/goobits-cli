@@ -69,6 +69,7 @@ class TypeScriptGenerator(NodeJSGenerator):
         
         # Add TypeScript-specific filters
         self.env.filters['to_ts_type'] = self._to_typescript_type
+        self.env.filters['tojsonstring'] = self._to_json_string
         self.env.filters['json_stringify'] = lambda x: self._json_stringify(x)
         self.env.filters['escape_backticks'] = lambda x: x.replace('`', '\\`')
         self.env.filters['camelCase'] = self._to_camel_case
@@ -201,6 +202,11 @@ class TypeScriptGenerator(NodeJSGenerator):
             return text
         # Replace underscores and spaces with hyphens, convert to lowercase
         return text.replace('_', '-').replace(' ', '-').lower()
+    
+    def _to_json_string(self, value: str) -> str:
+        """Convert a string value to a JSON string format for TypeScript."""
+        import json
+        return json.dumps(value)
     
     def _validate_config(self, config: any) -> ValidationResult:
         """Validate TypeScript-specific configuration.

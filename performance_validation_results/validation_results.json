@@ -1,0 +1,36 @@
+{
+  "startup_validation": {
+    "error": "Startup validation module not available"
+  },
+  "memory_analysis": {
+    "error": "Memory analysis module not available"
+  },
+  "template_benchmarks": {
+    "error": "Template benchmark module not available"
+  },
+  "cross_language_comparison": {
+    "error": "Cross-language analyzer module not available"
+  },
+  "overall_score": 0.0,
+  "meets_production_requirements": false,
+  "critical_issues": [
+    "Startup validation failed: Startup validation module not available",
+    "Memory analysis failed: Memory analysis module not available",
+    "Template benchmarks failed: Template benchmark module not available",
+    "Framework does not meet production performance requirements"
+  ],
+  "recommendations": [
+    "\ud83d\udea8 CRITICAL ISSUES DETECTED - Address immediately:",
+    "   \u2022 Startup validation failed: Startup validation module not available",
+    "   \u2022 Memory analysis failed: Memory analysis module not available",
+    "   \u2022 Template benchmarks failed: Template benchmark module not available",
+    "   \u2022 Framework does not meet production performance requirements",
+    "",
+    "\u26a1 General Performance Optimization:",
+    "   \u2022 Enable production mode optimizations in generated CLIs",
+    "   \u2022 Implement comprehensive performance monitoring",
+    "   \u2022 Use performance profiling tools to identify bottlenecks",
+    "   \u2022 Consider using performance optimization libraries specific to each language"
+  ],
+  "timestamp": 1754703554.8965566
+}

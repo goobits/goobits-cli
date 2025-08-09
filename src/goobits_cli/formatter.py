@@ -198,10 +198,27 @@ def align_header_items(items: List) -> List[dict]:
     # Convert items to dicts if they're objects
     dict_items = []
     for item in items:
-        if hasattr(item, 'dict'):
-            # Pydantic model
-            dict_items.append(item.model_dump())
-        elif hasattr(item, '__dict__'):
+        if hasattr(item, 'model_dump') and callable(getattr(item, 'model_dump', None)):
+            # Pydantic v2 model - but check if it actually returns a dict
+            try:
+                result = item.model_dump()
+                if isinstance(result, dict):
+                    dict_items.append(result)
+                    continue
+            except:
+                pass
+        
+        if hasattr(item, 'dict') and callable(getattr(item, 'dict', None)):
+            # Pydantic v1 model or mock
+            try:
+                result = item.dict()
+                if isinstance(result, dict):
+                    dict_items.append(result)
+                    continue
+            except:
+                pass
+        
+        if hasattr(item, '__dict__'):
             # Regular object
             dict_items.append(vars(item))
         else:

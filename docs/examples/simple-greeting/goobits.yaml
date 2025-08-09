@@ -1,0 +1,70 @@
+language: python  # Change to nodejs or typescript to test other languages
+
+package_name: simple-greeting
+command_name: greeting
+display_name: "Simple Greeting CLI"
+description: "A simple CLI that demonstrates basic greeting functionality"
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  python: ["click>=8.0.0"]
+
+installation:
+  extras:
+    npm: ["chalk@5.3.0"]  # For Node.js/TypeScript versions
+
+cli:
+  name: greeting
+  tagline: "Generate friendly greetings"
+  version: "1.0.0"
+  
+  options:
+    - name: verbose
+      short: v
+      desc: "Enable verbose output"
+      type: flag
+  
+  commands:
+    hello:
+      desc: "Say hello to someone"
+      args:
+        - name: name
+          desc: "Name of person to greet"
+          required: true
+      options:
+        - name: style
+          short: s
+          desc: "Greeting style"
+          choices: ["casual", "formal", "enthusiastic"]
+          default: "casual"
+        - name: repeat
+          short: r
+          desc: "Number of times to repeat greeting"
+          type: int
+          default: 1
+    
+    goodbye:
+      desc: "Say goodbye to someone"
+      args:
+        - name: name
+          desc: "Name of person to bid farewell"
+          required: true
+      options:
+        - name: polite
+          short: p
+          desc: "Use polite farewell"
+          type: flag
+    
+    introduce:
+      desc: "Introduce yourself"
+      options:
+        - name: name
+          short: n
+          desc: "Your name"
+          required: true
+        - name: role
+          short: r
+          desc: "Your role or title"
+          default: "friend"

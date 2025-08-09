@@ -419,6 +419,29 @@ class PerformanceMonitor:
         
         return "\n".join(report)
     
+    def start_session(self, session_name: str) -> str:
+        """Start a monitoring session and return session ID"""
+        session_id = f"{session_name}_{int(time.time())}"
+        self.record_metric(f"session_start_{session_name}", time.time(), "timestamp", {"session_id": session_id})
+        return session_id
+    
+    def end_session(self, session_id: str) -> Dict[str, Any]:
+        """End a monitoring session and return collected metrics"""
+        self.record_metric(f"session_end", time.time(), "timestamp", {"session_id": session_id})
+        
+        # Collect metrics for this session
+        session_metrics = {}
+        memory_stats = self.memory_tracker.stop()
+        
+        if "error" not in memory_stats:
+            session_metrics.update({
+                "memory_peak_mb": memory_stats.get("peak_mb", 0),
+                "memory_avg_mb": memory_stats.get("average_mb", 0),
+                "cpu_avg_percent": 0  # Placeholder - could be enhanced with actual CPU monitoring
+            })
+        
+        return session_metrics
+    
     def create_dashboard_data(self) -> Dict[str, Any]:
         """Create data for real-time performance dashboard"""
         recent_metrics = self.metrics[-100:] if self.metrics else []
