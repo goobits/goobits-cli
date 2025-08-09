@@ -190,7 +190,7 @@ class GoobitsConfigSchema(BaseModel):
     description: str
     
     # Language selection
-    language: Literal["python", "nodejs", "typescript", "rust"] = "python"
+    language: Literal["python", "nodejs", "typescript"] = "python"
     
     # CLI generation configuration
     cli_output_path: str = "src/{package_name}/cli.py"
@@ -203,7 +203,6 @@ class GoobitsConfigSchema(BaseModel):
     dependencies: DependenciesSchema
     
     # Language-specific dependencies
-    rust_crates: Optional[Dict[str, Any]] = None
     
     # Installation settings
     installation: InstallationSchema

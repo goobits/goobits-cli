@@ -23,7 +23,7 @@ from goobits_cli.schemas import (
 )
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.generators.python import PythonGenerator
-from goobits_cli.generators.rust import RustGenerator
+from goobits_cli.generators.typescript import TypeScriptGenerator
 
 
 def determine_language(config: GoobitsConfigSchema) -> str:
@@ -36,16 +36,15 @@ def generate_cli(config: GoobitsConfigSchema, filename: str, version: Optional[s
     
     Returns a dictionary mapping file paths to their contents.
     For Python, returns a single-entry dict with the CLI script.
-    For Node.js, returns multiple files.
-    For Rust, returns multiple files.
+    For Node.js/TypeScript, returns multiple files.
     """
     language = determine_language(config)
     
     if language == "nodejs":
         generator = NodeJSGenerator()
         return generator.generate_all_files(config, filename, version)
-    elif language == "rust":
-        generator = RustGenerator()
+    elif language == "typescript":
+        generator = TypeScriptGenerator()
         return generator.generate_all_files(config, filename, version)
     else:
         # Default to Python
@@ -143,16 +142,6 @@ def python_test_config(basic_cli_schema):
 
 
 @pytest.fixture
-def rust_test_config(basic_cli_schema):
-    """Provide a Rust test configuration."""
-    return create_test_goobits_config(
-        package_name="test-rust-cli",
-        cli=basic_cli_schema,
-        language="rust"
-    )
-
-
-@pytest.fixture
 def typescript_test_config(basic_cli_schema):
     """Provide a TypeScript test configuration."""
     return create_test_goobits_config(
@@ -175,6 +164,6 @@ def nodejs_generator():
 
 
 @pytest.fixture
-def rust_generator():
-    """Provide a Rust generator instance."""
-    return RustGenerator()
+def typescript_generator():
+    """Provide a TypeScript generator instance."""
+    return TypeScriptGenerator()

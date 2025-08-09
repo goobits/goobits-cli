@@ -23,11 +23,8 @@ from goobits_cli.schemas import GoobitsConfigSchema
 import sys
 from pathlib import Path
 
-# Add tests directory to path to import from conftest
-tests_dir = Path(__file__).parents[4] / "tests"
-sys.path.insert(0, str(tests_dir))
-
-from conftest import generate_cli
+# Note: generate_cli function moved to avoid circular imports
+# Use direct generator imports instead
 
 
 @dataclass

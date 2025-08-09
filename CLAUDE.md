@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Goobits CLI Framework is a **next-generation multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, TypeScript, and Rust** with advanced features including **Universal Template System**, **Interactive REPL mode**, **Dynamic completion**, and **Plugin ecosystem**. The framework generates language-specific code with rich terminal interfaces, setup scripts, and installation management.
+Goobits CLI Framework is a **next-generation multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, and TypeScript** with advanced features including **Universal Template System**, **Interactive REPL mode**, **Dynamic completion**, and **Plugin ecosystem**. The framework generates language-specific code with rich terminal interfaces, setup scripts, and installation management.
+
+**Note**: Rust support is planned for a future release with proper test-driven implementation.
 
 ## Development Commands
 
@@ -72,7 +74,6 @@ goobits.yaml → goobits build → [Language-specific output] → Install → Wo
 Python:   cli.py + setup.sh → pipx install
 Node.js:  cli.js + package.json → npm install  
 TypeScript: cli.ts + package.json → npm install
-Rust:     src/*.rs + Cargo.toml → cargo install
 ```
 
 ### Key Components
@@ -84,12 +85,10 @@ Rust:     src/*.rs + Cargo.toml → cargo install
    - `python.py` - Python/Click generator with DocumentationGenerator
    - `nodejs.py` - Node.js/Commander generator with validation placeholders
    - `typescript.py` - TypeScript generator with TestDataValidator
-   - `rust.py` - Rust/Clap generator with DocumentationGenerator
 5. **templates/** - Jinja2 templates organized by language:
    - `templates/` - Python templates
    - `templates/nodejs/` - Node.js templates
-   - `templates/typescript/` - TypeScript templates  
-   - `templates/rust/` - Rust templates
+   - `templates/typescript/` - TypeScript templates
 6. **universal/** - Universal Template System (Phase 3):
    - `template_engine.py` - Core universal template engine
    - `renderers/` - Language-specific renderers for universal templates
@@ -124,14 +123,6 @@ def on_command_name(*args, **kwargs):
 ```javascript
 export async function onCommandName(args) {
     // Business logic here
-}
-```
-
-**Rust** - `src/hooks.rs`:
-```rust
-pub fn on_command_name(args: &Args) -> Result<()> {
-    // Business logic here
-    Ok(())
 }
 ```
 
@@ -178,7 +169,7 @@ The framework supports both legacy and Universal Template Systems:
 
 **Universal Template System (Phase 3):** Single template generates for all languages:
 - **UniversalTemplateEngine**: Core engine with Intermediate Representation (IR)
-- **LanguageRenderers**: Python, Node.js, TypeScript, Rust-specific renderers
+- **LanguageRenderers**: Python, Node.js, TypeScript-specific renderers
 - **ComponentRegistry**: Universal component template management
 - **Interactive Mode**: REPL-style interaction for all generated CLIs
 - **Dynamic Completion**: Context-aware tab completion
@@ -204,7 +195,6 @@ language: python      # Default if not specified
 # or
 language: nodejs      # Node.js with Commander.js
 language: typescript  # TypeScript with type safety
-language: rust        # Rust with Clap
 ```
 
 ### Adding a New Command
@@ -215,7 +205,6 @@ language: rust        # Rust with Clap
    - Python: `app_hooks.py`
    - Node.js: `src/hooks.js`
    - TypeScript: `src/hooks.ts`
-   - Rust: `src/hooks.rs`
 
 ### Debugging Generated Code
 
