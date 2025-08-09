@@ -475,7 +475,7 @@ export async function cli(): Promise<void> {
     .on('option:interactive', async () => {
       try {
         // Try to import interactive mode
-        const { runInteractive } = await import('./interactive_mode.js');
+        const { runInteractive } = await import('./interactive_mode.js'); // Note: imports compiled .js file
         runInteractive();
         process.exit(0);
       } catch (error) {

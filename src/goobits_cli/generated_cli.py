@@ -636,7 +636,7 @@ def build(ctx, config_path, output_dir, output, backup):
         config_file = Path(config_path) if config_path else Path("goobits.yaml")
         output_dir_path = Path(output_dir) if output_dir else None
         
-        build(config_file, output_dir_path, output, backup)
+        build(config_file, output_dir_path, output, backup, universal_templates=False)
         click.echo("✅ Build completed successfully!")
         click.echo("   - Generated setup.sh")
         click.echo("   - Updated CLI files")
