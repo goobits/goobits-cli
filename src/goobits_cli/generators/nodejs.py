@@ -17,6 +17,8 @@ try:
     UNIVERSAL_TEMPLATES_AVAILABLE = True
 except ImportError:
     UNIVERSAL_TEMPLATES_AVAILABLE = False
+    UniversalTemplateEngine = None
+    UniversalNodeJSRenderer = None
 
 # Phase 2 shared components (to be created)
 # from ..shared.components.validation_framework import ValidationRunner, ValidationMode
@@ -44,9 +46,16 @@ class NodeJSGenerator(BaseGenerator):
         
         # Initialize Universal Template System if requested
         if self.use_universal_templates:
-            self.universal_engine = UniversalTemplateEngine()
-            self.nodejs_renderer = UniversalNodeJSRenderer()
-            self.universal_engine.register_renderer(self.nodejs_renderer)
+            try:
+                self.universal_engine = UniversalTemplateEngine()
+                self.nodejs_renderer = UniversalNodeJSRenderer()
+                self.universal_engine.register_renderer(self.nodejs_renderer)
+            except Exception as e:
+                print(f"⚠️  Failed to initialize Universal Template System: {e}")
+                print("   Falling back to legacy template system")
+                self.use_universal_templates = False
+                self.universal_engine = None
+                self.nodejs_renderer = None
         
         # Set up Jinja2 environment for Node.js templates (legacy mode)
         template_dir = Path(__file__).parent.parent / "templates" / "nodejs"
@@ -193,6 +202,10 @@ class NodeJSGenerator(BaseGenerator):
             Generated Node.js CLI code
         """
         try:
+            # Ensure universal engine is available
+            if not self.universal_engine:
+                raise RuntimeError("Universal Template Engine not initialized")
+            
             # Convert config to GoobitsConfigSchema if needed
             if isinstance(config, ConfigSchema):
                 # Create minimal GoobitsConfigSchema for universal system
@@ -212,7 +225,7 @@ class NodeJSGenerator(BaseGenerator):
                 goobits_config, "nodejs", output_dir
             )
             
-            # Store generated files
+            # Store generated files for later access
             self._generated_files = {}
             for file_path, content in generated_files.items():
                 # Extract relative filename for compatibility
@@ -222,11 +235,18 @@ class NodeJSGenerator(BaseGenerator):
             # Return main entry file for backward compatibility
             main_file = next((content for path, content in generated_files.items() 
                             if "index.js" in path or "cli.js" in path), "")
+            
+            if not main_file:
+                # If no main file found, use the first available content
+                main_file = next(iter(generated_files.values()), "")
+                
             return main_file
             
         except Exception as e:
             # Fall back to legacy mode if universal templates fail
-            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            print(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), falling back to legacy mode")
+            # Disable universal templates for subsequent calls to avoid repeated failures
+            self.use_universal_templates = False
             return self._generate_legacy(config, config_filename, version)
     
     def _generate_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
@@ -403,9 +423,9 @@ export default cli;
         if self.use_universal_templates:
             # Generate main file to populate _generated_files
             self.generate(config, config_filename, version)
-            return self._generated_files
+            return self._generated_files.copy() if self._generated_files else {}
         
-        # Legacy implementation
+        # Legacy implementation - generate all files using legacy system
         return self._generate_all_files_legacy(config, config_filename, version)
     
     def _generate_all_files_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 

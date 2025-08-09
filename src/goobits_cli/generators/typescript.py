@@ -17,6 +17,8 @@ try:
     UNIVERSAL_TEMPLATES_AVAILABLE = True
 except ImportError:
     UNIVERSAL_TEMPLATES_AVAILABLE = False
+    UniversalTemplateEngine = None
+    UniversalTypeScriptRenderer = None
 
 
 class TypeScriptGenerator(NodeJSGenerator):
@@ -33,9 +35,18 @@ class TypeScriptGenerator(NodeJSGenerator):
         
         # Initialize Universal Template System if requested and available
         if use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE:
-            # Override the nodejs renderer with typescript renderer
-            self.typescript_renderer = UniversalTypeScriptRenderer()
-            self.universal_engine.register_renderer(self.typescript_renderer)
+            try:
+                # Initialize universal engine if not already done by parent
+                if not hasattr(self, 'universal_engine') or not self.universal_engine:
+                    self.universal_engine = UniversalTemplateEngine()
+                # Override the nodejs renderer with typescript renderer
+                self.typescript_renderer = UniversalTypeScriptRenderer()
+                self.universal_engine.register_renderer(self.typescript_renderer)
+            except Exception as e:
+                print(f"⚠️  Failed to initialize TypeScript Universal Template System: {e}")
+                print("   Falling back to legacy template system")
+                self.use_universal_templates = False
+                self.typescript_renderer = None
         
         # Override template directory to use TypeScript templates
         template_dir = Path(__file__).parent.parent / "templates" / "typescript"
@@ -88,6 +99,10 @@ class TypeScriptGenerator(NodeJSGenerator):
             Generated TypeScript CLI code
         """
         try:
+            # Ensure universal engine is available
+            if not self.universal_engine:
+                raise RuntimeError("Universal Template Engine not initialized")
+            
             # Convert config to GoobitsConfigSchema if needed
             if isinstance(config, ConfigSchema):
                 # Create minimal GoobitsConfigSchema for universal system
@@ -103,13 +118,12 @@ class TypeScriptGenerator(NodeJSGenerator):
                 goobits_config = config
                 
             # Generate using universal engine with TypeScript language
-            from pathlib import Path
             output_dir = Path(".")
             generated_files = self.universal_engine.generate_cli(
                 goobits_config, "typescript", output_dir
             )
             
-            # Store generated files
+            # Store generated files for later access
             self._generated_files = {}
             for file_path, content in generated_files.items():
                 # Extract relative filename for compatibility
@@ -119,11 +133,18 @@ class TypeScriptGenerator(NodeJSGenerator):
             # Return main entry file for backward compatibility
             main_file = next((content for path, content in generated_files.items() 
                             if "index.ts" in path or "cli.ts" in path), "")
+            
+            if not main_file:
+                # If no main file found, use the first available content
+                main_file = next(iter(generated_files.values()), "")
+                
             return main_file
             
         except Exception as e:
             # Fall back to legacy mode if universal templates fail
-            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            print(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), falling back to legacy mode")
+            # Disable universal templates for subsequent calls to avoid repeated failures
+            self.use_universal_templates = False
             return self._generate_legacy_typescript(config, config_filename, version)
     
     def _generate_legacy_typescript(self, config, config_filename: str, version: Optional[str] = None) -> str:
@@ -306,7 +327,13 @@ class TypeScriptGenerator(NodeJSGenerator):
     
     def generate_all_files(self, config, config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
         """Generate all files for a TypeScript CLI project."""
-        # Extract metadata using base class helper
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            # Generate main file to populate _generated_files
+            self.generate(config, config_filename, version)
+            return self._generated_files.copy() if self._generated_files else {}
+        
+        # Extract metadata using base class helper for legacy mode
         from typing import Union
         from ..schemas import ConfigSchema, GoobitsConfigSchema
         

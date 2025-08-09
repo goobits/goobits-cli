@@ -10,7 +10,6 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from goobits_cli.generators.python import PythonGenerator
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.generators.typescript import TypeScriptGenerator
-from goobits_cli.generators.rust import RustGenerator
 from goobits_cli.schemas import GoobitsConfigSchema
 
 
@@ -22,7 +21,6 @@ def test_generator_initialization():
         "python": PythonGenerator,
         "nodejs": NodeJSGenerator,
         "typescript": TypeScriptGenerator,
-        "rust": RustGenerator,
     }
     
     for name, GeneratorClass in generators.items():

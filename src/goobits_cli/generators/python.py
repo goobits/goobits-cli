@@ -22,6 +22,8 @@ try:
     UNIVERSAL_TEMPLATES_AVAILABLE = True
 except ImportError:
     UNIVERSAL_TEMPLATES_AVAILABLE = False
+    UniversalTemplateEngine = None
+    PythonRenderer = None
 
 
 # Custom Exception Classes for Better Error Handling
@@ -92,9 +94,16 @@ class PythonGenerator(BaseGenerator):
         
         # Initialize Universal Template System if requested
         if self.use_universal_templates:
-            self.universal_engine = UniversalTemplateEngine()
-            self.python_renderer = PythonRenderer()
-            self.universal_engine.register_renderer(self.python_renderer)
+            try:
+                self.universal_engine = UniversalTemplateEngine()
+                self.python_renderer = PythonRenderer()
+                self.universal_engine.register_renderer(self.python_renderer)
+            except Exception as e:
+                print(f"⚠️  Failed to initialize Universal Template System: {e}")
+                print("   Falling back to legacy template system")
+                self.use_universal_templates = False
+                self.universal_engine = None
+                self.python_renderer = None
         
         # Set up Jinja2 environment for legacy mode
         template_dir = Path(__file__).parent.parent / "templates"
@@ -169,6 +178,10 @@ class PythonGenerator(BaseGenerator):
             Generated Python CLI code
         """
         try:
+            # Ensure universal engine is available
+            if not self.universal_engine:
+                raise RuntimeError("Universal Template Engine not initialized")
+            
             # Convert config to GoobitsConfigSchema if needed
             if isinstance(config, ConfigSchema):
                 # Create minimal GoobitsConfigSchema for universal system
@@ -188,7 +201,7 @@ class PythonGenerator(BaseGenerator):
                 goobits_config, "python", output_dir
             )
             
-            # Store generated files
+            # Store generated files for later access
             self._generated_files = {}
             for file_path, content in generated_files.items():
                 # Extract relative filename for compatibility
@@ -198,11 +211,18 @@ class PythonGenerator(BaseGenerator):
             # Return main CLI file for backward compatibility
             main_cli_file = next((content for path, content in generated_files.items() 
                                 if "cli.py" in path), "")
+            
+            if not main_cli_file:
+                # If no main CLI file found, use the first available content
+                main_cli_file = next(iter(generated_files.values()), "")
+                
             return main_cli_file
             
         except Exception as e:
             # Fall back to legacy mode if universal templates fail
-            print(f"⚠️  Universal Templates failed ({e}), falling back to legacy mode")
+            print(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), falling back to legacy mode")
+            # Disable universal templates for subsequent calls to avoid repeated failures
+            self.use_universal_templates = False
             return self._generate_legacy(config, config_filename, version)
     
     def _generate_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
@@ -330,12 +350,12 @@ class PythonGenerator(BaseGenerator):
             # Generate main file first to populate _generated_files
             self.generate(config, config_filename, version)
             
-            # For universal templates, files are already generated
+            # For universal templates, files are already generated during generate() call
             if self.use_universal_templates and self._generated_files:
-                return self._generated_files
+                return self._generated_files.copy()  # Return a copy to prevent external modification
             
             # For legacy mode, return the stored files
-            return self._generated_files
+            return self._generated_files.copy() if self._generated_files else {}
         except Exception as e:
             # Wrap and re-raise any errors
             raise TemplateError(

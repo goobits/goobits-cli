@@ -251,8 +251,22 @@ class UniversalTemplateEngine:
         
         Args:
             renderer: Language renderer implementation
+            
+        Raises:
+            ValueError: If renderer is None or invalid
         """
-        self.renderers[renderer.language] = renderer
+        if renderer is None:
+            raise ValueError("Renderer cannot be None")
+        
+        if not isinstance(renderer, LanguageRenderer):
+            raise ValueError(f"Renderer must implement LanguageRenderer interface, got {type(renderer)}")
+        
+        language = renderer.language
+        if not language:
+            raise ValueError("Renderer must provide a non-empty language name")
+        
+        self.renderers[language] = renderer
+        print(f"📝 Registered {language} renderer for Universal Template System")
     
     def generate_cli(self, config: GoobitsConfigSchema, language: str, 
                     output_dir: Path) -> Dict[str, str]:
@@ -268,12 +282,26 @@ class UniversalTemplateEngine:
             Dictionary mapping output file paths to generated content
             
         Raises:
-            ValueError: If language renderer is not registered
+            ValueError: If language renderer is not registered or config is invalid
+            FileNotFoundError: If component templates are missing
+            RuntimeError: If generation fails
         """
+        if not config:
+            raise ValueError("Configuration cannot be None or empty")
+        
+        if not language:
+            raise ValueError("Language cannot be None or empty")
+        
         if language not in self.renderers:
-            raise ValueError(f"No renderer registered for language: {language}")
+            available = list(self.renderers.keys())
+            raise ValueError(
+                f"No renderer registered for language '{language}'. "
+                f"Available renderers: {available if available else 'none'}"
+            )
         
         renderer = self.renderers[language]
+        
+        print(f"🚀 Generating {language} CLI using Universal Template System")
         
         # Use lazy loading if available
         if self.lazy_loader:
@@ -301,30 +329,51 @@ class UniversalTemplateEngine:
         # Get output structure
         output_structure = renderer.get_output_structure(ir)
         
-        # Render all components with performance optimization
+        # Render all components with error handling and performance optimization
         generated_files = {}
+        failed_components = []
+        
         for component_name, output_path in output_structure.items():
-            if self.component_registry.has_component(component_name):
-                # Use cached template if available
-                if self.performance_enabled and self.template_cache:
-                    template_path = self.component_registry.components_dir / f"{component_name}.j2"
-                    if template_path.exists():
-                        rendered_content = self.template_cache.render_template(
-                            template_path, context
-                        )
-                        if rendered_content is not None:
-                            full_output_path = output_dir / output_path
-                            generated_files[str(full_output_path)] = rendered_content
-                            continue
-                
-                # Fallback to regular rendering
-                template_content = self.component_registry.get_component(component_name)
-                rendered_content = renderer.render_component(
-                    component_name, template_content, context
-                )
-                
-                full_output_path = output_dir / output_path
-                generated_files[str(full_output_path)] = rendered_content
+            try:
+                if self.component_registry.has_component(component_name):
+                    # Use cached template if available
+                    if self.performance_enabled and self.template_cache:
+                        template_path = self.component_registry.components_dir / f"{component_name}.j2"
+                        if template_path.exists():
+                            rendered_content = self.template_cache.render_template(
+                                template_path, context
+                            )
+                            if rendered_content is not None:
+                                full_output_path = output_dir / output_path
+                                generated_files[str(full_output_path)] = rendered_content
+                                continue
+                    
+                    # Fallback to regular rendering
+                    template_content = self.component_registry.get_component(component_name)
+                    rendered_content = renderer.render_component(
+                        component_name, template_content, context
+                    )
+                    
+                    full_output_path = output_dir / output_path
+                    generated_files[str(full_output_path)] = rendered_content
+                else:
+                    print(f"⚠️  Component '{component_name}' not found, skipping")
+                    failed_components.append(component_name)
+                    
+            except Exception as e:
+                print(f"❌ Failed to render component '{component_name}': {e}")
+                failed_components.append(component_name)
+        
+        # Report generation results
+        print(f"✅ Generated {len(generated_files)} files for {language}")
+        if failed_components:
+            print(f"⚠️  Skipped {len(failed_components)} components: {', '.join(failed_components)}")
+        
+        if not generated_files:
+            raise RuntimeError(
+                f"No files were successfully generated for {language}. "
+                f"Check that component templates exist and are valid."
+            )
         
         return generated_files
     
