@@ -309,7 +309,8 @@ class NodeJSGenerator(BaseGenerator):
             "lib/progress.js",
             "lib/prompts.js",
             "lib/plugin-manager.js",
-            "completion_engine.js"
+            "completion_engine.js",
+            "enhanced_interactive_mode.js"
         ]
     
     def get_default_output_path(self, package_name: str) -> str:
@@ -504,7 +505,8 @@ export default cli;
             'lib/progress.js',
             'lib/prompts.js',
             'lib/plugin-manager.js',
-            'completion_engine.js'
+            'completion_engine.js',
+            'enhanced_interactive_mode.js'
         ]
         
         for helper_file in helper_files:

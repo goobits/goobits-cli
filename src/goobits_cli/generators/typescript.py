@@ -251,7 +251,7 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Check for TypeScript-specific installation requirements
         if hasattr(config, 'installation'):
             installation = config.installation
-            if hasattr(installation, 'extras') and hasattr(installation.extras, 'npm'):
+            if hasattr(installation, 'extras') and hasattr(installation.extras, 'npm') and installation.extras.npm:
                 # Validate npm packages
                 for pkg in installation.extras.npm:
                     if '@types/' in pkg and pkg not in ['@types/node']:

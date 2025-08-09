@@ -593,6 +593,39 @@ def show_help_json(ctx, param, value):
     ctx.exit()
 {% endif %}
 
+def start_interactive_mode(ctx, param, value):
+    """Callback for --interactive option."""
+    if not value or ctx.resilient_parsing:
+        return
+    
+    try:
+        # Try to import interactive mode module
+        import importlib.util
+        import os
+        
+        # Get the directory where this CLI script is located
+        cli_dir = Path(__file__).parent
+        interactive_file = cli_dir / "enhanced_interactive_mode.py"
+        
+        if interactive_file.exists():
+            spec = importlib.util.spec_from_file_location("enhanced_interactive_mode", interactive_file)
+            interactive_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(interactive_module)
+            interactive_module.start_enhanced_interactive()
+            # If we get here, interactive mode completed successfully, exit cleanly
+            import sys
+            sys.exit(0)
+        else:
+            click.echo("❌ Interactive mode not available. enhanced_interactive_mode.py not found.")
+            ctx.exit(1)
+    except SystemExit:
+        # Interactive mode exited, let it pass through
+        import sys
+        sys.exit(0)
+    except Exception as e:
+        click.echo(f"❌ Error starting interactive mode: {e}")
+        ctx.exit(1)
+
 {# Find the default command #}
 {% set ns = namespace(default_cmd=None) %}
 {% for cmd_name, cmd_data in cli.commands.items() %}
@@ -681,6 +714,7 @@ class DefaultGroup(RichGroup):
 {% if cli.enable_recursive_help %}
 @click.option('--help-all', is_flag=True, is_eager=True, help='Show help for all commands.', hidden=True)
 {% endif %}
+@click.option('--interactive', is_flag=True, is_eager=True, callback=start_interactive_mode, help='Launch interactive mode for running commands interactively.')
 {% if cli.options %}
 {% for option in cli.options %}
 {{ render_option(option) }}

@@ -380,39 +380,6 @@ def get_version():
 
 
 
-def start_interactive_mode(ctx, param, value):
-    """Callback for --interactive option."""
-    if not value or ctx.resilient_parsing:
-        return
-    
-    try:
-        # Try to import interactive mode module
-        import importlib.util
-        import os
-        
-        # Get the directory where this CLI script is located
-        cli_dir = Path(__file__).parent
-        interactive_file = cli_dir / "enhanced_interactive_mode.py"
-        
-        if interactive_file.exists():
-            spec = importlib.util.spec_from_file_location("enhanced_interactive_mode", interactive_file)
-            interactive_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(interactive_module)
-            interactive_module.start_enhanced_interactive()
-            # If we get here, interactive mode completed successfully, exit cleanly
-            import sys
-            sys.exit(0)
-        else:
-            click.echo("❌ Interactive mode not available. enhanced_interactive_mode.py not found.")
-            ctx.exit(1)
-    except SystemExit:
-        # Interactive mode exited, let it pass through
-        import sys
-        sys.exit(0)
-    except Exception as e:
-        click.echo(f"❌ Error starting interactive mode: {e}")
-        ctx.exit(1)
-
 
 
 
@@ -430,10 +397,10 @@ def start_interactive_mode(ctx, param, value):
 @click.pass_context
 
 
-@click.option('--interactive', is_flag=True, is_eager=True, callback=start_interactive_mode, help='Launch interactive mode for running commands interactively.')
+@click.option('--interactive', is_flag=True, help='Launch interactive mode for running commands interactively.')
 
-def main(ctx):
-    """[bold color(6)]test-cli v2.0.0-beta.1[/bold color(6)] - Interactive Mode Test CLI
+def main(ctx, interactive=False):
+    """[bold color(6)]test-cli {version}[/bold color(6)] - Interactive Mode Test CLI
 
     
     \b
@@ -445,12 +412,38 @@ def main(ctx):
     """
     
     
+    # Handle interactive mode
+    if interactive:
+        try:
+            # Try to import interactive mode module
+            import importlib.util
+            import os
+            
+            # Get the directory where this CLI script is located
+            cli_dir = Path(__file__).parent
+            interactive_file = cli_dir / "enhanced_interactive_mode.py"
+            
+            if interactive_file.exists():
+                spec = importlib.util.spec_from_file_location("enhanced_interactive_mode", interactive_file)
+                interactive_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(interactive_module)
+                interactive_module.start_enhanced_interactive()
+            else:
+                click.echo("❌ Interactive mode not available. enhanced_interactive_mode.py not found.")
+                ctx.exit(1)
+            ctx.exit(0)
+        except Exception as e:
+            click.echo(f"❌ Error starting interactive mode: {e}")
+            ctx.exit(1)
+    
     # Store global options in context for use by commands
     
 
     pass
 
 # Replace the version placeholder with dynamic version in the main command docstring
+
+main.callback.__doc__ = main.callback.__doc__.replace("{version}", "v" + get_version())
 
 
 

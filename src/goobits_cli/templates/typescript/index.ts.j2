@@ -469,6 +469,22 @@ export async function cli(): Promise<void> {
   {% endfor %}
   {% endif %}
 
+  // Interactive mode option
+  program
+    .option('--interactive', 'Launch interactive mode for running commands interactively')
+    .on('option:interactive', async () => {
+      try {
+        // Try to import interactive mode
+        const { runInteractive } = await import('./interactive_mode.js');
+        runInteractive();
+        process.exit(0);
+      } catch (error) {
+        console.error(chalk.red('❌ Interactive mode not available. Missing interactive mode module.'));
+        console.error(chalk.gray(`Error: ${error instanceof Error ? error.message : String(error)}`));
+        process.exit(1);
+      }
+    });
+
   {% if cli.enable_help_json %}
   // Add --help-json option
   program

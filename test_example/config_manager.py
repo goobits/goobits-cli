@@ -300,7 +300,7 @@ class ConfigManager:
     def get_defaults(self) -> Dict[str, Any]:
         """Get default configuration"""
         return {
-            'version': '2.0.0-beta.1',
+            'version': '1.0.0',
             
             # Add your default configuration here
             

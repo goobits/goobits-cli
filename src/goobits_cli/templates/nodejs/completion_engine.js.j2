@@ -4,9 +4,9 @@
  * Reads goobits.yaml at runtime and provides context-aware completions
  */
 
-const fs = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
+import fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
 
 class CompletionEngine {
     constructor(configPath = null) {
@@ -375,8 +375,8 @@ function main() {
     }
 }
 
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
     main();
 }
 
-module.exports = { CompletionEngine };
+export { CompletionEngine };

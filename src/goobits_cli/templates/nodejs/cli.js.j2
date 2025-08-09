@@ -4,10 +4,16 @@
  * {{ display_name }} CLI - Node.js Implementation
  */
 
-const { Command } = require('commander');
-const path = require('path');
-const fs = require('fs');
-const { spawn, execSync } = require('child_process');
+import { Command } from 'commander';
+import path from 'path';
+import fs from 'fs';
+import { spawn, execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// ES Module equivalents of __filename and __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Enhanced Error Classes
 class CLIError extends Error {
@@ -79,34 +85,6 @@ let HAS_PROGRESS_HELPER = false;
 let HAS_PROMPTS_HELPER = false;
 let HAS_COMPLETION_HELPER = false;
 
-try {
-    configManager = require('./lib/config');
-    HAS_CONFIG_MANAGER = true;
-} catch (e) {
-    if (process.env.DEBUG) console.debug('Config manager not available:', e.message);
-}
-
-try {
-    progressHelper = require('./lib/progress');
-    HAS_PROGRESS_HELPER = true;
-} catch (e) {
-    if (process.env.DEBUG) console.debug('Progress helper not available:', e.message);
-}
-
-try {
-    promptsHelper = require('./lib/prompts');
-    HAS_PROMPTS_HELPER = true;
-} catch (e) {
-    if (process.env.DEBUG) console.debug('Prompts helper not available:', e.message);
-}
-
-try {
-    completionHelper = require('./lib/completion');
-    HAS_COMPLETION_HELPER = true;
-} catch (e) {
-    if (process.env.DEBUG) console.debug('Completion helper not available:', e.message);
-}
-
 // Initialize global helpers
 let config = null;
 let progress = null;
@@ -149,39 +127,43 @@ if (HAS_COMPLETION_HELPER) {
     }
 }
 
-// Load hooks module
+// Load hooks module - will be loaded async on first use
 let appHooks = null;
-{% if hooks_path %}
-// Using configured hooks path: {{ hooks_path }}
-try {
-    const hooksPath = path.resolve(__dirname, '{{ hooks_path }}');
-    if (fs.existsSync(hooksPath)) {
-        appHooks = require(hooksPath);
-    }
-} catch (e) {
-    // No hooks module found
-}
-{% else %}
-// No hooks path configured, try default locations
-try {
-    // Try relative to script location
-    const possiblePaths = [
-        path.join(__dirname, '../hooks.js'),
-        path.join(__dirname, '../src/hooks.js'),
-        path.join(process.cwd(), 'hooks.js'),
-        path.join(process.cwd(), 'src/hooks.js')
-    ];
+
+// Async hook loader
+async function loadHooks() {
+    if (appHooks !== null) return appHooks; // Already loaded
     
-    for (const hookPath of possiblePaths) {
-        if (fs.existsSync(hookPath)) {
-            appHooks = require(hookPath);
-            break;
+    try {
+        {% if hooks_path %}
+        // Using configured hooks path: {{ hooks_path }}
+        const hooksPath = path.resolve(__dirname, '{{ hooks_path }}');
+        if (fs.existsSync(hooksPath)) {
+            appHooks = await import(hooksPath);
         }
+        {% else %}
+        // No hooks path configured, try default locations
+        const possiblePaths = [
+            path.join(__dirname, '../hooks.js'),
+            path.join(__dirname, '../src/hooks.js'),
+            path.join(process.cwd(), 'hooks.js'),
+            path.join(process.cwd(), 'src/hooks.js')
+        ];
+        
+        for (const hookPath of possiblePaths) {
+            if (fs.existsSync(hookPath)) {
+                appHooks = await import(hookPath);
+                break;
+            }
+        }
+        {% endif %}
+    } catch (e) {
+        // No hooks module found - use empty hooks object
+        appHooks = {};
     }
-} catch (e) {
-    // No hooks module found
+    
+    return appHooks;
 }
-{% endif %}
 
 // Get version function
 function getVersion() {
@@ -262,7 +244,7 @@ async function builtinUpgradeCommand(checkOnly = false, pre = false, version = n
 {% endif %}
 
 // Plugin loading
-function loadPlugins(program) {
+async function loadPlugins(program) {
     const pluginDirs = [
         path.join(process.env.HOME || process.env.USERPROFILE, '.config', 'goobits', '{{ cli.name }}', 'plugins'),
         path.join(__dirname, 'plugins')
@@ -280,9 +262,12 @@ function loadPlugins(program) {
             
             try {
                 const pluginPath = path.join(pluginDir, file);
-                const plugin = require(pluginPath);
+                const plugin = await import(pluginPath);
                 
-                if (typeof plugin.registerPlugin === 'function') {
+                if (typeof plugin.default?.registerPlugin === 'function') {
+                    plugin.default.registerPlugin(program);
+                    console.error(`Loaded plugin: ${pluginName}`);
+                } else if (typeof plugin.registerPlugin === 'function') {
                     plugin.registerPlugin(program);
                     console.error(`Loaded plugin: ${pluginName}`);
                 }
@@ -410,7 +395,8 @@ const {{ cmd_name }}Cmd = program
             {% else %}
             // Standard command - use hook pattern
             const hookName = 'on{{ cmd_name[0]|upper }}{{ cmd_name[1:] }}';
-            if (appHooks && typeof appHooks[hookName] === 'function') {
+            const hooks = await loadHooks();
+            if (hooks && typeof hooks[hookName] === 'function') {
                 const kwargs = {
                     commandName: '{{ cmd_name }}',
                     {% if cmd_data.args %}
@@ -427,7 +413,7 @@ const {{ cmd_name }}Cmd = program
                     {% endif %}
                 };
                 
-                await appHooks[hookName](kwargs);
+                await hooks[hookName](kwargs);
             } else {
                 // Default placeholder behavior
                 console.log(`Executing {{ cmd_name }} command...`);
@@ -469,7 +455,8 @@ const {{ cmd_name }}Cmd = program
     .action(async ({% if subcmd_data.args %}{{ subcmd_data.args|map(attribute='name')|join(', ') }}{% if subcmd_data.args and subcmd_data.options %}, {% endif %}{% endif %}options, command) => {
         try {
             const hookName = 'on{{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ subcmd_name[1:] }}';
-            if (appHooks && typeof appHooks[hookName] === 'function') {
+            const hooks = await loadHooks();
+            if (hooks && typeof hooks[hookName] === 'function') {
                 const kwargs = {
                     commandName: '{{ subcmd_name }}',
                     {% if subcmd_data.args %}
@@ -486,7 +473,7 @@ const {{ cmd_name }}Cmd = program
                     {% endif %}
                 };
                 
-                await appHooks[hookName](kwargs);
+                await hooks[hookName](kwargs);
             } else {
                 // Default placeholder behavior
                 console.log(`Executing {{ subcmd_name }} command...`);
@@ -604,12 +591,12 @@ completionCmd
 program
     .command('_completion <shell> <currentLine> [cursorPos]', { hidden: true })
     .option('--debug', 'Debug completion engine')
-    .action((shell, currentLine, cursorPos, options) => {
+    .action(async (shell, currentLine, cursorPos, options) => {
         try {
             const enginePath = path.join(__dirname, 'completion_engine.js');
             
             if (fs.existsSync(enginePath)) {
-                const CompletionEngine = require(enginePath).CompletionEngine;
+                const { CompletionEngine } = await import(enginePath);
                 const engine = new CompletionEngine();
                 const completions = engine.getCompletions(shell, currentLine, cursorPos);
                 
@@ -751,7 +738,7 @@ program
     .option('--json', 'Output in JSON format')
     .action(async (commandName, options) => {
         try {
-            const DaemonHelper = require('./lib/daemon').DaemonHelper;
+            const { DaemonHelper } = await import('./lib/daemon.js');
             const daemonHelper = new DaemonHelper(commandName);
             
             if (!daemonHelper.isRunning()) {
@@ -798,7 +785,7 @@ program
     .option('--json', 'Output in JSON format')
     .action(async (commandName, options) => {
         try {
-            const DaemonHelper = require('./lib/daemon').DaemonHelper;
+            const { DaemonHelper } = await import('./lib/daemon.js');
             const daemonHelper = new DaemonHelper(commandName);
             
             const stats = daemonHelper.getDaemonStats();
@@ -846,10 +833,10 @@ daemonCmd
 {% endif %}
 
 // CLI entry point
-function cliEntry() {
+async function cliEntry() {
     try {
         // Load plugins before parsing
-        loadPlugins(program);
+        await loadPlugins(program);
         
         // Parse command line
         program.parse(process.argv);
@@ -891,9 +878,15 @@ process.on('SIGINT', () => {
 });
 
 // Export for use as module
-module.exports = { program, cliEntry };
+export { program, cliEntry };
 
 // Run if called directly
-if (require.main === module) {
-    cliEntry();
+if (import.meta.url === `file://${process.argv[1]}`) {
+    cliEntry().catch(error => {
+        console.error('Fatal error:', error.message);
+        if (process.env.DEBUG) {
+            console.error(error.stack);
+        }
+        process.exit(1);
+    });
 }
