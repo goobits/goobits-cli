@@ -189,7 +189,7 @@ class GoobitsConfigSchema(BaseModel):
     display_name: str
     description: str
     
-    # Language selection
+    # Language selection (rust removed - under reconstruction)
     language: Literal["python", "nodejs", "typescript"] = "python"
     
     # CLI generation configuration

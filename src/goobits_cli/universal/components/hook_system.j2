@@ -614,8 +614,8 @@ use crate::{{HookResult, Hook}};
 /// {{ command.description }}
 pub struct {{ command.name.title().replace('-', '') }}Hook;
 
-impl Hook for {{ command.name.title().replace('-', '') }}Hook {{
-    fn execute(&self, args: &ArgMatches) -> HookResult {{
+impl Hook for {{ command.name.title().replace('-', '') }}Hook {
+    fn execute(&self, args: &ArgMatches) -> HookResult {
         // TODO: Implement your business logic here
         println!("Hook {{ command.hook_name }} called");
         
@@ -623,14 +623,14 @@ impl Hook for {{ command.name.title().replace('-', '') }}Hook {{
         // Extract arguments
         {%- for arg in command.arguments %}
         {%- if arg.multiple %}
-        if let Some({{ arg.name }}_values) = args.get_many::<String>("{{ arg.name }}") {{
+        if let Some({{ arg.name }}_values) = args.get_many::<String>("{{ arg.name }}") {
             let {{ arg.name }}: Vec<&str> = {{ arg.name }}_values.collect();
-            println!("{{ arg.name }}: {{:?}}", {{ arg.name }});
-        }}
+            println!("{{ arg.name }}: {:?}", {{ arg.name }});
+        }
         {%- else %}
-        if let Some({{ arg.name }}) = args.get_one::<String>("{{ arg.name }}") {{
-            println!("{{ arg.name }}: {{}}", {{ arg.name }});
-        }}
+        if let Some({{ arg.name }}) = args.get_one::<String>("{{ arg.name }}") {
+            println!("{{ arg.name }}: {}", {{ arg.name }});
+        }
         {%- endif %}
         {%- endfor %}
         {%- endif %}
@@ -640,16 +640,16 @@ impl Hook for {{ command.name.title().replace('-', '') }}Hook {{
         {%- for option in command.options %}
         {%- if option.type == 'boolean' %}
         let {{ option.name.replace('-', '_') }} = args.get_flag("{{ option.name }}");
-        println!("{{ option.name }}: {{}}", {{ option.name.replace('-', '_') }});
+        println!("{{ option.name }}: {}", {{ option.name.replace('-', '_') }});
         {%- elif option.multiple %}
-        if let Some({{ option.name.replace('-', '_') }}_values) = args.get_many::<String>("{{ option.name }}") {{
+        if let Some({{ option.name.replace('-', '_') }}_values) = args.get_many::<String>("{{ option.name }}") {
             let {{ option.name.replace('-', '_') }}: Vec<&str> = {{ option.name.replace('-', '_') }}_values.collect();
-            println!("{{ option.name }}: {{:?}}", {{ option.name.replace('-', '_') }});
-        }}
+            println!("{{ option.name }}: {:?}", {{ option.name.replace('-', '_') }});
+        }
         {%- else %}
-        if let Some({{ option.name.replace('-', '_') }}) = args.get_one::<String>("{{ option.name }}") {{
-            println!("{{ option.name }}: {{}}", {{ option.name.replace('-', '_') }});
-        }}
+        if let Some({{ option.name.replace('-', '_') }}) = args.get_one::<String>("{{ option.name }}") {
+            println!("{{ option.name }}: {}", {{ option.name.replace('-', '_') }});
+        }
         {%- endif %}
         {%- endfor %}
         {%- endif %}
@@ -662,11 +662,11 @@ impl Hook for {{ command.name.title().replace('-', '') }}Hook {{
 {%- endfor %}
 
 /// Initialize and register all hooks
-pub fn register_hooks(manager: &mut crate::HookManager) {{
+pub fn register_hooks(manager: &mut crate::HookManager) {
 {%- for command in cli.root_command.subcommands %}
     manager.register_hook("{{ command.hook_name }}".to_string(), {{ command.name.title().replace('-', '') }}Hook);
 {%- endfor %}
-}}
+}
 
 // Add any utility functions or structures here
 "#)

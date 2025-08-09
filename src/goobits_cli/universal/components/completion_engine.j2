@@ -30,11 +30,11 @@ class CompletionEngine:
 # Bash completion for {{ cli.root_command.name }}
 
 _{{ cli.root_command.name.replace("-", "_") }}_completions()
-{{
+{
     local cur prev words cword
     COMPREPLY=()
-    cur="${{COMP_WORDS[COMP_CWORD]}}"
-    prev="${{COMP_WORDS[COMP_CWORD-1]}}"
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
     
     # Global options
     local global_opts="--help -h --version"
@@ -42,12 +42,12 @@ _{{ cli.root_command.name.replace("-", "_") }}_completions()
     # Subcommands
     local subcommands="{%- for cmd in cli.root_command.subcommands %} {{ cmd.name }}{%- endfor %}"
     
-    case ${{COMP_CWORD}} in
+    case $COMP_CWORD in
         1)
             COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
             ;;
         *)
-            case "${{words[1]}}" in
+            case "$words[1]" in
 {%- for command in cli.root_command.subcommands %}
                 {{ command.name }})
                     local {{ command.name.replace("-", "_") }}_opts="--help -h{%- for opt in command.options %} --{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}{%- endfor %}"
@@ -57,7 +57,7 @@ _{{ cli.root_command.name.replace("-", "_") }}_completions()
             esac
             ;;
     esac
-}}
+}
 
 complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
 '''
@@ -68,11 +68,11 @@ complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.ro
         script = f'''#compdef {{ cli.root_command.name }}
 # Zsh completion for {{ cli.root_command.name }}
 
-_{{ cli.root_command.name.replace("-", "_") }}() {{
+_{{ cli.root_command.name.replace("-", "_") }}() {
     local context state line
     
     _arguments -C \\
-        '(--help -h){{--help,-h}}[Show help information]' \\
+        '(--help -h){--help,-h}[Show help information]' \\
         '(--version)--version[Show version information]' \\
         '1: :_{{ cli.root_command.name.replace("-", "_") }}_commands' \\
         '*::arg:->args'
@@ -83,9 +83,9 @@ _{{ cli.root_command.name.replace("-", "_") }}() {{
 {%- for command in cli.root_command.subcommands %}
                 {{ command.name }})
                     _arguments \\
-                        '(--help -h){{--help,-h}}[Show help information]' \\
+                        '(--help -h){--help,-h}[Show help information]' \\
 {%- for opt in command.options %}
-                        '(--{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}){{--{{ opt.name }}{% if opt.short %},-{{ opt.short }}{% endif %}}}[{{ opt.description }}]' \\
+                        '(--{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}){--{{ opt.name }}{% if opt.short %},-{{ opt.short }}{% endif %}}[{{ opt.description }}]' \\
 {%- endfor %}
 {%- for arg in command.arguments %}
                         '{{ loop.index }}:{{ arg.name }}:_files'{% if not loop.last %} \\{% endif %}
@@ -95,9 +95,9 @@ _{{ cli.root_command.name.replace("-", "_") }}() {{
             esac
             ;;
     esac
-}}
+}
 
-_{{ cli.root_command.name.replace("-", "_") }}_commands() {{
+_{{ cli.root_command.name.replace("-", "_") }}_commands() {
     local commands
     commands=(
 {%- for command in cli.root_command.subcommands %}
@@ -105,7 +105,7 @@ _{{ cli.root_command.name.replace("-", "_") }}_commands() {{
 {%- endfor %}
     )
     _describe 'commands' commands
-}}
+}
 
 _{{ cli.root_command.name.replace("-", "_") }} "$@"
 '''
@@ -592,11 +592,11 @@ impl CompletionEngine {
 # Bash completion for {}
 
 _{}_completions()
-{{
+{
     local cur prev words cword
     COMPREPLY=()
-    cur="${{COMP_WORDS[COMP_CWORD]}}"
-    prev="${{COMP_WORDS[COMP_CWORD-1]}}"
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
     
     # Global options
     local global_opts="--help -h --version"
@@ -636,7 +636,7 @@ _{}_completions()
             esac
             ;;
     esac
-}}
+}
 
 complete -F _{}_completions {}
 "#, self.cli_name.replace("-", "_"), self.cli_name));
@@ -648,11 +648,11 @@ complete -F _{}_completions {}
         let mut script = format!(r#"#compdef {}
 # Zsh completion for {}
 
-_{}() {{
+_{}() {
     local context state line
     
     _arguments -C \
-        '(--help -h){{--help,-h}}[Show help information]' \
+        '(--help -h){--help,-h}[Show help information]' \
         '(--version)--version[Show version information]' \
         '1: :_{}_commands' \
         '*::arg:->args'
@@ -669,7 +669,7 @@ _{}() {{
             
             for opt in &cmd.options {
                 if let Some(short) = &opt.short {
-                    script.push_str(&format!("\n                        '(--{} -{}){{--{},-{}}}[{}]' \\", 
+                    script.push_str(&format!("\n                        '(--{} -{}){--{},-{}}[{}]' \\", 
                         opt.name, short, opt.name, short, opt.description));
                 } else {
                     script.push_str(&format!("\n                        '(--{})--{}[{}]' \\", 
@@ -691,9 +691,9 @@ _{}() {{
             esac
             ;;
     esac
-}}
+}
 
-_{}_commands() {{
+_{}_commands() {
     local commands
     commands=("#, self.cli_name.replace("-", "_")));
 
@@ -704,7 +704,7 @@ _{}_commands() {{
         script.push_str(&format!(r#"
     )
     _describe 'commands' commands
-}}
+}
 
 _{} "$@"
 "#, self.cli_name.replace("-", "_")));

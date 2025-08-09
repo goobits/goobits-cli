@@ -28,7 +28,7 @@ class Config:
     # Default configuration values
 {%- if config_schema and config_schema.properties %}
 {%- for prop_name, prop_info in config_schema.properties.items() %}
-    {{ prop_name }}: {{ prop_info.get('python_type', 'str') }} = {{ prop_info.get('default', 'None') | repr }}
+    {{ prop_name }}: {{ prop_info.get('python_type', 'str') }} = {{ prop_info.get('default', 'None') }}
 {%- endfor %}
 {%- else %}
     # Add your configuration fields here
