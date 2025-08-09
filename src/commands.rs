@@ -1,6 +1,6 @@
 /**
  * Commands module for Test Rust CLI
- * Auto-generated from test-rust-verification.yaml
+ * Auto-generated from test-rust-cli.yaml
  */
 
 use crate::errors::{CliResult, CommandError, CLIError};
@@ -19,7 +19,7 @@ pub trait Command: Send + Sync {
     fn execute(&self, args: &CommandArgs) -> CliResult<()>;
     
     /// Validate command arguments before execution
-    fn validate(&self, args: &CommandArgs) -> CliResult<()> {
+    fn validate(&self, _args: &CommandArgs) -> CliResult<()> {
         // Default implementation - no validation
         Ok(())
     }
@@ -118,7 +118,7 @@ impl Command for HelloCommand {
     }
     
     fn description(&self) -> &str {
-        "Simple hello command"
+        "Say hello to someone"
     }
     
     fn execute(&self, args: &CommandArgs) -> CliResult<()> {
@@ -139,8 +139,14 @@ impl Command for HelloCommand {
         // Process options
         
         
-        if args.has_flag("--loud") {
-            println!("  --loud: enabled");
+        if let Some(greeting) = args.get_option("greeting") {
+            println!("  greeting: {}", greeting);
+        }
+        
+        
+        
+        if args.has_flag("verbose") {
+            println!("  verbose: enabled");
         }
         
         
@@ -173,11 +179,95 @@ impl Command for HelloCommand {
         
         
         
+        
+        
         Ok(())
     }
 }
 
 
+
+pub struct ProcessCommand;
+
+impl Command for ProcessCommand {
+    fn name(&self) -> &str {
+        "process"
+    }
+    
+    fn description(&self) -> &str {
+        "Process a file"
+    }
+    
+    fn execute(&self, args: &CommandArgs) -> CliResult<()> {
+        println!("🚀 Executing process command...");
+        
+        
+        // Process positional arguments
+        
+        
+        let input = args.get_arg(0)
+            .ok_or_else(|| CLIError::validation("input", "", "Missing required argument"))?;
+        println!("  input: {}", input);
+        
+        
+        
+        
+        
+        // Process options
+        
+        
+        if let Some(output) = args.get_option("output") {
+            println!("  output: {}", output);
+        }
+        
+        
+        
+        if let Some(format) = args.get_option("format") {
+            println!("  format: {}", format);
+        }
+        
+        
+        
+        
+        // TODO: Implement actual process command logic here
+        // This is a placeholder implementation
+        
+        println!("✅ Process command completed successfully!");
+        Ok(())
+    }
+    
+    fn validate(&self, args: &CommandArgs) -> CliResult<()> {
+        
+        // Validate required arguments
+        
+        
+        if args.get_arg(0).is_none() {
+            return Err(CLIError::validation("input", "", "Missing required argument"));
+        }
+        
+        
+        
+        
+        
+        
+        // Validate options
+        
+        
+        
+        
+        if let Some(value) = args.get_option("format") {
+            let valid_choices = vec!["json", "yaml", "text"];
+            if !valid_choices.contains(&value.as_str()) {
+                return Err(CLIError::validation("format", value, &format!("Invalid value. Valid choices: {}", valid_choices.join(", "))));
+            }
+        }
+        
+        
+        
+        
+        Ok(())
+    }
+}
 
 
 
@@ -190,6 +280,8 @@ pub fn create_command_registry() -> CommandRegistry {
     registry.register(HelloCommand);
     
     
+    
+    registry.register(ProcessCommand);
     
     
     
@@ -235,6 +327,8 @@ mod tests {
         assert!(registry.has_command("hello"));
         
         
+        
+        assert!(registry.has_command("process"));
         
         
         

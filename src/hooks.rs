@@ -1,6 +1,6 @@
 /**
  * Hook system for Test Rust CLI
- * Auto-generated from test-rust-verification.yaml
+ * Auto-generated from test-rust-cli.yaml
  */
 
 use anyhow::Result;
@@ -106,7 +106,7 @@ pub struct BuiltinHooks;
 impl BuiltinHooks {
     
     /// Pre-command hook for hello
-    pub fn pre_hello(context: &HookContext) -> Result<()> {
+    pub fn pre_hello(_context: &HookContext) -> Result<()> {
         // Default pre-command behavior for hello
         
         // No specific pre-command hook defined
@@ -115,7 +115,7 @@ impl BuiltinHooks {
     }
     
     /// Post-command hook for hello
-    pub fn post_hello(context: &HookContext) -> Result<()> {
+    pub fn post_hello(_context: &HookContext) -> Result<()> {
         // Default post-command behavior for hello
         
         // No specific post-command hook defined
@@ -123,18 +123,18 @@ impl BuiltinHooks {
         Ok(())
     }
     
-    /// Pre-command hook for config
-    pub fn pre_config(context: &HookContext) -> Result<()> {
-        // Default pre-command behavior for config
+    /// Pre-command hook for process
+    pub fn pre_process(_context: &HookContext) -> Result<()> {
+        // Default pre-command behavior for process
         
         // No specific pre-command hook defined
         
         Ok(())
     }
     
-    /// Post-command hook for config
-    pub fn post_config(context: &HookContext) -> Result<()> {
-        // Default post-command behavior for config
+    /// Post-command hook for process
+    pub fn post_process(_context: &HookContext) -> Result<()> {
+        // Default post-command behavior for process
         
         // No specific post-command hook defined
         
@@ -211,10 +211,10 @@ impl HookRegistry {
         hello_hooks.insert(ExecutionPhase::PostCommand, BuiltinHooks::post_hello as HookFn);
         self.builtin_hooks.insert("hello".to_string(), hello_hooks);
         
-        let mut config_hooks = HashMap::new();
-        config_hooks.insert(ExecutionPhase::PreCommand, BuiltinHooks::pre_config as HookFn);
-        config_hooks.insert(ExecutionPhase::PostCommand, BuiltinHooks::post_config as HookFn);
-        self.builtin_hooks.insert("config".to_string(), config_hooks);
+        let mut process_hooks = HashMap::new();
+        process_hooks.insert(ExecutionPhase::PreCommand, BuiltinHooks::pre_process as HookFn);
+        process_hooks.insert(ExecutionPhase::PostCommand, BuiltinHooks::post_process as HookFn);
+        self.builtin_hooks.insert("process".to_string(), process_hooks);
         
     }
     
@@ -335,12 +335,16 @@ pub mod hello {
         
         
         
-        pub __loud: Option<String>,
+        pub greeting: Option<String>,
+        
+        
+        
+        pub verbose: bool,
         
         
     }
     
-    pub fn execute(args: Args) -> Result<()> {
+    pub fn execute(_args: Args) -> Result<()> {
         // TODO: Implement hello command logic
         
         println!("Executing hello command");
@@ -349,20 +353,30 @@ pub mod hello {
     }
 }
 
-pub mod config {
+pub mod process {
     use anyhow::Result;
     use serde::{Deserialize, Serialize};
     
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct Args {
         
+        pub input: String,
+        
+        
+        
+        pub output: Option<String>,
+        
+        
+        
+        pub format: Option<String>,
+        
         
     }
     
-    pub fn execute(args: Args) -> Result<()> {
-        // TODO: Implement config command logic
+    pub fn execute(_args: Args) -> Result<()> {
+        // TODO: Implement process command logic
         
-        println!("Executing config command");
+        println!("Executing process command");
         
         Ok(())
     }
@@ -420,7 +434,7 @@ mod tests {
         
         assert!(registry.builtin_hooks.contains_key("hello"));
         
-        assert!(registry.builtin_hooks.contains_key("config"));
+        assert!(registry.builtin_hooks.contains_key("process"));
         
         
         // Test global hooks

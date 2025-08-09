@@ -1,6 +1,6 @@
 /**
  * Utility functions for Test Rust CLI
- * Auto-generated from test-rust-verification.yaml
+ * Auto-generated from test-rust-cli.yaml
  */
 
 use anyhow::{Context, Result};

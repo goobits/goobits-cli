@@ -531,6 +531,17 @@ impl From<std::io::Error> for CLIError {
     }
 }
 
+/// Convert serde_json errors to CLI errors
+impl From<serde_json::Error> for CLIError {
+    fn from(err: serde_json::Error) -> Self {
+        CLIError::ValidationFailed {
+            message: format!("JSON error: {}", err),
+            field: None,
+            value: None,
+        }
+    }
+}
+
 /// Error handling utilities
 pub struct ErrorHandler {
     show_stack: bool,

@@ -74,10 +74,10 @@ impl DynamicPlugin {
     pub fn load(library_path: &Path, metadata: PluginMetadata) -> CliResult<Self> {
         unsafe {
             let library = Library::new(library_path)
-                .map_err(|e| CLIError::plugin(&metadata.name, format!("Failed to load library: {}", e)))?;
+                .map_err(|e| CLIError::plugin(&metadata.name, &format!("Failed to load library: {}", e)))?;
             let create_plugin: Symbol<fn() -> Box<dyn Plugin>> = library
                 .get(metadata.entry_point.as_bytes())
-                .map_err(|e| CLIError::plugin(&metadata.name, format!("Failed to find entry point '{}': {}", metadata.entry_point, e)))?;
+                .map_err(|e| CLIError::plugin(&metadata.name, &format!("Failed to find entry point '{}': {}", metadata.entry_point, e)))?;
             
             let plugin = create_plugin();
             
@@ -452,7 +452,7 @@ impl PluginRegistry {
         let library_path = plugin_dir.join(&metadata.entry_point);
         
         if !library_path.exists() {
-            return Err(CLIError::plugin("dynamic", format!("Plugin library not found: {}", library_path.display())));
+            return Err(CLIError::plugin("dynamic", &format!("Plugin library not found: {}", library_path.display())));
         }
         
         // Load the dynamic plugin
@@ -496,7 +496,7 @@ impl PluginRegistry {
             command.validate(args)?;
             command.execute(args)
         } else {
-            return Err(CLIError::plugin("registry", format!("Unknown plugin command: {}", name)))
+            return Err(CLIError::plugin("registry", &format!("Unknown plugin command: {}", name)))
         }
     }
     

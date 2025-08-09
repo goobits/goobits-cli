@@ -75,7 +75,7 @@ pub struct CompletionEngine {
 
 impl CompletionEngine {
     pub fn new(config_path: Option<String>) -> Self {
-        let config_path = config_path.unwrap_or_else(|| Self::find_config());
+        let config_path = config_path.or_else(|| Self::find_config()).unwrap_or_else(|| "./goobits.yaml".to_string());
         let config = Self::load_config(&config_path);
         
         CompletionEngine {
@@ -84,14 +84,14 @@ impl CompletionEngine {
         }
     }
 
-    fn find_config() -> String {
+    fn find_config() -> Option<String> {
         let mut current = env::current_dir().unwrap_or_else(|_| Path::new(".").to_path_buf());
         
         // Search up the directory tree
         loop {
             let config_file = current.join("goobits.yaml");
             if config_file.exists() {
-                return config_file.to_string_lossy().to_string();
+                return Some(config_file.to_string_lossy().to_string());
             }
             
             match current.parent() {
@@ -100,8 +100,8 @@ impl CompletionEngine {
             }
         }
         
-        // Fallback to current directory
-        "./goobits.yaml".to_string()
+        // No config file found
+        None
     }
 
     fn load_config(config_path: &str) -> Config {

@@ -14,7 +14,7 @@
 use anyhow::{Context, Result};
 use crate::errors::CLIError;
 use rustyline::error::ReadlineError;
-use rustyline::{config::Configurer, DefaultEditor, Editor};
+use rustyline::{config::Configurer, DefaultEditor, Editor, history::DefaultHistory};
 use rustyline::config::{Config, EditMode, CompletionType, HistoryDuplicates};
 use rustyline::history::{FileHistory, History};
 use std::collections::HashMap;
@@ -147,22 +147,23 @@ impl RustInteractiveShell {
         // Configure tab completion
         editor.set_completion_type(config.tab_completion_type);
         editor.set_max_history_size(config.max_history_size)?;
-        editor.set_history_ignore_dups(HistoryDuplicates::IgnoreConsecutive);
+        editor.set_history_ignore_dups(true)?;
         
         // Set up custom key bindings for enhanced functionality
-        editor.bind_sequence(
-            rustyline::KeyEvent::ctrl('r'),
-            rustyline::Cmd::ReverseSearchHistory
-        );
+        // Keybindings handled by rustyline defaults in v13+
+        // The default keybindings already include Ctrl+R and Ctrl+S
+        // editor.bind_sequence(
+        //     rustyline::KeyEvent::ctrl('r'),
+        //     rustyline::Cmd::ReverseSearchHistory
+        // );
         
-        editor.bind_sequence(
-            rustyline::KeyEvent::ctrl('s'),
-            rustyline::Cmd::ForwardSearchHistory
-        );
+        // editor.bind_sequence(
+        //     rustyline::KeyEvent::ctrl('s'),
+        //     rustyline::Cmd::ForwardSearchHistory
+        // );
         
-        // Custom completion helper
-        let helper = RustCompletionHelper::new();
-        editor.set_helper(Some(helper));
+        // Note: Custom completion helper would require Editor<Helper> type
+        // For now using DefaultEditor without custom helper
         
         Ok(())
     }
@@ -355,7 +356,7 @@ impl RustInteractiveShell {
                     // Execute command
                     if let Err(e) = self.execute_command(trimmed) {
                         match e.downcast_ref::<AppError>() {
-                            Some(AppError::Exit) => break,
+                            Some(AppError::Exit { .. }) => break,
                             _ => eprintln!("Error: {}", e),
                         }
                     }

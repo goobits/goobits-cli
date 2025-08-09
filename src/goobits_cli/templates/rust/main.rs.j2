@@ -7,23 +7,19 @@ use anyhow::Context;
 use clap::{Parser, Subcommand, CommandFactory};
 use std::collections::HashMap;
 use std::process;
+use std::error::Error;
 
 // Import error handling
 mod errors;
 use errors::{CliResult, CLIError, ExitCode};
 
-// Import modules when building as library
-#[cfg(feature = "lib")]
+// Import modules
 mod config;
-#[cfg(feature = "lib")]
 mod commands;
-#[cfg(feature = "lib")]
 mod utils;
 
 // Re-export for hook functions
-#[cfg(feature = "lib")]
 pub use commands::{Command, CommandArgs};
-#[cfg(feature = "lib")]
 pub use config::AppConfig;
 
 // Import actual hook system
@@ -38,8 +34,7 @@ use plugins::{initialize_plugins, execute_plugin_command, cleanup_plugins};
 mod styling;
 use styling::initialize_styling;
 
-// Import utilities
-mod utils;
+// Utils module already imported above
 
 #[derive(Parser)]
 #[command(name = "{{ command_name }}")]
@@ -422,7 +417,7 @@ fn handle_upgrade(check: bool, version: Option<String>, pre: bool, dry_run: bool
     }
     
     let status = cmd.status()
-        .map_err(|e| CLIError::hook("cargo install", format!("Command execution failed: {}", e)))?;
+        .map_err(|e| CLIError::hook("cargo install", &format!("Command execution failed: {}", e)))?;
     
     if status.success() {
         utils::output::success(&format!("{} upgraded successfully!", display_name));
@@ -474,9 +469,9 @@ fn run() -> CliResult<()> {
     
     // Initialize configuration and hook system
     let config = crate::config::AppConfig::load()
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CLIError::ValidationFailed {
             message: format!("Failed to load configuration: {}", e),
-        }))?;
+        })?;
     let config_dir = crate::config::AppConfig::config_dir()
         .map_err(|e| CLIError::Environment {
             message: format!("Could not determine configuration directory: {}", e),
@@ -489,9 +484,9 @@ fn run() -> CliResult<()> {
     );
     
     hooks::initialize_hooks(&config_dir)
-        .map_err(|e| CLIError::hook("system", format!("Failed to initialize hooks in {}: {}", config_dir.display(), e)))?;
+        .map_err(|e| CLIError::hook("system", &format!("Failed to initialize hooks in {}: {}", config_dir.display(), e)))?;
     initialize_plugins(&config)
-        .map_err(|e| CLIError::plugin("system", format!("Failed to initialize plugins: {}", e)))?;
+        .map_err(|e| CLIError::plugin("system", &format!("Failed to initialize plugins: {}", e)))?;
     
     // Prepare common arguments structure
     let args = Args {
@@ -695,20 +690,18 @@ where
         HashMap::new(), // options would be populated from actual command options
         ExecutionPhase::PreCommand,
     ).map_err(|e| CLIError::hook(
-        name: command_name.to_string(),
-        phase: "context_creation".to_string(),
-        reason: e.to_string(),
-    }))?;
+        command_name,
+        &format!("Failed to create context: {}", e)
+    ))?;
     
     // Execute pre-command hooks
     if let Err(e) = hooks::execute_command_hooks(command_name, ExecutionPhase::PreCommand, &hook_context) {
         let error_context = hook_context.with_error(&e.to_string());
         let _ = hooks::execute_command_hooks(command_name, ExecutionPhase::OnError, &error_context);
         return Err(CLIError::hook(
-            name: command_name.to_string(),
-            phase: "pre-command".to_string(),
-            reason: e.to_string(),
-        }));
+            command_name,
+            &format!("Pre-command hook failed: {}", e)
+        ));
     }
     
     // Execute the actual command
@@ -722,10 +715,9 @@ where
         HashMap::new(),
         if command_result.is_ok() { ExecutionPhase::OnSuccess } else { ExecutionPhase::OnError },
     ).map_err(|e| CLIError::hook(
-        name: command_name.to_string(),
-        phase: "post_context_creation".to_string(),
-        reason: e.to_string(),
-    }))?;
+        command_name,
+        &format!("Failed to create post-command context: {}", e)
+    ))?;
     
     match &command_result {
         Ok(_) => {
@@ -776,9 +768,9 @@ fn execute_{{ cmd_name | replace('-', '_') }}_command(
     utils::output::info("   Implement {{ cmd_name | title }}Command struct with execute() method");
     
     return Err(CLIError::hook(
-        command: "{{ cmd_name }}".to_string(),
-        reason: "Managed command not implemented".to_string(),
-    }));
+        "{{ cmd_name }}",
+        "Managed command not implemented"
+    ));
     {% else %}
     // Default command implementation with validation
     utils::output::info("🚀 Executing {{ cmd_name }} command...");
@@ -881,7 +873,7 @@ fn handle_completion_generate(shell: &str, output: Option<&str>, verbose: bool) 
             arg: "shell".to_string(),
             value: shell.to_string(),
             expected: "one of: bash, zsh, fish, powershell".to_string(),
-        })),
+        }))
     };
     
     match output {
@@ -957,15 +949,15 @@ fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResul
         }
         "powershell" => {
             return Err(CLIError::hook(
-                command: "completion install".to_string(),
-                reason: "PowerShell completion installation not supported on this platform".to_string(),
-            }));
+                "completion install",
+                "PowerShell completion installation not supported on this platform"
+            ));
         }
         _ => return Err(CLIError::Command(errors::CommandError::InvalidArgument {
             arg: "shell".to_string(),
             value: shell.to_string(),
             expected: "one of: bash, zsh, fish, powershell".to_string(),
-        })),
+        }))
     };
     
     let completion_path = completion_dir.join(&completion_file);
@@ -973,12 +965,12 @@ fn handle_completion_install(shell: &str, system: bool, force: bool) -> CliResul
     // Check if completion already exists
     if completion_path.exists() && !force {
         return Err(CLIError::hook(
-            command: "completion install".to_string(),
-            reason: format!(
+            "completion install",
+            &format!(
                 "Completion already exists at {}. Use --force to overwrite.",
                 completion_path.display()
-            ),
-        }));
+            )
+        ));
     }
     
     // Create completion directory if it doesn't exist
@@ -1110,7 +1102,7 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
             arg: "shell".to_string(),
             value: shell.to_string(),
             expected: "one of: bash, zsh, fish, powershell".to_string(),
-        })),
+        }))
     }
     
     println!();
@@ -1122,9 +1114,9 @@ fn handle_completion_instructions(shell: &str, system: bool) -> CliResult<()> {
 /// Handle config get command
 fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
     let config = crate::config::AppConfig::load()
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CLIError::ValidationFailed {
             message: format!("Failed to load configuration: {}", e),
-        }))?;
+        })?;
     
     let output_format = format.unwrap_or("plain");
     
@@ -1137,16 +1129,16 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
                         "json" => {
                             let json_value = serde_json::json!({key_name: value});
                             println!("{}", serde_json::to_string_pretty(&json_value)
-                                .map_err(|e| CLIError::validation_failed(
+                                .map_err(|e| CLIError::ValidationFailed {
                                     message: format!("Failed to format as JSON: {}", e),
-                                }))?);
+                                })?);
                         }
                         "yaml" => {
                             let yaml_map = std::collections::HashMap::<String, serde_yaml::Value>::from([(key_name.to_string(), value.clone())]);
                             println!("{}", serde_yaml::to_string(&yaml_map)
-                                .map_err(|e| CLIError::validation_failed(
+                                .map_err(|e| CLIError::ValidationFailed {
                                     message: format!("Failed to format as YAML: {}", e),
-                                }))?);
+                                })?);
                         }
                         "plain" | _ => {
                             println!("{}", value.as_str().unwrap_or(&value.to_string()));
@@ -1167,15 +1159,15 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
             match output_format {
                 "json" => {
                     println!("{}", serde_json::to_string_pretty(&all_config)
-                        .map_err(|e| CLIError::validation_failed(
+                        .map_err(|e| CLIError::ValidationFailed {
                             message: format!("Failed to format as JSON: {}", e),
-                        }))?);
+                        })?);
                 }
                 "yaml" => {
                     println!("{}", serde_yaml::to_string(&all_config)
-                        .map_err(|e| CLIError::validation_failed(
+                        .map_err(|e| CLIError::ValidationFailed {
                             message: format!("Failed to format as YAML: {}", e),
-                        }))?);
+                        })?);
                 }
                 "plain" | _ => {
                     utils::output::info("Configuration values:");
@@ -1193,44 +1185,44 @@ fn handle_config_get(key: Option<&str>, format: Option<&str>) -> CliResult<()> {
 /// Handle config set command
 fn handle_config_set(key: &str, value: &str, value_type: Option<&str>) -> CliResult<()> {
     let mut config = crate::config::AppConfig::load()
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CLIError::ValidationFailed {
             message: format!("Failed to load configuration: {}", e),
-        }))?;
+        })?;
     
     // Parse value based on type
     let parsed_value = match value_type.unwrap_or("string") {
         "string" => serde_yaml::Value::String(value.to_string()),
         "int" => {
             let int_val: i64 = value.parse()
-                .map_err(|_| CLIError::validation_failed(
+                .map_err(|_| CLIError::ValidationFailed {
                     message: format!("Invalid integer value: {}", value),
-                }))?;
+                })?;
             serde_yaml::Value::Number(serde_yaml::Number::from(int_val))
         }
         "float" => {
             let float_val: f64 = value.parse()
-                .map_err(|_| CLIError::validation_failed(
+                .map_err(|_| CLIError::ValidationFailed {
                     message: format!("Invalid float value: {}", value),
-                }))?;
+                })?;
             serde_yaml::Value::Number(serde_yaml::Number::from(float_val))
         }
         "bool" => {
             let bool_val: bool = value.parse()
-                .map_err(|_| CLIError::validation_failed(
+                .map_err(|_| CLIError::ValidationFailed {
                     message: format!("Invalid boolean value: {} (use true/false)", value),
-                }))?;
+                })?;
             serde_yaml::Value::Bool(bool_val)
         }
-        _ => return Err(CLIError::validation_failed(
+        _ => return Err(CLIError::ValidationFailed {
             message: format!("Invalid value type: {}", value_type.unwrap()),
-        })),
+        }),
     };
     
     // Set the value
     config.set_value(key, parsed_value)
-        .map_err(|e| CLIError::validation_failed(
+        .map_err(|e| CLIError::ValidationFailed {
             message: format!("Failed to set configuration value: {}", e),
-        }))?;
+        })?;
     
     // Save the configuration
     config.save()
@@ -1267,14 +1259,14 @@ fn handle_config_reset(key: Option<&str>, yes: bool) -> CliResult<()> {
             }
             
             let mut config = crate::config::AppConfig::load()
-                .map_err(|e| CLIError::validation_failed(
+                .map_err(|e| CLIError::ValidationFailed {
                     message: format!("Failed to load configuration: {}", e),
-                }))?;
+                })?;
             
             config.reset_key(key_name)
-                .map_err(|e| CLIError::validation_failed(
+                .map_err(|e| CLIError::ValidationFailed {
                     message: format!("Failed to reset configuration key: {}", e),
-                }))?;
+                })?;
             
             config.save()
                 .map_err(|e| CLIError::Config(errors::ConfigError::SaveFailed {
@@ -1447,11 +1439,25 @@ fn handle_application_error(error: &CLIError) {
     }
 
     // Print user-friendly error message
-    formatting::print_error(error);
+    eprintln!("Error: {}", error);
 
     // In debug mode, also print the error chain
     #[cfg(debug_assertions)]
-    formatting::print_error_chain(error);
+    {
+        if let Some(source) = error.source() {
+            eprintln!("\nCaused by:");
+            let mut current = source;
+            let mut depth = 0;
+            loop {
+                eprintln!("  {}: {}", depth, current);
+                match current.source() {
+                    Some(err) => current = err,
+                    None => break,
+                }
+                depth += 1;
+            }
+        }
+    }
 
     // Cleanup resources before exit
     if let Err(cleanup_error) = cleanup_plugins() {

@@ -1,9 +1,9 @@
 /**
  * Configuration module for Test Rust CLI
- * Auto-generated from test-rust-verification.yaml
+ * Auto-generated from test-rust-cli.yaml
  */
 
-use crate::errors::{CliResult, ConfigError, CLIError};
+use crate::errors::{CliResult, CLIError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -67,6 +67,10 @@ impl Default for AppConfig {
         
         
         
+        // Ensure variables are considered mutable even if no aliases are defined
+        aliases.reserve(1);
+        custom.reserve(1);
+        
         Self {
             settings: Settings {
                 version: "2.0.0-beta.1".to_string(),
@@ -92,36 +96,24 @@ impl Default for AppConfig {
 
 impl AppConfig {
     /// Load configuration from multiple possible locations and formats
-    pub fn load() -> Result<Self, ConfigError> {
+    pub fn load() -> CliResult<Self> {
         // Search for configuration files in order of preference
         let search_paths = Self::get_config_search_paths()?;
         
         for (path, format) in search_paths {
             if path.exists() {
                 let content = std::fs::read_to_string(&path)
-                    .map_err(|e| ConfigError::config(format!("Failed to read config file {}: {}", path.display(), e)))?;
+                    .map_err(|e| CLIError::config(&format!("Failed to read config file {}: {}", path.display(), e)))?;
                 
                 let config = match format.as_str() {
                     "yaml" | "yml" => serde_yaml::from_str::<AppConfig>(&content)
-                        .map_err(|e| ConfigError::InvalidFormat {
-                            path: path.clone(),
-                            reason: format!("YAML parsing error: {}", e),
-                        })?,
+                        .map_err(|e| CLIError::invalid_format(&format!("YAML parsing error in {}: {}", path.display(), e)))?, 
                     "json" => serde_json::from_str::<AppConfig>(&content)
-                        .map_err(|e| ConfigError::InvalidFormat {
-                            path: path.clone(),
-                            reason: format!("JSON parsing error: {}", e),
-                        })?,
+                        .map_err(|e| CLIError::invalid_format(&format!("JSON parsing error in {}: {}", path.display(), e)))?, 
                     "toml" => toml::from_str::<AppConfig>(&content)
-                        .map_err(|e| ConfigError::InvalidFormat {
-                            path: path.clone(),
-                            reason: format!("TOML parsing error: {}", e),
-                        })?,
+                        .map_err(|e| CLIError::invalid_format(&format!("TOML parsing error in {}: {}", path.display(), e)))?, 
                     _ => {
-                        return Err(ConfigError::InvalidFormat {
-                            path: path.clone(),
-                            reason: format!("Unsupported config format: {}", format),
-                        });
+                        return Err(CLIError::invalid_format(&format!("Unsupported config format: {} for {}", format, path.display())));
                     }
                 };
                 
@@ -134,25 +126,19 @@ impl AppConfig {
         
         // No config file found, create default
         let config = Self::default();
-        config.save().map_err(|e| match e {
-            CLIError::config("Failed to create configuration directory") => e,
-            CLIError::config("Failed to write configuration") => e,
-            _ => ConfigError::ValidationFailed {
-                message: "Failed to create default configuration".to_string(),
-            },
+        config.save().map_err(|e| {
+            CLIError::config(&format!("Failed to create default configuration: {}", e))
         })?;
         Ok(config)
     }
     
     /// Get search paths for configuration files in order of preference
-    fn get_config_search_paths() -> Result<Vec<(PathBuf, String)>, ConfigError> {
+    fn get_config_search_paths() -> CliResult<Vec<(PathBuf, String)>> {
         let mut paths = Vec::new();
         
         // 1. Current directory (highest priority)
         let current_dir = std::env::current_dir()
-            .map_err(|e| ConfigError::ValidationFailed {
-                message: format!("Cannot access current directory: {}", e),
-            })?;
+            .map_err(|e| CLIError::validation_failed(&format!("Cannot access current directory: {}", e)))?;
         paths.push((current_dir.join(".test-rust-cli.yaml"), "yaml".to_string()));
         paths.push((current_dir.join(".test-rust-cli.yml"), "yaml".to_string()));
         paths.push((current_dir.join(".test-rust-cli.json"), "json".to_string()));
@@ -200,7 +186,7 @@ impl AppConfig {
     }
     
     /// Save configuration to file
-    pub fn save(&self) -> Result<(), ConfigError> {
+    pub fn save(&self) -> CliResult<()> {
         // Validate before saving
         self.validate()?;
         
@@ -209,23 +195,14 @@ impl AppConfig {
         // Ensure config directory exists
         if let Some(parent) = config_path.parent() {
             std::fs::create_dir_all(parent)
-                .map_err(|e| ConfigError::DirectoryCreationFailed {
-                    path: parent.to_path_buf(),
-                    reason: e.to_string(),
-                })?;
+                .map_err(|e| CLIError::directory_creation_failed(&format!("Failed to create config directory {}: {}", parent.display(), e)))?;
         }
         
         let content = serde_yaml::to_string(self)
-            .map_err(|e| ConfigError::WriteFailed {
-                path: config_path.clone(),
-                reason: format!("Serialization failed: {}", e),
-            })?;
+            .map_err(|e| CLIError::write_failed(&format!("Serialization failed for {}: {}", config_path.display(), e)))?;
         
         std::fs::write(&config_path, content)
-            .map_err(|e| ConfigError::WriteFailed {
-                path: config_path.clone(),
-                reason: format!("File write failed: {}", e),
-            })?;
+            .map_err(|e| CLIError::write_failed(&format!("File write failed for {}: {}", config_path.display(), e)))?;
         
         Ok(())
     }
@@ -277,44 +254,32 @@ impl AppConfig {
         
         let config_dir = Self::config_dir()?;
         std::fs::create_dir_all(&config_dir)
-            .map_err(|e| CLIError::io(format!("Failed to create config directory: {}", config_dir.display()), e))?;
+            .map_err(|e| CLIError::io(&format!("Failed to create config directory: {}", config_dir.display()), e))?;
         
         let (filename, content) = match format {
             "yaml" | "yml" => {
                 let content = serde_yaml::to_string(self)
-                    .map_err(|e| ConfigError::WriteFailed {
-                        path: config_dir.join("config.yaml"),
-                        reason: format!("YAML serialization failed: {}", e),
-                    })?;
+                    .map_err(|e| CLIError::write_failed(&format!("YAML serialization failed: {}", e)))?;
                 ("config.yaml", content)
             },
             "json" => {
                 let content = serde_json::to_string_pretty(self)
-                    .map_err(|e| ConfigError::WriteFailed {
-                        path: config_dir.join("config.json"),
-                        reason: format!("JSON serialization failed: {}", e),
-                    })?;
+                    .map_err(|e| CLIError::write_failed(&format!("JSON serialization failed: {}", e)))?;
                 ("config.json", content)
             },
             "toml" => {
                 let content = toml::to_string_pretty(self)
-                    .map_err(|e| ConfigError::WriteFailed {
-                        path: config_dir.join("config.toml"),
-                        reason: format!("TOML serialization failed: {}", e),
-                    })?;
+                    .map_err(|e| CLIError::write_failed(&format!("TOML serialization failed: {}", e)))?;
                 ("config.toml", content)
             },
             _ => {
-                return Err(ConfigError::InvalidFormat {
-                    path: config_dir.clone(),
-                    reason: format!("Unsupported config format: {}", format),
-                });
+                return Err(CLIError::invalid_format(&format!("Unsupported config format: {}", format)));
             }
         };
         
         let config_path = config_dir.join(filename);
         std::fs::write(&config_path, content)
-            .map_err(|e| CLIError::io(format!("Failed to write config file: {}", config_path.display()), e))?;
+            .map_err(|e| CLIError::io(&format!("Failed to write config file: {}", config_path.display()), e))?;
         
         Ok(())
     }
@@ -460,17 +425,17 @@ impl AppConfig {
         match format {
             "yaml" | "yml" => {
                 serde_yaml::to_string(self)
-                    .map_err(|e| CLIError::config(format!("YAML serialization failed: {}", e)))
+                    .map_err(|e| CLIError::config(&format!("YAML serialization failed: {}", e)))
             }
             "json" => {
                 serde_json::to_string_pretty(self)
-                    .map_err(|e| CLIError::config(format!("JSON serialization failed: {}", e)))
+                    .map_err(|e| CLIError::config(&format!("JSON serialization failed: {}", e)))
             }
             "toml" => {
                 toml::to_string_pretty(self)
-                    .map_err(|e| CLIError::config(format!("TOML serialization failed: {}", e)))
+                    .map_err(|e| CLIError::config(&format!("TOML serialization failed: {}", e)))
             }
-            _ => Err(CLIError::config(format!("Unsupported export format: {}", format)))
+            _ => Err(CLIError::config(&format!("Unsupported export format: {}", format)))
         }
     }
     
@@ -479,18 +444,18 @@ impl AppConfig {
         let imported_config = match format {
             "yaml" | "yml" => {
                 serde_yaml::from_str::<AppConfig>(content)
-                    .map_err(|e| CLIError::config(format!("YAML parsing failed: {}", e)))?
+                    .map_err(|e| CLIError::config(&format!("YAML parsing failed: {}", e)))?
             }
             "json" => {
                 serde_json::from_str::<AppConfig>(content)
-                    .map_err(|e| CLIError::config(format!("JSON parsing failed: {}", e)))?
+                    .map_err(|e| CLIError::config(&format!("JSON parsing failed: {}", e)))?
             }
             "toml" => {
                 toml::from_str::<AppConfig>(content)
-                    .map_err(|e| CLIError::config(format!("TOML parsing failed: {}", e)))?
+                    .map_err(|e| CLIError::config(&format!("TOML parsing failed: {}", e)))?
             }
             _ => {
-                return Err(CLIError::config(format!("Unsupported import format: {}", format)));
+                return Err(CLIError::config(&format!("Unsupported import format: {}", format)));
             }
         };
         

@@ -1,5 +1,5 @@
 /**
- * Auto-generated from test-rust-verification.yaml
+ * Auto-generated from test-rust-cli.yaml
  * Library module for Test Rust CLI
  */
 

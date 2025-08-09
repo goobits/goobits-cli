@@ -178,7 +178,7 @@ impl Command for {{ cmd_name | title | replace('-', '') }}Command {
         if let Some(value) = args.get_arg({{ loop.index0 }}) {
             let valid_choices = vec![{% for choice in arg.choices %}"{{ choice }}"{% if not loop.last %}, {% endif %}{% endfor %}];
             if !valid_choices.contains(&value.as_str()) {
-                return Err(CLIError::validation("{{ arg.name }}", value, format!("Invalid value. Valid choices: {}", valid_choices.join(", "))));
+                return Err(CLIError::validation("{{ arg.name }}", value, &format!("Invalid value. Valid choices: {}", valid_choices.join(", "))));
             }
         }
         {% endif %}
@@ -192,7 +192,7 @@ impl Command for {{ cmd_name | title | replace('-', '') }}Command {
         if let Some(value) = args.get_option("{{ opt.name }}") {
             let valid_choices = vec![{% for choice in opt.choices %}"{{ choice }}"{% if not loop.last %}, {% endif %}{% endfor %}];
             if !valid_choices.contains(&value.as_str()) {
-                return Err(CLIError::validation("{{ opt.name }}", value, format!("Invalid value. Valid choices: {}", valid_choices.join(", "))));
+                return Err(CLIError::validation("{{ opt.name }}", value, &format!("Invalid value. Valid choices: {}", valid_choices.join(", "))));
             }
         }
         {% endif %}
