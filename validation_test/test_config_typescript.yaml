@@ -1,0 +1,43 @@
+package_name: typescript-test-cli
+command_name: typescript-test
+display_name: "TypeScript Test CLI"
+description: "A TypeScript test CLI for validation"
+language: typescript
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: []
+  optional: []
+
+installation:
+  pypi_name: typescript-test-cli
+  development_path: "."
+
+shell_integration:
+  enabled: false
+  alias: typescript-test
+
+validation:
+  check_api_keys: false
+  check_disk_space: false
+
+messages:
+  install_success: "TypeScript test CLI installed successfully!"
+
+cli:
+  name: "TypeScript Test CLI"
+  version: "1.0.0"
+  tagline: "A simple TypeScript test CLI"
+  description: "Basic TypeScript CLI for validation testing"
+  
+  commands:
+    hello:
+      desc: "Say hello to someone"
+      options:
+        - name: "name"
+          type: "str"
+          desc: "Name to greet"
+          default: "World"

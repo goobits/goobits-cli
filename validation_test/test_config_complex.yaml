@@ -1,0 +1,84 @@
+package_name: complex-test-cli
+command_name: complex-test
+display_name: "Complex Test CLI"
+description: "Complex test configuration with all features"
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: []
+  optional: []
+
+installation:
+  pypi_name: complex-test-cli
+  development_path: "."
+  extras:
+    python: ["dev", "test"]
+    apt: ["git"]
+
+shell_integration:
+  enabled: false
+  alias: complex-test
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: "Complex test CLI installed successfully!"
+
+cli:
+  name: "Complex Test CLI"
+  version: "2.0.0"
+  tagline: "Advanced CLI with multiple features"
+  description: "Complex CLI for comprehensive validation testing"
+  
+  commands:
+    process:
+      desc: "Process data with various options"
+      options:
+        - name: "input"
+          short: "i"
+          type: "str"
+          desc: "Input file path"
+          required: true
+        - name: "output"
+          short: "o"
+          type: "str"
+          desc: "Output file path"
+          default: "output.txt"
+        - name: "format"
+          type: "str"
+          desc: "Output format"
+          choices: ["json", "xml", "csv"]
+          default: "json"
+        - name: "threads"
+          type: "int"
+          desc: "Number of threads"
+          default: 4
+        - name: "enable-cache"
+          type: "flag"
+          desc: "Enable caching"
+          
+    server:
+      desc: "Server management commands"
+      subcommands:
+        start:
+          desc: "Start the server"
+          options:
+            - name: "port"
+              short: "p"
+              type: "int"
+              desc: "Server port"
+              default: 8080
+            - name: "host"
+              type: "str"
+              desc: "Server host"
+              default: "localhost"
+        stop:
+          desc: "Stop the server"
+        status:
+          desc: "Check server status"

@@ -208,6 +208,16 @@ class TypeScriptGenerator(NodeJSGenerator):
         import json
         return json.dumps(value)
     
+    def _json_stringify(self, x) -> str:
+        """Convert to JSON, handling Pydantic models."""
+        import json
+        if hasattr(x, 'model_dump'):
+            return json.dumps(x.model_dump(), indent=2)
+        elif hasattr(x, 'dict'):
+            return json.dumps(x.dict(), indent=2)
+        else:
+            return json.dumps(x, indent=2)
+    
     def _validate_config(self, config: any) -> ValidationResult:
         """Validate TypeScript-specific configuration.
         

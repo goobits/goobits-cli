@@ -1,0 +1,13 @@
+{
+  "production_ready": false,
+  "overall_score": 72.72727272727272,
+  "critical_issues_count": 4,
+  "validation_timestamp": 1754805279.2047195,
+  "next_steps": [
+    "\ud83d\udea8 CRITICAL ISSUES DETECTED - Address immediately:",
+    "   \u2022 Low startup success rate (66.7%) indicates reliability issues",
+    "   \u2022 Memory analysis failed: No memory analysis results",
+    "   \u2022 Template benchmarks failed: Template benchmarks failed: mean requires at least one data point",
+    "   \u2022 Framework does not meet production performance requirements"
+  ]
+}

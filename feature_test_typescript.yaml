@@ -1,0 +1,447 @@
+package_name: feature-test-cli
+command_name: feature-test
+display_name: "Feature Test CLI"
+description: "Comprehensive CLI for testing feature parity across languages"
+
+language: typescript  # Will be overridden for each test
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: []
+  optional: []
+
+installation:
+  pypi_name: feature-test-cli
+  development_path: "."
+  extras:
+    python: ["dev", "test"]
+    npm: ["typescript", "@types/node"]
+    apt: ["git"]
+
+shell_integration:
+  enabled: true
+  alias: ft
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 50
+
+messages:
+  install_success: "Feature test CLI installed successfully!"
+  install_dev_success: "Feature test CLI installed in development mode!"
+
+cli:
+  name: feature-test
+  tagline: "Comprehensive feature testing CLI"
+  version: "2.0.0"
+  description: "Tests all features across Python, Node.js, and TypeScript"
+  icon: "🧪"
+  display_version: true
+  enable_recursive_help: true
+  enable_help_json: true
+  
+  # Global CLI options
+  options:
+    - name: verbose
+      short: v
+      desc: "Enable verbose output"
+      type: flag
+      default: false
+    - name: config
+      short: c
+      desc: "Path to configuration file"
+      type: str
+      default: "~/.feature-test/config.yaml"
+    - name: output-format
+      desc: "Output format"
+      type: str
+      choices: ["json", "yaml", "table", "text"]
+      default: "text"
+    - name: dry-run
+      desc: "Show what would be done without executing"
+      type: flag
+      default: false
+
+  # Rich display configuration
+  config:
+    rich_help_panel: true
+    show_metavars_column: false
+    append_metavars_help: true
+    style_errors_suggestion: true
+    max_width: 120
+
+  header_sections:
+    - title: "Quick Examples"
+      icon: "💡"
+      items:
+        - item: "feature-test hello Alice"
+          desc: "Say hello to Alice"
+        - item: "feature-test data process input.json -o output.json"
+          desc: "Process data file"
+        - item: "feature-test config set theme dark"
+          desc: "Set configuration value"
+
+  footer_note: "For detailed help on any command, use: feature-test <command> --help"
+
+  commands:
+    # Basic command with arguments and options
+    hello:
+      desc: "Greet someone with customizable message"
+      icon: "👋"
+      args:
+        - name: name
+          desc: "Name of person to greet"
+          required: true
+        - name: surname
+          desc: "Optional surname"
+          required: false
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting message"
+          type: str
+          default: "Hello"
+        - name: uppercase
+          short: u
+          desc: "Convert output to uppercase"
+          type: flag
+          default: false
+        - name: repeat
+          short: r
+          desc: "Number of times to repeat greeting"
+          type: int
+          default: 1
+        - name: separator
+          desc: "Separator between repetitions"
+          type: str
+          default: " "
+
+    # Command with multiple argument types
+    data:
+      desc: "Data processing operations"
+      icon: "📊"
+      subcommands:
+        process:
+          desc: "Process input data"
+          args:
+            - name: input_file
+              desc: "Input data file"
+              required: true
+            - name: filters
+              desc: "Filter expressions"
+              nargs: "*"
+              required: false
+          options:
+            - name: output
+              short: o
+              desc: "Output file path"
+              type: str
+            - name: format
+              short: f
+              desc: "Output format"
+              type: str
+              choices: ["json", "csv", "xml"]
+              default: "json"
+            - name: validate
+              desc: "Validate input data"
+              type: flag
+              default: false
+            - name: batch-size
+              desc: "Processing batch size"
+              type: int
+              default: 100
+            - name: timeout
+              desc: "Processing timeout in seconds"
+              type: float
+              default: 30.0
+        validate:
+          desc: "Validate data file"
+          args:
+            - name: file
+              desc: "File to validate"
+              required: true
+          options:
+            - name: schema
+              desc: "Schema file for validation"
+              type: str
+            - name: strict
+              desc: "Enable strict validation"
+              type: flag
+              default: false
+        convert:
+          desc: "Convert between data formats"
+          args:
+            - name: source
+              desc: "Source file"
+              required: true
+            - name: target
+              desc: "Target file"
+              required: true
+          options:
+            - name: source-format
+              desc: "Source format"
+              type: str
+              choices: ["json", "csv", "xml", "yaml"]
+            - name: target-format
+              desc: "Target format"
+              type: str
+              choices: ["json", "csv", "xml", "yaml"]
+            - name: pretty
+              desc: "Pretty-print output"
+              type: flag
+              default: false
+
+    # Configuration management
+    config:
+      desc: "Configuration management"
+      icon: "⚙️"
+      subcommands:
+        get:
+          desc: "Get configuration value"
+          args:
+            - name: key
+              desc: "Configuration key"
+              required: true
+          options:
+            - name: default
+              desc: "Default value if key doesn't exist"
+              type: str
+        set:
+          desc: "Set configuration value"
+          args:
+            - name: key
+              desc: "Configuration key"
+              required: true
+            - name: value
+              desc: "Configuration value"
+              required: true
+          options:
+            - name: type
+              desc: "Value type"
+              type: str
+              choices: ["string", "int", "float", "bool", "list"]
+              default: "string"
+        list:
+          desc: "List all configuration values"
+          options:
+            - name: filter
+              desc: "Filter keys by pattern"
+              type: str
+            - name: show-defaults
+              desc: "Show default values"
+              type: flag
+              default: false
+        delete:
+          desc: "Delete configuration value"
+          args:
+            - name: key
+              desc: "Configuration key to delete"
+              required: true
+          options:
+            - name: force
+              short: f
+              desc: "Force deletion without confirmation"
+              type: flag
+              default: false
+        reset:
+          desc: "Reset configuration to defaults"
+          options:
+            - name: force
+              short: f
+              desc: "Force reset without confirmation"
+              type: flag
+              default: false
+
+    # File operations
+    file:
+      desc: "File and directory operations"
+      icon: "📁"
+      subcommands:
+        create:
+          desc: "Create files or directories"
+          args:
+            - name: paths
+              desc: "Paths to create"
+              nargs: "+"
+              required: true
+          options:
+            - name: content
+              desc: "Content for files"
+              type: str
+            - name: template
+              desc: "Template to use"
+              type: str
+            - name: permissions
+              desc: "File permissions (octal)"
+              type: str
+              default: "644"
+            - name: directory
+              short: d
+              desc: "Create directories instead of files"
+              type: flag
+              default: false
+        delete:
+          desc: "Delete files or directories"
+          args:
+            - name: paths
+              desc: "Paths to delete"
+              nargs: "+"
+              required: true
+          options:
+            - name: recursive
+              short: r
+              desc: "Delete recursively"
+              type: flag
+              default: false
+            - name: force
+              short: f
+              desc: "Force deletion without confirmation"
+              type: flag
+              default: false
+        copy:
+          desc: "Copy files or directories"
+          args:
+            - name: source
+              desc: "Source path"
+              required: true
+            - name: destination
+              desc: "Destination path"
+              required: true
+          options:
+            - name: recursive
+              short: r
+              desc: "Copy recursively"
+              type: flag
+              default: false
+            - name: preserve
+              desc: "Preserve file attributes"
+              type: flag
+              default: false
+        move:
+          desc: "Move or rename files"
+          args:
+            - name: source
+              desc: "Source path"
+              required: true
+            - name: destination
+              desc: "Destination path"
+              required: true
+
+    # Testing various option types and validation
+    types:
+      desc: "Test different argument and option types"
+      icon: "🔢"
+      args:
+        - name: text
+          desc: "Text argument"
+          required: true
+        - name: numbers
+          desc: "Numeric arguments"
+          nargs: "*"
+          required: false
+      options:
+        - name: string-val
+          desc: "String value"
+          type: str
+          default: "default"
+        - name: int-val
+          desc: "Integer value"
+          type: int
+          default: 42
+        - name: float-val
+          desc: "Float value"
+          type: float
+          default: 3.14
+        - name: bool-val
+          desc: "Boolean flag"
+          type: flag
+          default: false
+        - name: choice-val
+          desc: "Choice from list"
+          type: str
+          choices: ["alpha", "beta", "gamma"]
+          default: "alpha"
+        - name: multiple-vals
+          desc: "Multiple string values"
+          type: str
+          multiple: true
+
+    # Error handling and edge cases
+    test-errors:
+      desc: "Test error handling scenarios"
+      icon: "❌"
+      subcommands:
+        fail:
+          desc: "Command that always fails"
+          options:
+            - name: code
+              desc: "Exit code to return"
+              type: int
+              default: 1
+            - name: message
+              desc: "Error message"
+              type: str
+              default: "Test failure"
+        timeout:
+          desc: "Command that times out"
+          options:
+            - name: seconds
+              desc: "Seconds before timeout"
+              type: float
+              default: 5.0
+        exception:
+          desc: "Command that raises exception"
+          options:
+            - name: type
+              desc: "Exception type"
+              type: str
+              choices: ["runtime", "value", "type", "key"]
+              default: "runtime"
+
+    # Interactive features (if supported)
+    interactive:
+      desc: "Interactive mode testing"
+      icon: "🎮"
+      options:
+        - name: no-prompt
+          desc: "Disable interactive prompts"
+          type: flag
+          default: false
+
+    # Performance testing
+    performance:
+      desc: "Performance and load testing"
+      icon: "⚡"
+      args:
+        - name: operation
+          desc: "Operation to perform"
+          choices: ["startup", "memory", "cpu", "io"]
+          required: true
+      options:
+        - name: iterations
+          desc: "Number of iterations"
+          type: int
+          default: 100
+        - name: size
+          desc: "Data size for testing"
+          type: int
+          default: 1000
+
+  # Command groups for organization
+  command_groups:
+    - name: "Core Operations"
+      icon: "🎯"
+      commands: ["hello", "data", "config"]
+    - name: "File System"
+      icon: "📂" 
+      commands: ["file"]
+    - name: "Development"
+      icon: "🔧"
+      commands: ["types", "test-errors", "performance"]
+    - name: "Interactive"
+      icon: "🎪"
+      commands: ["interactive"]

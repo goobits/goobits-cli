@@ -1,0 +1,110 @@
+# Universal Template System Test Configuration
+
+package_name: universal-template-test
+command_name: test-cli
+display_name: "Universal Template Test CLI"
+description: "Test CLI for validating universal templates across languages"
+
+language: python  # Will be overridden for different language tests
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: ["click", "pyyaml"]
+  optional: ["js-yaml"]
+
+installation:
+  pypi_name: "universal-template-test"
+  development_path: "."
+  extras:
+    python: ["click", "pyyaml", "js-yaml"]
+    apt: []
+    npm: ["js-yaml", "commander"]
+
+shell_integration:
+  enabled: true
+  alias: test-cli
+
+validation:
+  check_api_keys: false
+  check_disk_space: false
+
+messages:
+  install_success: "✅ Universal Template Test CLI installed successfully!"
+  install_dev_success: "🚀 Development mode enabled!"
+
+cli:
+  name: "test-cli"
+  tagline: "Universal template test CLI"
+  commands:
+    hello:
+      desc: "Say hello with various options"
+      examples:
+        - "test-cli hello World"
+        - "test-cli hello --uppercase Alice"
+      arguments:
+        - name: "name"
+          description: "Name to greet"
+          required: true
+      options:
+        - name: "uppercase"
+          short: "u"
+          desc: "Convert greeting to uppercase"
+          type: "boolean"
+        - name: "repeat"
+          short: "r"
+          desc: "Number of times to repeat greeting"
+          type: "integer"
+          default: 1
+
+    file-ops:
+      desc: "File operations with error handling"
+      examples:
+        - "test-cli file-ops *.txt"
+        - "test-cli file-ops --operation copy *.md"
+      arguments:
+        - name: "files"
+          description: "Files to process"
+          required: true
+          multiple: true
+      options:
+        - name: "operation"
+          short: "o"
+          desc: "Operation to perform"
+          type: "string"
+          default: "list"
+        - name: "recursive"
+          short: "R"
+          desc: "Process recursively"
+          type: "boolean"
+
+    config-test:
+      desc: "Test configuration management"
+      examples:
+        - "test-cli config-test --key debug --value true"
+      options:
+        - name: "key"
+          short: "k"
+          desc: "Configuration key to test"
+          type: "string"
+          required: true
+        - name: "value"
+          short: "v"
+          desc: "Configuration value to set"
+          type: "string"
+
+    completion-test:
+      desc: "Test shell completion features"
+      examples:
+        - "test-cli completion-test bash --install"
+      arguments:
+        - name: "shell"
+          description: "Shell type for completion"
+          required: false
+      options:
+        - name: "install"
+          short: "i"
+          desc: "Install completion scripts"
+          type: "boolean"

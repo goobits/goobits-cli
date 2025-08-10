@@ -1,0 +1,42 @@
+package_name: minimal-test-cli
+command_name: minimal-test
+display_name: "Minimal Test CLI"
+description: "A minimal test CLI for validation"
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: []
+  optional: []
+
+installation:
+  pypi_name: minimal-test-cli
+  development_path: "."
+
+shell_integration:
+  enabled: false
+  alias: minimal-test
+
+validation:
+  check_api_keys: false
+  check_disk_space: false
+
+messages:
+  install_success: "Minimal test CLI installed successfully!"
+
+cli:
+  name: "Minimal Test CLI"
+  version: "1.0.0"
+  tagline: "A simple test CLI"
+  description: "Basic CLI for validation testing"
+  
+  commands:
+    hello:
+      desc: "Say hello to someone"
+      options:
+        - name: "name"
+          type: "str"
+          desc: "Name to greet"
+          default: "World"
