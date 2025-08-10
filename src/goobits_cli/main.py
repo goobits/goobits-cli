@@ -1,4 +1,38 @@
 #!/usr/bin/env python3
+
+# Fast version and help check to avoid heavy imports
+import sys
+if len(sys.argv) == 2:
+    if sys.argv[1] in ['--version', '-V']:
+        from .__version__ import __version__
+        print(f"goobits-cli {__version__}")
+        sys.exit(0)
+    elif sys.argv[1] in ['--help', '-h']:
+        # Fast help without loading heavy dependencies
+        help_text = """
+Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...
+
+Unified CLI for Goobits projects
+
+
+╭─ Options ──────────────────────────────────────────────────────────────────────╮
+│ --version                     Show version and exit                          │
+│ --install-completion          Install completion for the current shell.      │
+│ --show-completion             Show completion for the current shell, to copy │
+│                               it or customize the installation.              │
+│ --help                        Show this message and exit.                    │
+╰────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ─────────────────────────────────────────────────────────────────────╮
+│ build       Build CLI and setup scripts from goobits.yaml configuration.    │
+│ init        Create initial goobits.yaml template.                            │
+│ serve       Serve a local PyPI-compatible package index.                     │
+│ upgrade     Upgrade goobits-cli to the latest version.                       │
+╰────────────────────────────────────────────────────────────────────────────────╯
+        """.strip()
+        print(help_text)
+        sys.exit(0)
+
+# Now import heavy dependencies only if needed
 import yaml
 import toml
 import shutil

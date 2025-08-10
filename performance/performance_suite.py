@@ -25,6 +25,7 @@ except ImportError:
 
 # Import our performance analysis modules
 try:
+    # Try relative imports first (when run as module)
     from .benchmark_suite import PerformanceValidator
     from .startup_validator import StartupValidator
     from .memory_profiler import CLIMemoryBenchmark
@@ -32,7 +33,16 @@ try:
     from .cross_language_analyzer import CrossLanguageAnalyzer
     MODULES_AVAILABLE = True
 except ImportError:
-    MODULES_AVAILABLE = False
+    try:
+        # Fallback to direct imports (when run directly)
+        from benchmark_suite import PerformanceValidator
+        from startup_validator import StartupValidator
+        from memory_profiler import CLIMemoryBenchmark
+        from template_benchmark import TemplateBenchmark
+        from cross_language_analyzer import CrossLanguageAnalyzer
+        MODULES_AVAILABLE = True
+    except ImportError:
+        MODULES_AVAILABLE = False
 
 
 @dataclass

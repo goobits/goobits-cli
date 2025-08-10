@@ -32,7 +32,14 @@ try:
     from .template_benchmark import TemplateBenchmark
     TOOLS_AVAILABLE = True
 except ImportError:
-    TOOLS_AVAILABLE = False
+    try:
+        from benchmark_suite import PerformanceValidator
+        from startup_validator import StartupValidator
+        from memory_profiler import CLIMemoryBenchmark
+        from template_benchmark import TemplateBenchmark
+        TOOLS_AVAILABLE = True
+    except ImportError:
+        TOOLS_AVAILABLE = False
 
 
 @dataclass

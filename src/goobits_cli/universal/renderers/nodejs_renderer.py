@@ -62,6 +62,9 @@ class NodeJSRenderer(LanguageRenderer):
         
         # Node.js-specific additions
         context.update({
+            # CRITICAL: Set language for universal template conditional logic
+            "language": "nodejs",
+            
             # Commander.js specific structures
             "commander_commands": self._build_commander_structure(ir["cli"]),
             "npm_dependencies": self._build_npm_dependencies(ir),

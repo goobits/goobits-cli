@@ -26,7 +26,7 @@ class CompletionEngine:
     
     def generate_bash_completion(self) -> str:
         """Generate bash completion script."""
-        script = f'''#!/bin/bash
+        script = '''#!/bin/bash
 # Bash completion for {{ cli.root_command.name }}
 
 _{{ cli.root_command.name.replace("-", "_") }}_completions()
@@ -47,7 +47,7 @@ _{{ cli.root_command.name.replace("-", "_") }}_completions()
             COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
             ;;
         *)
-            case "$words[1]" in
+            case "${words[1]}" in
 {%- for command in cli.root_command.subcommands %}
                 {{ command.name }})
                     local {{ command.name.replace("-", "_") }}_opts="--help -h{%- for opt in command.options %} --{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}{%- endfor %}"

@@ -107,6 +107,7 @@ class PythonRenderer(LanguageRenderer):
             "python_repr": self._python_repr_filter,
             "snake_case": self._snake_case_filter,
             "python_docstring": self._python_docstring_filter,
+            "js_string": self._js_string_filter,  # For compatibility with universal templates
         }
     
     def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
@@ -450,3 +451,10 @@ class PythonRenderer(LanguageRenderer):
             return f'"""\n    {text}\n    """'
         else:
             return f'"""{text}"""'
+    
+    def _js_string_filter(self, value: str) -> str:
+        """Escape string for JavaScript (compatibility with universal templates)."""
+        if not isinstance(value, str):
+            return str(value)
+        
+        return value.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')

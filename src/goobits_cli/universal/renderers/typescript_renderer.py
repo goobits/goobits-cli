@@ -59,6 +59,9 @@ class TypeScriptRenderer(LanguageRenderer):
         # Start with base IR context
         context = ir.copy()
         
+        # CRITICAL: Set language for universal template conditional logic
+        context['language'] = 'typescript'
+        
         # Add TypeScript-specific transformations
         context['typescript'] = {
             'interfaces': self._generate_interfaces(ir),
@@ -91,7 +94,8 @@ class TypeScriptRenderer(LanguageRenderer):
             'ts_safe_name': self._ts_safe_name_filter,
             'ts_optional': self._ts_optional_filter,
             'ts_array_type': self._ts_array_type_filter,
-            'ts_function_signature': self._ts_function_signature_filter
+            'ts_function_signature': self._ts_function_signature_filter,
+            'js_string': self._js_string_filter
         }
     
     def render_component(self, component_name: str, template_content: str, 
@@ -540,3 +544,10 @@ class TypeScriptRenderer(LanguageRenderer):
         features = cli_schema.get("features", {})
         interactive_mode = features.get("interactive_mode", {})
         return interactive_mode.get("enabled", False)
+    
+    def _js_string_filter(self, value: str) -> str:
+        """Escape string for JavaScript/TypeScript."""
+        if not isinstance(value, str):
+            return str(value)
+        
+        return value.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')

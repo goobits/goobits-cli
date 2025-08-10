@@ -46,7 +46,7 @@ class TestBuilder:
         assert '"Say hello to someone"' in result
         
         # Test main CLI function
-        assert "def main(ctx):" in result
+        assert "def main(ctx, interactive=False):" in result
         assert "Test CLI Application" in result  # Tagline appears in docstring
     
     def test_build_handles_command_with_arguments(self):
