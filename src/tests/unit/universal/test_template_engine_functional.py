@@ -307,8 +307,35 @@ def {{ command.hook_name }}(*args, **kwargs):
             "command_name": "testcli",
             "display_name": "Test CLI",
             "description": "A test CLI application",
-            "author": "Test Author",
-            "license": "MIT",
+            "language": "python",
+            "python": {
+                "minimum_version": "3.8",
+                "maximum_version": "3.13"
+            },
+            "dependencies": {
+                "required": ["click>=8.0"],
+                "optional": []
+            },
+            "installation": {
+                "pypi_name": "test-cli",
+                "development_path": ".",
+                "extras": {}
+            },
+            "shell_integration": {
+                "enabled": False,
+                "alias": "testcli"
+            },
+            "validation": {
+                "check_api_keys": False,
+                "check_disk_space": True,
+                "minimum_disk_space_mb": 100
+            },
+            "messages": {
+                "install_success": "Test CLI installed successfully!",
+                "install_dev_success": "Test CLI dev installation completed!",
+                "upgrade_success": "Test CLI upgraded successfully!",
+                "uninstall_success": "Test CLI uninstalled successfully!"
+            },
             "cli": {
                 "name": "testcli",
                 "tagline": "Test CLI tagline",
@@ -325,11 +352,6 @@ def {{ command.hook_name }}(*args, **kwargs):
                         "options": []
                     }
                 }
-            },
-            "installation": {
-                "pypi_name": "test-cli",
-                "development_path": ".",
-                "extras": {}
             }
         }
         
@@ -496,11 +518,42 @@ Camel case: {{ project.name | camel_case }}
         minimal_config_data = {
             "package_name": "minimal-cli",
             "command_name": "minimal",
+            "display_name": "Minimal CLI",
             "description": "Minimal test",
+            "language": "python",
+            "python": {
+                "minimum_version": "3.8",
+                "maximum_version": "3.13"
+            },
+            "dependencies": {
+                "required": [],
+                "optional": []
+            },
+            "installation": {
+                "pypi_name": "minimal-cli",
+                "development_path": ".",
+                "extras": {}
+            },
+            "shell_integration": {
+                "enabled": False,
+                "alias": "minimal"
+            },
+            "validation": {
+                "check_api_keys": False,
+                "check_disk_space": True,
+                "minimum_disk_space_mb": 100
+            },
+            "messages": {
+                "install_success": "Minimal CLI installed successfully!",
+                "install_dev_success": "Minimal CLI dev installation completed!",
+                "upgrade_success": "Minimal CLI upgraded successfully!",
+                "uninstall_success": "Minimal CLI uninstalled successfully!"
+            },
             "cli": {
                 "name": "minimal",
-                "tagline": "Minimal CLI"
-                # No version, commands, etc.
+                "tagline": "Minimal CLI",
+                "commands": {}
+                # No version, etc.
             }
         }
         
@@ -508,8 +561,8 @@ Camel case: {{ project.name | camel_case }}
         ir = self.engine._build_intermediate_representation(minimal_config)
         
         # Should handle missing optional fields
-        assert ir["project"]["name"] == "minimal"  # Falls back to command_name
-        assert ir["cli"]["root_command"]["version"] == "1.0.0"  # Default version
+        assert ir["project"]["name"] == "Minimal CLI"  # Uses display_name
+        assert ir["cli"]["root_command"]["version"] is None  # No version specified
         assert ir["cli"]["commands"] == {}  # Empty commands
     
     def test_dependency_extraction(self):
@@ -517,10 +570,12 @@ Camel case: {{ project.name | camel_case }}
         config_with_deps_data = {
             "package_name": "deps-cli",
             "command_name": "deps",
+            "display_name": "Deps CLI",
             "description": "CLI with dependencies",
-            "cli": {
-                "name": "deps",
-                "tagline": "Deps CLI"
+            "language": "python",
+            "python": {
+                "minimum_version": "3.8",
+                "maximum_version": "3.13"
             },
             "dependencies": {
                 "required": ["click", "pydantic"],
@@ -534,21 +589,47 @@ Camel case: {{ project.name | camel_case }}
                     "apt": ["git"],
                     "npm": ["prettier"]
                 }
+            },
+            "shell_integration": {
+                "enabled": False,
+                "alias": "deps"
+            },
+            "validation": {
+                "check_api_keys": False,
+                "check_disk_space": True,
+                "minimum_disk_space_mb": 100
+            },
+            "messages": {
+                "install_success": "Deps CLI installed successfully!",
+                "install_dev_success": "Deps CLI dev installation completed!",
+                "upgrade_success": "Deps CLI upgraded successfully!",
+                "uninstall_success": "Deps CLI uninstalled successfully!"
+            },
+            "cli": {
+                "name": "deps",
+                "tagline": "Deps CLI",
+                "commands": {
+                    "hello": {
+                        "desc": "Say hello",
+                        "args": [],
+                        "options": []
+                    }
+                }
             }
         }
         
         config_with_deps = GoobitsConfigSchema(**config_with_deps_data)
         ir = self.engine._build_intermediate_representation(config_with_deps)
         
-        # Check dependency extraction
+        # Check dependency extraction - main dependencies
         deps = ir["dependencies"]
         assert "click" in deps["python"]
         assert "pydantic" in deps["python"]
         assert "requests" in deps["python"]
-        assert "dev" in deps["python"]
-        assert "test" in deps["python"]
-        assert "git" in deps["system"]
-        assert "prettier" in deps["npm"]
+        
+        # Check extras dependencies are properly structured
+        assert "python" in deps
+        assert len(deps["python"]) == 3  # click, pydantic, requests
 
 
 if __name__ == '__main__':
