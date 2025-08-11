@@ -391,15 +391,15 @@ export class DefaultErrorManager implements ErrorManager {
     return factory(message, context);
   }
 
-  async handle<T extends CLIError>(error: T, context?: ErrorContext): Promise<void> {
+  async handle<T extends CLIError>(error: T, context?: ErrorContext, verbose = false): Promise<void> {
     const handler = this.handlers.get(error.code);
     if (handler) {
       await handler(error, context || {});
     } else {
       // Default error handling
-      const formatted = this.format(error, process.env.DEBUG !== undefined);
+      const formatted = this.format(error, verbose);
       
-      if (formatted.developerMessage && process.env.DEBUG) {
+      if (formatted.developerMessage && verbose) {
         console.error(formatted.developerMessage);
       } else {
         console.error(formatted.userMessage);
@@ -459,9 +459,9 @@ export const errorManager = new DefaultErrorManager();
 
 // === Utility Functions ===
 
-export function handleError(error: CLIError, context?: ErrorContext): never {
-  errorManager.handle(error, context);
-  const formatted = errorManager.format(error);
+export function handleError(error: CLIError, context?: ErrorContext, verbose = false): never {
+  errorManager.handle(error, context, verbose);
+  const formatted = errorManager.format(error, verbose);
   process.exit(formatted.exitCode);
 }
 

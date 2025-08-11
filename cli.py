@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Auto-generated from {{ file_name }}"""
+"""Auto-generated from goobits.yaml"""
 import os
 import sys
 import logging
@@ -178,11 +178,11 @@ os.environ["RICH_CLICK_USE_RICH_MARKUP"] = "1"
 os.environ["RICH_CLICK_FORCE_TERMINAL"] = "1"
 click.rich_click.SHOW_ARGUMENTS = True
 click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
-click.rich_click.SHOW_METAVARS_COLUMN = {{ cli.config.show_metavars_column if cli.config else False }}
-click.rich_click.APPEND_METAVARS_HELP = {{ cli.config.append_metavars_help if cli.config else True }}
+click.rich_click.SHOW_METAVARS_COLUMN = False
+click.rich_click.APPEND_METAVARS_HELP = True
 click.rich_click.STYLE_ERRORS_SUGGESTION = "#ff5555"
 click.rich_click.ERRORS_SUGGESTION = "Try running the '--help' flag for more information."
-click.rich_click.ERRORS_EPILOGUE = "To find out more, visit {{ project_url | default('https://github.com/your-org/your-project') }}"
+click.rich_click.ERRORS_EPILOGUE = "To find out more, visit https://github.com/your-org/your-project"
 click.rich_click.MAX_WIDTH = 120  # Set reasonable width
 click.rich_click.WIDTH = 120  # Set consistent width
 click.rich_click.COLOR_SYSTEM = "auto"
@@ -208,39 +208,13 @@ click.rich_click.STYLE_COMMANDS_PANEL_BORDER = "dim"  # Dim for subtle borders
 click.rich_click.STYLE_COMMAND = "#50fa7b"            # Dracula Green - for command names in list
 click.rich_click.STYLE_COMMANDS_TABLE_COLUMN_WIDTH_RATIO = (1, 3)  # Command:Description ratio (1/4 : 3/4)
 
-{% if cli.command_groups %}
+
 # Command groups will be set after main function is defined
-{% endif %}
+
 
 # Hooks system - try to import app_hooks module
 app_hooks = None
-{% if hooks_path %}
-# Using configured hooks path: {{ hooks_path }}
-try:
-    # First try as a module import (e.g., "ttt.app_hooks")
-    module_path = "{{ hooks_path }}".replace(".py", "").replace("/", ".")
-    if module_path.startswith("src."):
-        module_path = module_path[4:]  # Remove 'src.' prefix
-    
-    try:
-        app_hooks = importlib.import_module(module_path)
-    except ImportError:
-        # If module import fails, try relative import
-        try:
-            from . import app_hooks
-        except ImportError:
-            # If relative import fails, try file-based import as last resort
-            script_dir = Path(__file__).parent.parent.parent
-            hooks_file = script_dir / "{{ hooks_path }}"
-            
-            if hooks_file.exists():
-                spec = importlib.util.spec_from_file_location("app_hooks", hooks_file)
-                app_hooks = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(app_hooks)
-except Exception:
-    # No hooks module found, use default behavior
-    pass
-{% else %}
+
 # No hooks path configured, try default locations
 try:
     # Try to import from the project root directory
@@ -257,23 +231,23 @@ try:
 except (ImportError, FileNotFoundError):
     # No hooks module found, use default behavior
     pass
-{% endif %}
+
 
 # Built-in commands
-{% if cli %}
+
 def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=False):
-    """Built-in upgrade function for {{ display_name }} - uses enhanced setup.sh script."""
+    """Built-in upgrade function for Goobits CLI Framework - uses enhanced setup.sh script."""
     import subprocess
     import sys
     from pathlib import Path
 
     if check_only:
-        print(f"Checking for updates to {{ display_name }}...")
+        print(f"Checking for updates to Goobits CLI Framework...")
         print("Update check not yet implemented. Run without --check to upgrade.")
         return
 
     if dry_run:
-        print("Dry run - would execute: pipx upgrade {{ package_name }}")
+        print("Dry run - would execute: pipx upgrade goobits-cli")
         return
 
     # Find the setup.sh script - look in common locations
@@ -281,7 +255,7 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     search_paths = [
         Path(__file__).parent / "setup.sh",  # Package directory (installed packages)
         Path(__file__).parent.parent / "setup.sh",  # Development mode 
-        Path.home() / ".local" / "share" / "{{ installation.pypi_name | default(package_name) }}" / "setup.sh",  # User data
+        Path.home() / ".local" / "share" / "goobits-cli" / "setup.sh",  # User data
         # Remove Path.cwd() to prevent cross-contamination
     ]
     
@@ -292,11 +266,11 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     
     if setup_script is None:
         # Fallback to basic upgrade if setup.sh not found
-        print(f"Enhanced setup script not found. Using basic upgrade for {{ display_name }}...")
+        print(f"Enhanced setup script not found. Using basic upgrade for Goobits CLI Framework...")
         import shutil
         
-        package_name = "{{ package_name }}"
-        pypi_name = "{% if installation and installation.pypi_name %}{{ installation.pypi_name }}{% else %}{{ package_name }}{% endif %}"
+        package_name = "goobits-cli"
+        pypi_name = "goobits-cli"
         
         if shutil.which("pipx"):
             result = subprocess.run(["pipx", "list"], capture_output=True, text=True)
@@ -309,8 +283,8 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
         
         result = subprocess.run(cmd)
         if result.returncode == 0:
-            print(f"✅ {{ display_name }} upgraded successfully!")
-            print(f"Run '{{ command_name }} --version' to verify the new version.")
+            print(f"✅ Goobits CLI Framework upgraded successfully!")
+            print(f"Run 'goobits --version' to verify the new version.")
         else:
             print(f"❌ Upgrade failed with exit code {result.returncode}")
             sys.exit(1)
@@ -319,14 +293,14 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
     # Use the enhanced setup.sh script
     result = subprocess.run([str(setup_script), "upgrade"])
     sys.exit(result.returncode)
-{% endif %}
+
 
 def load_plugins(cli_group):
     """Load plugins from the conventional plugin directory."""
     # Define plugin directories to search
     plugin_dirs = [
         # User-specific plugin directory
-        Path.home() / ".config" / "{{ package_name }}" / "plugins",
+        Path.home() / ".config" / "goobits-cli" / "plugins",
         # Local plugin directory (same as script)
         Path(__file__).parent / "plugins",
     ]
@@ -362,187 +336,11 @@ def load_plugins(cli_group):
             except Exception as e:
                 click.echo(f"Failed to load plugin {plugin_name}: {e}", err=True)
 
-{% macro render_option(opt) -%}
-@click.option(
-    {%- if opt.short %}"-{{ opt.short }}", {% endif %}"--{{ opt.name }}"
-    {%- if opt.type == "flag" %},
-    is_flag=True
-    {%- elif opt.choices %},
-    type=click.Choice({{ opt.choices }})
-    {%- else %},
-    type={% if opt.type == "str" %}str{% elif opt.type == "int" %}int{% elif opt.type == "float" %}float{% elif opt.type == "bool" %}bool{% else %}str{% endif %}
-    {%- endif %}
-    {%- if opt.multiple %},
-    multiple=True
-    {%- endif %}
-    {%- if opt.default is not none %},
-    default={% if opt.default is sameas true %}True{% elif opt.default is sameas false %}False{% elif opt.default is number %}{{ opt.default }}{% else %}"{{ opt.default }}"{% endif %}
-    {%- endif %},
-    help="{{ opt.desc }}"
-)
-{%- endmacro %}
 
-{% macro render_argument(arg) -%}
-@click.argument(
-    "{{ arg.name|upper|replace('-', '_') }}"
-    {%- if arg.nargs %},
-    nargs={% if arg.nargs == "*" %}-1{% elif arg.nargs == "?" %}1{% else %}{{ arg.nargs }}{% endif %}
-    {%- if arg.nargs == "?" %},
-    required=False{% endif %}
-    {%- endif %}
-    {%- if arg.required is defined and not arg.required %},
-    required=False{% endif %}
-    {%- if arg.required is defined and arg.required and arg.nargs and arg.nargs != "*" %},
-    required=True{% endif %}
-    {%- if not arg.required is defined and arg.nargs and arg.nargs != "*" %},
-    required=True{% endif %}
-    {%- if arg.choices %},
-    type=click.Choice({{ arg.choices }})
-    {%- endif %}
-)
-{%- endmacro %}
 
-{% macro render_command(cmd_name, cmd_data, is_subcommand=False) -%}
-{% if not is_subcommand %}@main.command(){% else %}@{{ cmd_name }}.command(){% endif %}
-@click.pass_context
-{% for arg in (cmd_data.args or []) %}
-{{ render_argument(arg) }}
-{% endfor %}
-{% for opt in (cmd_data.options or []) %}
-{{ render_option(opt) }}
-{% endfor %}
-def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
-    """{% if cmd_data.icon %}{{ cmd_data.icon | format_icon }}{% endif %}{{ cmd_data.desc }}"""
-    {% if cmd_data.lifecycle == "managed" %}
-    # Managed command - expect an instance of ManagedCommand
-    command_instance_name = f"{{ cmd_name }}_command"
-    if app_hooks and hasattr(app_hooks, command_instance_name):
-        # Get the command instance
-        command_instance = getattr(app_hooks, command_instance_name)
-        
-        # Prepare arguments including global options
-        kwargs = {}
-        kwargs['command_name'] = '{{ cmd_name }}'  # Pass command name for daemon management
-        {% if cmd_data.args %}
-        {% for arg in cmd_data.args %}
-        kwargs['{{ arg.name|lower|replace('-', '_') }}'] = {{ arg.name|lower|replace('-', '_') }}
-        {% endfor %}
-        {% endif %}
-        {% if cmd_data.options %}
-        {% for opt in cmd_data.options %}
-        {# Handle hyphenated parameters correctly #}
-        {% set param_name = opt.name|replace('-', '_') %}
-        {% set var_name = opt.name|replace('-', '_') %}
-        kwargs['{{ param_name }}'] = {{ var_name }}
-        {% endfor %}
-        {% endif %}
-        
-        # Add global options from context
-        {% if cli.options %}
-        if ctx.obj:
-            {% for option in cli.options %}
-            kwargs['{{ option.name|replace('-', '_') }}'] = ctx.obj.get('{{ option.name }}')
-            {% endfor %}
-        {% endif %}
-        
-        # Call execute() method on the ManagedCommand instance
-        result = command_instance.execute(**kwargs)
-        return result
-    else:
-        click.echo(f"Error: Managed command '{{ cmd_name }}' requires '{{ cmd_name }}_command' instance in app_hooks.py")
-        sys.exit(1)
-    {% else %}
-    # Check for built-in commands first
-    {% if cmd_name == 'build' or cmd_name == 'init' %}
-    # Built-in commands (build, init)
-    try:
-        from pathlib import Path
-        import sys
-        
-        # Add the parent directory to sys.path to find goobits_cli
-        parent_dir = Path(__file__).parent.parent.parent
-        if str(parent_dir) not in sys.path:
-            sys.path.insert(0, str(parent_dir))
-        
-        {% if cmd_name == 'build' %}
-        from goobits_cli.main import build
-        
-        # Use current directory's goobits.yaml if no config path specified
-        config_file = Path(config_path) if config_path else Path("goobits.yaml")
-        output_dir_path = Path(output_dir) if output_dir else None
-        
-        build(config_file, output_dir_path, output, backup, universal_templates=False)
-        click.echo("✅ Build completed successfully!")
-        click.echo("   - Generated setup.sh")
-        click.echo("   - Updated CLI files")
-        
-        {% elif cmd_name == 'init' %}
-        from goobits_cli.main import init
-        
-        init(project_name, template, force)
-        click.echo("✅ Init completed successfully!")
-        click.echo("   - Created goobits.yaml")
-        
-        {% endif %}
-            
-    except ImportError as e:
-        click.echo(f"❌ {{ cmd_name.title() }} error: Could not import framework functions: {e}")
-        return False
-    except Exception as e:
-        click.echo(f"❌ {{ cmd_name.title() }} error: {e}")
-        return False
-    
-    return True
-    {% else %}
-    # Standard command - use the existing hook pattern
-    hook_name = f"on_{{ cmd_name }}"
-    if app_hooks and hasattr(app_hooks, hook_name):
-        # Call the hook with all parameters
-        hook_func = getattr(app_hooks, hook_name)
-        
-        # Prepare arguments including global options
-        kwargs = {}
-        kwargs['command_name'] = '{{ cmd_name }}'  # Pass command name for all commands
-        {% if cmd_data.args %}
-        {% for arg in cmd_data.args %}
-        kwargs['{{ arg.name|lower|replace('-', '_') }}'] = {{ arg.name|lower|replace('-', '_') }}
-        {% endfor %}
-        {% endif %}
-        {% if cmd_data.options %}
-        {% for opt in cmd_data.options %}
-        {# Handle hyphenated parameters correctly #}
-        {% set param_name = opt.name|replace('-', '_') %}
-        {% set var_name = opt.name|replace('-', '_') %}
-        kwargs['{{ param_name }}'] = {{ var_name }}
-        {% endfor %}
-        {% endif %}
-        
-        # Add global options from context
-        {% if cli.options %}
-        if ctx.obj:
-            {% for option in cli.options %}
-            kwargs['{{ option.name|replace('-', '_') }}'] = ctx.obj.get('{{ option.name }}')
-            {% endfor %}
-        {% endif %}
-        
-        result = hook_func(**kwargs)
-        return result
-    else:
-        # Default placeholder behavior
-        click.echo(f"Executing {{ cmd_name }} command...")
-        {% if cmd_data.args %}
-        {% for arg in cmd_data.args %}
-        click.echo(f"  {{ arg.name }}: {{ '{' }}{{ arg.name|lower|replace('-', '_') }}{{ '}' }}")
-        {% endfor %}
-        {% endif %}
-        {% if cmd_data.options %}
-        {% for opt in cmd_data.options %}
-        click.echo(f"  {{ opt.name }}: {{ '{' }}{{ opt.name|replace('-', '_') }}{{ '}' }}")
-        {% endfor %}
-        {% endif %}
-    {% endif %}
-    {% endif %}
-{%- endmacro %}
+
+
+
 
 def get_version():
     """Get version from pyproject.toml or __init__.py"""
@@ -579,19 +377,10 @@ def get_version():
     except Exception:
         pass
         
-    # Final fallback{% if cli.version %}
-    return "{{ cli.version }}"{% else %}
-    return "1.0.0"{% endif %}
+    # Final fallback
+    return "1.2.0"
 
-{% if cli.enable_help_json %}
-def show_help_json(ctx, param, value):
-    """Callback for --help-json option."""
-    if not value or ctx.resilient_parsing:
-        return
-    # The triple quotes are important to correctly handle the multi-line JSON string
-    click.echo('''{{ cli_config_json }}''')
-    ctx.exit()
-{% endif %}
+
 
 def start_interactive_mode(ctx, param, value):
     """Callback for --interactive option."""
@@ -626,15 +415,19 @@ def start_interactive_mode(ctx, param, value):
         click.echo(f"❌ Error starting interactive mode: {e}")
         ctx.exit(1)
 
-{# Find the default command #}
-{% set ns = namespace(default_cmd=None) %}
-{% for cmd_name, cmd_data in cli.commands.items() %}
-  {% if cmd_data.is_default %}
-    {% set ns.default_cmd = cmd_name %}
-  {% endif %}
-{% endfor %}
 
-{% if ns.default_cmd %}
+
+
+  
+    
+  
+
+  
+
+  
+
+
+
 class DefaultGroup(RichGroup):
     """Allow a default command to be invoked without being specified."""
     
@@ -699,56 +492,81 @@ class DefaultGroup(RichGroup):
                         # Return command name, command object, and all args
                         return self.default_command, cmd, args
             raise
-{% endif %}
 
-{% if ns.default_cmd %}
-@click.group(cls=DefaultGroup, default='{{ ns.default_cmd }}', context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
-{% else %}
-@click.group(cls=RichGroup, context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
-{% endif %}
-@click.version_option(version=get_version(), prog_name="{{ cli.name }}")
+
+
+@click.group(cls=DefaultGroup, default='build', context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
+
+@click.version_option(version=get_version(), prog_name="Goobits CLI")
 @click.pass_context
-{% if cli.enable_help_json %}
-@click.option('--help-json', is_flag=True, callback=show_help_json, is_eager=True, help='Output CLI structure as JSON.', hidden=True)
-{% endif %}
-{% if cli.enable_recursive_help %}
+
+
 @click.option('--help-all', is_flag=True, is_eager=True, help='Show help for all commands.', hidden=True)
-{% endif %}
+
 @click.option('--interactive', is_flag=True, is_eager=True, callback=start_interactive_mode, help='Launch interactive mode for running commands interactively.')
-{% if cli.options %}
-{% for option in cli.options %}
-{{ render_option(option) }}
-{% endfor %}
-{% endif %}
-def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.enable_recursive_help %}, help_all=False{% endif %}, interactive=False{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% if option.type == 'flag' %}=False{% else %}=None{% endif %}{% endfor %}{% endif %}):
-    """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %}{% if cli.version %} v{{ cli.version }}{% elif version %} v{{ version }}{% else %} {version}{% endif %}{% endif %}[/bold color(6)] - {{ cli.tagline }}
 
-    {% if cli.description %}
+
+@click.option("-v", "--verbose",
+    is_flag=True,
+    help="Enable verbose output with detailed error messages and stack traces"
+)
+
+
+def main(ctx, help_all=False, interactive=False, verbose=False):
+    """🛠️  [bold color(6)]Goobits CLI v1.2.0[/bold color(6)] - Build professional command-line tools with YAML configuration
+
+    
     \b
-    [#B3B8C0]{{ cli.description }}[/#B3B8C0]
-    {% endif %}
+    [#B3B8C0]Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.[/#B3B8C0]
+    
 
-    {% if cli.header_sections %}
-    {% for section in cli.header_sections %}
-    [bold yellow]{{ section.title }}[/bold yellow]
-    {%- set aligned_items = section.items | align_header_items %}
-    {% for item in aligned_items %}
-    {% if item.style == 'example' %}
-    [green]   {{ item.item_aligned }}[/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
-    {% elif item.style == 'command' %}
-    [green]   {{ item.item_aligned }}[/green]  {{ item.desc }}
-    {% elif item.style == 'setup' %}
-    [#B3B8C0]   {{ item.item + ":" }}{{ " " * (item.item_aligned|length - item.item|length - 1) }}[/#B3B8C0][green]{{ item.desc }}[/green]
-    {%- endif %}
-    {%- endfor %}
+    
+    
+    [bold yellow]🚀 Quick Start[/bold yellow]
+    
+    
+    [green]   mkdir my-cli && cd my-cli  [/green] [italic][#B3B8C0]# Create new project directory[/#B3B8C0][/italic]
+    
+    
+    [green]   goobits init               [/green] [italic][#B3B8C0]# Generate initial goobits.yaml[/#B3B8C0][/italic]
+    
+    
+    [green]   goobits build              [/green] [italic][#B3B8C0]# Create CLI and setup scripts[/#B3B8C0][/italic]
+    
+    
+    [green]   ./setup.sh install --dev   [/green] [italic][#B3B8C0]# Install for development[/#B3B8C0][/italic]
+    
     [green] [/green]
-    {% endfor %}
-    {% endif %}
-    {% if cli.footer_note %}
-    [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
-    {% endif %}
+    
+    [bold yellow]💡 Core Commands[/bold yellow]
+    
+    
+    [green]   build  [/green]  🔨 Generate CLI and setup scripts from goobits.yaml
+    
+    
+    [green]   serve  [/green]  🌐 Serve local PyPI-compatible package index
+    
+    
+    [green]   init   [/green]  🆕 Create initial goobits.yaml template
+    
+    [green] [/green]
+    
+    [bold yellow]🔧 Development Workflow[/bold yellow]
+    
+    
+    [#B3B8C0]   1. Edit goobits.yaml: [/#B3B8C0][green]Define your CLI structure[/green]
+    
+    [#B3B8C0]   2. goobits build:     [/#B3B8C0][green]Generate implementation files[/green]
+    
+    [#B3B8C0]   3. Edit app_hooks.py: [/#B3B8C0][green]Add your business logic[/green]
+    [green] [/green]
+    
+    
+    
+    [#B3B8C0]📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6][/#B3B8C0]
+    
     """
-    {% if cli.enable_recursive_help %}
+    
     if help_all:
         # Print main help
         click.echo(ctx.get_help())
@@ -770,362 +588,279 @@ def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.e
 
         # Exit after printing all help
         ctx.exit()
-    {% endif %}
+    
     
     # Store global options in context for use by commands
-    {% if cli.options %}
+    
     if ctx.obj is None:
         ctx.obj = {}
-    {% for option in cli.options %}
-    ctx.obj['{{ option.name }}'] = {{ option.name.replace('-', '_') }}
-    {% endfor %}
-    {% endif %}
+    
+    ctx.obj['verbose'] = verbose
+    
+    
 
     pass
 
 # Replace the version placeholder with dynamic version in the main command docstring
-{% if cli.display_version and not cli.version and not version %}
-main.callback.__doc__ = main.callback.__doc__.replace("{version}", "v" + get_version())
-{% endif %}
 
-{% if cli.command_groups %}
+
+
 # Set command groups after main function is defined
-{%- set defined_commands = cli.commands.keys() | list %}
 click.rich_click.COMMAND_GROUPS = {
     "main": [
-        {% for group in cli.command_groups %}
+        
         {
-            "name": "{{ group.name }}",
-            "commands": {{ group.commands | select('in', defined_commands) | list }},
+            "name": "Core Commands",
+            "commands": ['build', 'init'],
         },
-        {% endfor %}
+        
+        {
+            "name": "Development Tools",
+            "commands": ['serve'],
+        },
+        
     ]
 }
-{% endif %}
+
 
 # Built-in upgrade command (enabled by default)
-{% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
+
 @main.command()
 @click.option('--check', is_flag=True, help='Check for updates without installing')
 @click.option('--version', type=str, help='Install specific version')
 @click.option('--pre', is_flag=True, help='Include pre-release versions')
 @click.option('--dry-run', is_flag=True, help='Show what would be done without doing it')
 def upgrade(check, version, pre, dry_run):
-    """Upgrade {{ display_name }} to the latest version."""
+    """Upgrade Goobits CLI Framework to the latest version."""
     builtin_upgrade_command(check_only=check, version=version, pre=pre, dry_run=dry_run)
-{% endif %}
 
-{% for cmd_name, cmd_data in cli.commands.items() %}
-{% if not cmd_data.subcommands %}
-{{ render_command(cmd_name, cmd_data) }}
-{% else %}
-@main.group()
-def {{ cmd_name }}():
-    """{% if cmd_data.icon %}{{ cmd_data.icon | format_icon }}{% endif %}{{ cmd_data.desc }}"""
-    pass
 
-{% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
-@{{ cmd_name }}.command()
+
+
+@main.command()
 @click.pass_context
-{% for arg in (subcmd_data.args or []) %}
-{{ render_argument(arg) }}
-{% endfor %}
-{% for opt in (subcmd_data.options or []) %}
-{{ render_option(opt) }}
-{% endfor %}
-def {{ subcmd_name }}(ctx{% if subcmd_data.args or subcmd_data.options %}, {% endif %}{% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
-    """{% if subcmd_data.icon %}{{ subcmd_data.icon | format_icon }}{% endif %}{{ subcmd_data.desc }}"""
-    # Check if hook function exists
-    hook_name = f"on_{{ cmd_name }}_{{ subcmd_name }}"
+
+@click.argument(
+    "CONFIG_PATH",
+    required=False
+)
+
+
+@click.option("-o", "--output-dir",
+    type=str,
+    help="📁 Output directory (defaults to same directory as config file)"
+)
+
+@click.option("--output",
+    type=str,
+    help="📝 Output filename for generated CLI (defaults to 'generated_cli.py')"
+)
+
+@click.option("--backup",
+    is_flag=True,
+    help="💾 Create backup files (.bak) when overwriting existing files"
+)
+
+@click.option("--universal-templates",
+    is_flag=True,
+    help="🧪 Use Universal Template System (experimental)"
+)
+
+def build(ctx, config_path, output_dir, output, backup, universal_templates):
+    """🔨 Build CLI and setup scripts from goobits.yaml configuration"""
+    
+    # Check for built-in commands first
+    
+    # Built-in commands (build, init)
+    try:
+        from pathlib import Path
+        import sys
+        
+        # Add the parent directory to sys.path to find goobits_cli
+        parent_dir = Path(__file__).parent.parent.parent
+        if str(parent_dir) not in sys.path:
+            sys.path.insert(0, str(parent_dir))
+        
+        
+        from goobits_cli.main import build
+        
+        # Use current directory's goobits.yaml if no config path specified
+        config_file = Path(config_path) if config_path else Path("goobits.yaml")
+        output_dir_path = Path(output_dir) if output_dir else None
+        
+        build(config_file, output_dir_path, output, backup, universal_templates=False)
+        click.echo("✅ Build completed successfully!")
+        click.echo("   - Generated setup.sh")
+        click.echo("   - Updated CLI files")
+        
+        
+            
+    except ImportError as e:
+        click.echo(f"❌ Build error: Could not import framework functions: {e}")
+        return False
+    except Exception as e:
+        click.echo(f"❌ Build error: {e}")
+        return False
+    
+    return True
+    
+    
+
+
+
+
+@main.command()
+@click.pass_context
+
+@click.argument(
+    "PROJECT_NAME",
+    required=False
+)
+
+
+@click.option("-t", "--template",
+    type=click.Choice(['basic', 'advanced', 'api-client', 'text-processor']),
+    default="basic",
+    help="🎯 Template type"
+)
+
+@click.option("--force",
+    is_flag=True,
+    help="🔥 Overwrite existing goobits.yaml file"
+)
+
+def init(ctx, project_name, template, force):
+    """🆕 Create initial goobits.yaml template"""
+    
+    # Check for built-in commands first
+    
+    # Built-in commands (build, init)
+    try:
+        from pathlib import Path
+        import sys
+        
+        # Add the parent directory to sys.path to find goobits_cli
+        parent_dir = Path(__file__).parent.parent.parent
+        if str(parent_dir) not in sys.path:
+            sys.path.insert(0, str(parent_dir))
+        
+        
+        from goobits_cli.main import init
+        
+        init(project_name, template, force)
+        click.echo("✅ Init completed successfully!")
+        click.echo("   - Created goobits.yaml")
+        
+        
+            
+    except ImportError as e:
+        click.echo(f"❌ Init error: Could not import framework functions: {e}")
+        return False
+    except Exception as e:
+        click.echo(f"❌ Init error: {e}")
+        return False
+    
+    return True
+    
+    
+
+
+
+
+@main.command()
+@click.pass_context
+
+@click.argument(
+    "DIRECTORY"
+)
+
+
+@click.option("--host",
+    type=str,
+    default="localhost",
+    help="🌍 Host to bind the server to"
+)
+
+@click.option("-p", "--port",
+    type=int,
+    default=8080,
+    help="🔌 Port to run the server on"
+)
+
+def serve(ctx, directory, host, port):
+    """🌐 Serve local PyPI-compatible package index"""
+    
+    # Check for built-in commands first
+    
+    # Standard command - use the existing hook pattern
+    hook_name = f"on_serve"
     if app_hooks and hasattr(app_hooks, hook_name):
         # Call the hook with all parameters
         hook_func = getattr(app_hooks, hook_name)
         
         # Prepare arguments including global options
         kwargs = {}
-        kwargs['command_name'] = '{{ subcmd_name }}'  # Pass command name for all commands
-        {% if subcmd_data.args %}
-        {% for arg in subcmd_data.args %}
-        kwargs['{{ arg.name|lower|replace('-', '_') }}'] = {{ arg.name|lower|replace('-', '_') }}
-        {% endfor %}
-        {% endif %}
-        {% if subcmd_data.options %}
-        {% for opt in subcmd_data.options %}
-        kwargs['{{ opt.name|replace('-', '_') }}'] = {{ opt.name|replace('-', '_') }}
-        {% endfor %}
-        {% endif %}
+        kwargs['command_name'] = 'serve'  # Pass command name for all commands
+        
+        
+        kwargs['directory'] = directory
+        
+        
+        
+        
+        
+        
+        
+        kwargs['host'] = host
+        
+        
+        
+        
+        kwargs['port'] = port
+        
+        
         
         # Add global options from context
-        {% if cli.options %}
+        
         if ctx.obj:
-            {% for option in cli.options %}
-            kwargs['{{ option.name|replace('-', '_') }}'] = ctx.obj.get('{{ option.name }}')
-            {% endfor %}
-        {% endif %}
+            
+            kwargs['verbose'] = ctx.obj.get('verbose')
+            
+        
         
         result = hook_func(**kwargs)
         return result
     else:
         # Default placeholder behavior
-        click.echo(f"Executing {{ subcmd_name }} command...")
-        {% if subcmd_data.args %}
-        {% for arg in subcmd_data.args %}
-        click.echo(f"  {{ arg.name }}: {{ '{' }}{{ arg.name|lower|replace('-', '_') }}{{ '}' }}")
-        {% endfor %}
-        {% endif %}
-        {% if subcmd_data.options %}
-        {% for opt in subcmd_data.options %}
-        click.echo(f"  {{ opt.name }}: {{ '{' }}{{ opt.name|replace('-', '_') }}{{ '}' }}")
-        {% endfor %}
-        {% endif %}
-{% endfor %}
-{% endif %}
-
-{% endfor %}
-
-{# Auto-generate daemon management commands for managed commands #}
-{% set ns = namespace(has_managed=false) %}
-{% for cmd_name, cmd_data in cli.commands.items() %}
-{% if cmd_data.lifecycle == "managed" %}
-{% set ns.has_managed = true %}
-{% endif %}
-{% endfor %}
-{% if ns.has_managed %}
-@main.command()
-@click.pass_context
-@click.argument(
-    "command_name",
-    required=True
-)
-@click.option("--timeout",
-    type=int,
-    default=10,
-    help="Timeout in seconds for graceful shutdown"
-)
-@click.option("--json",
-    is_flag=True,
-    help="Output in JSON format"
-)
-def daemonstop(ctx, command_name, timeout, json):
-    """⏹️ Stop a running daemon process"""
-    from src.gubits.daemon import DaemonHelper
-    
-    daemon_helper = DaemonHelper(command_name)
-    
-    # Check if daemon is running
-    if not daemon_helper.is_running():
-        msg = f"No daemon running for command '{command_name}'"
-        if json:
-            import json as json_module
-            click.echo(json_module.dumps({"status": "not_running", "message": msg}))
-        else:
-            click.echo(f"⚠️  {msg}")
-        return {"status": "not_running"}
-    
-    # Get PID before stopping
-    pid = daemon_helper.get_pid()
-    
-    # Stop the daemon
-    if daemon_helper.stop(timeout=timeout):
-        if json:
-            import json as json_module
-            click.echo(json_module.dumps({
-                "status": "stopped",
-                "command": command_name,
-                "pid": pid,
-                "message": f"Successfully stopped daemon for '{command_name}'"
-            }))
-        else:
-            click.echo(f"✅ Successfully stopped daemon '{command_name}' (PID: {pid})")
-        return {"status": "stopped", "pid": pid}
-    else:
-        error_msg = f"Failed to stop daemon '{command_name}' (PID: {pid})"
-        if json:
-            import json as json_module
-            click.echo(json_module.dumps({"status": "error", "message": error_msg}))
-        else:
-            click.echo(f"❌ {error_msg}")
-        return {"status": "error", "message": error_msg}
-
-
-@main.command()
-@click.pass_context
-@click.argument(
-    "command_name",
-    required=True
-)
-@click.option("--json",
-    is_flag=True,
-    help="Output in JSON format"
-)
-def daemonstatus(ctx, command_name, json):
-    """📊 Check status of a daemon process"""
-    from src.gubits.daemon import DaemonHelper
-    
-    daemon_helper = DaemonHelper(command_name)
-    
-    # Get daemon stats
-    stats = daemon_helper.get_daemon_stats()
-    
-    if json:
-        import json as json_module
-        click.echo(json_module.dumps(stats, indent=2))
-    else:
-        is_running = stats['running']
-        status_emoji = '🟢' if is_running else '🔴'
-        status_text = 'Running' if is_running else 'Stopped'
+        click.echo(f"Executing serve command...")
         
-        click.echo(f"📊 Daemon Status for '{command_name}': {status_emoji} {status_text}")
         
-        if is_running:
-            click.echo(f"   PID: {stats['pid']}")
-            click.echo(f"   PID File: {stats['pid_file']}")
-        else:
-            click.echo(f"   PID File: {stats['pid_file']} (not found or stale)")
-            
-    return stats
+        click.echo(f"  directory: {directory}")
+        
+        
+        
+        
+        click.echo(f"  host: {host}")
+        
+        click.echo(f"  port: {port}")
+        
+        
+    
+    
 
 
-@main.group()
-def daemon():
-    """🔧 Daemon system integration commands"""
-    pass
 
 
-@daemon.command()
-@click.pass_context
-@click.argument(
-    "command_name",
-    required=True
-)
-@click.option("--user",
-    is_flag=True,
-    default=True,
-    help="Install as user service (default)"
-)
-@click.option("--system",
-    is_flag=True,
-    help="Install as system service (requires sudo)"
-)
-def install(ctx, command_name, user, system):
-    """🔧 Generate systemd service file for daemon management"""
-    import shutil
-    import subprocess
-    from pathlib import Path
-    
-    # Determine CLI executable path
-    cli_executable = shutil.which("{{ cli.name|lower|replace(' ', '') }}")
-    if not cli_executable:
-        # Fallback to sys.executable with -m approach
-        cli_executable = f"{sys.executable} -m {{ cli.name|lower|replace(' ', '_') }}"
-    
-    # Determine installation type
-    if system:
-        service_dir = Path("/etc/systemd/system")
-        service_type = "system"
-        install_cmd_prefix = "sudo "
-    else:
-        service_dir = Path.home() / ".config" / "systemd" / "user"
-        service_type = "user"
-        install_cmd_prefix = ""
-    
-    # Ensure service directory exists
-    if not service_dir.exists():
-        try:
-            service_dir.mkdir(parents=True, exist_ok=True)
-        except PermissionError:
-            click.echo(f"❌ Permission denied creating directory: {service_dir}")
-            click.echo(f"   Try running with sudo for system services")
-            sys.exit(1)
-    
-    # Generate service file name
-    service_name = f"{{ cli.name|lower|replace(' ', '-') }}-{command_name}.service"
-    service_file_path = service_dir / service_name
-    
-    # Determine PID file path
-    if system:
-        pid_file_path = f"/run/{{ cli.name|lower|replace(' ', '-') }}-{command_name}.pid"
-        working_dir = "/var/lib/{{ cli.name|lower|replace(' ', '-') }}"
-    else:
-        runtime_dir = os.environ.get('XDG_RUNTIME_DIR', f"/run/user/{os.getuid()}")
-        pid_file_path = f"{runtime_dir}/{{ cli.name|lower|replace(' ', '-') }}-{command_name}.pid"
-        working_dir = str(Path.home())
-    
-    # Generate systemd unit file content
-    service_content = f"""# Auto-generated by goobits for the '{command_name}' command
-# Service file for {{ cli.name }} daemon management
-[Unit]
-Description=goobits-managed daemon for the '{command_name}' command
-After=network.target
-Wants=network.target
 
-[Service]
-Type=forking
-ExecStart={cli_executable} {command_name} --daemon
-PIDFile={pid_file_path}
-Restart=on-failure
-RestartSec=5
-WorkingDirectory={working_dir}
-"""
 
-    # Add user-specific settings
-    if not system:
-        service_content += """
-# User service settings
-User=%i
-Group=%i
-"""
 
-    service_content += """
-[Install]
-WantedBy={"default.target" if not system else "multi-user.target"}
-"""
-    
-    # Write service file
-    try:
-        with open(service_file_path, 'w') as f:
-            f.write(service_content)
-        click.echo(f"✅ Generated systemd service file: {service_file_path}")
-    except PermissionError:
-        click.echo(f"❌ Permission denied writing to: {service_file_path}")
-        if not system:
-            click.echo(f"   Try: mkdir -p {service_dir}")
-        sys.exit(1)
-    
-    # Print usage instructions
-    click.echo(f"")
-    click.echo(f"🔧 Systemd service '{service_name}' created successfully!")
-    click.echo(f"")
-    click.echo(f"📋 To enable and start the service:")
-    if system:
-        click.echo(f"   sudo systemctl daemon-reload")
-        click.echo(f"   sudo systemctl enable {service_name}")
-        click.echo(f"   sudo systemctl start {service_name}")
-        click.echo(f"")
-        click.echo(f"📊 To check status:")
-        click.echo(f"   sudo systemctl status {service_name}")
-        click.echo(f"")
-        click.echo(f"🛑 To stop and disable:")
-        click.echo(f"   sudo systemctl stop {service_name}")
-        click.echo(f"   sudo systemctl disable {service_name}")
-    else:
-        click.echo(f"   systemctl --user daemon-reload")
-        click.echo(f"   systemctl --user enable {service_name}")
-        click.echo(f"   systemctl --user start {service_name}")
-        click.echo(f"")
-        click.echo(f"📊 To check status:")
-        click.echo(f"   systemctl --user status {service_name}")
-        click.echo(f"")
-        click.echo(f"🛑 To stop and disable:")
-        click.echo(f"   systemctl --user stop {service_name}")
-        click.echo(f"   systemctl --user disable {service_name}")
-    
-    click.echo(f"")
-    click.echo(f"📝 Service file location: {service_file_path}")
-    
-    return {"status": "service_created", "service_file": str(service_file_path), "service_name": service_name}
 
-{% endif %}
+
+
+
+
+
+
 
 # Shell completion commands
 @main.group()
@@ -1241,12 +976,12 @@ def instructions(shell):
     
     click.echo("🏠 User installation (recommended):")
     click.echo(f"   mkdir -p {Path(instructions['user_script_path']).parent}")
-    click.echo(f"   {{ cli.name | lower | replace(' ', '-') }} completion generate {shell} > completion.{shell}")
+    click.echo(f"   goobits-cli completion generate {shell} > completion.{shell}")
     click.echo(f"   cp completion.{shell} {instructions['user_script_path']}")
     click.echo()
     
     click.echo("🌐 System-wide installation:")
-    click.echo(f"   {{ cli.name | lower | replace(' ', '-') }} completion generate {shell} > completion.{shell}")
+    click.echo(f"   goobits-cli completion generate {shell} > completion.{shell}")
     click.echo(f"   {instructions['install_cmd']}")
     click.echo()
     

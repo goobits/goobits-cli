@@ -84,11 +84,22 @@ For development with live updates:
 
 ### Global Options
 
+All commands support these global options:
+
+- `--help`: Show help message and exit
+- `--version`: Show version information
 {% if cli.options %}
 {% for option in cli.options %}
 - `{% if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <{{ option.type }}>{% endif %}`: {{ option.desc }}{% if option.default %} (default: {{ option.default }}){% endif %}
 {% endfor %}
 {% endif %}
+
+**Verbose Mode:**
+When `--verbose` is enabled, the CLI provides:
+- Detailed error messages with full context
+- Stack traces for debugging issues
+- Additional diagnostic information
+- Progress details for long-running operations
 
 ### Examples
 
@@ -99,13 +110,25 @@ For development with live updates:
 # Show version
 {{ command_name }} --version
 
+# Enable verbose output for detailed error messages
+{{ command_name }} --verbose {{ cli.commands.keys() | list | first }}
+
+# Short form of verbose flag
+{{ command_name }} -v {{ cli.commands.keys() | list | first }}
+
 {% for cmd_name, cmd_data in cli.commands.items() %}
 {% if not cmd_data.subcommands and cmd_data.args %}
 # Example {{ cmd_name }} command
 {{ command_name }} {{ cmd_name }}{% for arg in cmd_data.args %}{% if arg.required %} "example_{{ arg.name }}"{% endif %}{% endfor %}
 
+# Same command with verbose output
+{{ command_name }} --verbose {{ cmd_name }}{% for arg in cmd_data.args %}{% if arg.required %} "example_{{ arg.name }}"{% endif %}{% endfor %}
+
 {% endif %}
 {% endfor %}
+# Error handling examples
+{{ command_name }} invalid-command              # Standard error message
+{{ command_name }} --verbose invalid-command   # Detailed error with stack trace
 ```
 
 ## Configuration
@@ -128,8 +151,23 @@ You can edit this file directly or use the CLI to manage settings.
 
 - `settings.auto_update`: Enable automatic updates (default: false)
 - `settings.log_level`: Set logging level (debug, info, warn, error)
+- `settings.verbose`: Enable verbose output by default (default: false)
 - `features.colored_output`: Enable colored terminal output (default: true)
 - `features.progress_bars`: Show progress bars for long operations (default: true)
+
+### Environment Variables
+
+You can also control verbose mode using environment variables:
+
+```bash
+# Enable verbose mode for all commands
+export {{ command_name | upper }}_VERBOSE=true
+{{ command_name }} {{ cli.commands.keys() | list | first }}
+
+# Disable verbose mode (overrides config)
+export {{ command_name | upper }}_VERBOSE=false
+{{ command_name }} {{ cli.commands.keys() | list | first }}
+```
 
 ## Development
 

@@ -79,14 +79,14 @@ interface AppHooks {
 }
 
 // Global error handler
-function handleCLIError(error: Error, debug: boolean = false): number {
+function handleCLIError(error: Error, verbose: boolean = false): number {
     if (error instanceof CLIError) {
         console.error(`❌ Error: ${error.message}`);
         if (error.suggestion) {
             console.error(`💡 Suggestion: ${error.suggestion}`);
         }
-        if (debug) {
-            console.error('\n🔍 Debug traceback:');
+        if (verbose) {
+            console.error('\n🔍 Verbose traceback:');
             console.error(error.stack);
         }
         return error.exitCode;
@@ -94,12 +94,12 @@ function handleCLIError(error: Error, debug: boolean = false): number {
         // Unexpected errors
         console.error(`❌ Unexpected error: ${error.message}`);
         console.error('💡 This may be a bug. Please report it with the following details:');
-        if (debug) {
+        if (verbose) {
             console.error(error.stack);
         } else {
             console.error(`   Error type: ${error.constructor.name}`);
             console.error(`   Error message: ${error.message}`);
-            console.error('   Run with --debug for full traceback');
+            console.error('   Run with --verbose for full traceback');
         }
         return 1;
     }
@@ -407,7 +407,7 @@ interface {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}Options {
     {% for opt in (cmd_data.options or []) %}
     {{ opt.name|replace('-', '') }}: {% if opt.type == 'flag' %}boolean{% elif opt.type == 'int' %}number{% elif opt.type == 'float' %}number{% else %}string{% endif %}{% if not opt.required %} | undefined{% endif %};
     {% endfor %}
-    debug?: boolean;
+    verbose?: boolean;
 }
 
 const {{ cmd_name }}Cmd = program
@@ -489,7 +489,7 @@ const {{ cmd_name }}Cmd = program
             }
             {% endif %}
         } catch (error) {
-            const exitCode = handleCLIError(error as Error, options.debug || (command.parent?.opts() as GlobalOptions)?.debug);
+            const exitCode = handleCLIError(error as Error, options.verbose || (command.parent?.opts() as GlobalOptions)?.verbose);
             process.exit(exitCode);
         }
     });
@@ -504,7 +504,7 @@ interface {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ 
     {% for opt in (subcmd_data.options or []) %}
     {{ opt.name|replace('-', '') }}: {% if opt.type == 'flag' %}boolean{% elif opt.type == 'int' %}number{% elif opt.type == 'float' %}number{% else %}string{% endif %}{% if not opt.required %} | undefined{% endif %};
     {% endfor %}
-    debug?: boolean;
+    verbose?: boolean;
 }
 
 {{ cmd_name }}Cmd
@@ -554,7 +554,7 @@ interface {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ 
                 {% endif %}
             }
         } catch (error) {
-            const exitCode = handleCLIError(error as Error, options.debug || (command.parent?.parent?.opts() as GlobalOptions)?.debug);
+            const exitCode = handleCLIError(error as Error, options.verbose || (command.parent?.parent?.opts() as GlobalOptions)?.verbose);
             process.exit(exitCode);
         }
     });
@@ -840,7 +840,7 @@ program
                 process.exit(1);
             }
         } catch (e) {
-            const exitCode = handleCLIError(e as Error, options.debug || program.opts().debug);
+            const exitCode = handleCLIError(e as Error, options.verbose || program.opts().verbose);
             process.exit(exitCode);
         }
     });
@@ -873,7 +873,7 @@ program
                 }
             }
         } catch (e) {
-            const exitCode = handleCLIError(e as Error, options.debug || program.opts().debug);
+            const exitCode = handleCLIError(e as Error, options.verbose || program.opts().verbose);
             process.exit(exitCode);
         }
     });
@@ -892,7 +892,7 @@ daemonCmd
             // Implementation would be similar to Python version
             console.log('Daemon installation not yet implemented for TypeScript');
         } catch (e) {
-            const exitCode = handleCLIError(e as Error, options.debug || program.parent?.opts().debug);
+            const exitCode = handleCLIError(e as Error, options.verbose || program.parent?.opts().verbose);
             process.exit(exitCode);
         }
     });
@@ -917,23 +917,26 @@ function cliEntry(): void {
             process.exit(0);
         }
         
-        const debug = process.argv.includes('--debug');
-        const exitCode = handleCLIError(e as Error, debug);
+        // Get verbose flag from program options
+        const verbose = program.opts().verbose || false;
+        const exitCode = handleCLIError(e as Error, verbose);
         process.exit(exitCode);
     }
 }
 
 // Handle uncaught errors
 process.on('uncaughtException', (error: Error) => {
-    const debug = process.argv.includes('--debug');
-    const exitCode = handleCLIError(error, debug);
+    // Get verbose flag from program options if available, fallback to process.argv check
+    const verbose = program.opts().verbose || process.argv.includes('--verbose');
+    const exitCode = handleCLIError(error, verbose);
     process.exit(exitCode);
 });
 
 process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    const debug = process.argv.includes('--debug');
-    const exitCode = handleCLIError(error, debug);
+    // Get verbose flag from program options if available, fallback to process.argv check
+    const verbose = program.opts().verbose || process.argv.includes('--verbose');
+    const exitCode = handleCLIError(error, verbose);
     process.exit(exitCode);
 });
 

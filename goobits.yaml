@@ -70,6 +70,12 @@ cli:
   enable_recursive_help: true
   enable_help_json: false
   
+  options:
+    - name: "verbose"
+      short: "v"
+      type: "flag"
+      desc: "Enable verbose output with detailed error messages and stack traces"
+  
   header_sections:
     - title: "🚀 Quick Start"
       items:

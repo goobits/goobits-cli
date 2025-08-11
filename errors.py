@@ -62,7 +62,7 @@ class ErrorHandler:
 
     def __init__(self, debug: bool = False, verbose: bool = False):
         self.debug = debug
-        self.verbose = verbose
+        self.verbose = verbose or debug  # verbose includes debug functionality
 
     def handle_error(self, error: Exception, context: Optional[str] = None) -> None:
         """
@@ -90,7 +90,7 @@ class ErrorHandler:
             for key, value in error.details.items():
                 print(f"  {key}: {value}", file=sys.stderr)
 
-        if self.debug:
+        if self.verbose:
             traceback.print_exc()
 
         sys.exit(error.exit_code.value)
@@ -103,10 +103,10 @@ class ErrorHandler:
 
         print(message, file=sys.stderr)
 
-        if self.debug or self.verbose:
+        if self.verbose:
             traceback.print_exc()
         else:
-            print("Run with --debug for more details", file=sys.stderr)
+            print("Run with --verbose for more details", file=sys.stderr)
 
         sys.exit(ExitCode.GENERAL_ERROR.value)
 

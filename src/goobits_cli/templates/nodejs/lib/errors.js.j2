@@ -145,13 +145,47 @@ function formatErrorMessage(error, options = {}) {
 }
 
 /**
+ * Handle CLI error with verbose flag (matches CLI template interface)
+ */
+export function handleCLIError(error, verbose = false) {
+  if (error instanceof CLIError) {
+    console.error(chalk.red('❌ Error: ') + error.message);
+    
+    if (error.cause) {
+      console.error(chalk.gray('  Caused by: ') + chalk.white(error.cause.message));
+    }
+    
+    if (verbose && error.stack) {
+      console.error('\n' + chalk.blue('🔍 Verbose traceback:'));
+      console.error(chalk.gray(error.stack));
+    }
+    
+    return error.code;
+  } else {
+    // Unexpected errors
+    console.error(chalk.red('❌ Unexpected error: ') + error.message);
+    console.error(chalk.yellow('💡 This may be a bug. Please report it with the following details:'));
+    
+    if (verbose && error.stack) {
+      console.error(chalk.gray(error.stack));
+    } else {
+      console.error(chalk.gray('   Error type: ') + error.constructor.name);
+      console.error(chalk.gray('   Error message: ') + error.message);
+      console.error(chalk.gray('   Run with --verbose for full traceback'));
+    }
+    
+    return EXIT_CODES.GENERAL_ERROR;
+  }
+}
+
+/**
  * Handle and display error
  */
 export function handleError(error, options = {}) {
-  const { exit = true, log = true } = options;
+  const { exit = true, log = true, verbose = false } = options;
   
   if (log) {
-    console.error(formatErrorMessage(error, options));
+    console.error(formatErrorMessage(error, { ...options, showStack: verbose }));
   }
   
   if (exit) {
@@ -211,7 +245,7 @@ export function errorHandler(fn) {
  */
 export function setupGlobalErrorHandlers(options = {}) {
   const {
-    showStack = process.env.NODE_ENV === 'development',
+    verbose = process.env.NODE_ENV === 'development',
     colorize = true,
     exitOnError = true
   } = options;
@@ -219,14 +253,14 @@ export function setupGlobalErrorHandlers(options = {}) {
   // Handle uncaught exceptions
   process.on('uncaughtException', (error) => {
     console.error(chalk.red('\n💥 Uncaught Exception:'));
-    handleError(error, { showStack: true, colorize, exit: exitOnError });
+    handleError(error, { verbose: true, colorize, exit: exitOnError });
   });
   
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
     console.error(chalk.red('\n💥 Unhandled Promise Rejection:'));
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    handleError(error, { showStack: true, colorize, exit: exitOnError });
+    handleError(error, { verbose: true, colorize, exit: exitOnError });
   });
   
   // Handle process signals
@@ -241,7 +275,7 @@ export function setupGlobalErrorHandlers(options = {}) {
   });
   
   return {
-    handleError: (error) => handleError(error, { showStack, colorize, exit: exitOnError }),
+    handleError: (error, opts = {}) => handleError(error, { verbose, colorize, exit: exitOnError, ...opts }),
     asyncErrorHandler,
     errorHandler
   };

@@ -52,13 +52,13 @@ class DependencyError extends CLIError {
 }
 
 // Global error handler
-function handleCLIError(error, debug = false) {
+function handleCLIError(error, verbose = false) {
     if (error instanceof CLIError) {
         console.error(`❌ Error: ${error.message}`);
         if (error.suggestion) {
             console.error(`💡 Suggestion: ${error.suggestion}`);
         }
-        if (debug) {
+        if (verbose) {
             console.error('\n🔍 Debug traceback:');
             console.error(error.stack);
         }
@@ -67,12 +67,12 @@ function handleCLIError(error, debug = false) {
         // Unexpected errors
         console.error(`❌ Unexpected error: ${error.message}`);
         console.error('💡 This may be a bug. Please report it with the following details:');
-        if (debug) {
+        if (verbose) {
             console.error(error.stack);
         } else {
             console.error(`   Error type: ${error.constructor.name}`);
             console.error(`   Error message: ${error.message}`);
-            console.error('   Run with --debug for full traceback');
+            console.error('   Run with --verbose for full traceback');
         }
         return 1;
     }
@@ -430,7 +430,7 @@ const {{ cmd_name }}Cmd = program
             }
             {% endif %}
         } catch (error) {
-            handleCLIError(error, options.debug || command.parent.opts().debug);
+            handleCLIError(error, options.verbose || command.parent.opts().verbose);
             process.exit(error.exitCode || 1);
         }
     });
@@ -489,7 +489,7 @@ const {{ cmd_name }}Cmd = program
                 {% endif %}
             }
         } catch (error) {
-            handleCLIError(error, options.debug || command.parent.parent.opts().debug);
+            handleCLIError(error, options.verbose || command.parent.parent.opts().verbose);
             process.exit(error.exitCode || 1);
         }
     });
@@ -774,7 +774,7 @@ program
                 process.exit(1);
             }
         } catch (e) {
-            handleCLIError(e, options.debug || program.opts().debug);
+            handleCLIError(e, options.verbose || program.opts().verbose);
             process.exit(e.exitCode || 1);
         }
     });
@@ -807,7 +807,7 @@ program
                 }
             }
         } catch (e) {
-            handleCLIError(e, options.debug || program.opts().debug);
+            handleCLIError(e, options.verbose || program.opts().verbose);
             process.exit(e.exitCode || 1);
         }
     });
@@ -826,7 +826,7 @@ daemonCmd
             // Implementation would be similar to Python version
             console.log('Daemon installation not yet implemented for Node.js');
         } catch (e) {
-            handleCLIError(e, options.debug || program.parent.opts().debug);
+            handleCLIError(e, options.verbose || program.parent.opts().verbose);
             process.exit(e.exitCode || 1);
         }
     });
@@ -851,23 +851,23 @@ async function cliEntry() {
             process.exit(0);
         }
         
-        const debug = process.argv.includes('--debug');
-        const exitCode = handleCLIError(e, debug);
+        const verbose = program.opts().verbose || false;
+        const exitCode = handleCLIError(e, verbose);
         process.exit(exitCode);
     }
 }
 
 // Handle uncaught errors
 process.on('uncaughtException', (error) => {
-    const debug = process.argv.includes('--debug');
-    const exitCode = handleCLIError(error, debug);
+    const verbose = program.opts().verbose || false;
+    const exitCode = handleCLIError(error, verbose);
     process.exit(exitCode);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    const debug = process.argv.includes('--debug');
-    const exitCode = handleCLIError(error, debug);
+    const verbose = program.opts().verbose || false;
+    const exitCode = handleCLIError(error, verbose);
     process.exit(exitCode);
 });
 

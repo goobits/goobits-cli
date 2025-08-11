@@ -74,7 +74,7 @@ class ErrorHandler:
     
     def __init__(self, debug: bool = False, verbose: bool = False):
         self.debug = debug
-        self.verbose = verbose
+        self.verbose = verbose or debug  # verbose includes debug functionality
     
     def handle_error(self, error: Exception, context: Optional[str] = None) -> None:
         """
@@ -102,7 +102,7 @@ class ErrorHandler:
             for key, value in error.details.items():
                 print(f"  {key}: {value}", file=sys.stderr)
         
-        if self.debug:
+        if self.verbose:
             traceback.print_exc()
         
         sys.exit(error.exit_code.value)
@@ -115,10 +115,10 @@ class ErrorHandler:
         
         print(message, file=sys.stderr)
         
-        if self.debug or self.verbose:
+        if self.verbose:
             traceback.print_exc()
         else:
-            print("Run with --debug for more details", file=sys.stderr)
+            print("Run with --verbose for more details", file=sys.stderr)
         
         sys.exit(ExitCode.GENERAL_ERROR.value)
     
@@ -216,7 +216,7 @@ class FileNotFoundError extends CliError {
 class ErrorHandler {
     constructor(options = {}) {
         this.debug = options.debug || false;
-        this.verbose = options.verbose || false;
+        this.verbose = options.verbose || options.debug || false;  // verbose includes debug functionality
     }
 
     handleError(error, context = null) {
@@ -242,7 +242,7 @@ class ErrorHandler {
             }
         }
 
-        if (this.debug) {
+        if (this.verbose) {
             console.error(error.stack);
         }
 
@@ -257,10 +257,10 @@ class ErrorHandler {
 
         console.error(message);
 
-        if (this.debug || this.verbose) {
+        if (this.verbose) {
             console.error(error.stack);
         } else {
-            console.error('Run with --debug for more details');
+            console.error('Run with --verbose for more details');
         }
 
         process.exit(ExitCode.GENERAL_ERROR);
@@ -399,7 +399,7 @@ export class ErrorHandler {
 
     constructor(options: ErrorHandlerOptions = {}) {
         this.debug = options.debug || false;
-        this.verbose = options.verbose || false;
+        this.verbose = options.verbose || options.debug || false;  // verbose includes debug functionality
     }
 
     public handleError(error: Error, context?: string): never {
@@ -427,7 +427,7 @@ export class ErrorHandler {
             }
         }
 
-        if (this.debug) {
+        if (this.verbose) {
             console.error(error.stack);
         }
 
@@ -442,10 +442,10 @@ export class ErrorHandler {
 
         console.error(message);
 
-        if (this.debug || this.verbose) {
+        if (this.verbose) {
             console.error(error.stack);
         } else {
-            console.error('Run with --debug for more details');
+            console.error('Run with --verbose for more details');
         }
 
         process.exit(ExitCode.GENERAL_ERROR);
@@ -587,7 +587,7 @@ pub struct ErrorHandler {
 
 impl ErrorHandler {
     pub fn new(debug: bool, verbose: bool) -> Self {
-        Self { debug, verbose }
+        Self { debug, verbose: verbose || debug }  // verbose includes debug functionality
     }
 
     pub fn handle_error(&self, error: &dyn std::error::Error, context: Option<&str>) -> ! {
@@ -614,7 +614,7 @@ impl ErrorHandler {
             }
         }
 
-        if self.debug {
+        if self.verbose {
             eprintln!("{:?}", error);
         }
 
@@ -630,10 +630,10 @@ impl ErrorHandler {
 
         eprintln!("{}", message);
 
-        if self.debug || self.verbose {
+        if self.verbose {
             eprintln!("{:?}", error);
         } else {
-            eprintln!("Run with --debug for more details");
+            eprintln!("Run with --verbose for more details");
         }
 
         process::exit(ExitCode::GeneralError.as_i32());

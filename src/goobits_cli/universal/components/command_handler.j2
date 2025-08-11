@@ -37,17 +37,13 @@ except ImportError:
     context_settings={"help_option_names": ["-h", "--help"]}
 )
 @click.version_option(version="{{ cli.root_command.version }}")
-{%- for option in cli.root_command.options %}
+{% for option in cli.root_command.options -%}
 @click.option(
     "--{{ option.name }}"{% if option.short %}, "-{{ option.short }}"{% endif %},
-    help="{{ option.description }}",
-{%- if option.type == "boolean" %}
-    is_flag=True,
-{%- elif option.type == "integer" %}
-    type=int,
-{%- elif option.type == "float" %}
-    type=float,
-{%- endif %}
+    help="{{ option.description }}"{% if option.type == "flag" or option.type == "boolean" %},
+    is_flag=True{% elif option.type == "integer" %},
+    type=int{% elif option.type == "float" %},
+    type=float{% endif %},
 {%- if option.default is not none %}
     default={{ option.default | repr }},
 {%- endif %}
@@ -84,14 +80,10 @@ def cli({% for option in cli.root_command.options %}{{ option.name.replace('-', 
 {% for option in command.options -%}
 @click.option(
     "--{{ option.name }}"{% if option.short %}, "-{{ option.short }}"{% endif %},
-    help="{{ option.description }}",
-{%- if option.type == "boolean" %}
-    is_flag=True,
-{%- elif option.type == "integer" %}
-    type=int,
-{%- elif option.type == "float" %}
-    type=float,
-{%- endif %}
+    help="{{ option.description }}"{% if option.type == "flag" or option.type == "boolean" %},
+    is_flag=True{% elif option.type == "integer" %},
+    type=int{% elif option.type == "float" %},
+    type=float{% endif %},
 {%- if option.default is not none %}
     default={{ option.default | repr }},
 {%- endif %}
@@ -107,6 +99,13 @@ def cli({% for option in cli.root_command.options %}{{ option.name.replace('-', 
 def {{ command.name.replace('-', '_') }}_command({% for arg in command.arguments %}{{ arg.name }}{% if command.options or not loop.last %}, {% endif %}{% endfor %}{% for option in command.options %}{{ option.name.replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %}):
     """{{ command.description }}"""
     try:
+        # Initialize error handler with verbose flag from global options
+        from .errors import ErrorHandler, set_error_handler
+        ctx = click.get_current_context()
+        verbose_flag = ctx.find_root().params.get('verbose', False)
+        error_handler = ErrorHandler(verbose=verbose_flag)
+        set_error_handler(error_handler)
+        
         # Call the hook function if it exists
         hook_name = "{{ command.hook_name }}"
         if hook_name in globals():
@@ -116,8 +115,23 @@ def {{ command.name.replace('-', '_') }}_command({% for arg in command.arguments
             click.echo(f"Hook function '{hook_name}' not implemented")
             sys.exit(1)
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(1)
+        # Use error handler for proper verbose output
+        try:
+            from .errors import get_error_handler
+            error_handler = get_error_handler()
+            error_handler.handle_error(e, "Command execution")
+        except ImportError:
+            click.echo(f"Error: {e}", err=True)
+            # Try to get verbose flag again for fallback
+            try:
+                ctx = click.get_current_context()
+                verbose_fallback = ctx.find_root().params.get('verbose', False)
+                if verbose_fallback:
+                    import traceback
+                    traceback.print_exc()
+            except:
+                pass
+            sys.exit(1)
 
 {%- endfor %}
 
@@ -170,6 +184,12 @@ program
 {%- endfor %}
     .action(async ({% for arg in command.arguments %}{{ arg.name }}{% if command.options or not loop.last %}, {% endif %}{% endfor %}options) => {
         try {
+            // Initialize error handler with verbose flag from global options
+            const { ErrorHandler, setErrorHandler } = require('./lib/errors');
+            const verboseFlag = program.opts().verbose || false;
+            const errorHandler = new ErrorHandler({ verbose: verboseFlag });
+            setErrorHandler(errorHandler);
+            
             const hookName = '{{ command.hook_name }}';
             if (typeof hooks[hookName] === 'function') {
                 await hooks[hookName]({% for arg in command.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.arguments %}, {% endif %}options);
@@ -178,8 +198,19 @@ program
                 process.exit(1);
             }
         } catch (error) {
-            console.error('Error:', error.message);
-            process.exit(1);
+            // Use error handler for proper verbose output
+            try {
+                const { getErrorHandler } = require('./lib/errors');
+                const errorHandler = getErrorHandler();
+                errorHandler.handleError(error, 'Command execution');
+            } catch (e) {
+                console.error('Error:', error.message);
+                const verboseOpts = program.opts().verbose || false;
+                if (verboseOpts) {
+                    console.error(error.stack);
+                }
+                process.exit(1);
+            }
         }
     });
 
@@ -243,6 +274,12 @@ program
 {%- endfor %}
     .action(async ({% for arg in command.arguments %}{{ arg.name }}: {% if arg.multiple %}string[]{% else %}string{% endif %}{% if command.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
         try {
+            // Initialize error handler with verbose flag from global options
+            import { ErrorHandler, setErrorHandler } from './lib/errors';
+            const verboseFlag = program.opts().verbose || false;
+            const errorHandler = new ErrorHandler({ verbose: verboseFlag });
+            setErrorHandler(errorHandler);
+            
             const hookName = '{{ command.hook_name }}' as keyof typeof hooks;
             if (typeof hooks[hookName] === 'function') {
                 await (hooks[hookName] as Function)({% for arg in command.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.arguments %}, {% endif %}options);
@@ -251,8 +288,19 @@ program
                 process.exit(1);
             }
         } catch (error) {
-            console.error('Error:', (error as Error).message);
-            process.exit(1);
+            // Use error handler for proper verbose output
+            try {
+                const { getErrorHandler } = await import('./lib/errors');
+                const errorHandler = getErrorHandler();
+                errorHandler.handleError(error as Error, 'Command execution');
+            } catch (e) {
+                console.error('Error:', (error as Error).message);
+                const verboseOpts = program.opts().verbose || false;
+                if (verboseOpts) {
+                    console.error((error as Error).stack);
+                }
+                process.exit(1);
+            }
         }
     });
 
