@@ -305,7 +305,7 @@ class ComponentRegistry:
         
         try:
             # Parse template to check for syntax errors
-            template = jinja2.Template(content, environment=self._env)
+            template = self._env.from_string(content)
             
             # Additional validation could be added here:
             # - Check for required variables
