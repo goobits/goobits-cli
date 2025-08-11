@@ -9,6 +9,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import jinja2
+import re
 from ..schemas import GoobitsConfigSchema
 
 # Import performance optimization components
@@ -124,6 +125,10 @@ class ComponentRegistry:
         self._loader = jinja2.FileSystemLoader(str(self.components_dir))
         self._env = jinja2.Environment(loader=self._loader)
         
+        # Add custom filters that templates expect
+        self._env.filters['snake_case'] = self._snake_case_filter
+        self._env.filters['camelCase'] = self._camel_case_filter
+        
     def load_components(self) -> None:
         """Load all component templates from the components directory."""
         if not self.components_dir.exists():
@@ -212,6 +217,29 @@ class ComponentRegistry:
             return component_file.exists()
         
         return False
+    
+    def _snake_case_filter(self, name: str) -> str:
+        """Convert name to snake_case."""
+        # Replace hyphens with underscores
+        name = name.replace("-", "_")
+        
+        # Convert CamelCase to snake_case
+        name = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', name)
+        name = re.sub(r'([a-z\d])([A-Z])', r'\1_\2', name)
+        
+        # Convert to lowercase and clean up
+        name = name.lower()
+        name = re.sub(r'_+', '_', name)  # Remove multiple underscores
+        name = name.strip('_')  # Remove leading/trailing underscores
+        
+        return name
+    
+    def _camel_case_filter(self, text: str) -> str:
+        """Convert text to camelCase."""
+        if not text:
+            return text
+        words = re.split(r'[-_\s]+', text.lower())
+        return words[0] + ''.join(word.capitalize() for word in words[1:])
     
     def component_exists(self, name: str) -> bool:
         """

@@ -56,9 +56,12 @@ class MockRenderer(LanguageRenderer):
     
     def render_component(self, component_name: str, template_content: str, 
                         context: Dict[str, Any]) -> str:
-        # Simple Jinja2 rendering
+        # Simple Jinja2 rendering with custom filters
         import jinja2
-        template = jinja2.Template(template_content)
+        env = jinja2.Environment(loader=jinja2.BaseLoader())
+        # Add custom filters
+        env.filters.update(self.get_custom_filters())
+        template = env.from_string(template_content)
         return template.render(**context)
     
     def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:

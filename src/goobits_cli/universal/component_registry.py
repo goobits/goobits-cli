@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 import jinja2
 import logging
+import re
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -67,6 +68,10 @@ class ComponentRegistry:
         # Jinja2 environment for template validation
         self._loader = jinja2.FileSystemLoader(str(self.components_dir))
         self._env = jinja2.Environment(loader=self._loader)
+        
+        # Add custom filters that templates expect
+        self._env.filters['snake_case'] = self._snake_case_filter
+        self._env.filters['camelCase'] = self._camel_case_filter
         
         logger.info(f"ComponentRegistry initialized with components_dir: {self.components_dir}")
     
@@ -259,6 +264,29 @@ class ComponentRegistry:
         self._components.clear()
         self._metadata.clear()
         logger.info("Component cache cleared")
+    
+    def _snake_case_filter(self, name: str) -> str:
+        """Convert name to snake_case."""
+        # Replace hyphens with underscores
+        name = name.replace("-", "_")
+        
+        # Convert CamelCase to snake_case
+        name = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', name)
+        name = re.sub(r'([a-z\d])([A-Z])', r'\1_\2', name)
+        
+        # Convert to lowercase and clean up
+        name = name.lower()
+        name = re.sub(r'_+', '_', name)  # Remove multiple underscores
+        name = name.strip('_')  # Remove leading/trailing underscores
+        
+        return name
+    
+    def _camel_case_filter(self, text: str) -> str:
+        """Convert text to camelCase."""
+        if not text:
+            return text
+        words = re.split(r'[-_\s]+', text.lower())
+        return words[0] + ''.join(word.capitalize() for word in words[1:])
     
     def _load_single_component(self, name: str) -> None:
         """Load a single component by name."""
