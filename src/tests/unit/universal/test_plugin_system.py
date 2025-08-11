@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, AsyncMock, MagicMock
 from datetime import datetime
 
-from ..plugins.manager import (
+from goobits_cli.universal.plugins.manager import (
     PluginManager,
     PluginInfo,
     PluginRegistry, 
@@ -20,7 +20,7 @@ from ..plugins.manager import (
     PluginType,
     get_plugin_manager
 )
-from ..plugins.integration import (
+from goobits_cli.universal.plugins.integration import (
     PluginCLIIntegrator,
     PluginCommandManager,
     setup_plugin_integration,

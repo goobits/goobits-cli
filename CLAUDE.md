@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Start
+
+For rapid project understanding, see **CODEMAP.md** - a comprehensive project map designed for LLM quick comprehension.
+
 ## Project Overview
 
 Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, and TypeScript** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.

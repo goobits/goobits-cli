@@ -159,9 +159,10 @@ class TestComponentRegistryDetailed:
         
         # Check components loaded
         components = registry.list_components()
-        assert "simple" in components
-        assert "with_vars" in components
-        assert "empty" in components
+        component_names = [comp.name for comp in components]
+        assert "simple" in component_names
+        assert "with_vars" in component_names
+        assert "empty" in component_names
         # Note: nested components may not be supported in this implementation
         # assert "sub/nested" in components
         

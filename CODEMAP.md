@@ -1,0 +1,197 @@
+```
+================================================================================
+                          📍 PROJECT CODEMAP
+================================================================================
+
+PROJECT SUMMARY
+---------------
+  Name:         Goobits CLI Framework
+  Type:         Multi-language CLI generator
+  Language:     Python (core), Node.js, TypeScript (targets)
+  Framework:    Click (Python), Commander (Node.js), Clap (TS)
+  Entry Point:  src/goobits_cli/main.py
+  
+  Total Files:  491 (175 Python, 93 JS, 188 TS, 35 YAML)
+  Total LOC:    ~15,000+ (8.8K Python core)
+
+================================================================================
+
+🏗️ ARCHITECTURE OVERVIEW
+------------------------
+
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    YAML     │────▶│  Generator  │────▶│  CLI Code   │
+│ goobits.yaml│     │   Engine    │     │ Python/JS/TS│
+└─────────────┘     └─────────────┘     └─────────────┘
+        │                   │                    │
+   Configuration        Template            Generated
+   (User Input)        Processing           Applications
+                      (Jinja2/Univ)
+
+Key Patterns:
+  • Generator Pattern: Language-specific code generators
+  • Template Engine: Jinja2 + Universal template system
+  • Plugin Architecture: Extensible command/feature system
+  • Self-Hosting: goobits generates its own CLI
+
+================================================================================
+
+📁 DIRECTORY STRUCTURE
+----------------------
+
+[root]/
+├── src/goobits_cli/           [Core framework - 8.8K+ LOC]
+│   ├── main.py               [CLI entry point - build/init/serve]
+│   ├── builder.py            [Routes to language generators]
+│   ├── schemas.py            [YAML config validation (Pydantic)]
+│   ├── generators/ [3]       [Language-specific generators]
+│   │   ├── python.py        [Python/Click generator]
+│   │   ├── nodejs.py        [Node.js/Commander generator]
+│   │   └── typescript.py    [TypeScript generator]
+│   ├── templates/            [Jinja2 templates by language]
+│   │   ├── *.py.j2          [Python CLI templates]
+│   │   ├── nodejs/          [Node.js templates & package.json]
+│   │   └── typescript/      [TS templates & build configs]
+│   ├── universal/           [Universal Template System v2.0]
+│   │   ├── template_engine.py [Cross-language template engine]
+│   │   ├── renderers/       [Language-specific renderers]
+│   │   ├── interactive/     [Interactive mode components]
+│   │   ├── plugins/         [Plugin system & marketplace]
+│   │   ├── performance/     [Performance monitoring]
+│   │   └── completion/      [Dynamic completion system]
+│   └── shared/              [Cross-language utilities]
+├── src/tests/ [29]          [Comprehensive test suite]
+│   ├── unit/                [Unit tests by component]
+│   ├── integration/         [Cross-language integration]
+│   ├── e2e/                 [End-to-end CLI testing]
+│   └── performance/         [Real performance benchmarks]
+├── performance/             [Performance validation suite]
+├── docs/                    [Architecture & usage guides]
+├── shared/                  [Shared schemas & components]
+└── goobits.yaml            [Self-hosting configuration]
+
+================================================================================
+
+🔑 KEY FILES (Start Here)
+-------------------------
+
+ENTRY POINTS:
+  • src/goobits_cli/main.py     - CLI commands (build/init/serve)
+  • src/goobits_cli/builder.py  - Language routing & generation
+  • goobits.yaml               - Self-hosting config example
+
+CORE LOGIC:
+  • src/goobits_cli/schemas.py  - YAML validation (Pydantic)
+  • src/goobits_cli/generators/ - Language-specific generators
+  • src/goobits_cli/universal/  - Universal template system
+
+CONFIGURATION:
+  • pyproject.toml             - Python dependencies & build
+  • CLAUDE.md                  - Development instructions
+  • setup.sh                   - Installation script
+
+================================================================================
+
+🔄 DATA FLOW
+------------
+
+1. CLI Input:
+   [main.py] → [load_yaml_config] → [schemas.py validation]
+
+2. Code Generation:
+   [builder.py] → [language generator] → [templates/] → [output]
+
+3. Universal System:
+   [template_engine.py] → [renderers/] → [components/] → [output]
+
+Key Relationships:
+  • main.py depends on → builder.py, schemas.py
+  • builder.py routes to → generators/{python,nodejs,typescript}.py
+  • generators/ use → templates/[lang]/, shared/components/
+  • universal/ provides → cross-language consistency
+
+================================================================================
+
+📦 DEPENDENCIES
+---------------
+
+PRODUCTION:
+  • click         - Python CLI framework
+  • pydantic      - YAML config validation
+  • jinja2        - Template rendering
+  • pyyaml        - YAML parsing
+
+DEVELOPMENT:
+  • pytest       - Test framework (121+ tests)
+  • mypy         - Type checking
+  • ruff         - Python linting
+  • coverage     - Test coverage analysis
+
+Generated CLIs Use:
+  • Python: click, pydantic, rich (terminal UI)
+  • Node.js: commander, chalk, inquirer
+  • TypeScript: clap-like libs, type definitions
+
+================================================================================
+
+🎯 COMMON TASKS
+---------------
+
+To understand CLI generation:
+  Start with: goobits.yaml → main.py → builder.py → generators/
+
+To modify Python generation:
+  Core files: generators/python.py, templates/*.py.j2
+  Tests: src/tests/unit/test_*.py
+
+To add new language support:
+  1. Create generator in generators/[lang].py
+  2. Add templates in templates/[lang]/
+  3. Update builder.py routing
+  4. Add tests in src/tests/
+  5. Update schemas.py if needed
+
+To use Universal Templates:
+  Flag: goobits build --universal-templates
+  Files: universal/template_engine.py, universal/renderers/
+
+================================================================================
+
+⚡ QUICK REFERENCE
+-----------------
+
+Naming Conventions:
+  • Files:       snake_case.py, kebab-case.js
+  • Classes:     PascalCase (schemas, generators)
+  • Functions:   snake_case (Python), camelCase (JS/TS)
+  • Templates:   snake_case.j2
+
+CLI Commands:
+  • Generate:    goobits build [config.yaml]
+  • Initialize:  goobits init <project-name>
+  • Self-host:   goobits build (uses goobits.yaml)
+  • Universal:   goobits build --universal-templates
+
+Development:
+  • Install:     ./setup.sh install --dev
+  • Test:        pytest src/tests/
+  • Coverage:    pytest --cov=goobits_cli
+  • Type check:  mypy src/goobits_cli/
+  • Lint:        ruff check src/
+
+================================================================================
+
+⚠️ GOTCHAS & NOTES
+------------------
+
+• Self-hosting: goobits generates its own CLI from goobits.yaml
+• Python CLIs work end-to-end; Node.js/TS have build issues
+• Universal templates (--universal-templates) are v2.0 system
+• Performance: Python ~320ms, Node.js ~1.7s, TypeScript ~5s
+• Interactive mode framework exists but not in generated CLIs
+• Rust support was removed - templates archived
+• Test coverage: 17% → 60%+ after recent improvements
+• Generated CLIs use hook system: app_hooks.py/js/ts for logic
+
+================================================================================
+```

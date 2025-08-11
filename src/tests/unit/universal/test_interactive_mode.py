@@ -9,13 +9,13 @@ import pytest
 from pathlib import Path
 from typing import Dict, Any
 
-from ..template_engine import UniversalTemplateEngine
-from ..component_registry import ComponentRegistry
-from ..interactive import integrate_interactive_mode, is_interactive_supported
-from ..renderers.python_renderer import PythonRenderer
-from ..renderers.nodejs_renderer import NodeJSRenderer
-from ..renderers.typescript_renderer import TypeScriptRenderer
-from ..renderers.rust_renderer import RustRenderer
+from goobits_cli.universal.template_engine import UniversalTemplateEngine
+from goobits_cli.universal.component_registry import ComponentRegistry
+from goobits_cli.universal.interactive import integrate_interactive_mode, is_interactive_supported
+from goobits_cli.universal.renderers.python_renderer import PythonRenderer
+from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
+from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
+# RustRenderer removed - using existing renderers only
 
 
 class TestInteractiveMode:
@@ -231,33 +231,7 @@ class TestInteractiveMode:
         assert "private commands: Record<string, Command>;" in rendered
         assert "export function runInteractive(): void {" in rendered
     
-    def test_rust_interactive_rendering(self, sample_ir, template_engine):
-        """Test rendering interactive mode for Rust."""
-        renderer = RustRenderer()
-        
-        # Check that interactive mode is included in output structure
-        output_structure = renderer.get_output_structure(sample_ir)
-        assert "interactive_mode" in output_structure
-        assert output_structure["interactive_mode"] == "src/test_cli_interactive.rs"
-        
-        # Get template content
-        interactive_template = template_engine.component_registry.get_component("interactive_mode")
-        assert interactive_template is not None
-        
-        # Transform context for Rust
-        context = renderer.get_template_context(sample_ir)
-        
-        # Render the template
-        rendered = renderer.render_component("interactive_mode", interactive_template, context)
-        
-        # Verify Rust-specific content
-        assert "use rustyline::{DefaultEditor, Result};" in rendered
-        assert "pub struct TestcliInteractive {" in rendered
-        assert "editor: DefaultEditor," in rendered
-        assert "commands: HashMap<String, fn(&[&str]) -> Result<()>>," in rendered
-        assert "pub fn run_interactive() -> Result<()> {" in rendered
-        assert 'commands.insert("hello".to_string()' in rendered
-        assert 'commands.insert("config".to_string()' in rendered
+    # Rust renderer tests removed - RustRenderer no longer exists
     
     def test_command_handler_integration(self, sample_ir, template_engine):
         """Test that command handler properly integrates interactive mode."""
