@@ -230,6 +230,30 @@ class ComponentRegistry:
             logger.error(f"Failed to reload component {name}: {e}")
             return False
     
+    def component_exists(self, name: str) -> bool:
+        """
+        Check if a component exists (alias for has_component for test compatibility).
+        
+        Args:
+            name: Component name
+            
+        Returns:
+            True if component exists, False otherwise
+        """
+        return self.has_component(name)
+    
+    def get_component_dependencies(self, name: str) -> List[str]:
+        """
+        Get dependencies for a component (alias for get_dependencies).
+        
+        Args:
+            name: Component name
+            
+        Returns:
+            List of dependency names
+        """
+        return self.get_dependencies(name)
+    
     def clear_cache(self) -> None:
         """Clear all cached components and metadata."""
         self._components.clear()
@@ -263,7 +287,7 @@ class ComponentRegistry:
     
     def _extract_template_dependencies(self, template_content: str) -> List[str]:
         """
-        Extract template dependencies from Jinja2 includes and extends.
+        Extract template dependencies from Jinja2 includes, extends, and dependency comments.
         
         Args:
             template_content: Template content to analyze
@@ -286,6 +310,18 @@ class ComponentRegistry:
                 # Remove .j2 extension if present
                 dep_name = match.replace('.j2', '')
                 if dep_name not in dependencies:
+                    dependencies.append(dep_name)
+        
+        # Also check for dependency comments: {{# Dependencies: base.j2, utils.j2 #}}
+        comment_pattern = r'\{\{#\s*Dependencies:\s*([^#]+)#\}\}'
+        comment_matches = re.findall(comment_pattern, template_content)
+        for match in comment_matches:
+            # Split by comma and clean up each dependency name
+            deps = [dep.strip() for dep in match.split(',')]
+            for dep in deps:
+                # Remove .j2 extension if present
+                dep_name = dep.replace('.j2', '')
+                if dep_name and dep_name not in dependencies:
                     dependencies.append(dep_name)
         
         return dependencies
