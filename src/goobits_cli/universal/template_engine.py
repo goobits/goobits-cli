@@ -187,7 +187,21 @@ class ComponentRegistry:
         Returns:
             List of component names
         """
-        return list(self._components.keys())
+        # Include both loaded and discoverable components
+        loaded = set(self._components.keys())
+        discoverable = set()
+        
+        if self.components_dir.exists():
+            for template_file in self.components_dir.rglob("*.j2"):
+                if template_file.is_file():
+                    relative_path = template_file.relative_to(self.components_dir)
+                    if relative_path.parent != Path('.'):
+                        component_name = str(relative_path.with_suffix('')).replace('\\', '/')
+                    else:
+                        component_name = template_file.stem
+                    discoverable.add(component_name)
+        
+        return sorted(loaded | discoverable)
     
     def has_component(self, name: str) -> bool:
         """
@@ -262,9 +276,6 @@ class ComponentRegistry:
             
         Returns:
             True if component was successfully reloaded, False otherwise
-            
-        Raises:
-            KeyError: If component doesn't exist
         """
         component_file = self.components_dir / f"{name}.j2"
         
@@ -277,7 +288,7 @@ class ComponentRegistry:
             component_file = component_file / f"{parts[-1]}.j2"
         
         if not component_file.exists():
-            raise KeyError(f"Component '{name}' not found")
+            return False
         
         try:
             content = component_file.read_text(encoding='utf-8')
@@ -429,19 +440,22 @@ class ComponentRegistry:
         # Look for {% include "component_name" %}
         include_pattern = r'{%\s*include\s+["\']([^"\'\']+)["\']\s*%}'
         includes = re.findall(include_pattern, content)
-        dependencies.extend(includes)
+        clean_includes = [inc.replace('.j2', '') for inc in includes]
+        dependencies.extend(clean_includes)
         
         # Look for {% extends "component_name" %}
         extends_pattern = r'{%\s*extends\s+["\']([^"\'\']+)["\']\s*%}'
         extends = re.findall(extends_pattern, content)
-        dependencies.extend(extends)
+        clean_extends = [ext.replace('.j2', '') for ext in extends]
+        dependencies.extend(clean_extends)
         
         # Look for custom dependency comments (multiple patterns)
         # Example: {# depends: component1, component2 #}
         comment_pattern = r'{#\s*depends:\s*([^#]+)\s*#}'
         comment_deps = re.findall(comment_pattern, content, re.IGNORECASE)
         for deps in comment_deps:
-            dependencies.extend([dep.strip() for dep in deps.split(',')])
+            clean_deps = [dep.strip().replace('.j2', '') for dep in deps.split(',')]
+            dependencies.extend(clean_deps)
         
         # Look for Dependencies: pattern
         # Example: {# Dependencies: base.j2, utils.j2 #}
@@ -454,6 +468,58 @@ class ComponentRegistry:
         
         # Remove duplicates and empty strings
         return list(filter(None, set(dependencies)))
+    
+    def validate_all_components(self) -> Dict[str, List[str]]:
+        """
+        Validate all loaded components.
+        
+        Returns:
+            Dictionary mapping component names to lists of validation errors
+        """
+        errors = {}
+        for name, content in self._components.items():
+            try:
+                component_errors = self._validate_template(name, content)
+                if component_errors:
+                    errors[name] = component_errors
+            except Exception as e:
+                errors[name] = [str(e)]
+        
+        return errors
+    
+    def _validate_template(self, name: str, content: str) -> List[str]:
+        """
+        Validate template syntax.
+        
+        Args:
+            name: Template name
+            content: Template content
+            
+        Returns:
+            List of validation errors
+        """
+        errors = []
+        
+        try:
+            # Parse template to check for syntax errors
+            template = self._env.from_string(content)
+            
+        except jinja2.TemplateSyntaxError as e:
+            errors.append(f"Syntax error at line {e.lineno}: {e.message}")
+        except Exception as e:
+            errors.append(f"Validation error: {str(e)}")
+        
+        return errors
+    
+    def clear_cache(self) -> None:
+        """Clear all cached components and metadata."""
+        self._components.clear()
+        self._metadata.clear()
+        self._dependencies.clear()
+    
+    def clear(self) -> None:
+        """Clear registry and hide components until explicitly reloaded (alias for clear_cache)."""
+        self.clear_cache()
 
 
 class UniversalTemplateEngine:

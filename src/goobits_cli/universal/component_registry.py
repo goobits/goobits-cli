@@ -15,6 +15,14 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
+class ComponentInfo:
+    """Simple component info object with name attribute for list_components() return."""
+    
+    def __init__(self, name: str, path: Optional[Path] = None):
+        self.name = name
+        self.path = path
+
+
 class ComponentMetadata:
     """Metadata for a component template."""
     
@@ -60,10 +68,13 @@ class ComponentRegistry:
         """
         self.components_dir = components_dir or Path(__file__).parent / "components"
         self.auto_reload = auto_reload
+        self.validation_enabled = True  # Enable template validation by default
+        self._cleared = False  # Track if registry has been explicitly cleared
         
         # Component storage
         self._components: Dict[str, str] = {}
         self._metadata: Dict[str, ComponentMetadata] = {}
+        self._dependencies: Dict[str, List[str]] = {}  # For test compatibility
         
         # Jinja2 environment for template validation
         self._loader = jinja2.FileSystemLoader(str(self.components_dir))
@@ -86,10 +97,17 @@ class ComponentRegistry:
             logger.warning(f"Components directory not found: {self.components_dir}")
             return
             
+        # Reset cleared flag when loading components
+        self._cleared = False
         logger.info(f"Loading components from: {self.components_dir}")
         
-        for template_file in self.components_dir.glob("*.j2"):
-            component_name = template_file.stem
+        for template_file in self.components_dir.rglob("*.j2"):
+            # Create component name with path relative to components_dir
+            relative_path = template_file.relative_to(self.components_dir)
+            if relative_path.parent != Path('.'):
+                component_name = str(relative_path.with_suffix('')).replace('\\', '/')
+            else:
+                component_name = template_file.stem
             
             # Check if we need to load/reload this component
             if (force_reload or 
@@ -146,21 +164,47 @@ class ComponentRegistry:
             self._load_single_component(name)
         
         if name not in self._components:
-            raise KeyError(f"Component '{name}' not found in {self.components_dir}")
+            raise KeyError(f"Component '{name}' not found")
             
         return self._components[name]
     
-    def list_components(self) -> List[str]:
+    def list_components(self) -> List[ComponentInfo]:
         """
-        List all available component names.
+        List all available components as ComponentInfo objects.
         
         Returns:
-            List of component names
+            List of ComponentInfo objects with .name attribute
         """
-        # Include both loaded and discoverable components
-        loaded = set(self._components.keys())
-        discoverable = set(f.stem for f in self.components_dir.glob("*.j2") if f.is_file())
-        return sorted(loaded | discoverable)
+        # If registry has been cleared, only show loaded components
+        if self._cleared:
+            loaded = set(self._components.keys())
+            all_components = loaded
+        else:
+            # Include both loaded and discoverable components
+            loaded = set(self._components.keys())
+            discoverable_files = {f for f in self.components_dir.rglob("*.j2") if f.is_file()}
+            discoverable = set()
+            for f in discoverable_files:
+                relative_path = f.relative_to(self.components_dir)
+                if relative_path.parent != Path('.'):
+                    component_name = str(relative_path.with_suffix('')).replace('\\', '/')
+                else:
+                    component_name = f.stem
+                discoverable.add(component_name)
+            
+            all_components = loaded | discoverable
+        
+        component_infos = []
+        
+        for name in sorted(all_components):
+            # Find the corresponding file path
+            component_file = self.components_dir / f"{name}.j2"
+            if component_file.exists():
+                component_infos.append(ComponentInfo(name, component_file))
+            else:
+                component_infos.append(ComponentInfo(name))
+        
+        return component_infos
     
     def has_component(self, name: str) -> bool:
         """
@@ -172,8 +216,12 @@ class ComponentRegistry:
         Returns:
             True if component exists, False otherwise
         """
-        return (name in self._components or 
-                (self.components_dir / f"{name}.j2").exists())
+        # If registry has been cleared, only check loaded components
+        if self._cleared:
+            return name in self._components
+        else:
+            return (name in self._components or 
+                    (self.components_dir / f"{name}.j2").exists())
     
     def get_component_metadata(self, name: str) -> Optional[ComponentMetadata]:
         """
@@ -263,7 +311,16 @@ class ComponentRegistry:
         """Clear all cached components and metadata."""
         self._components.clear()
         self._metadata.clear()
+        self._dependencies.clear()
         logger.info("Component cache cleared")
+    
+    def clear(self) -> None:
+        """Clear registry and hide components until explicitly reloaded."""
+        self._components.clear()
+        self._metadata.clear()
+        self._dependencies.clear()
+        self._cleared = True
+        logger.info("Component registry cleared")
     
     def _snake_case_filter(self, name: str) -> str:
         """Convert name to snake_case."""
@@ -290,9 +347,14 @@ class ComponentRegistry:
     
     def _load_single_component(self, name: str) -> None:
         """Load a single component by name."""
+        # Handle nested components (e.g., "subdir/nested" -> "subdir/nested.j2")
         component_file = self.components_dir / f"{name}.j2"
         if not component_file.exists():
-            raise KeyError(f"Component file not found: {component_file}")
+            # Check if this component was previously loaded (file was deleted)
+            if name in self._components:
+                raise FileNotFoundError(f"Component file was deleted: {component_file}")
+            else:
+                raise KeyError(f"Component '{name}' not found")
         
         try:
             content = component_file.read_text(encoding='utf-8')
