@@ -8,9 +8,9 @@ For rapid project understanding, see **CODEMAP.md** - a comprehensive project ma
 
 ## Project Overview
 
-Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, and TypeScript** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.
+Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, TypeScript, and Rust** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.
 
-**Current Status**: v2.0.0-beta.1 with 3 language implementations (Python 95%, Node.js 85%, TypeScript 85% complete). Rust support was removed and is under reconstruction for future releases. Advanced features (interactive mode, dynamic completion, plugins) have framework implementations but are not yet integrated into generated CLIs.
+**Current Status**: v2.0.0-beta.1 with 4 language implementations (Python 95%, Node.js 90%, TypeScript 95%, Rust 85% complete). Advanced features (interactive mode, dynamic completion, plugins) have framework implementations but are not yet integrated into generated CLIs.
 
 ## Development Commands
 
@@ -78,9 +78,10 @@ The framework generates language-specific CLIs:
 ```
 goobits.yaml → goobits build → [Language-specific output] → Install → Working CLI
 
-Python:   cli.py + setup.sh → pipx install
-Node.js:  cli.js + package.json → npm install  
+Python:     cli.py + setup.sh → pipx install
+Node.js:    cli.js + package.json → npm install  
 TypeScript: cli.ts + package.json → npm install
+Rust:       main.rs + Cargo.toml → cargo install
 ```
 
 ### Key Components
@@ -89,13 +90,15 @@ TypeScript: cli.ts + package.json → npm install
 2. **schemas.py** - Pydantic models for YAML validation (ConfigSchema, GoobitsConfigSchema)
 3. **builder.py** - Routes to language-specific generators based on `language` field
 4. **generators/** - Language-specific generators with shared component integration:
-   - `python.py` - Python/Click generator with DocumentationGenerator
-   - `nodejs.py` - Node.js/Commander generator with validation placeholders
-   - `typescript.py` - TypeScript generator with TestDataValidator
+   - `python.py` - Python/Click generator with DocumentationGenerator (437 lines)
+   - `nodejs.py` - Node.js/Commander generator with validation placeholders (799 lines)  
+   - `typescript.py` - TypeScript generator with TestDataValidator (1,044 lines)
+   - `rust.py` - Rust/Clap generator with comprehensive CLI support (864 lines)
 5. **templates/** - Jinja2 templates organized by language:
    - `templates/` - Python templates
-   - `templates/nodejs/` - Node.js templates
+   - `templates/nodejs/` - Node.js templates  
    - `templates/typescript/` - TypeScript templates
+   - `templates/rust/` - Rust templates
 6. **universal/** - Universal Template System (Phase 3):
    - `template_engine.py` - Core universal template engine
    - `renderers/` - Language-specific renderers for universal templates
@@ -130,6 +133,17 @@ def on_command_name(*args, **kwargs):
 ```javascript
 export async function onCommandName(args) {
     // Business logic here
+}
+```
+
+**Rust** - `src/hooks.rs`:
+```rust
+use clap::ArgMatches;
+use anyhow::Result;
+
+pub fn on_command_name(matches: &ArgMatches) -> Result<()> {
+    // Business logic here
+    Ok(())
 }
 ```
 
@@ -185,7 +199,7 @@ The framework supports both legacy and Universal Template Systems:
 
 The repository contains implementation phases and proposals:
 - **PROPOSAL_06_UNIFIED_IMPLEMENTATION.md**: Master implementation roadmap (📋 ACTIVE)
-- **Phase 0**: Foundation - Complete language implementations (✅ 95% COMPLETED - Rust pending)
+- **Phase 0**: Foundation - Complete language implementations (✅ 95% COMPLETED - All 4 languages implemented)
 - **Phase 1**: Testing Framework - YAML-based CLI testing (✅ 100% COMPLETED) 
 - **Phase 2**: Shared Components - Validation and documentation integration (✅ 100% COMPLETED)
 - **Phase 3**: Universal Template System - Single-source multi-language generation (✅ 90% COMPLETED)
@@ -203,6 +217,7 @@ language: python      # Default if not specified
 # or
 language: nodejs      # Node.js with Commander.js
 language: typescript  # TypeScript with type safety
+language: rust        # Rust with Clap for high performance
 ```
 
 ### Adding a New Command
@@ -213,6 +228,7 @@ language: typescript  # TypeScript with type safety
    - Python: `app_hooks.py`
    - Node.js: `src/hooks.js`
    - TypeScript: `src/hooks.ts`
+   - Rust: `src/hooks.rs`
 
 ### Debugging Generated Code
 

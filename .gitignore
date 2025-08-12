@@ -60,3 +60,51 @@ Thumbs.db
 
 # Config (keep local config private)
 config.local.toml
+
+# Development and temporary files
+*.tmp
+*.temp
+.cache
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Editor temp files
+*~
+.#*
+\#*#
+.*.swp
+.*.swo
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Coverage artifacts (specific patterns seen in project)
+.coverage.*.*.local.*
+
+# Build artifacts
+*.tar.gz
+*.whl
+*.deb
+*.rpm
+
+# Generated documentation
+docs/_build/
+docs/build/
+
+# Performance test results
+performance/results/
+benchmarks/results/
+
+# Local development scripts
+dev-local.sh
+test-local.sh
+
+# CLI testing output directories  
+test-output/
+generated-test-cli/
