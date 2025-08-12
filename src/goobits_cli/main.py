@@ -394,6 +394,12 @@ def build(
             
             # TypeScript generates multiple files
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
+        elif language == "rust":
+            from goobits_cli.generators.rust import RustGenerator
+            generator = RustGenerator(use_universal_templates=universal_templates)
+            
+            # Rust generates multiple files
+            all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         else:
             # Use Python generator (default)
             from goobits_cli.generators.python import PythonGenerator  
@@ -403,7 +409,7 @@ def build(
             all_files = generator.generate_all_files(goobits_config, config_path.name, version)
         
         # Handle multi-file generation for all languages
-        if language in ["python", "nodejs", "typescript"]:
+        if language in ["python", "nodejs", "typescript", "rust"]:
             # Write all generated files
             executable_files = all_files.pop('__executable__', [])
             for file_path, content in all_files.items():

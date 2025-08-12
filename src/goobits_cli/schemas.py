@@ -189,8 +189,8 @@ class GoobitsConfigSchema(BaseModel):
     display_name: str
     description: str
     
-    # Language selection (rust removed - under reconstruction)
-    language: Literal["python", "nodejs", "typescript"] = "python"
+    # Language selection (rust support now available)
+    language: Literal["python", "nodejs", "typescript", "rust"] = "python"
     
     # CLI generation configuration
     cli_output_path: str = "src/{package_name}/cli.py"
