@@ -1,14 +1,12 @@
 """
-Comprehensive tests for main CLI commands in main.py
+Tests for main CLI functionality in main.py
 
-This test suite covers the main CLI entry points to increase coverage
-from 26% to 70%+, focusing on:
-- build command with various configurations
-- init command with different templates
-- serve command functionality
-- upgrade command functionality  
+This unified test suite covers all main CLI functionality:
+- CLI commands (build, init, serve, upgrade)
+- Configuration handling and validation
+- Template generation and processing
+- Utility functions and helpers
 - Error conditions and edge cases
-- YAML configuration loading and validation
 """
 import pytest
 import tempfile
@@ -33,8 +31,12 @@ from goobits_cli.main import (
 from goobits_cli.schemas import GoobitsConfigSchema
 
 
-class TestMainCLI:
-    """Test suite for main CLI functionality."""
+# ============================================================================
+# SHARED TEST SETUP AND FIXTURES
+# ============================================================================
+
+class TestMainCLIBase:
+    """Base test class with shared setup and helper methods."""
     
     def setup_method(self):
         """Set up test environment."""
@@ -45,7 +47,7 @@ class TestMainCLI:
         """Clean up test environment."""
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
-    
+
     def create_test_config_file(self, content: str, filename: str = "goobits.yaml") -> Path:
         """Create a test configuration file."""
         config_path = self.temp_dir / filename
@@ -183,300 +185,13 @@ cli:
       is_default: true
 """
 
-    def test_version_callback_triggers_exit(self):
-        """Test that version_callback triggers typer.Exit when True."""
-        with pytest.raises(typer.Exit):
-            version_callback(True)
-    
-    def test_version_callback_no_action_when_false(self):
-        """Test that version_callback does nothing when False."""
-        # Should not raise any exception
-        result = version_callback(False)
-        assert result is None
 
-    def test_load_goobits_config_success(self, basic_config_content):
-        """Test successful loading of goobits configuration."""
-        config_path = self.create_test_config_file(basic_config_content)
-        
-        config = load_goobits_config(config_path)
-        
-        assert isinstance(config, GoobitsConfigSchema)
-        assert config.package_name == "test-cli"
-        assert config.command_name == "testcli"
-        assert config.language == "python"
+# ============================================================================
+# CLI COMMANDS TESTS
+# ============================================================================
 
-    def test_load_goobits_config_file_not_found(self):
-        """Test loading config when file doesn't exist."""
-        non_existent_path = self.temp_dir / "nonexistent.yaml"
-        
-        with pytest.raises(typer.Exit):
-            load_goobits_config(non_existent_path)
-
-    def test_load_goobits_config_invalid_yaml(self):
-        """Test loading config with invalid YAML."""
-        config_path = self.create_test_config_file("invalid: yaml: content: [")
-        
-        with pytest.raises(typer.Exit):
-            load_goobits_config(config_path)
-
-    def test_load_goobits_config_validation_error(self):
-        """Test loading config that fails validation."""
-        invalid_config = "package_name: ''"  # Empty package name should fail validation
-        config_path = self.create_test_config_file(invalid_config)
-        
-        with pytest.raises(typer.Exit):
-            load_goobits_config(config_path)
-
-    def test_normalize_dependencies_for_template(self, basic_config_content):
-        """Test dependency normalization for templates."""
-        config_path = self.create_test_config_file(basic_config_content)
-        config = load_goobits_config(config_path)
-        
-        normalized = normalize_dependencies_for_template(config)
-        
-        assert isinstance(normalized, GoobitsConfigSchema)
-        # Should be a deep copy, not the same object
-        assert normalized is not config
-        assert normalized.package_name == config.package_name
-
-    def test_dependency_to_dict_string(self):
-        """Test converting string dependency to dict."""
-        result = dependency_to_dict("pipx")
-        assert result == {'name': 'pipx', 'type': 'command'}
-
-    def test_dependency_to_dict_dict(self):
-        """Test converting dict dependency to dict."""
-        dep_dict = {'name': 'python', 'version': '>=3.8'}
-        result = dependency_to_dict(dep_dict)
-        assert result == dep_dict
-
-    def test_dependency_to_dict_object_with_model_dump(self):
-        """Test converting object with model_dump to dict."""
-        mock_dep = MagicMock()
-        mock_dep.model_dump.return_value = {'name': 'test', 'version': '1.0'}
-        
-        result = dependency_to_dict(mock_dep)
-        assert result == {'name': 'test', 'version': '1.0'}
-
-    def test_dependency_to_dict_fallback(self):
-        """Test dependency_to_dict fallback for unknown types."""
-        result = dependency_to_dict(123)
-        assert result == {'name': '123', 'type': 'command'}
-
-    def test_dependencies_to_json(self):
-        """Test converting dependencies list to JSON."""
-        deps = ["pipx", {"name": "python", "version": ">=3.8"}]
-        result = dependencies_to_json(deps)
-        
-        import json
-        parsed = json.loads(result)
-        assert len(parsed) == 2
-        assert parsed[0] == {'name': 'pipx', 'type': 'command'}
-        assert parsed[1] == {'name': 'python', 'version': '>=3.8'}
-
-    def test_extract_version_from_pyproject_not_found(self):
-        """Test version extraction when pyproject.toml doesn't exist."""
-        result = extract_version_from_pyproject(self.temp_dir)
-        assert result == "unknown"
-
-    def test_extract_version_from_pyproject_poetry_format(self):
-        """Test version extraction from Poetry format."""
-        pyproject_content = """
-[tool.poetry]
-name = "test-package"
-version = "1.2.3"
-"""
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        with open(pyproject_path, 'w') as f:
-            f.write(pyproject_content)
-        
-        result = extract_version_from_pyproject(self.temp_dir)
-        assert result == "1.2.3"
-
-    def test_extract_version_from_pyproject_pep621_format(self):
-        """Test version extraction from PEP 621 format."""
-        pyproject_content = """
-[project]
-name = "test-package"
-version = "2.0.0"
-"""
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        with open(pyproject_path, 'w') as f:
-            f.write(pyproject_content)
-        
-        result = extract_version_from_pyproject(self.temp_dir)
-        assert result == "2.0.0"
-
-    def test_extract_version_from_pyproject_parse_error(self):
-        """Test version extraction with invalid TOML."""
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        with open(pyproject_path, 'w') as f:
-            f.write("invalid toml content [")
-        
-        result = extract_version_from_pyproject(self.temp_dir)
-        assert result == "unknown"
-
-    def test_backup_file_creates_backup(self):
-        """Test that backup_file creates a backup when requested."""
-        test_file = self.temp_dir / "test.txt"
-        test_file.write_text("original content")
-        
-        backup_path = backup_file(test_file, create_backup=True)
-        
-        assert backup_path is not None
-        assert backup_path.exists()
-        assert backup_path.name == "test.txt.bak"
-        assert backup_path.read_text() == "original content"
-
-    def test_backup_file_no_backup_when_disabled(self):
-        """Test that backup_file doesn't create backup when disabled."""
-        test_file = self.temp_dir / "test.txt"
-        test_file.write_text("original content")
-        
-        backup_path = backup_file(test_file, create_backup=False)
-        
-        assert backup_path is None
-
-    def test_backup_file_nonexistent_file(self):
-        """Test backup_file with non-existent file."""
-        non_existent = self.temp_dir / "nonexistent.txt"
-        
-        backup_path = backup_file(non_existent, create_backup=True)
-        
-        assert backup_path is None
-
-    @patch('goobits_cli.main.toml.load')
-    @patch('goobits_cli.main.toml.dump')
-    def test_update_pyproject_toml_poetry_format(self, mock_dump, mock_load):
-        """Test updating pyproject.toml in Poetry format."""
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        pyproject_path.touch()
-        
-        mock_load.return_value = {
-            'tool': {
-                'poetry': {
-                    'scripts': {}
-                }
-            }
-        }
-        
-        with patch('builtins.open', mock_open()):
-            result = update_pyproject_toml(
-                self.temp_dir, "test_package", "testcli", "generated_cli.py"
-            )
-        
-        assert result is True
-        mock_load.assert_called_once()
-        mock_dump.assert_called_once()
-
-    def test_update_pyproject_toml_no_file(self):
-        """Test updating pyproject.toml when file doesn't exist."""
-        result = update_pyproject_toml(
-            self.temp_dir, "test_package", "testcli", "generated_cli.py"
-        )
-        
-        assert result is False
-
-    def test_generate_basic_template(self):
-        """Test generation of basic template."""
-        template = generate_basic_template("my-awesome-cli")
-        
-        assert "package_name: my-awesome-cli" in template
-        assert "command_name: my_awesome_cli" in template
-        assert "language: python" in template
-        assert "hello:" in template
-
-    def test_generate_advanced_template(self):
-        """Test generation of advanced template."""
-        template = generate_advanced_template("advanced-cli")
-        
-        assert "package_name: advanced-cli" in template
-        assert "command_name: advanced_cli" in template
-        assert "process:" in template
-        assert "convert:" in template
-        assert "command_groups:" in template
-
-    def test_generate_api_client_template(self):
-        """Test generation of API client template."""
-        template = generate_api_client_template("api-client")
-        
-        assert "package_name: api-client" in template
-        assert "get:" in template
-        assert "post:" in template
-        assert "api-key" in template
-
-    def test_generate_text_processor_template(self):
-        """Test generation of text processor template."""
-        template = generate_text_processor_template("text-tool")
-        
-        assert "package_name: text-tool" in template
-        assert "process:" in template
-        assert "count:" in template
-        assert "uppercase" in template
-
-
-class TestMainCLICommands:
+class TestMainCLICommands(TestMainCLIBase):
     """Test the main CLI commands using CliRunner."""
-    
-    def setup_method(self):
-        """Set up test environment."""
-        self.runner = CliRunner()
-        self.temp_dir = Path(tempfile.mkdtemp())
-        
-    def teardown_method(self):
-        """Clean up test environment."""
-        if self.temp_dir.exists():
-            shutil.rmtree(self.temp_dir)
-
-    def create_test_config_file(self, content: str, filename: str = "goobits.yaml") -> Path:
-        """Create a test configuration file."""
-        config_path = self.temp_dir / filename
-        with open(config_path, 'w') as f:
-            f.write(content)
-        return config_path
-
-    def get_minimal_valid_config(self, package_name="test-cli", command_name="testcli", language="python", include_cli=True):
-        """Get minimal valid config with all required fields."""
-        config = f"""
-package_name: {package_name}
-command_name: {command_name}
-display_name: "Test CLI"
-description: "A test CLI"
-language: {language}
-
-python:
-  minimum_version: "3.8"
-
-dependencies:
-  required:
-    - pipx
-
-installation:
-  pypi_name: "{package_name}"
-
-shell_integration:
-  enabled: false
-  alias: "{command_name}"
-
-validation:
-  check_api_keys: false
-  check_disk_space: true
-  minimum_disk_space_mb: 100
-
-messages:
-  install_success: "Installation completed successfully!"
-"""
-        if include_cli:
-            config += f"""
-cli:
-  name: {command_name}
-  tagline: "Test CLI tool"
-  commands:
-    hello:
-      desc: "Say hello"
-      is_default: true
-"""
-        return config
 
     def test_cli_version_command(self):
         """Test --version command."""
@@ -920,332 +635,6 @@ cli:
         assert result.exit_code == 1
         assert "Upgrade failed" in result.stderr
 
-
-class TestFastVersionHelp:
-    """Test the fast version and help check functionality."""
-    
-    @patch('sys.argv', ['goobits', '--version'])
-    @patch('goobits_cli.main.__version__', '1.2.3')
-    @patch('sys.exit')
-    def test_fast_version_check(self, mock_exit):
-        """Test fast version check before heavy imports."""
-        # This is tricky to test since it modifies sys.argv
-        # We'll test this indirectly through the CLI runner
-        runner = CliRunner()
-        result = runner.invoke(app, ["--version"])
-        
-        assert result.exit_code == 0
-        assert "goobits-cli" in result.stdout
-
-    @patch('sys.argv', ['goobits', '--help'])
-    @patch('sys.exit')
-    def test_fast_help_check(self, mock_exit):
-        """Test fast help check before heavy imports."""
-        # Test through CLI runner
-        runner = CliRunner()
-        result = runner.invoke(app, ["--help"])
-        
-        assert result.exit_code == 0
-        assert "Commands" in result.stdout
-        assert "build" in result.stdout
-
-
-class TestGenerateSetupScript:
-    """Test setup script generation functionality."""
-    
-    def setup_method(self):
-        """Set up test environment."""
-        self.temp_dir = Path(tempfile.mkdtemp())
-        
-    def teardown_method(self):
-        """Clean up test environment."""
-        if self.temp_dir.exists():
-            shutil.rmtree(self.temp_dir)
-
-    @patch('goobits_cli.main.Environment')
-    @patch('goobits_cli.main.FileSystemLoader')
-    def test_generate_setup_script_basic(self, mock_loader, mock_env):
-        """Test basic setup script generation."""
-        # Create a mock config
-        from goobits_cli.schemas import GoobitsConfigSchema
-        config_data = {
-            'package_name': 'test-cli',
-            'command_name': 'testcli',
-            'display_name': 'Test CLI',
-            'description': 'A test CLI',
-            'language': 'python',
-            'python': {'minimum_version': '3.8'},
-            'dependencies': {'required': ['pipx']},
-            'installation': {'pypi_name': 'test-cli'},
-            'shell_integration': {'enabled': False, 'alias': 'testcli'},
-            'validation': {'check_api_keys': False, 'check_disk_space': True, 'minimum_disk_space_mb': 100},
-            'messages': {'install_success': 'Installation completed successfully!'},
-            'cli': {'name': 'testcli', 'tagline': 'Test CLI tool', 'commands': {}}
-        }
-        config = GoobitsConfigSchema(**config_data)
-        
-        # Mock the template rendering
-        mock_template = MagicMock()
-        mock_template.render.return_value = "#!/bin/bash\n# Generated setup script"
-        mock_env_instance = MagicMock()
-        mock_env_instance.get_template.return_value = mock_template
-        mock_env.return_value = mock_env_instance
-        
-        # Create a pyproject.toml for version extraction
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        pyproject_path.write_text('[project]\nversion = "1.0.0"')
-        
-        result = generate_setup_script(config, self.temp_dir)
-        
-        assert result == "#!/bin/bash\n# Generated setup script"
-        mock_template.render.assert_called_once()
-        # Check that template variables include expected keys
-        call_args = mock_template.render.call_args[1]
-        assert 'package_name' in call_args
-        assert 'version' in call_args
-        assert call_args['package_name'] == 'test-cli'
-
-
-class TestErrorConditionsAndEdgeCases:
-    """Test error conditions and edge cases for main CLI functionality."""
-    
-    def setup_method(self):
-        """Set up test environment."""
-        self.runner = CliRunner()
-        self.temp_dir = Path(tempfile.mkdtemp())
-        
-    def teardown_method(self):
-        """Clean up test environment."""
-        if self.temp_dir.exists():
-            shutil.rmtree(self.temp_dir)
-
-    def create_test_config_file(self, content: str, filename: str = "goobits.yaml") -> Path:
-        """Create a test configuration file."""
-        config_path = self.temp_dir / filename
-        with open(config_path, 'w') as f:
-            f.write(content)
-        return config_path
-
-    def test_build_command_invalid_yaml_syntax(self):
-        """Test build command with invalid YAML syntax."""
-        invalid_config = "package_name: test\ninvalid: yaml: content: ["
-        config_path = self.create_test_config_file(invalid_config)
-        
-        result = self.runner.invoke(app, ["build", str(config_path)])
-        
-        assert result.exit_code == 1
-        assert "Error parsing YAML" in result.stderr
-
-    def test_build_command_missing_required_fields(self):
-        """Test build command with missing required fields."""
-        incomplete_config = "package_name: test-cli\n# Missing other required fields"
-        config_path = self.create_test_config_file(incomplete_config)
-        
-        result = self.runner.invoke(app, ["build", str(config_path)])
-        
-        assert result.exit_code == 1
-        assert "Error validating configuration" in result.stderr
-
-    def test_build_command_no_cli_section(self):
-        """Test build command when CLI section is missing."""
-        config_content = f"""
-package_name: test-cli
-command_name: testcli
-display_name: "Test CLI"
-description: "A test CLI"
-language: python
-
-python:
-  minimum_version: "3.8"
-
-dependencies:
-  required:
-    - pipx
-
-installation:
-  pypi_name: "test-cli"
-
-shell_integration:
-  enabled: false
-  alias: "testcli"
-
-validation:
-  check_api_keys: false
-  check_disk_space: true
-  minimum_disk_space_mb: 100
-
-messages:
-  install_success: "Installation completed successfully!"
-"""
-        config_path = self.create_test_config_file(config_content)
-        
-        result = self.runner.invoke(app, ["build", str(config_path)])
-        
-        assert result.exit_code == 0  # Should not fail, just skip CLI generation
-        assert "No CLI configuration found" in result.stdout
-
-    @patch('goobits_cli.generators.python.PythonGenerator.generate_all_files')
-    def test_build_command_generator_exception(self, mock_generate):
-        """Test build command when generator raises an exception."""
-        config_content = f"""
-package_name: test-cli
-command_name: testcli
-display_name: "Test CLI"
-description: "A test CLI"
-language: python
-
-python:
-  minimum_version: "3.8"
-
-dependencies:
-  required:
-    - pipx
-
-installation:
-  pypi_name: "test-cli"
-
-shell_integration:
-  enabled: false
-  alias: "testcli"
-
-validation:
-  check_api_keys: false
-  check_disk_space: true
-  minimum_disk_space_mb: 100
-
-messages:
-  install_success: "Installation completed successfully!"
-
-cli:
-  name: testcli
-  tagline: "Test CLI tool"
-  commands:
-    hello:
-      desc: "Say hello"
-      is_default: true
-"""
-        config_path = self.create_test_config_file(config_content)
-        
-        # Make generator raise an exception
-        mock_generate.side_effect = Exception("Generator failed")
-        
-        result = self.runner.invoke(app, ["build", str(config_path)])
-        
-        # The CLI should catch the exception and exit with error code
-        assert result.exit_code == 1
-
-    def test_build_command_output_dir_creation_failure(self):
-        """Test build command when output directory creation fails."""
-        config_content = """
-package_name: test-cli
-command_name: testcli
-display_name: "Test CLI"
-description: "A test CLI"
-language: python
-
-python:
-  minimum_version: "3.8"
-
-dependencies:
-  required:
-    - pipx
-
-cli:
-  name: testcli
-  tagline: "Test CLI tool"
-  commands:
-    hello:
-      desc: "Say hello"
-      is_default: true
-"""
-        config_path = self.create_test_config_file(config_content)
-        
-        # Try to create output in a file (not directory) - should fail
-        test_file = self.temp_dir / "not_a_dir.txt"
-        test_file.write_text("test")
-        
-        # This test is tricky since mkdir with parents=True is quite permissive
-        # We'll test with a path that would require root permissions
-        result = self.runner.invoke(app, [
-            "build", str(config_path), 
-            "--output-dir", "/root/restricted"
-        ])
-        
-        # On systems where /root/restricted can't be created, it should fail
-        # On systems where it can, it should succeed
-        # The exact behavior depends on permissions
-
-    @patch('goobits_cli.main.update_pyproject_toml')
-    def test_build_command_pyproject_update_failure(self, mock_update):
-        """Test build command when pyproject.toml update fails."""
-        config_content = f"""
-package_name: test-cli
-command_name: testcli
-display_name: "Test CLI"
-description: "A test CLI"
-language: python
-
-python:
-  minimum_version: "3.8"
-
-dependencies:
-  required:
-    - pipx
-
-installation:
-  pypi_name: "test-cli"
-
-shell_integration:
-  enabled: false
-  alias: "testcli"
-
-validation:
-  check_api_keys: false
-  check_disk_space: true
-  minimum_disk_space_mb: 100
-
-messages:
-  install_success: "Installation completed successfully!"
-
-cli:
-  name: testcli
-  tagline: "Test CLI tool"
-  commands:
-    hello:
-      desc: "Say hello"
-      is_default: true
-"""
-        config_path = self.create_test_config_file(config_content)
-        
-        from goobits_cli.generators.python import PythonGenerator
-        with patch.object(PythonGenerator, 'generate_all_files') as mock_gen:
-            mock_gen.return_value = {
-                'src/test_cli/generated_cli.py': '# Generated CLI code',
-                'setup.sh': '#!/bin/bash\n# Setup script'
-            }
-            
-            mock_update.return_value = False  # Simulate failure
-            
-            result = self.runner.invoke(app, ["build", str(config_path)])
-        
-        assert result.exit_code == 0  # Should still succeed
-        assert "Could not update pyproject.toml automatically" in result.stdout
-
-    def test_serve_command_os_error_generic(self):
-        """Test serve command with generic OS error."""
-        packages_dir = self.temp_dir / "packages"
-        packages_dir.mkdir()
-        
-        with patch('goobits_cli.main.serve_packages') as mock_serve:
-            error = OSError("Generic OS error")
-            error.errno = 13  # Permission denied
-            mock_serve.side_effect = error
-            
-            result = self.runner.invoke(app, ["serve", str(packages_dir)])
-        
-        assert result.exit_code == 1
-        assert "Error starting server" in result.stderr
-
     @patch('subprocess.run')
     def test_upgrade_command_version_check_failure(self, mock_subprocess):
         """Test upgrade command when new version check fails."""
@@ -1325,65 +714,164 @@ cli:
         finally:
             os.chdir(original_cwd)
 
-    def test_update_pyproject_toml_exception_handling(self):
-        """Test update_pyproject_toml with various exceptions."""
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        pyproject_path.write_text('[project]\nversion = "1.0.0"')
-        
-        # Test with file read error
-        with patch('builtins.open', side_effect=PermissionError("Access denied")):
-            result = update_pyproject_toml(
-                self.temp_dir, "test_package", "testcli", "generated_cli.py"
-            )
-            assert result is False
+    @patch('goobits_cli.generators.python.PythonGenerator.generate_all_files')
+    def test_build_command_generator_exception(self, mock_generate):
+        """Test build command when generator raises an exception."""
+        config_content = f"""
+package_name: test-cli
+command_name: testcli
+display_name: "Test CLI"
+description: "A test CLI"
+language: python
 
-    def test_dependency_to_dict_with_dict_method(self):
-        """Test dependency_to_dict with object that has dict method."""
-        mock_dep = MagicMock()
-        mock_dep.dict.return_value = {'name': 'test', 'version': '1.0'}
-        # Remove model_dump to force dict method usage
-        del mock_dep.model_dump
-        
-        result = dependency_to_dict(mock_dep)
-        assert result == {'name': 'test', 'version': '1.0'}
+python:
+  minimum_version: "3.8"
 
-    def test_extract_version_from_pyproject_no_version(self):
-        """Test version extraction when version field is missing."""
-        pyproject_content = """
-[project]
-name = "test-package"
-description = "A test package"
+dependencies:
+  required:
+    - pipx
+
+installation:
+  pypi_name: "test-cli"
+
+shell_integration:
+  enabled: false
+  alias: "testcli"
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: "Installation completed successfully!"
+
+cli:
+  name: testcli
+  tagline: "Test CLI tool"
+  commands:
+    hello:
+      desc: "Say hello"
+      is_default: true
 """
-        pyproject_path = self.temp_dir / "pyproject.toml"
-        with open(pyproject_path, 'w') as f:
-            f.write(pyproject_content)
+        config_path = self.create_test_config_file(config_content)
         
-        result = extract_version_from_pyproject(self.temp_dir)
-        assert result == "unknown"
-
-    @patch('shutil.copy2')
-    def test_backup_file_copy_failure(self, mock_copy):
-        """Test backup_file when copy operation fails."""
-        test_file = self.temp_dir / "test.txt"
-        test_file.write_text("original content")
+        # Make generator raise an exception
+        mock_generate.side_effect = Exception("Generator failed")
         
-        mock_copy.side_effect = PermissionError("Copy failed")
+        result = self.runner.invoke(app, ["build", str(config_path)])
         
-        # Should raise exception since copy2 failed
-        with pytest.raises(PermissionError):
-            backup_file(test_file, create_backup=True)
-
-    def test_empty_and_whitespace_only_configs(self):
-        """Test handling of empty and whitespace-only configs."""
-        # Empty file
-        empty_config_path = self.create_test_config_file("")
-        result = self.runner.invoke(app, ["build", str(empty_config_path)])
+        # The CLI should catch the exception and exit with error code
         assert result.exit_code == 1
 
-        # Whitespace only
-        whitespace_config_path = self.create_test_config_file("   \n\t\n   ")
-        result = self.runner.invoke(app, ["build", str(whitespace_config_path)])
+    def test_serve_command_os_error_generic(self):
+        """Test serve command with generic OS error."""
+        packages_dir = self.temp_dir / "packages"
+        packages_dir.mkdir()
+        
+        with patch('goobits_cli.main.serve_packages') as mock_serve:
+            error = OSError("Generic OS error")
+            error.errno = 13  # Permission denied
+            mock_serve.side_effect = error
+            
+            result = self.runner.invoke(app, ["serve", str(packages_dir)])
+        
         assert result.exit_code == 1
+        assert "Error starting server" in result.stderr
+
+    def test_build_command_no_cli_section(self):
+        """Test build command when CLI section is missing."""
+        config_content = f"""
+package_name: test-cli
+command_name: testcli
+display_name: "Test CLI"
+description: "A test CLI"
+language: python
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+
+installation:
+  pypi_name: "test-cli"
+
+shell_integration:
+  enabled: false
+  alias: "testcli"
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: "Installation completed successfully!"
+"""
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 0  # Should not fail, just skip CLI generation
+        assert "No CLI configuration found" in result.stdout
+
+    @patch('goobits_cli.main.update_pyproject_toml')
+    def test_build_command_pyproject_update_failure(self, mock_update):
+        """Test build command when pyproject.toml update fails."""
+        config_content = f"""
+package_name: test-cli
+command_name: testcli
+display_name: "Test CLI"
+description: "A test CLI"
+language: python
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+
+installation:
+  pypi_name: "test-cli"
+
+shell_integration:
+  enabled: false
+  alias: "testcli"
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: "Installation completed successfully!"
+
+cli:
+  name: testcli
+  tagline: "Test CLI tool"
+  commands:
+    hello:
+      desc: "Say hello"
+      is_default: true
+"""
+        config_path = self.create_test_config_file(config_content)
+        
+        from goobits_cli.generators.python import PythonGenerator
+        with patch.object(PythonGenerator, 'generate_all_files') as mock_gen:
+            mock_gen.return_value = {
+                'src/test_cli/generated_cli.py': '# Generated CLI code',
+                'setup.sh': '#!/bin/bash\n# Setup script'
+            }
+            
+            mock_update.return_value = False  # Simulate failure
+            
+            result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 0  # Should still succeed
+        assert "Could not update pyproject.toml automatically" in result.stdout
 
     def test_build_command_complex_package_structure(self):
         """Test build command with complex package structure."""
@@ -1437,3 +925,917 @@ cli:
         
         assert result.exit_code == 0
         assert "🎉 Build completed successfully!" in result.stdout
+
+
+class TestFastVersionHelp(TestMainCLIBase):
+    """Test the fast version and help check functionality."""
+    
+    @patch('sys.argv', ['goobits', '--version'])
+    @patch('goobits_cli.main.__version__', '1.2.3')
+    @patch('sys.exit')
+    def test_fast_version_check(self, mock_exit):
+        """Test fast version check before heavy imports."""
+        # This is tricky to test since it modifies sys.argv
+        # We'll test this indirectly through the CLI runner
+        result = self.runner.invoke(app, ["--version"])
+        
+        assert result.exit_code == 0
+        assert "goobits-cli" in result.stdout
+
+    @patch('sys.argv', ['goobits', '--help'])
+    @patch('sys.exit')
+    def test_fast_help_check(self, mock_exit):
+        """Test fast help check before heavy imports."""
+        # Test through CLI runner
+        result = self.runner.invoke(app, ["--help"])
+        
+        assert result.exit_code == 0
+        assert "Commands" in result.stdout
+        assert "build" in result.stdout
+
+
+class TestYAMLConfigurationErrorConditions(TestMainCLIBase):
+    """Test error conditions in YAML configuration parsing and validation."""
+
+    def test_yaml_syntax_error_unclosed_quotes(self):
+        """Test YAML parsing with unclosed quotes."""
+        config_content = '''
+package_name: "test-cli
+command_name: testcli
+display_name: "Test CLI"
+description: "A test CLI"
+language: python
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+        # Should indicate YAML parsing error
+    
+    def test_yaml_syntax_error_invalid_indentation(self):
+        """Test YAML parsing with invalid indentation."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+python:
+minimum_version: "3.8"  # Wrong indentation
+    maximum_version: "3.13"
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_yaml_syntax_error_mixed_tabs_spaces(self):
+        """Test YAML parsing with mixed tabs and spaces."""
+        # Create config with intentional tab/space mixing
+        config_content = '''package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+python:
+\tminimum_version: "3.8"  # Tab character
+    maximum_version: "3.13"  # Spaces
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_missing_required_root_fields(self):
+        """Test configuration missing required root fields."""
+        configs_missing_fields = [
+            # Missing package_name
+            '''
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+''',
+            # Missing command_name
+            '''
+package_name: test-cli
+display_name: Test CLI
+description: A test CLI
+language: python
+''',
+            # Missing display_name
+            '''
+package_name: test-cli
+command_name: testcli
+description: A test CLI
+language: python
+''',
+            # Missing description
+            '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+language: python
+'''
+        ]
+        
+        for i, config_content in enumerate(configs_missing_fields):
+            config_path = self.create_test_config_file(config_content, f"missing_field_{i}.yaml")
+            
+            result = self.runner.invoke(app, ["build", str(config_path)])
+            
+            assert result.exit_code == 1, f"Config {i} should fail validation"
+    
+    def test_invalid_data_types_in_config(self):
+        """Test configuration with invalid data types."""
+        invalid_type_configs = [
+            # package_name as number
+            '''
+package_name: 123
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+''',
+            # language as list
+            '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: [python, nodejs]
+''',
+            # dependencies as string instead of object
+            '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+dependencies: "click>=8.0"
+''',
+            # CLI commands as string instead of object
+            '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+python:
+  minimum_version: "3.8"
+dependencies:
+  required: []
+installation:
+  pypi_name: test-cli
+shell_integration:
+  enabled: false
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+messages:
+  install_success: Success!
+cli:
+  name: testcli
+  tagline: Test CLI
+  commands: "hello world"
+'''
+        ]
+        
+        for i, config_content in enumerate(invalid_type_configs):
+            config_path = self.create_test_config_file(config_content, f"invalid_type_{i}.yaml")
+            
+            result = self.runner.invoke(app, ["build", str(config_path)])
+            
+            assert result.exit_code == 1, f"Config {i} should fail type validation"
+    
+    def test_yaml_with_duplicate_keys(self):
+        """Test YAML configuration with duplicate keys."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+language: nodejs  # Duplicate key
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        # YAML parsers typically handle duplicate keys by using the last value
+        # The validation should still work, but with the last value
+        assert result.exit_code == 1 or result.exit_code == 0  # Depends on YAML parser behavior
+    
+    def test_yaml_with_invalid_unicode_characters(self):
+        """Test YAML configuration with invalid unicode characters."""
+        # Create file with invalid unicode byte sequences
+        config_path = self.temp_dir / "invalid_unicode.yaml"
+        with open(config_path, 'wb') as f:
+            f.write(b'''package_name: test-cli
+command_name: testcli
+display_name: Test CLI \xff\xfe
+description: A test CLI
+language: python
+''')
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_extremely_large_yaml_file(self):
+        """Test handling of extremely large YAML configuration files."""
+        # Create a large configuration
+        large_commands = {}
+        for i in range(1000):
+            large_commands[f"command_{i}"] = {
+                "desc": f"Command {i} description",
+                "args": [{"name": f"arg_{j}", "desc": f"Argument {j}"} for j in range(10)],
+                "options": [{"name": f"opt_{j}", "desc": f"Option {j}"} for j in range(10)]
+            }
+        
+        config_content = f'''
+package_name: large-cli
+command_name: largecli
+display_name: Large CLI
+description: A CLI with many commands
+language: python
+python:
+  minimum_version: "3.8"
+dependencies:
+  required: []
+installation:
+  pypi_name: large-cli
+shell_integration:
+  enabled: false
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+messages:
+  install_success: Success!
+cli:
+  name: largecli
+  tagline: Large CLI
+  commands: {yaml.dump(large_commands, default_flow_style=False)}
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        # Should handle large files without memory issues
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        # Either succeeds or fails gracefully with appropriate error
+        assert result.exit_code in [0, 1]
+    
+    def test_nested_yaml_structure_validation_errors(self):
+        """Test validation errors in deeply nested YAML structures."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+python:
+  minimum_version: "3.8"
+dependencies:
+  required: []
+installation:
+  pypi_name: test-cli
+shell_integration:
+  enabled: false
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+messages:
+  install_success: Success!
+cli:
+  name: testcli
+  tagline: Test CLI
+  commands:
+    hello:
+      desc: Say hello
+      args:
+        - name: user
+          desc: User to greet
+          required: "invalid_boolean"  # Should be boolean
+          type: invalid_type  # Invalid argument type
+      options:
+        - name: verbose
+          desc: Verbose output
+          type: invalid_option_type  # Invalid option type
+          default: []  # Invalid default for string type
+      subcommands:
+        world:
+          desc: 123  # Should be string
+          invalid_field: value  # Unknown field
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_yaml_anchor_and_reference_errors(self):
+        """Test YAML anchor and reference parsing errors."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+
+# Valid anchor
+common_config: &common
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+python:
+  <<: *common
+
+# Invalid reference to non-existent anchor
+nodejs:
+  <<: *nonexistent_anchor
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_config_file_permission_denied(self):
+        """Test handling of permission denied when reading config file."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        # Make file unreadable (may not work on all systems)
+        import os
+        try:
+            os.chmod(str(config_path), 0o000)
+            
+            result = self.runner.invoke(app, ["build", str(config_path)])
+            
+            assert result.exit_code in [1, 2]  # Accept either exit code for permission errors
+        finally:
+            # Restore permissions for cleanup
+            try:
+                os.chmod(str(config_path), 0o644)
+            except (PermissionError, OSError):
+                pass
+    
+    def test_config_file_is_directory(self):
+        """Test error when config path points to a directory instead of file."""
+        # Create a directory with the config name
+        config_dir = self.temp_dir / "goobits.yaml"
+        config_dir.mkdir()
+        
+        result = self.runner.invoke(app, ["build", str(config_dir)])
+        
+        assert result.exit_code == 1
+    
+    def test_config_file_empty(self):
+        """Test handling of completely empty config file."""
+        config_path = self.create_test_config_file("")
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_config_file_only_comments(self):
+        """Test handling of config file with only comments."""
+        config_content = '''
+# This is a comment
+# Another comment
+# No actual configuration
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_invalid_enum_values(self):
+        """Test configuration with invalid enum values."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: invalid_language  # Should be python, nodejs, or typescript
+python:
+  minimum_version: "3.8"
+dependencies:
+  required: []
+installation:
+  pypi_name: test-cli
+shell_integration:
+  enabled: false
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+messages:
+  install_success: Success!
+cli:
+  name: testcli
+  tagline: Test CLI
+  commands:
+    hello:
+      desc: Say hello
+      lifecycle: invalid_lifecycle  # Should be "simple" or "managed"
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+    
+    def test_config_with_circular_references(self):
+        """Test configuration with circular YAML references."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+
+# Create circular reference
+a: &a
+  b: *b
+b: &b
+  a: *a
+
+python: *a  # Use circular reference
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        # Should either handle gracefully or fail with appropriate error
+        assert result.exit_code == 1
+    
+    def test_config_exceeding_nesting_limits(self):
+        """Test configuration with excessive nesting depth."""
+        # Create deeply nested structure
+        nested_structure = "value"
+        for i in range(100):  # Very deep nesting
+            nested_structure = {"level_" + str(i): nested_structure}
+        
+        config_content = f'''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+python:
+  minimum_version: "3.8"
+dependencies:
+  required: []
+installation:
+  pypi_name: test-cli
+shell_integration:
+  enabled: false
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+messages:
+  install_success: Success!
+deep_nested: {yaml.dump(nested_structure, default_flow_style=False)}
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        # Should handle deep nesting or fail gracefully
+        assert result.exit_code in [0, 1]
+    
+    def test_config_with_conflicting_field_values(self):
+        """Test configuration with conflicting field values."""
+        config_content = '''
+package_name: test-cli
+command_name: testcli
+display_name: Test CLI
+description: A test CLI
+language: python
+python:
+  minimum_version: "3.10"
+  maximum_version: "3.8"  # Maximum less than minimum
+dependencies:
+  required: []
+installation:
+  pypi_name: test-cli
+shell_integration:
+  enabled: false
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: -100  # Negative value
+messages:
+  install_success: Success!
+cli:
+  name: testcli
+  tagline: Test CLI
+  commands:
+    hello:
+      desc: Say hello
+      args:
+        - name: ""  # Empty name
+          desc: Empty name argument
+'''
+        config_path = self.create_test_config_file(config_content)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+
+
+# ============================================================================
+# CONFIGURATION TESTS
+# ============================================================================
+
+class TestMainCLIConfig(TestMainCLIBase):
+    """Test suite for main CLI configuration functionality."""
+
+    def test_load_goobits_config_success(self, basic_config_content):
+        """Test successful loading of goobits configuration."""
+        config_path = self.create_test_config_file(basic_config_content)
+        
+        config = load_goobits_config(config_path)
+        
+        assert isinstance(config, GoobitsConfigSchema)
+        assert config.package_name == "test-cli"
+        assert config.command_name == "testcli"
+        assert config.language == "python"
+
+    def test_load_goobits_config_file_not_found(self):
+        """Test loading config when file doesn't exist."""
+        non_existent_path = self.temp_dir / "nonexistent.yaml"
+        
+        with pytest.raises(typer.Exit):
+            load_goobits_config(non_existent_path)
+
+    def test_load_goobits_config_invalid_yaml(self):
+        """Test loading config with invalid YAML."""
+        config_path = self.create_test_config_file("invalid: yaml: content: [")
+        
+        with pytest.raises(typer.Exit):
+            load_goobits_config(config_path)
+
+    def test_load_goobits_config_validation_error(self):
+        """Test loading config that fails validation."""
+        invalid_config = "package_name: ''"  # Empty package name should fail validation
+        config_path = self.create_test_config_file(invalid_config)
+        
+        with pytest.raises(typer.Exit):
+            load_goobits_config(config_path)
+
+    def test_normalize_dependencies_for_template(self, basic_config_content):
+        """Test dependency normalization for templates."""
+        config_path = self.create_test_config_file(basic_config_content)
+        config = load_goobits_config(config_path)
+        
+        normalized = normalize_dependencies_for_template(config)
+        
+        assert isinstance(normalized, GoobitsConfigSchema)
+        # Should be a deep copy, not the same object
+        assert normalized is not config
+        assert normalized.package_name == config.package_name
+
+    def test_build_command_invalid_yaml_syntax(self):
+        """Test build command with invalid YAML syntax."""
+        invalid_config = "package_name: test\ninvalid: yaml: content: ["
+        config_path = self.create_test_config_file(invalid_config)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+        assert "Error parsing YAML" in result.stderr
+
+    def test_build_command_missing_required_fields(self):
+        """Test build command with missing required fields."""
+        incomplete_config = "package_name: test-cli\n# Missing other required fields"
+        config_path = self.create_test_config_file(incomplete_config)
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        
+        assert result.exit_code == 1
+        assert "Error validating configuration" in result.stderr
+
+    def test_empty_and_whitespace_only_configs(self):
+        """Test handling of empty and whitespace-only configs."""
+        # Empty file
+        empty_config_path = self.create_test_config_file("")
+        result = self.runner.invoke(app, ["build", str(empty_config_path)])
+        assert result.exit_code == 1
+
+        # Whitespace only
+        whitespace_config_path = self.create_test_config_file("   \n\t\n   ")
+        result = self.runner.invoke(app, ["build", str(whitespace_config_path)])
+        assert result.exit_code == 1
+
+
+# ============================================================================
+# TEMPLATE TESTS
+# ============================================================================
+
+class TestMainCLITemplates(TestMainCLIBase):
+    """Test suite for template generation functionality."""
+
+    def test_generate_basic_template(self):
+        """Test generation of basic template."""
+        template = generate_basic_template("my-awesome-cli")
+        
+        assert "package_name: my-awesome-cli" in template
+        assert "command_name: my_awesome_cli" in template
+        assert "language: python" in template
+        assert "hello:" in template
+
+    def test_generate_advanced_template(self):
+        """Test generation of advanced template."""
+        template = generate_advanced_template("advanced-cli")
+        
+        assert "package_name: advanced-cli" in template
+        assert "command_name: advanced_cli" in template
+        assert "process:" in template
+        assert "convert:" in template
+        assert "command_groups:" in template
+
+    def test_generate_api_client_template(self):
+        """Test generation of API client template."""
+        template = generate_api_client_template("api-client")
+        
+        assert "package_name: api-client" in template
+        assert "get:" in template
+        assert "post:" in template
+        assert "api-key" in template
+
+    def test_generate_text_processor_template(self):
+        """Test generation of text processor template."""
+        template = generate_text_processor_template("text-tool")
+        
+        assert "package_name: text-tool" in template
+        assert "process:" in template
+        assert "count:" in template
+        assert "uppercase" in template
+
+
+class TestGenerateSetupScript(TestMainCLIBase):
+    """Test setup script generation functionality."""
+
+    @patch('goobits_cli.main.Environment')
+    @patch('goobits_cli.main.FileSystemLoader')
+    def test_generate_setup_script_basic(self, mock_loader, mock_env):
+        """Test basic setup script generation."""
+        # Create a mock config
+        from goobits_cli.schemas import GoobitsConfigSchema
+        config_data = {
+            'package_name': 'test-cli',
+            'command_name': 'testcli',
+            'display_name': 'Test CLI',
+            'description': 'A test CLI',
+            'language': 'python',
+            'python': {'minimum_version': '3.8'},
+            'dependencies': {'required': ['pipx']},
+            'installation': {'pypi_name': 'test-cli'},
+            'shell_integration': {'enabled': False, 'alias': 'testcli'},
+            'validation': {'check_api_keys': False, 'check_disk_space': True, 'minimum_disk_space_mb': 100},
+            'messages': {'install_success': 'Installation completed successfully!'},
+            'cli': {'name': 'testcli', 'tagline': 'Test CLI tool', 'commands': {}}
+        }
+        config = GoobitsConfigSchema(**config_data)
+        
+        # Mock the template rendering
+        mock_template = MagicMock()
+        mock_template.render.return_value = "#!/bin/bash\n# Generated setup script"
+        mock_env_instance = MagicMock()
+        mock_env_instance.get_template.return_value = mock_template
+        mock_env.return_value = mock_env_instance
+        
+        # Create a pyproject.toml for version extraction
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        pyproject_path.write_text('[project]\nversion = "1.0.0"')
+        
+        result = generate_setup_script(config, self.temp_dir)
+        
+        assert result == "#!/bin/bash\n# Generated setup script"
+        mock_template.render.assert_called_once()
+        # Check that template variables include expected keys
+        call_args = mock_template.render.call_args[1]
+        assert 'package_name' in call_args
+        assert 'version' in call_args
+        assert call_args['package_name'] == 'test-cli'
+
+
+# ============================================================================
+# UTILITY TESTS
+# ============================================================================
+
+class TestMainCLIUtils(TestMainCLIBase):
+    """Test suite for utility functions in main CLI."""
+
+    def test_version_callback_triggers_exit(self):
+        """Test that version_callback triggers typer.Exit when True."""
+        with pytest.raises(typer.Exit):
+            version_callback(True)
+    
+    def test_version_callback_no_action_when_false(self):
+        """Test that version_callback does nothing when False."""
+        # Should not raise any exception
+        result = version_callback(False)
+        assert result is None
+
+    def test_dependency_to_dict_string(self):
+        """Test converting string dependency to dict."""
+        result = dependency_to_dict("pipx")
+        assert result == {'name': 'pipx', 'type': 'command'}
+
+    def test_dependency_to_dict_dict(self):
+        """Test converting dict dependency to dict."""
+        dep_dict = {'name': 'python', 'version': '>=3.8'}
+        result = dependency_to_dict(dep_dict)
+        assert result == dep_dict
+
+    def test_dependency_to_dict_object_with_model_dump(self):
+        """Test converting object with model_dump to dict."""
+        mock_dep = MagicMock()
+        mock_dep.model_dump.return_value = {'name': 'test', 'version': '1.0'}
+        
+        result = dependency_to_dict(mock_dep)
+        assert result == {'name': 'test', 'version': '1.0'}
+
+    def test_dependency_to_dict_fallback(self):
+        """Test dependency_to_dict fallback for unknown types."""
+        result = dependency_to_dict(123)
+        assert result == {'name': '123', 'type': 'command'}
+
+    def test_dependency_to_dict_with_dict_method(self):
+        """Test dependency_to_dict with object that has dict method."""
+        mock_dep = MagicMock()
+        mock_dep.dict.return_value = {'name': 'test', 'version': '1.0'}
+        # Remove model_dump to force dict method usage
+        del mock_dep.model_dump
+        
+        result = dependency_to_dict(mock_dep)
+        assert result == {'name': 'test', 'version': '1.0'}
+
+    def test_dependencies_to_json(self):
+        """Test converting dependencies list to JSON."""
+        deps = ["pipx", {"name": "python", "version": ">=3.8"}]
+        result = dependencies_to_json(deps)
+        
+        import json
+        parsed = json.loads(result)
+        assert len(parsed) == 2
+        assert parsed[0] == {'name': 'pipx', 'type': 'command'}
+        assert parsed[1] == {'name': 'python', 'version': '>=3.8'}
+
+    def test_extract_version_from_pyproject_not_found(self):
+        """Test version extraction when pyproject.toml doesn't exist."""
+        result = extract_version_from_pyproject(self.temp_dir)
+        assert result == "unknown"
+
+    def test_extract_version_from_pyproject_poetry_format(self):
+        """Test version extraction from Poetry format."""
+        pyproject_content = """
+[tool.poetry]
+name = "test-package"
+version = "1.2.3"
+"""
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        with open(pyproject_path, 'w') as f:
+            f.write(pyproject_content)
+        
+        result = extract_version_from_pyproject(self.temp_dir)
+        assert result == "1.2.3"
+
+    def test_extract_version_from_pyproject_pep621_format(self):
+        """Test version extraction from PEP 621 format."""
+        pyproject_content = """
+[project]
+name = "test-package"
+version = "2.0.0"
+"""
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        with open(pyproject_path, 'w') as f:
+            f.write(pyproject_content)
+        
+        result = extract_version_from_pyproject(self.temp_dir)
+        assert result == "2.0.0"
+
+    def test_extract_version_from_pyproject_parse_error(self):
+        """Test version extraction with invalid TOML."""
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        with open(pyproject_path, 'w') as f:
+            f.write("invalid toml content [")
+        
+        result = extract_version_from_pyproject(self.temp_dir)
+        assert result == "unknown"
+
+    def test_extract_version_from_pyproject_no_version(self):
+        """Test version extraction when version field is missing."""
+        pyproject_content = """
+[project]
+name = "test-package"
+description = "A test package"
+"""
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        with open(pyproject_path, 'w') as f:
+            f.write(pyproject_content)
+        
+        result = extract_version_from_pyproject(self.temp_dir)
+        assert result == "unknown"
+
+    def test_backup_file_creates_backup(self):
+        """Test that backup_file creates a backup when requested."""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("original content")
+        
+        backup_path = backup_file(test_file, create_backup=True)
+        
+        assert backup_path is not None
+        assert backup_path.exists()
+        assert backup_path.name == "test.txt.bak"
+        assert backup_path.read_text() == "original content"
+
+    def test_backup_file_no_backup_when_disabled(self):
+        """Test that backup_file doesn't create backup when disabled."""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("original content")
+        
+        backup_path = backup_file(test_file, create_backup=False)
+        
+        assert backup_path is None
+
+    def test_backup_file_nonexistent_file(self):
+        """Test backup_file with non-existent file."""
+        non_existent = self.temp_dir / "nonexistent.txt"
+        
+        backup_path = backup_file(non_existent, create_backup=True)
+        
+        assert backup_path is None
+
+    @patch('shutil.copy2')
+    def test_backup_file_copy_failure(self, mock_copy):
+        """Test backup_file when copy operation fails."""
+        test_file = self.temp_dir / "test.txt"
+        test_file.write_text("original content")
+        
+        mock_copy.side_effect = PermissionError("Copy failed")
+        
+        # Should raise exception since copy2 failed
+        with pytest.raises(PermissionError):
+            backup_file(test_file, create_backup=True)
+
+    @patch('goobits_cli.main.toml.load')
+    @patch('goobits_cli.main.toml.dump')
+    def test_update_pyproject_toml_poetry_format(self, mock_dump, mock_load):
+        """Test updating pyproject.toml in Poetry format."""
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        pyproject_path.touch()
+        
+        mock_load.return_value = {
+            'tool': {
+                'poetry': {
+                    'scripts': {}
+                }
+            }
+        }
+        
+        with patch('builtins.open', mock_open()):
+            result = update_pyproject_toml(
+                self.temp_dir, "test_package", "testcli", "generated_cli.py"
+            )
+        
+        assert result is True
+        mock_load.assert_called_once()
+        mock_dump.assert_called_once()
+
+    def test_update_pyproject_toml_no_file(self):
+        """Test updating pyproject.toml when file doesn't exist."""
+        result = update_pyproject_toml(
+            self.temp_dir, "test_package", "testcli", "generated_cli.py"
+        )
+        
+        assert result is False
+
+    def test_update_pyproject_toml_exception_handling(self):
+        """Test update_pyproject_toml with various exceptions."""
+        pyproject_path = self.temp_dir / "pyproject.toml"
+        pyproject_path.write_text('[project]\nversion = "1.0.0"')
+        
+        # Test with file read error
+        with patch('builtins.open', side_effect=PermissionError("Access denied")):
+            result = update_pyproject_toml(
+                self.temp_dir, "test_package", "testcli", "generated_cli.py"
+            )
+            assert result is False
