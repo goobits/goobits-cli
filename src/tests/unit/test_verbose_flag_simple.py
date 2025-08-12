@@ -1,4 +1,13 @@
-"""Simple functional tests for --verbose flag implementation."""
+"""Simple functional tests for --verbose flag implementation.
+
+NOTE: This file is NOT a duplicate of test_verbose_flag.py - they test different layers:
+- test_verbose_flag.py: Tests the GENERATION PIPELINE (unit layer)
+- test_verbose_flag_simple.py: Tests the ACTUAL TEMPLATE CONTENT (integration layer)
+
+This file validates that the templates themselves contain the correct verbose flag code,
+while test_verbose_flag.py validates that the generation system produces the templates correctly.
+Both tests are necessary for complete coverage of the verbose flag feature.
+"""
 import pytest
 import tempfile
 import os

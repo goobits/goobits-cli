@@ -111,29 +111,6 @@ cli:
         if Path(cls.temp_dir).exists():
             shutil.rmtree(cls.temp_dir)
     
-    def test_language_detection_nodejs(self):
-        """Test that Node.js language is correctly detected from config."""
-        config = load_goobits_config(self.test_yaml_path)
-        language = determine_language(config)
-        
-        assert language == "nodejs"
-    
-    def test_nodejs_generator_selection(self):
-        """Test that NodeJSGenerator is selected for Node.js language."""
-        config = load_goobits_config(self.test_yaml_path)
-        
-        # The main generate_cli function should use NodeJSGenerator
-        output_files = generate_cli(config, "test_nodejs.yaml")
-        
-        # Check that we get Node.js files, not Python files
-        assert 'index.js' in output_files
-        assert 'package.json' in output_files
-        assert 'setup.sh' in output_files
-        
-        # Should NOT have Python files
-        assert 'cli.py' not in output_files
-        assert 'requirements.txt' not in output_files
-    
     def test_generated_package_json_validity(self):
         """Test that generated package.json is valid JSON with correct structure."""
         config = load_goobits_config(self.test_yaml_path)

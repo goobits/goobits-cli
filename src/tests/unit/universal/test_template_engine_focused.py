@@ -95,7 +95,7 @@ class TestUniversalTemplateEngineCore:
         renderer = SimpleTestRenderer("test")
         
         # Register renderer
-        engine.register_renderer(renderer)
+        engine.register_renderer("test", renderer)
         assert "test" in engine.renderers
         assert engine.renderers["test"] is renderer
         
@@ -130,7 +130,7 @@ class TestUniversalTemplateEngineCore:
         """Test basic template rendering"""
         engine = UniversalTemplateEngine(self.components_dir)
         renderer = SimpleTestRenderer("basic")
-        engine.register_renderer(renderer)
+        engine.register_renderer("basic", renderer)
         
         # Test context
         test_ir = {
@@ -188,7 +188,7 @@ class TestUniversalTemplateEngineCore:
         
         # Test registering invalid renderer
         try:
-            engine.register_renderer(None)
+            engine.register_renderer("test", None)
             assert False, "Should have raised error"
         except (TypeError, AttributeError, ValueError):
             pass  # Expected

@@ -30,22 +30,43 @@ def load_yaml_config(file_path: str) -> ConfigSchema:
 
 
 class Builder:
-    """CLI code builder that generates Python code from YAML configuration.
+    """CLI code builder that generates code from YAML configuration.
     
-    This class is maintained for backward compatibility.
-    It delegates to the PythonGenerator class.
+    This class supports multiple languages and can be used for backward compatibility.
     """
     
-    def __init__(self, use_universal_templates: bool = False):
-        """Initialize the Builder with a PythonGenerator instance.
+    def __init__(self, config_data=None, language: str = "python", use_universal_templates: bool = False):
+        """Initialize the Builder with appropriate generator.
         
         Args:
+            config_data: Configuration data (dict) - for test compatibility
+            language: Target language ("python", "nodejs", "typescript")
             use_universal_templates: If True, use Universal Template System
         """
-        self.generator = PythonGenerator(use_universal_templates=use_universal_templates)
+        self.language = language
+        self.use_universal_templates = use_universal_templates
+        self.config_data = config_data
+        
+        # Initialize the appropriate generator based on language (lazy import to avoid circular imports)
+        if language == "nodejs":
+            from .generators.nodejs import NodeJSGenerator
+            self.generator = NodeJSGenerator(use_universal_templates=use_universal_templates)
+        elif language == "typescript":
+            from .generators.typescript import TypeScriptGenerator
+            self.generator = TypeScriptGenerator(use_universal_templates=use_universal_templates)
+        else:
+            # Default to Python
+            self.generator = PythonGenerator(use_universal_templates=use_universal_templates)
     
-    def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str = "config.yaml", version: Optional[str] = None) -> str:
-        """Build CLI Python code from configuration and return the rendered template string."""
+    def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema', None] = None, file_name: str = "config.yaml", version: Optional[str] = None) -> str:
+        """Build CLI code from configuration and return the rendered template string."""
+        # If config is not provided but config_data was provided in constructor, use that
+        if config is None and self.config_data is not None:
+            config = ConfigSchema(**self.config_data)
+        
+        if config is None:
+            raise ValueError("No configuration provided")
+            
         return self.generator.generate(config, file_name, version)
 
 

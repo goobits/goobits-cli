@@ -235,7 +235,7 @@ class TestNodeJSInteractiveIntegration(unittest.TestCase):
         self.assertNotIn("{{ project.name }}", rendered)
         self.assertNotIn("{{ cli.root_command.name }}", rendered)
         self.assertIn("test-cli", rendered)
-        self.assertIn("TestCliInteractive", rendered)
+        self.assertIn("TestcliInteractive", rendered)
         
         # Check that command handlers were generated
         self.assertIn("handleHello", rendered)

@@ -53,27 +53,42 @@ class NodeJSRenderer(LanguageRenderer):
         """
         # Base context with project information
         context = {
-            "project": ir["project"],
-            "cli": ir["cli"],
-            "installation": ir["installation"],
-            "dependencies": ir["dependencies"],
-            "metadata": ir["metadata"],
+            "project": ir.get("project", {}),
+            "cli": ir.get("cli", {}),
+            "installation": ir.get("installation", {}),
+            "dependencies": ir.get("dependencies", {}),
+            "metadata": ir.get("metadata", {}),
         }
         
         # Node.js-specific additions
+        npm_deps = self._build_npm_dependencies(ir)
+        nodejs_imports = self._build_imports(ir)
+        
         context.update({
             # CRITICAL: Set language for universal template conditional logic
             "language": "nodejs",
             
             # Commander.js specific structures
-            "commander_commands": self._build_commander_structure(ir["cli"]),
-            "npm_dependencies": self._build_npm_dependencies(ir),
-            "nodejs_imports": self._build_imports(ir),
-            "hook_functions": self._build_hook_functions(ir["cli"]),
+            "commander_commands": self._build_commander_structure(ir.get("cli", {})),
+            "npm_dependencies": npm_deps,
+            "nodejs_imports": nodejs_imports,
+            "hook_functions": self._build_hook_functions(ir.get("cli", {})),
+            
+            # Node.js specific context structure (expected by tests)
+            "nodejs": {
+                "imports": nodejs_imports,
+                "requires": nodejs_imports,  # Alias for backward compatibility
+                "package_config": {
+                    "name": ir.get("project", {}).get("package_name", "cli"),
+                    "version": ir.get("project", {}).get("version", "1.0.0"),
+                    "description": ir.get("project", {}).get("description", "CLI application"),
+                    "dependencies": npm_deps,
+                },
+            },
             
             # JavaScript naming conventions
-            "js_package_name": self._to_js_package_name(ir["project"]["package_name"]),
-            "js_command_name": self._to_js_variable_name(ir["project"]["command_name"]),
+            "js_package_name": self._to_js_package_name(ir.get("project", {}).get("package_name", "cli")),
+            "js_command_name": self._to_js_variable_name(ir.get("project", {}).get("command_name", "cli")),
             
             # Node.js-specific metadata
             "node_version": ">=14.0.0",
@@ -94,9 +109,12 @@ class NodeJSRenderer(LanguageRenderer):
         return {
             "js_type": self._js_type_filter,
             "camel_case": self._camel_case_filter,
+            "camelCase": self._camel_case_filter,  # Alias for test compatibility
             "js_require": self._js_require_filter,
             "commander_option": self._commander_option_filter,
             "js_variable": self._js_variable_filter,
+            "js_variable_name": self._js_variable_name_filter,  # Alias for test compatibility
+            "js_safe_name": self._js_safe_name_filter,  # New filter for test compatibility
             "js_string": self._js_string_filter,
             "npm_package_name": self._npm_package_name_filter,
             "hook_name": self._hook_name_filter,
@@ -179,11 +197,12 @@ class NodeJSRenderer(LanguageRenderer):
         Returns:
             Commander.js command structure
         """
+        root_command = cli_schema.get("root_command", {})
         commander_data = {
             "root_command": {
-                "name": cli_schema["root_command"]["name"],
-                "description": cli_schema["root_command"]["description"],
-                "version": cli_schema["root_command"]["version"],
+                "name": root_command.get("name", "cli"),
+                "description": root_command.get("description", "CLI application"),
+                "version": root_command.get("version", "1.0.0"),
                 "options": [],
                 "commands": [],
             },
@@ -191,23 +210,23 @@ class NodeJSRenderer(LanguageRenderer):
         }
         
         # Convert options to Commander format
-        for option in cli_schema["root_command"]["options"]:
+        for option in root_command.get("options", []):
             commander_option = {
                 "flags": self._build_option_flags(option),
-                "description": option["description"],
+                "description": option.get("description", ""),
                 "default": option.get("default"),
                 "type": self._js_type_from_option(option),
             }
             commander_data["root_command"]["options"].append(commander_option)
         
         # Convert commands to Commander format  
-        for command in cli_schema["root_command"]["subcommands"]:
+        for command in root_command.get("subcommands", []):
             commander_cmd = {
-                "name": command["name"],
-                "description": command["description"],
-                "arguments": [self._build_commander_argument(arg) for arg in command["arguments"]],
-                "options": [self._build_commander_option(opt) for opt in command["options"]],
-                "hook_name": command["hook_name"],
+                "name": command.get("name", "command"),
+                "description": command.get("description", ""),
+                "arguments": [self._build_commander_argument(arg) for arg in command.get("arguments", [])],
+                "options": [self._build_commander_option(opt) for opt in command.get("options", [])],
+                "hook_name": command.get("hook_name", f"on_{command.get('name', 'command')}"),
                 "subcommands": command.get("subcommands", []),
             }
             commander_data["subcommands"].append(commander_cmd)
@@ -238,7 +257,7 @@ class NodeJSRenderer(LanguageRenderer):
             })
         
         # Add NPM dependencies from IR
-        npm_deps = ir["dependencies"].get("npm", [])
+        npm_deps = ir.get("dependencies", {}).get("npm", [])
         for dep in npm_deps:
             if "@" in dep:
                 name, version = dep.rsplit("@", 1)
@@ -274,7 +293,7 @@ class NodeJSRenderer(LanguageRenderer):
             ])
         
         # Add conditional imports based on available dependencies
-        npm_deps = ir["dependencies"].get("npm", [])
+        npm_deps = ir.get("dependencies", {}).get("npm", [])
         for dep in npm_deps:
             dep_name = dep.split("@")[0] if "@" in dep else dep
             if dep_name not in ["commander", "chalk"]:
@@ -293,22 +312,23 @@ class NodeJSRenderer(LanguageRenderer):
             List of hook function definitions
         """
         hooks = []
+        root_command = cli_schema.get("root_command", {})
         
         # Generate hooks for each command
-        for command in cli_schema["root_command"]["subcommands"]:
+        for command in root_command.get("subcommands", []):
             hook = {
-                "name": command["hook_name"],
-                "js_name": self._hook_name_filter(command["name"]),
-                "command_name": command["name"],
-                "description": command["description"],
-                "arguments": command["arguments"],
-                "options": command["options"],
+                "name": command.get("hook_name", f"on_{command.get('name', 'command')}"),
+                "js_name": self._hook_name_filter(command.get("name", "command")),
+                "command_name": command.get("name", "command"),
+                "description": command.get("description", ""),
+                "arguments": command.get("arguments", []),
+                "options": command.get("options", []),
             }
             hooks.append(hook)
             
             # Handle nested subcommands recursively
             if command.get("subcommands"):
-                hooks.extend(self._build_subcommand_hooks(command["subcommands"], command["name"]))
+                hooks.extend(self._build_subcommand_hooks(command["subcommands"], command.get("name", "command")))
         
         return hooks
     
@@ -362,7 +382,7 @@ class NodeJSRenderer(LanguageRenderer):
             "pattern": arg_pattern,
             "description": arg["description"],
             "name": arg["name"],
-            "type": arg["type"],
+            "type": arg.get("type", "string"),
         }
     
     def _build_commander_option(self, option: Dict[str, Any]) -> Dict[str, str]:
@@ -385,16 +405,81 @@ class NodeJSRenderer(LanguageRenderer):
         Returns:
             Formatted JavaScript code
         """
-        # Remove extra blank lines
-        content = re.sub(r'\n\s*\n\s*\n', '\n\n', content)
+        # Fix import formatting - normalize spacing inside braces and around 'from'
+        content = re.sub(r'import\s*{\s*([^}]+?)\s*}\s*from\s*', 
+                        lambda m: f'import {{ {m.group(1).strip()} }} from ', content)
         
-        # Ensure proper spacing around functions
-        content = re.sub(r'}\n([a-zA-Z])', r'}\n\n\1', content)
+        # Remove extra blank lines more aggressively
+        content = re.sub(r'\n\s*\n\s*\n+', '\n\n', content)
+        # Clean up any remaining multiple blank lines
+        while '\n\n\n' in content:
+            content = content.replace('\n\n\n', '\n\n')
         
-        # Fix import formatting
-        content = re.sub(r'import\s+{([^}]+)}\s+from', r'import { \1 } from', content)
+        # Split into lines for more precise control
+        lines = content.split('\n')
+        processed_lines = []
+        consecutive_empty_count = 0
         
-        return content.strip() + '\n'
+        for line in lines:
+            is_empty = line.strip() == ''
+            
+            if is_empty:
+                consecutive_empty_count += 1
+                # Allow max 1 consecutive blank line
+                if consecutive_empty_count <= 1:
+                    processed_lines.append(line)
+            else:
+                consecutive_empty_count = 0
+                processed_lines.append(line)
+        
+        content = '\n'.join(processed_lines)
+        
+        # Ensure proper spacing around functions only if there isn't already spacing
+        content = re.sub(r'}\n(?!\n)([a-zA-Z])', r'}\n\n\1', content)
+        
+        # Remove trailing whitespace and trailing blank lines
+        content = content.rstrip()
+        
+        # Convert fluent interface style to individual method calls
+        # This handles cases like:
+        # program
+        #   .name('cli')
+        #   .version('1.0.0');
+        # becomes:
+        # program.name('cli');
+        # program.version('1.0.0');
+        
+        lines = content.split('\n')
+        processed_lines = []
+        i = 0
+        
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            if line == 'program':
+                # Start of fluent interface - collect all chained calls
+                method_calls = []
+                i += 1
+                
+                # Collect all subsequent method calls
+                while i < len(lines) and lines[i].strip().startswith('.'):
+                    method_call = lines[i].strip()
+                    method_calls.append(method_call)
+                    i += 1
+                
+                # Convert each method call to individual program.method() statements
+                for method_call in method_calls:
+                    processed_lines.append(f'program{method_call}')
+                
+                # Don't increment i again since we've already processed multiple lines
+                continue
+            else:
+                processed_lines.append(lines[i])
+                i += 1
+        
+        content = '\n'.join(processed_lines)
+        
+        return content.strip()
     
     # Filter functions
     
@@ -463,12 +548,50 @@ class NodeJSRenderer(LanguageRenderer):
         """Convert name to valid JavaScript variable name."""
         return self._to_js_variable_name(name)
     
-    def _js_string_filter(self, value: str) -> str:
-        """Escape string for JavaScript."""
-        if not isinstance(value, str):
-            return str(value)
+    def _js_variable_name_filter(self, name: str) -> str:
+        """Convert name to camelCase JavaScript variable name with proper validation."""
+        if not name:
+            return ""
         
-        return value.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')
+        # First convert to camelCase
+        camel_name = self._camel_case_filter(name)
+        
+        # Handle edge cases for valid JS variable names
+        if camel_name and camel_name[0].isdigit():
+            # Can't start with number, prefix with underscore
+            return f"_{camel_name}"
+        
+        return camel_name
+    
+    def _js_safe_name_filter(self, name: str) -> str:
+        """Convert name to JavaScript-safe identifier, prefixing reserved words."""
+        js_reserved_words = {
+            "abstract", "arguments", "await", "boolean", "break", "byte", "case", 
+            "catch", "char", "class", "const", "continue", "debugger", "default", 
+            "delete", "do", "double", "else", "enum", "eval", "export", "extends", 
+            "false", "final", "finally", "float", "for", "function", "goto", "if", 
+            "implements", "import", "in", "instanceof", "int", "interface", "let", 
+            "long", "native", "new", "null", "package", "private", "protected", 
+            "public", "return", "short", "static", "super", "switch", "synchronized", 
+            "this", "throw", "throws", "transient", "true", "try", "typeof", "var", 
+            "void", "volatile", "while", "with", "yield"
+        }
+        
+        # Convert to camelCase first (which handles hyphens and underscores properly)
+        camel_name = self._camel_case_filter(name)
+        
+        # Check if it's a reserved word and prefix with underscore if needed
+        if camel_name.lower() in js_reserved_words:
+            return f"_{camel_name}"
+        return camel_name
+    
+    def _js_string_filter(self, value: str) -> str:
+        """Escape string for JavaScript and wrap in quotes."""
+        if not isinstance(value, str):
+            return f'"{str(value)}"'
+        
+        escaped = value.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+        return f'"{escaped}"'
     
     def _npm_package_name_filter(self, name: str) -> str:
         """Convert to valid NPM package name."""
@@ -527,7 +650,14 @@ class NodeJSRenderer(LanguageRenderer):
     
     def _to_js_package_name(self, name: str) -> str:
         """Convert to valid NPM package name (lowercase, hyphens allowed)."""
-        return re.sub(r'[^a-z0-9\-_]', '-', name.lower()).strip('-')
+        # First convert to lowercase
+        lower_name = name.lower()
+        # Replace underscores with hyphens
+        lower_name = lower_name.replace('_', '-')
+        # Replace any other invalid characters with hyphens
+        lower_name = re.sub(r'[^a-z0-9\-]', '-', lower_name)
+        # Remove leading/trailing hyphens
+        return lower_name.strip('-')
     
     def _js_type_from_option(self, option: Dict[str, Any]) -> str:
         """Determine JavaScript type from option definition."""

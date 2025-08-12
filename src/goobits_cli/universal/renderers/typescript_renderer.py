@@ -195,33 +195,72 @@ class TypeScriptRenderer(LanguageRenderer):
         for name, filter_func in self.get_custom_filters().items():
             self._env.filters[name] = filter_func
     
-    def _generate_interfaces(self, ir: Dict[str, Any]) -> Dict[str, str]:
+    def _generate_interfaces(self, ir: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate TypeScript interfaces from CLI schema."""
-        interfaces = {}
+        interfaces = []
         
         # Generate global options interface
         if 'cli' in ir and 'global_options' in ir['cli']:
-            interfaces['GlobalOptions'] = self._generate_global_options_interface(
-                ir['cli']['global_options']
-            )
+            interfaces.append({
+                'name': 'GlobalOptions',
+                'properties': self._extract_properties_from_options(ir['cli']['global_options'])
+            })
         
-        # Generate command interfaces
-        if 'cli' in ir and 'commands' in ir['cli']:
-            for cmd_name, cmd_data in ir['cli']['commands'].items():
+        # Generate command interfaces from root_command subcommands
+        if 'cli' in ir and 'root_command' in ir['cli'] and 'subcommands' in ir['cli']['root_command']:
+            for command in ir['cli']['root_command']['subcommands']:
+                cmd_name = command.get('name', 'Command')
                 interface_name = f"{self._pascal_case_filter(cmd_name)}Options"
-                interfaces[interface_name] = self._generate_command_interface(cmd_data)
+                properties = {}
+                
+                # Add options as properties
+                for option in command.get('options', []):
+                    prop_name = option.get('name', 'option')
+                    prop_type = self._ts_type_filter(option.get('type', 'string'))
+                    is_required = option.get('required', False)
+                    properties[prop_name] = {
+                        'type': prop_type,
+                        'required': is_required,
+                        'optional': not is_required  # Add optional field for template compatibility
+                    }
+                
+                interfaces.append({
+                    'name': interface_name,
+                    'properties': properties
+                })
         
         # Generate common interfaces
-        interfaces['CommandArgs'] = '''interface CommandArgs {
-  commandName: string;
-  [key: string]: any;
-}'''
-        
-        interfaces['HookFunction'] = '''interface HookFunction {
-  (args: CommandArgs): Promise<any> | any;
-}'''
+        interfaces.extend([
+            {
+                'name': 'CommandArgs',
+                'properties': {
+                    'commandName': {'type': 'string', 'required': True, 'optional': False},
+                    '[key: string]': {'type': 'any', 'required': False, 'optional': True}
+                }
+            },
+            {
+                'name': 'HookFunction',
+                'properties': {
+                    '(args: CommandArgs)': {'type': 'Promise<any> | any', 'required': True, 'optional': False}
+                }
+            }
+        ])
         
         return interfaces
+    
+    def _extract_properties_from_options(self, options: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+        """Extract properties from options list for interface generation."""
+        properties = {}
+        for option in options:
+            prop_name = option.get('name', 'option')
+            prop_type = self._ts_type_filter(option.get('type', 'string'))
+            is_required = option.get('required', False)
+            properties[prop_name] = {
+                'type': prop_type,
+                'required': is_required,
+                'optional': not is_required  # Add optional field for template compatibility
+            }
+        return properties
     
     def _get_type_mappings(self) -> Dict[str, str]:
         """Get mapping from generic types to TypeScript types."""
@@ -235,8 +274,8 @@ class TypeScriptRenderer(LanguageRenderer):
             'bool': 'boolean',
             'boolean': 'boolean',
             'flag': 'boolean',
-            'list': 'Array<any>',
-            'array': 'Array<any>',
+            'list': 'any[]',
+            'array': 'any[]',
             'dict': 'Record<string, any>',
             'object': 'Record<string, any>',
             'any': 'any',
@@ -299,16 +338,20 @@ class TypeScriptRenderer(LanguageRenderer):
     def _generate_build_config(self, ir: Dict[str, Any]) -> Dict[str, Any]:
         """Generate TypeScript build configuration."""
         return {
-            'target': 'ES2022',
-            'module': 'NodeNext',
-            'moduleResolution': 'NodeNext',
-            'outDir': './dist',
-            'strict': True,
-            'esModuleInterop': True,
-            'skipLibCheck': True,
-            'declaration': True,
-            'declarationMap': True,
-            'sourceMap': True
+            'tsconfig': {
+                'compilerOptions': {
+                    'target': 'ES2022',
+                    'module': 'NodeNext',
+                    'moduleResolution': 'NodeNext',
+                    'outDir': './dist',
+                    'strict': True,
+                    'esModuleInterop': True,
+                    'skipLibCheck': True,
+                    'declaration': True,
+                    'declarationMap': True,
+                    'sourceMap': True
+                }
+            }
         }
     
     def _apply_naming_conventions(self, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -366,8 +409,11 @@ class TypeScriptRenderer(LanguageRenderer):
     # Filter implementations
     def _ts_type_filter(self, type_str: str) -> str:
         """Convert generic types to TypeScript types."""
+        if type_str is None or type_str == "":
+            return 'any'
+        
         mappings = self._get_type_mappings()
-        return mappings.get(type_str.lower(), 'any')
+        return mappings.get(str(type_str).lower(), 'any')
     
     def _ts_interface_filter(self, name: str) -> str:
         """Generate interface name (PascalCase)."""
@@ -415,33 +461,80 @@ class TypeScriptRenderer(LanguageRenderer):
     
     def _ts_safe_name_filter(self, name: str) -> str:
         """Convert name to TypeScript-safe identifier."""
+        ts_reserved_words = {
+            "abstract", "any", "as", "asserts", "async", "await", "bigint", "boolean", 
+            "break", "case", "catch", "class", "const", "constructor", "continue", 
+            "debugger", "declare", "default", "delete", "do", "else", "enum", "export", 
+            "extends", "false", "finally", "for", "from", "function", "get", "if", 
+            "implements", "import", "in", "infer", "instanceof", "interface", "is", 
+            "keyof", "let", "module", "namespace", "never", "new", "null", "number", 
+            "object", "of", "package", "private", "protected", "public", "readonly", 
+            "require", "return", "set", "static", "string", "super", "switch", "symbol", 
+            "this", "throw", "true", "try", "type", "typeof", "undefined", "unique", 
+            "unknown", "var", "void", "while", "with", "yield"
+        }
+        
         # Replace invalid characters with underscore
         safe = re.sub(r'[^a-zA-Z0-9_]', '_', name)
         # Ensure doesn't start with number
         if safe and safe[0].isdigit():
             safe = '_' + safe
+        
+        # Check for reserved words
+        if safe.lower() in ts_reserved_words:
+            safe = '_' + safe
+            
         return safe or '_unnamed'
     
-    def _ts_optional_filter(self, type_str: str, required: bool = True) -> str:
-        """Add optional modifier to TypeScript type if not required."""
-        base_type = self._ts_type_filter(type_str)
-        if not required:
-            return f"{base_type} | undefined"
-        return base_type
+    def _ts_optional_filter(self, arg: Any) -> str:
+        """Return optional modifier for TypeScript property."""
+        # Handle different input types
+        if isinstance(arg, dict):
+            # Check if it's a property definition with optional field
+            if "optional" in arg:
+                return "?" if arg["optional"] else ""
+            # Check if it's an option definition with required field
+            elif "required" in arg:
+                return "" if arg.get("required", True) else "?"
+            else:
+                # Default to required
+                return ""
+        elif hasattr(arg, 'optional'):
+            # Handle object with optional attribute
+            return "?" if getattr(arg, 'optional', False) else ""
+        else:
+            # For any other type, assume it's required
+            return ""
     
     def _ts_array_type_filter(self, item_type: str) -> str:
         """Convert to TypeScript array type."""
         ts_type = self._ts_type_filter(item_type)
-        return f"Array<{ts_type}>"
+        return f"{ts_type}[]"
     
-    def _ts_function_signature_filter(self, params: List[Dict[str, Any]], return_type: str = 'void') -> str:
+    def _ts_function_signature_filter(self, params, return_type: str = 'void') -> str:
         """Generate TypeScript function signature."""
         param_strs = []
-        for param in params:
-            name = param.get('name', 'arg')
-            type_str = self._ts_type_filter(param.get('type', 'any'))
-            optional = '' if param.get('required', True) else '?'
-            param_strs.append(f"{name}{optional}: {type_str}")
+        
+        # Handle different input formats
+        if isinstance(params, dict) and ('arguments' in params or 'options' in params):
+            # Command data structure with arguments and options
+            # Add arguments as positional parameters
+            for arg in params.get('arguments', []):
+                name = arg.get('name', 'arg')
+                type_str = self._ts_type_filter(arg.get('type', 'any'))
+                optional = '' if arg.get('required', True) else '?'
+                param_strs.append(f"{name}{optional}: {type_str}")
+            
+            # Add options as a typed object if there are any
+            if params.get('options'):
+                param_strs.append("options?: any")  # Could be more specific based on option types
+        elif isinstance(params, list):
+            # Direct list of parameters
+            for param in params:
+                name = param.get('name', 'arg')
+                type_str = self._ts_type_filter(param.get('type', 'any'))
+                optional = '' if param.get('required', True) else '?'
+                param_strs.append(f"{name}{optional}: {type_str}")
         
         params_str = ', '.join(param_strs)
         return_ts_type = self._ts_type_filter(return_type)

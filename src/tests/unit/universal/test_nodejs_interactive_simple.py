@@ -1,6 +1,14 @@
 """
 Test cases for enhanced Node.js interactive mode features (Simplified).
 
+NOTE: This file is NOT a duplicate of test_nodejs_interactive_mode.py - they test different implementations:
+- test_nodejs_interactive_mode.py: Tests FULL implementation (1292 lines) with advanced features
+- test_nodejs_interactive_simple.py: Tests SIMPLIFIED implementation (554 lines) with core features
+
+Both implementations are being evaluated during Phase 4 development. This simplified version
+focuses on essential interactive functionality while the full version includes comprehensive
+NPM integration, advanced completion, and complex error handling.
+
 This module tests the Node.js-specific enhancements including async command handling,
 tab completion, NPM package integration, and JavaScript expression evaluation.
 """
@@ -129,9 +137,17 @@ class TestNodeJSInteractiveUtils(unittest.TestCase):
         """Test complete enhanced template generation."""
         template = self.utils.generate_enhanced_interactive_template()
         
-        # Check that template reference is returned
-        self.assertIn("Enhanced Node.js interactive template", template)
-        self.assertIn("templates/nodejs/interactive_mode_enhanced.js.j2", template)
+        # Check overall structure
+        self.assertIn("#!/usr/bin/env node", template)
+        self.assertIn("Enhanced Interactive mode", template)
+        self.assertIn("Simplified", template)
+        
+        # Check basic features are included
+        self.assertIn("setupBasicFeatures", template)
+        
+        # Check Jinja2 template variables
+        self.assertIn("{{ project.name }}", template)
+        self.assertIn("{{ cli.root_command.name }}", template)
         
     def test_dependencies_structure(self):
         """Test Node.js interactive dependencies structure."""
@@ -162,6 +178,29 @@ class TestNodeJSInteractiveIntegration(unittest.TestCase):
             "name": "test-cli",
             "description": "Test CLI for Node.js interactive mode"
         }
+        self.test_cli = {
+            "root_command": {
+                "name": "test-cli",
+                "description": "Test CLI",
+                "subcommands": [
+                    {
+                        "name": "hello",
+                        "description": "Say hello",
+                        "hook_name": "on_hello",
+                        "arguments": [],
+                        "options": [
+                            {
+                                "name": "name",
+                                "short": "n",
+                                "description": "Name to greet",
+                                "type": "string",
+                                "default": "World"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
         
     def tearDown(self):
         """Clean up test environment."""
@@ -170,24 +209,47 @@ class TestNodeJSInteractiveIntegration(unittest.TestCase):
         
     def test_template_rendering(self):
         """Test template rendering with real data."""
+        from jinja2 import Template
+        
         utils = NodeJSInteractiveUtils()
         template_content = utils.generate_enhanced_interactive_template()
         
-        # Since we now return a template reference, just check it exists
-        self.assertIsInstance(template_content, str)
-        self.assertIn("templates/nodejs", template_content)
+        template = Template(template_content)
+        rendered = template.render(
+            project=self.test_project,
+            cli=self.test_cli
+        )
+        
+        # Check that template variables were replaced
+        self.assertNotIn("{{ project.name }}", rendered)
+        self.assertNotIn("{{ cli.root_command.name }}", rendered)
+        self.assertIn("test-cli", rendered)
+        self.assertIn("TestcliInteractive", rendered)
+        
+        # Check that command handlers were generated
+        self.assertIn("handleHello", rendered)
+        self.assertIn("on_hello", rendered)
         
     def test_javascript_syntax_validity(self):
         """Test that generated JavaScript has valid syntax."""
         utils = NodeJSInteractiveUtils()
         template_content = utils.generate_enhanced_interactive_template()
         
-        # Since we now return a template reference, just verify template exists
+        # Verify we get actual JavaScript template content
         self.assertIsInstance(template_content, str)
         self.assertIn("enhanced", template_content.lower())
         
-        # Skip JavaScript syntax validation since we're using template reference
-        self.skipTest("Template reference returned instead of actual template content")
+        # Validate basic JavaScript syntax
+        self.assertIn("const readline = require('readline')", template_content)
+        self.assertIn("const chalk = require('chalk')", template_content)
+        self.assertIn("#!/usr/bin/env node", template_content)
+        
+        # Ensure proper JavaScript structure (no obvious syntax errors)
+        brace_count = template_content.count('{') - template_content.count('}')
+        self.assertEqual(brace_count, 0, "Mismatched braces in generated JavaScript")
+        
+        paren_count = template_content.count('(') - template_content.count(')')
+        self.assertEqual(paren_count, 0, "Mismatched parentheses in generated JavaScript")
             
     @patch('subprocess.run')
     def test_async_command_execution(self, mock_run):

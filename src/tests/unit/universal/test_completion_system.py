@@ -1,6 +1,17 @@
 """
 Test suite for the dynamic completion system.
 
+⚠️  MOSTLY FRAMEWORK-ONLY FEATURE: Advanced completion exists in framework but is minimally integrated.
+    Users who run 'goobits build' get basic static completion only.
+    
+    Integration Status:
+    - Framework: 70% complete (tested here)
+    - User Integration: 10% complete (basic static completion)
+    - Generated CLIs: Only command/option name completion
+    
+    These tests validate the framework implementation. Advanced dynamic completion
+    (file paths, API endpoints, contextual suggestions) is not yet user-accessible.
+
 Tests the DynamicCompletionRegistry, providers, and integration components.
 """
 

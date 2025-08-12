@@ -76,7 +76,7 @@ class TestUniversalTemplateEngineBasic:
         renderer = MockRenderer("test")
         
         # Register renderer
-        engine.register_renderer(renderer)
+        engine.register_renderer("test", renderer)
         assert "test" in engine.renderers
         assert engine.renderers["test"] is renderer
     
@@ -86,11 +86,11 @@ class TestUniversalTemplateEngineBasic:
         
         # Test None renderer
         with pytest.raises(ValueError, match="cannot be None"):
-            engine.register_renderer(None)
+            engine.register_renderer("test", None)
         
         # Test invalid renderer
         with pytest.raises(ValueError, match="must implement"):
-            engine.register_renderer("not a renderer")
+            engine.register_renderer("test", "not a renderer")
     
     def test_component_registry_access(self):
         """Test component registry access"""

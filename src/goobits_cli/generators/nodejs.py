@@ -284,7 +284,7 @@ class NodeJSGenerator(BaseGenerator):
         
         # Try to load Node.js specific template
         try:
-            template = self.env.get_template("index.js.j2")
+            template = self.env.get_template("cli.js.j2")
             code = template.render(**context)
             return code
         except TemplateNotFound:

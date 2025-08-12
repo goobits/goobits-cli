@@ -1,6 +1,16 @@
 """
 Test suite for the plugin system.
 
+⚠️  FRAMEWORK-ONLY FEATURE: Plugin system exists in framework but is NOT integrated into generated CLIs.
+    Users who run 'goobits build' will NOT have access to these features yet.
+    
+    Integration Status:
+    - Framework: 60% complete (tested here)  
+    - User Integration: 0% complete
+    - Generated CLIs: Basic local plugin scanning only
+    
+    These tests validate the framework implementation that will eventually be integrated.
+
 Tests the PluginManager, PluginInfo, PluginRegistry, and integration components.
 """
 

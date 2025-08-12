@@ -1,12 +1,20 @@
 """
 Comprehensive tests for Universal Template Engine.
 
-These tests focus on real functionality to maximize coverage improvements
+NOTE: This is one of four template engine test files, each serving a different purpose:
+- test_template_engine_comprehensive.py: COVERAGE IMPROVEMENTS (63% → 85%)
+- test_template_engine_focused.py: SPECIFIC FUNCTIONALITY isolation
+- test_template_engine_functional.py: END-TO-END template processing
+- test_universal_coverage_boost.py: FRAMEWORK INTEGRATION testing
+
+This file focuses on real functionality to maximize coverage improvements
 from 63% to 85% by testing:
 - UniversalTemplateEngine with actual template rendering
 - Intermediate Representation (IR) processing
 - Cross-language code generation
 - Error handling and edge cases
+
+All four files are necessary to fully validate the sophisticated Universal Template System.
 """
 
 import pytest
@@ -43,9 +51,17 @@ class MockRenderer(LanguageRenderer):
         context["language"] = self.language
         return context
     
-    def render_component(self, component_name: str, context: Dict[str, Any]) -> str:
+    def get_custom_filters(self) -> Dict[str, callable]:
+        """Return custom Jinja2 filters for testing"""
+        return {}
+    
+    def render_component(self, component_name: str, template_content: str, context: Dict[str, Any]) -> str:
         """Render a component for testing"""
         return f"// {self.language} component: {component_name}\ntest content"
+    
+    def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
+        """Get output structure mapping"""
+        return {"cli": "cli.test", "main": "main.test"}
     
     def get_output_files(self, ir: Dict[str, Any]) -> Dict[str, str]:
         """Get output files mapping"""
@@ -342,9 +358,9 @@ ERROR: Project name is required
         
         # Verify complex structure processing
         command = ir["cli"]["commands"]["complex"]
-        assert len(command["args"]) == 2
+        assert len(command["arguments"]) == 2
         assert len(command["options"]) == 2
-        assert command["args"][0]["required"] is True
+        assert command["arguments"][0]["required"] is True
         assert command["options"][0]["type"] == "str"
     
     def test_error_handling_in_rendering(self):

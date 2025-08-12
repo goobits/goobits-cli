@@ -1,7 +1,7 @@
 """TypeScript CLI generator implementation."""
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from jinja2 import TemplateNotFound
 
 from .nodejs import NodeJSGenerator
@@ -87,6 +87,26 @@ class TypeScriptGenerator(NodeJSGenerator):
         from ..universal.interactive.typescript_utils import TypeScriptInteractiveRenderer
         self.interactive_renderer = None
     
+    def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                 config_filename: str, version: Optional[str] = None) -> str:
+        """
+        Generate TypeScript CLI code from configuration.
+        
+        Args:
+            config: The configuration object
+            config_filename: Name of the configuration file
+            version: Optional version string
+            
+        Returns:
+            Generated TypeScript CLI code
+        """
+        # Use Universal Template System if enabled
+        if self.use_universal_templates:
+            return self._generate_with_universal_templates(config, config_filename, version)
+        
+        # Fall back to TypeScript-specific legacy implementation
+        return self._generate_legacy_typescript(config, config_filename, version)
+    
     def _generate_with_universal_templates(self, config, config_filename: str, version: Optional[str] = None) -> str:
         """
         Override to use TypeScript language in universal templates.
@@ -160,8 +180,34 @@ class TypeScriptGenerator(NodeJSGenerator):
         Returns:
             Generated TypeScript CLI code
         """
-        # Use parent's legacy generation but ensure we get TypeScript output
-        return super()._generate_legacy(config, config_filename, version)
+        # Extract metadata using base class helper
+        metadata = self._extract_config_metadata(config)
+        cli_config = metadata['cli_config']
+        
+        # Validate configuration
+        self._validate_configuration(config, cli_config)
+        
+        # Prepare context for template rendering
+        context = {
+            'cli': cli_config,
+            'file_name': config_filename,
+            'package_name': metadata['package_name'],
+            'command_name': metadata['command_name'],
+            'display_name': metadata['display_name'],
+            'description': getattr(config, 'description', cli_config.description if cli_config else ''),
+            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            'installation': metadata['installation'],
+            'hooks_path': metadata['hooks_path'],
+        }
+        
+        # Try to load TypeScript specific template
+        try:
+            template = self.env.get_template("cli.ts.j2")
+            code = template.render(**context)
+            return code
+        except TemplateNotFound:
+            # Provide helpful error message with template content
+            return self._generate_fallback_typescript_code(context)
     
     def _to_typescript_type(self, python_type: str) -> str:
         """Convert Python type hints to TypeScript types."""

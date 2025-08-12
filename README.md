@@ -1,15 +1,15 @@
-# Test TS Compile
+# Test Rust CLI
 
-Testing TypeScript compilation
+A test CLI built with Rust
 
-> Test TypeScript compilation
+> Test CLI for Rust generation
 
 ## Installation
 
 ### From Package Manager (Recommended)
 
 ```bash
-npm install -g test-ts-compile
+cargo install test-rust-cli
 ```
 
 ### From Source
@@ -18,7 +18,7 @@ Clone this repository and build from source:
 
 ```bash
 git clone https://github.com/user/repo
-cd test-ts-compile
+cd test-rust-cli
 ./setup.sh --dev
 ```
 
@@ -34,36 +34,58 @@ For development with live updates:
 
 ### Basic Commands
 
-#### `testts hello`
+#### `test_rust hello`
 Say hello
 
 ```bash
-testts hello```
+test_rust hello [name] [OPTIONS]```
 
-
-
+**Arguments:**
+- `name`: Name to greet
+**Options:**
+- `-g, --greeting <str>`: Custom greeting (default: Hello)
 
 ### Global Options
 
+All commands support these global options:
+
+- `--help`: Show help message and exit
+- `--version`: Show version information
+
+**Verbose Mode:**
+When `--verbose` is enabled, the CLI provides:
+- Detailed error messages with full context
+- Stack traces for debugging issues
+- Additional diagnostic information
+- Progress details for long-running operations
 
 ### Examples
 
 ```bash
 # Show help
-testts --help
+test_rust --help
 
 # Show version
-testts --version
+test_rust --version
 
+# Enable verbose output for detailed error messages
+test_rust --verbose hello
+
+# Short form of verbose flag
+test_rust -v hello
+
+# Example hello command
+test_rust hello
+# Same command with verbose output
+test_rust --verbose hello
+# Error handling examples
+test_rust invalid-command              # Standard error message
+test_rust --verbose invalid-command   # Detailed error with stack trace
 ```
 
 ## Configuration
 
-Configuration locations:
-
-- **Linux**: `~/.config/test-ts-compile/`
-- **macOS**: `~/Library/Application Support/test-ts-compile/`
-- **Windows**: `%APPDATA%\test-ts-compile\`
+The CLI stores configuration in `~/.config/test-rust-cli/config.yaml`.
 
 You can edit this file directly or use the CLI to manage settings.
 
@@ -71,42 +93,54 @@ You can edit this file directly or use the CLI to manage settings.
 
 - `settings.auto_update`: Enable automatic updates (default: false)
 - `settings.log_level`: Set logging level (debug, info, warn, error)
+- `settings.verbose`: Enable verbose output by default (default: false)
 - `features.colored_output`: Enable colored terminal output (default: true)
 - `features.progress_bars`: Show progress bars for long operations (default: true)
+
+### Environment Variables
+
+You can also control verbose mode using environment variables:
+
+```bash
+# Enable verbose mode for all commands
+export TEST_RUST_VERBOSE=true
+test_rust hello
+
+# Disable verbose mode (overrides config)
+export TEST_RUST_VERBOSE=false
+test_rust hello
+```
 
 ## Development
 
 ### Building
 
 ```bash
-# Install dependencies
-npm install
+# Debug build
+cargo build
 
-# Build (if TypeScript)
-npm run build
-
-# Run tests
-npm test
+# Release build
+cargo build --release
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-npm test
+cargo test
 
-# Run with coverage
-npm run test:coverage
+# Run tests with output
+cargo test -- --nocapture
 ```
 
 ### Running
 
 ```bash
-# Run from source (development)
-node cli.js --help
+# Run from source (debug)
+cargo run -- --help
 
-# Or using npm link
-npm link && testts --help
+# Run specific command
+cargo run -- hello --help
 ```
 
 ## Shell Completions
@@ -126,7 +160,7 @@ This creates completion files in the `completions/` directory for:
 
 **Bash:**
 ```bash
-source completions/testts.bash
+source completions/test_rust.bash
 ```
 
 **Zsh:**
@@ -138,27 +172,28 @@ autoload -U compinit && compinit
 
 **Fish:**
 ```bash
-cp completions/testts.fish ~/.config/fish/completions/
+cp completions/test_rust.fish ~/.config/fish/completions/
 ```
 
 ## Architecture
 
 This CLI is built using:
 
-- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
-- **[TypeScript](https://www.typescriptlang.org/)**: Typed superset of JavaScript
-- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
+- **[Clap](https://docs.rs/clap/)**: Command-line argument parsing with derive macros
+- **[Anyhow](https://docs.rs/anyhow/)**: Flexible error handling
+- **[Serde](https://docs.rs/serde/)**: Serialization/deserialization for configuration
+- **[Tokio](https://docs.rs/tokio/)**: Async runtime (optional feature)
 
 ### Project Structure
 
 ```
-├── cli.ts           # CLI entry point
-├── package.json         # NPM package configuration
-├── src/
-│   ├── hooks.ts       # User-defined business logic
-│   ├── config.ts      # Configuration management
-│   └── utils.ts       # Utility functions
-└── completions/         # Shell completion scripts
+src/
+├── main.rs          # CLI entry point and command definitions
+├── lib.rs           # Library exports and core functionality  
+├── config.rs        # Configuration management
+├── commands.rs      # Command implementations
+├── hooks.rs         # User-defined business logic
+└── utils.rs         # Utility functions
 ```
 
 ## Contributing

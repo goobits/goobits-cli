@@ -250,14 +250,14 @@ class TestUniversalTemplateEngineFunctional:
         
         # Create engine with test components
         self.engine = UniversalTemplateEngine(
-            components_dir=self.components_dir,
+            template_dir=self.components_dir,
             template_cache=None,  # Disable cache for easier testing
             enable_lazy_loading=False  # Disable lazy loading for simpler tests
         )
         
         # Register test renderer
         self.renderer = MockRenderer("python")
-        self.engine.register_renderer(self.renderer)
+        self.engine.register_renderer("python", self.renderer)
         
         # Create test configuration
         self.test_config = self._create_test_config()
@@ -370,17 +370,17 @@ def {{ command.hook_name }}(*args, **kwargs):
         """Test renderer registration validation"""
         # Test None renderer
         with pytest.raises(ValueError, match="Renderer cannot be None"):
-            self.engine.register_renderer(None)
+            self.engine.register_renderer("test", None)
         
         # Test invalid renderer type
         with pytest.raises(ValueError, match="must implement LanguageRenderer"):
-            self.engine.register_renderer("not a renderer")
+            self.engine.register_renderer("test", "not a renderer")
         
-        # Test renderer without language
+        # Test renderer without language  
         invalid_renderer = Mock(spec=LanguageRenderer)
         invalid_renderer.language = ""
-        with pytest.raises(ValueError, match="non-empty language name"):
-            self.engine.register_renderer(invalid_renderer)
+        with pytest.raises(ValueError, match="Language name must be provided"):
+            self.engine.register_renderer("", invalid_renderer)
     
     def test_intermediate_representation_building(self):
         """Test building intermediate representation from config"""
@@ -452,10 +452,10 @@ def {{ command.hook_name }}(*args, **kwargs):
         empty_dir.mkdir()
         
         empty_engine = UniversalTemplateEngine(
-            components_dir=empty_dir,
+            template_dir=empty_dir,
             enable_lazy_loading=False
         )
-        empty_engine.register_renderer(self.renderer)
+        empty_engine.register_renderer("python", self.renderer)
         
         generated_files = empty_engine.generate_cli(
             config=self.test_config,
@@ -498,10 +498,10 @@ Camel case: {{ project.name | camel_case }}
         
         # Re-register renderer
         filter_engine = UniversalTemplateEngine(
-            components_dir=self.components_dir,
+            template_dir=self.components_dir,
             enable_lazy_loading=False
         )
-        filter_engine.register_renderer(test_renderer)
+        filter_engine.register_renderer("python", test_renderer)
         
         generated_files = filter_engine.generate_cli(
             config=self.test_config,
