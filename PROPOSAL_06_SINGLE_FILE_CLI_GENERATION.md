@@ -1,10 +1,11 @@
 # PROPOSAL_07_SINGLE_FILE_CLI_GENERATION.md
 
-**Status**: 🔄 REVISED - Pinliner-Based Implementation, No Legacy Support  
+**Status**: ❌ **BLOCKED** - Critical bugs prevent implementation  
 **Priority**: HIGH  
-**Complexity**: LOW  
-**Timeline**: 3-5 days (2 phases)  
-**Dependencies**: Universal Template System (existing), Pinliner library
+**Complexity**: LOW (once bugs fixed)  
+**Timeline**: 3-5 days (2 phases) + bug fix time  
+**Dependencies**: Universal Template System (existing, **BROKEN**), Pinliner library
+**Blockers**: 2 critical bugs in Universal Template System must be fixed first
 
 ---
 
@@ -57,9 +58,10 @@ goobits build
 
 ---
 
-## PHASE 1: Foundation Infrastructure (Day 1)
+## PHASE 1: Foundation Infrastructure (Day 1) ❌ **BLOCKED**
 **Duration**: 2-4 hours  
 **Objective**: Fix Universal Template System bugs and enable working generation via universal templates
+**Status**: ❌ **0% COMPLETE** - Critical bugs prevent any progress
 
 ### 1.1 Add Pinliner Dependency
 
@@ -109,16 +111,17 @@ ls -la  # Should generate component files without errors
 ```
 
 **Success Criteria**:
-- [ ] Universal Template System initializes without errors
-- [ ] `goobits build --universal-templates` generates working multi-file output
-- [ ] Python renderer registers and functions correctly
-- [ ] Pinliner dependency installed and accessible
+- [ ] Universal Template System initializes without errors ❌ **BLOCKED** (Bug #1: Missing language parameter)
+- [ ] `goobits build --universal-templates` generates working multi-file output ❌ **BLOCKED** (Bug #2: Method name mismatch)
+- [ ] Python renderer registers and functions correctly ❌ **BLOCKED** (Both bugs prevent renderer from working)
+- [ ] Pinliner dependency installed and accessible ❌ **NOT STARTED** (blocked by bugs above)
 
 ---
 
-## PHASE 2: Pinliner Integration (Days 2-5)
+## PHASE 2: Pinliner Integration (Days 2-5) ❌ **BLOCKED**
 **Duration**: 2-3 days  
 **Objective**: Integrate Pinliner for automatic component consolidation with single-file as ONLY generation mode
+**Status**: ❌ **0% COMPLETE** - Cannot start until Phase 1 bugs are resolved
 
 ### 2.1 Pinliner Integration
 
@@ -200,12 +203,12 @@ time ./cli.py --help     # Full CLI load time
 ```
 
 **Success Criteria**:
-- [ ] `goobits build --universal-templates` generates ONLY single `cli.py` file + `setup.sh`
-- [ ] Generated CLI contains all helper functionality (config, progress, prompts, completion)
-- [ ] No relative imports in generated CLI code (self-contained via Pinliner)
-- [ ] All existing CLI features work identically
-- [ ] Pinliner consolidation completes without errors
-- [ ] Self-hosting: Goobits can build itself with single-file output
+- [ ] `goobits build --universal-templates` generates ONLY single `cli.py` file + `setup.sh` ❌ **BLOCKED** (Phase 1 bugs must be fixed first)
+- [ ] Generated CLI contains all helper functionality (config, progress, prompts, completion) ❌ **BLOCKED** (cannot test until basic generation works)
+- [ ] No relative imports in generated CLI code (self-contained via Pinliner) ❌ **BLOCKED** (Pinliner integration blocked)
+- [ ] All existing CLI features work identically ❌ **BLOCKED** (generation fails due to bugs)
+- [ ] Pinliner consolidation completes without errors ❌ **BLOCKED** (cannot test until Phase 1 complete)
+- [ ] Self-hosting: Goobits can build itself with single-file output ❌ **BLOCKED** (fundamental generation broken)
 
 ---
 
