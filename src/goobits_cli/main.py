@@ -33,6 +33,7 @@ Unified CLI for Goobits projects
         sys.exit(0)
 
 # Now import heavy dependencies only if needed
+import json
 import yaml
 import toml
 import shutil
@@ -113,7 +114,6 @@ def dependency_to_dict(dep):
 
 def dependencies_to_json(deps):
     """Convert list of dependencies to JSON string."""
-    import json
     return json.dumps([dependency_to_dict(dep) for dep in deps])
 
 def extract_version_from_pyproject(project_dir: Path) -> str:

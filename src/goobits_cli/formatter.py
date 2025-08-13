@@ -205,7 +205,7 @@ def align_header_items(items: List) -> List[dict]:
                 if isinstance(result, dict):
                     dict_items.append(result)
                     continue
-            except:
+            except (AttributeError, TypeError, ValueError):
                 pass
         
         if hasattr(item, 'dict') and callable(getattr(item, 'dict', None)):
@@ -215,7 +215,7 @@ def align_header_items(items: List) -> List[dict]:
                 if isinstance(result, dict):
                     dict_items.append(result)
                     continue
-            except:
+            except (AttributeError, TypeError, ValueError):
                 pass
         
         if hasattr(item, '__dict__'):
