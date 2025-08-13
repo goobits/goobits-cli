@@ -58,7 +58,7 @@ src/tests/e2e/
 
 ### **Layer 4: Performance Tests** 📊 (Very Slow: Variable)
 **Purpose**: Benchmark startup times, memory usage, generation speed
-**Location**: `src/tests/performance/` and `src/tests/phase4e_integration_suite.py`
+**Location**: `src/tests/performance/`
 **Characteristics**: Timing measurements, memory profiling, cross-language benchmarks
 
 ## **Test Classification System**
