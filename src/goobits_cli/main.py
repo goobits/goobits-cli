@@ -643,7 +643,7 @@ def build(
 
         "--universal-templates",
 
-        help="Use Universal Template System (experimental)"
+        help="Use Universal Template System with single-file output (experimental)"
 
     )
 
@@ -723,7 +723,7 @@ def build(
 
     if universal_templates:
 
-        typer.echo("🧪 Using Universal Template System (experimental)")
+        typer.echo("🧪 Using Universal Template System with single-file output (experimental)")
 
     else:
 
@@ -809,7 +809,7 @@ def build(
 
             from goobits_cli.generators.python import PythonGenerator  
 
-            generator = PythonGenerator(use_universal_templates=universal_templates)
+            generator = PythonGenerator(use_universal_templates=universal_templates, consolidate=universal_templates)
 
             
 

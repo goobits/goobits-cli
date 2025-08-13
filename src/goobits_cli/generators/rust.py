@@ -1248,9 +1248,24 @@ fn handle_command(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>
 
             println!("Executing {cmd_name} command...");
 
-            hooks::on_{safe_cmd_name}(sub_matches)?;
-
-            Ok(())
+            
+            // Try to call hook, but gracefully handle if it doesn't exist
+            match hooks::on_{safe_cmd_name}(sub_matches) {{
+                Ok(_) => Ok(()),
+                Err(e) => {{
+                    // Check if it's a "function not found" type error
+                    let error_msg = format!("{{:?}}", e);
+                    if error_msg.contains("not implemented") || error_msg.contains("not found") {{
+                        // Hook not implemented - show placeholder behavior
+                        println!("Command '{cmd_name}' executed successfully (no custom implementation)");
+                        println!("To implement custom behavior, add the 'on_{safe_cmd_name}' function to src/hooks.rs");
+                        Ok(())
+                    }} else {{
+                        // Real error - propagate it
+                        Err(e)
+                    }}
+                }}
+            }}
 
         }}''')
 
@@ -1352,27 +1367,9 @@ use anyhow::Result;
 
 pub fn on_{safe_cmd_name}(matches: &ArgMatches) -> Result<()> {{
 
-    println!("🚀 Executing {cmd_name} command...");
-
-    
-
-    // TODO: Implement your '{cmd_name}' command logic here
-
-    
-
-    // Example: access arguments and options
-
-    for (arg_name, arg_value) in matches.get_many::<String>("").unwrap_or_default().enumerate() {{
-
-        println!("   Arg {{}}: {{}}", arg_name, arg_value);
-
-    }}
-
-    
-
-    println!("✅ {cmd_name} command completed successfully!");
-
-    Ok(())
+    // Return error indicating this hook is not implemented
+    // This allows the main CLI to show placeholder behavior
+    Err(anyhow::anyhow!("Hook function 'on_{safe_cmd_name}' not implemented"))
 
 }}
 

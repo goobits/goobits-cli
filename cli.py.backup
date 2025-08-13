@@ -29,6 +29,7 @@ class ConfigManager:
     def __init__(self, config_file: Optional[str] = None):
         self.config_file = config_file or self._get_default_config_path()
         self.config = Config()
+        self.load_config()
 
     def _get_default_config_path(self) -> str:
         """Get the default configuration file path."""
@@ -95,6 +96,7 @@ class ConfigManager:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary."""
+        return asdict(self.config)
 
 # Global configuration instance
 _config_manager = None
@@ -125,50 +127,129 @@ class CompletionEngine:
 
     def generate_bash_completion(self) -> str:
         """Generate shell completion script."""
-        return "# Shell completion not available in consolidated mode"
-
+        script = '''
 # Bash completion for Goobits CLI
 
+_Goobits_CLI_completions()
+{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # Global options
+    local global_opts="--help -h --version"
 
     # Subcommands
+    local subcommands=" build init serve"
 
-                    ;;            esac
+    case $COMP_CWORD in
+        1)
+            COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
+            ;;
+        *)
+            case "${words[1]}" in
+                build)
+                    local build_opts="--help -h --output-dir -o --output --backup --universal-templates"
+                    COMPREPLY=($(compgen -W "$build_opts" -- "$cur"))
+                    ;;
+                init)
+                    local init_opts="--help -h --template -t --force"
+                    COMPREPLY=($(compgen -W "$init_opts" -- "$cur"))
+                    ;;
+                serve)
+                    local serve_opts="--help -h --host --port -p"
+                    COMPREPLY=($(compgen -W "$serve_opts" -- "$cur"))
+                    ;;
+            esac
+            ;;
+    esac
+}
 
+complete -F _Goobits_CLI_completions goobits
+'''
         return script
 
     def generate_zsh_completion(self) -> str:
         """Generate shell completion script."""
-        return "# Shell completion not available in consolidated mode"
-
+        script = '''
 # Zsh completion for Goobits CLI
 
-_Goobits CLI() {
+_goobits() {
+    local context state line
 
+    _arguments -C \\
         '(--help -h){--help,-h}[Show help information]' \\
         '(--version)--version[Show version information]' \\
-        '1: :_Goobits CLI_commands' \\
+        '1: :_goobits_commands' \\
         '*::arg:->args'
 
+    case $state in
+        args)
+            case $words[1] in
+                build)
                     _arguments \\
-                        '(--help -h){--help,-h}[Show help information]' \\                        '(--output-dir -o){--output-dir,-o}[📁 Output directory (defaults to same directory as config file)]' \\                        '(--output){--output}[📝 Output filename for generated CLI (defaults to 'generated_cli.py')]' \\                        '(--backup){--backup}[💾 Create backup files (.bak) when overwriting existing files]' \\                        '(--universal-templates){--universal-templates}[🧪 Use Universal Template System (experimental)]' \\                        '1:config_path:_files'                    ;;                init)
+                        '(--help -h){--help,-h}[Show help information]' \\
+                        '(--output-dir -o){--output-dir,-o}[Output directory]' \\
+                        '(--output){--output}[Output filename for generated CLI]' \\
+                        '(--backup){--backup}[Create backup files]' \\
+                        '(--universal-templates){--universal-templates}[Use Universal Template System]' \\
+                        '1:config_path:_files'
+                    ;;
+                init)
                     _arguments \\
-                        '(--help -h){--help,-h}[Show help information]' \\                        '(--template -t){--template,-t}[🎯 Template type]' \\                        '(--force){--force}[🔥 Overwrite existing goobits.yaml file]' \\                        '1:project_name:_files'                    ;;                serve)
+                        '(--help -h){--help,-h}[Show help information]' \\
+                        '(--template -t){--template,-t}[Template type]' \\
+                        '(--force){--force}[Overwrite existing goobits.yaml file]' \\
+                        '1:project_name:_files'
+                    ;;
+                serve)
                     _arguments \\
-                        '(--help -h){--help,-h}[Show help information]' \\                        '(--host){--host}[🌍 Host to bind the server to]' \\                        '(--port -p){--port,-p}[🔌 Port to run the server on]' \\                        '1:directory:_files'                    ;;            esac
+                        '(--help -h){--help,-h}[Show help information]' \\
+                        '(--host){--host}[Host to bind the server to]' \\
+                        '(--port -p){--port,-p}[Port to run the server on]' \\
+                        '1:directory:_files'
+                    ;;
+            esac
+            ;;
+    esac
+}
 
-_Goobits CLI_commands() {
+_goobits_commands() {
+    local commands
+    commands=(
+        'build:Build CLI and setup scripts from goobits.yaml configuration'
+        'init:Create initial goobits.yaml template'
+        'serve:Serve local PyPI-compatible package index'
+    )
+    _describe 'commands' commands
+}
 
-_Goobits CLI "$@"
+_goobits "$@"
+'''
         return script
 
     def generate_fish_completion(self) -> str:
         """Generate shell completion script."""
-        return "# Shell completion not available in consolidated mode"
-
+        script = '''
 # Global options
+complete -c goobits -f
+complete -c goobits -s h -l help -d "Show help information"
+complete -c goobits -l version -d "Show version information"
 
+# Subcommands
+complete -c goobits -n "__fish_use_subcommand" -a "build" -d "Build CLI and setup scripts from goobits.yaml configuration"
+complete -c goobits -n "__fish_seen_subcommand_from build" -l output-dir -s o -d "Output directory (defaults to same directory as config file)"
+complete -c goobits -n "__fish_seen_subcommand_from build" -l output -d "Output filename for generated CLI (defaults to 'generated_cli.py')"
+complete -c goobits -n "__fish_seen_subcommand_from build" -l backup -d "Create backup files (.bak) when overwriting existing files"
+complete -c goobits -n "__fish_seen_subcommand_from build" -l universal-templates -d "Use Universal Template System (experimental)"
+complete -c goobits -n "__fish_use_subcommand" -a "init" -d "Create initial goobits.yaml template"
+complete -c goobits -n "__fish_seen_subcommand_from init" -l template -s t -d "Template type"
+complete -c goobits -n "__fish_seen_subcommand_from init" -l force -d "Overwrite existing goobits.yaml file"
+complete -c goobits -n "__fish_use_subcommand" -a "serve" -d "Serve local PyPI-compatible package index"
+complete -c goobits -n "__fish_seen_subcommand_from serve" -l host -d "Host to bind the server to"
+complete -c goobits -n "__fish_seen_subcommand_from serve" -l port -s p -d "Port to run the server on"
+'''
         return script
 
     def install_completion(self, shell: str = None) -> bool:
@@ -197,6 +278,7 @@ _Goobits CLI "$@"
 
             filepath = os.path.join(completion_dir, filename)
             with open(filepath, 'w') as f:
+                f.write(script)
 
             print(f"Completion script installed: {filepath}")
             if shell == 'bash':
@@ -236,6 +318,7 @@ class CliError(Exception):
 
     def __init__(self, message: str, exit_code: ExitCode = ExitCode.GENERAL_ERROR,
                  details: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
         self.message = message
         self.exit_code = exit_code
         self.details = details or {}
@@ -304,6 +387,7 @@ class ErrorHandler:
                 print(f"  {key}: {value}", file=sys.stderr)
 
         if self.verbose:
+            traceback.print_exc()
 
         sys.exit(error.exit_code.value)
 
@@ -316,6 +400,7 @@ class ErrorHandler:
         print(message, file=sys.stderr)
 
         if self.verbose:
+            traceback.print_exc()
         else:
             print("Run with --verbose for more details", file=sys.stderr)
 
@@ -372,6 +457,7 @@ class HookManager:
         self.hooks_module_name = hooks_module_name
         self.hooks_module = None
         self.hooks_cache: Dict[str, Callable] = {}
+        self.load_hooks()
 
     def load_hooks(self) -> None:
         """Load the hooks module."""
@@ -396,6 +482,7 @@ class HookManager:
         if self.hooks_module:
             importlib.reload(self.hooks_module)
         else:
+            self.load_hooks()
 
     def has_hook(self, hook_name: str) -> bool:
         """Check if a hook function exists."""
@@ -449,6 +536,7 @@ class HookManager:
 
     def generate_hooks_template(self) -> str:
         """Generate a template hooks file for the user."""
+        template = f'''"""
 Hook implementations for Goobits CLI Framework
 
 This file contains the business logic for your CLI commands.
@@ -493,6 +581,7 @@ def on_serve(directory, host=None, port=None):
     # Return 0 for success, non-zero for error
     return 0
 # Add any utility functions or classes here
+'''
         return template
 
 class HookNotFoundError(Exception):
@@ -534,6 +623,7 @@ import click
 import sys
 from typing import Any
 try:
+    from .hooks import execute_hook, has_hook
 except ImportError:
     # Hooks not implemented yet
     pass

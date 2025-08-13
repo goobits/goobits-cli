@@ -170,7 +170,7 @@ class PythonGenerator(BaseGenerator):
 
     
 
-    def __init__(self, use_universal_templates: bool = False):
+    def __init__(self, use_universal_templates: bool = False, consolidate: bool = False):
 
         """Initialize the Python generator with Jinja2 environment.
 
@@ -178,11 +178,16 @@ class PythonGenerator(BaseGenerator):
 
         Args:
 
-            use_universal_templates: If True, use Universal Template System
+            use_universal_templates: If True, use Universal Template System with single-file output
+            
+            consolidate: Automatically enabled when using universal templates (legacy parameter)
 
         """
 
         self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
+        
+        # Universal templates always use single-file output (consolidation)
+        self.consolidate = use_universal_templates or consolidate
 
         
 
@@ -196,7 +201,7 @@ class PythonGenerator(BaseGenerator):
 
                 self.python_renderer = PythonRenderer()
 
-                self.universal_engine.register_renderer(self.python_renderer)
+                self.universal_engine.register_renderer("python", self.python_renderer)
 
             except Exception as e:
 
@@ -398,7 +403,7 @@ class PythonGenerator(BaseGenerator):
 
             generated_files = self.universal_engine.generate_cli(
 
-                goobits_config, "python", output_dir
+                goobits_config, "python", output_dir, consolidate=self.consolidate
 
             )
 

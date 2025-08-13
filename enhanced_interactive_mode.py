@@ -9,7 +9,6 @@ import shlex
 from typing import List, Dict, Any, Optional, Callable
 from pathlib import Path
 import logging
-import typer
 
 # Enhanced imports for completion and plugin systems
 try:
@@ -181,13 +180,13 @@ class EnhancedInteractive:
     
     async def run(self) -> None:
         """Run the enhanced interactive mode."""
-        typer.echo(f"🚀 Welcome to  Enhanced Interactive Mode!")
-        typer.echo("📝 Type 'help' for available commands, 'exit' to quit.")
+        print(f"🚀 Welcome to  Enhanced Interactive Mode!")
+        print("📝 Type 'help' for available commands, 'exit' to quit.")
         
         if ENHANCED_FEATURES_AVAILABLE:
-            typer.echo("✨ Enhanced features: Dynamic completion and plugin support enabled")
+            print("✨ Enhanced features: Dynamic completion and plugin support enabled")
         
-        typer.echo()
+        print()
         
         self.running = True
         
@@ -207,12 +206,12 @@ class EnhancedInteractive:
                 await self._execute_command(user_input)
                 
             except KeyboardInterrupt:
-                typer.echo("\n⚠️  Use 'exit' to quit.")
+                print("\n⚠️  Use 'exit' to quit.")
             except EOFError:
-                typer.echo("\n👋 Goodbye!")
+                print("\n👋 Goodbye!")
                 break
             except Exception as e:
-                typer.echo(f"❌ Error: {e}")
+                print(f"❌ Error: {e}")
     
     def _get_enhanced_prompt(self) -> str:
         """Get enhanced prompt with context information."""
@@ -245,30 +244,30 @@ class EnhancedInteractive:
                     handler(args, cmd_info)
             else:
                 # Try to execute as system command or show error
-                typer.echo(f"❌ Unknown command: {command}")
-                typer.echo("💡 Type 'help' to see available commands")
+                print(f"❌ Unknown command: {command}")
+                print("💡 Type 'help' to see available commands")
                 
         except Exception as e:
-            typer.echo(f"❌ Command execution error: {e}")
+            print(f"❌ Command execution error: {e}")
     
     async def _execute_plugin_command(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Execute a plugin-provided command."""
         try:
             plugin_info = cmd_info['plugin_info']
-            typer.echo(f"🔌 Executing plugin command from {plugin_info.name}")
+            print(f"🔌 Executing plugin command from {plugin_info.name}")
             
             # In a real implementation, this would delegate to the plugin's command handler
-            typer.echo(f"⚠️  Plugin command execution not fully implemented")
-            typer.echo(f"   Plugin: {plugin_info.name}")
-            typer.echo(f"   Args: {args}")
+            print(f"⚠️  Plugin command execution not fully implemented")
+            print(f"   Plugin: {plugin_info.name}")
+            print(f"   Args: {args}")
             
         except Exception as e:
-            typer.echo(f"❌ Plugin command error: {e}")
+            print(f"❌ Plugin command error: {e}")
     
     def _cmd_help(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Show help information."""
-        typer.echo("📚 Available Commands:")
-        typer.echo()
+        print("📚 Available Commands:")
+        print()
         
         # Group commands by type
         builtin_commands = {}
@@ -282,41 +281,41 @@ class EnhancedInteractive:
         
         # Show built-in commands
         if builtin_commands:
-            typer.echo("🏠 Built-in Commands:")
+            print("🏠 Built-in Commands:")
             for cmd_name, info in builtin_commands.items():
                 desc = info.get('description', 'No description')
-                typer.echo(f"   {cmd_name:<15} - {desc}")
-            typer.echo()
+                print(f"   {cmd_name:<15} - {desc}")
+            print()
         
         # Show plugin commands
         if plugin_commands:
-            typer.echo("🔌 Plugin Commands:")
+            print("🔌 Plugin Commands:")
             for cmd_name, info in plugin_commands.items():
                 desc = info.get('description', 'No description')
                 plugin_name = info['plugin_info'].name
-                typer.echo(f"   {cmd_name:<15} - {desc} [{plugin_name}]")
-            typer.echo()
+                print(f"   {cmd_name:<15} - {desc} [{plugin_name}]")
+            print()
         
         if ENHANCED_FEATURES_AVAILABLE:
-            typer.echo("✨ Enhanced Features:")
-            typer.echo("   - Dynamic contextual completion (Tab)")
-            typer.echo("   - Plugin command support")
-            typer.echo("   - Advanced history management")
+            print("✨ Enhanced Features:")
+            print("   - Dynamic contextual completion (Tab)")
+            print("   - Plugin command support")
+            print("   - Advanced history management")
     
     def _cmd_exit(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Exit interactive mode."""
-        typer.echo("👋 Goodbye!")
+        print("👋 Goodbye!")
         self.running = False
     
     def _cmd_history(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Show command history."""
         if not self.history:
-            typer.echo("📝 No command history")
+            print("📝 No command history")
             return
         
-        typer.echo("📝 Command History:")
+        print("📝 Command History:")
         for i, cmd in enumerate(self.history[-10:], 1):  # Show last 10 commands
-            typer.echo(f"   {i:2}. {cmd}")
+            print(f"   {i:2}. {cmd}")
     
     def _cmd_clear(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Clear the screen."""
@@ -325,7 +324,7 @@ class EnhancedInteractive:
     async def _cmd_plugins(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Manage plugins."""
         if not ENHANCED_FEATURES_AVAILABLE:
-            typer.echo("❌ Plugin features not available")
+            print("❌ Plugin features not available")
             return
         
         if not args:
@@ -335,57 +334,57 @@ class EnhancedInteractive:
                 plugins = manager.list_plugins()
                 
                 if not plugins:
-                    typer.echo("🔌 No plugins installed")
+                    print("🔌 No plugins installed")
                     return
                 
-                typer.echo("🔌 Installed Plugins:")
+                print("🔌 Installed Plugins:")
                 for plugin in plugins:
                     status_icon = "✅" if plugin.status.value == 'enabled' else "❌"
-                    typer.echo(f"   {status_icon} {plugin.name} v{plugin.version} - {plugin.description}")
+                    print(f"   {status_icon} {plugin.name} v{plugin.version} - {plugin.description}")
                 
             except Exception as e:
-                typer.echo(f"❌ Error listing plugins: {e}")
+                print(f"❌ Error listing plugins: {e}")
         
         elif args[0] == 'install':
             if len(args) < 2:
-                typer.echo("❌ Usage: plugins install <plugin_source>")
+                print("❌ Usage: plugins install <plugin_source>")
                 return
             
             try:
                 manager = get_plugin_manager()
                 success = await manager.install_plugin(args[1])
                 if success:
-                    typer.echo(f"✅ Plugin installed successfully")
+                    print(f"✅ Plugin installed successfully")
                     # Reload plugin commands
                     await self._load_plugins()
                 else:
-                    typer.echo(f"❌ Plugin installation failed")
+                    print(f"❌ Plugin installation failed")
             except Exception as e:
-                typer.echo(f"❌ Error installing plugin: {e}")
+                print(f"❌ Error installing plugin: {e}")
         
         elif args[0] == 'enable':
             if len(args) < 2:
-                typer.echo("❌ Usage: plugins enable <plugin_name>")
+                print("❌ Usage: plugins enable <plugin_name>")
                 return
             
             try:
                 manager = get_plugin_manager()
                 success = await manager.enable_plugin(args[1])
                 if success:
-                    typer.echo(f"✅ Plugin enabled successfully")
+                    print(f"✅ Plugin enabled successfully")
                     await self._load_plugins()
                 else:
-                    typer.echo(f"❌ Plugin enable failed")
+                    print(f"❌ Plugin enable failed")
             except Exception as e:
-                typer.echo(f"❌ Error enabling plugin: {e}")
+                print(f"❌ Error enabling plugin: {e}")
         
         else:
-            typer.echo("❌ Unknown plugin command. Available: list, install, enable")
+            print("❌ Unknown plugin command. Available: list, install, enable")
     
     def _cmd_completion(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Manage completion settings."""
         if not ENHANCED_FEATURES_AVAILABLE:
-            typer.echo("❌ Enhanced completion not available")
+            print("❌ Enhanced completion not available")
             return
         
         if not args:
@@ -393,18 +392,18 @@ class EnhancedInteractive:
             registry = get_completion_registry()
             stats = registry.get_statistics()
             
-            typer.echo("🎯 Completion System Status:")
-            typer.echo(f"   Enabled: {stats['enabled']}")
-            typer.echo(f"   Providers: {stats['providers_count']}")
-            typer.echo(f"   Cache size: {stats['cache_size']}")
+            print("🎯 Completion System Status:")
+            print(f"   Enabled: {stats['enabled']}")
+            print(f"   Providers: {stats['providers_count']}")
+            print(f"   Cache size: {stats['cache_size']}")
             
         elif args[0] == 'clear':
             registry = get_completion_registry()
             registry.clear_cache()
-            typer.echo("✅ Completion cache cleared")
+            print("✅ Completion cache cleared")
         
         else:
-            typer.echo("❌ Unknown completion command. Available: status, clear")
+            print("❌ Unknown completion command. Available: status, clear")
 
 
 def start_enhanced_interactive():

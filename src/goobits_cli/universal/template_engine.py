@@ -1420,7 +1420,7 @@ class UniversalTemplateEngine:
 
         # Get output files from renderer
 
-        output_files = renderer.get_output_files(ir)
+        output_files = renderer.get_output_structure(ir)
 
         
 
@@ -1458,7 +1458,7 @@ class UniversalTemplateEngine:
 
     def generate_cli(self, config: GoobitsConfigSchema, language: str, 
 
-                    output_dir: Path) -> Dict[str, str]:
+                    output_dir: Path, consolidate: bool = False) -> Dict[str, str]:
 
         """
 
@@ -1473,6 +1473,8 @@ class UniversalTemplateEngine:
             language: Target programming language
 
             output_dir: Directory to write generated files
+
+            consolidate: Whether to consolidate multiple files into single file
 
             
 
@@ -1682,6 +1684,20 @@ class UniversalTemplateEngine:
 
         
 
+        # Apply consolidation if requested and supported
+        if consolidate and language == "python" and generated_files:
+            # Check if renderer supports consolidation
+            if hasattr(renderer, 'consolidate_files'):
+                print("🔄 Consolidating files using Pinliner...")
+                try:
+                    generated_files = renderer.consolidate_files(generated_files, output_dir)
+                    print(f"✅ Consolidation completed: {len(generated_files)} files total")
+                except Exception as e:
+                    print(f"⚠️  Consolidation failed: {e}")
+                    # Continue with original files if consolidation fails
+            else:
+                print(f"⚠️  Consolidation not supported for {language}")
+        
         return generated_files
 
     

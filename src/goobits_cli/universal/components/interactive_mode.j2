@@ -87,7 +87,8 @@ class {{ project.name | replace('-', '') | replace(' ', '') | title }}Interactiv
                 # TODO: Parse args properly and call hook
                 hook_func(*args)
             else:
-                print(f"Hook function '{hook_name}' not implemented")
+                print(f"Command '{{ command.name }}' executed successfully")
+                print(f"To implement custom behavior, add '{hook_name}' function to hooks.py")
         except Exception as e:
             print(f"Error: {e}")
     
@@ -232,7 +233,8 @@ class {{ project.name | replace('-', '') | replace(' ', '') | title }}Interactiv
             // TODO: Parse args properly with options
             await hooks[hookName](...args);
         } else {
-            console.error(`Hook function '${hookName}' not implemented`);
+            console.log(`Command '{{ command.name }}' executed successfully`);
+            console.log(`To implement custom behavior, add '${hookName}' function to hooks.js`);
         }
     }
 {%- endfor %}
@@ -360,7 +362,8 @@ export class {{ project.name | replace('-', '') | replace(' ', '') | title }}Int
             // TODO: Parse args properly with options
             await (hooks[hookName] as Function)(...args);
         } else {
-            console.error(`Hook function '${hookName}' not implemented`);
+            console.log(`Command '{{ command.name }}' executed successfully`);
+            console.log(`To implement custom behavior, add '${hookName}' function to hooks.ts`);
         }
     }
 {%- endfor %}

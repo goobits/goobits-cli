@@ -72,7 +72,7 @@ class Builder:
 
     
 
-    def __init__(self, config_data=None, language: str = "python", use_universal_templates: bool = False):
+    def __init__(self, config_data=None, language: str = "python", use_universal_templates: bool = False, consolidate: bool = False):
 
         """Initialize the Builder with appropriate generator.
 
@@ -86,11 +86,15 @@ class Builder:
 
             use_universal_templates: If True, use Universal Template System
 
+            consolidate: If True, consolidate multiple files into single file
+
         """
 
         self.language = language
 
         self.use_universal_templates = use_universal_templates
+        
+        self.consolidate = consolidate
 
         self.config_data = config_data
 
@@ -114,7 +118,7 @@ class Builder:
 
             # Default to Python
 
-            self.generator = PythonGenerator(use_universal_templates=use_universal_templates)
+            self.generator = PythonGenerator(use_universal_templates=use_universal_templates, consolidate=self.consolidate)
 
     
 
@@ -142,7 +146,7 @@ class Builder:
 
 
 
-def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str, version: Optional[str] = None, use_universal_templates: bool = False) -> str:
+def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str, version: Optional[str] = None, use_universal_templates: bool = False, consolidate: bool = False) -> str:
 
     """Generate CLI Python code from configuration.
 
@@ -163,9 +167,11 @@ def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_n
         version: Optional version string
 
         use_universal_templates: If True, use Universal Template System
+        
+        consolidate: If True, consolidate multiple files into single file
 
     """
 
-    generator = PythonGenerator(use_universal_templates=use_universal_templates)
+    generator = PythonGenerator(use_universal_templates=use_universal_templates, consolidate=consolidate)
 
     return generator.generate(config, file_name, version)
