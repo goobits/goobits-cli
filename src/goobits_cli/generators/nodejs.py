@@ -30,6 +30,12 @@ try:
 
     from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
 
+    from ..universal.interactive import integrate_interactive_mode
+
+    from ..universal.completion import integrate_completion_system, get_completion_files_for_language
+
+    from ..universal.plugins import integrate_plugin_system
+
     UNIVERSAL_TEMPLATES_AVAILABLE = True
 
 except ImportError:
@@ -39,6 +45,14 @@ except ImportError:
     UniversalTemplateEngine = None
 
     UniversalNodeJSRenderer = None
+
+    integrate_interactive_mode = None
+
+    integrate_completion_system = None
+
+    get_completion_files_for_language = None
+
+    integrate_plugin_system = None
 
 
 
@@ -443,6 +457,48 @@ class NodeJSGenerator(BaseGenerator):
 
                 
 
+            # Integrate interactive mode support
+
+            if integrate_interactive_mode:
+
+                config_dict = goobits_config.dict()
+
+                config_dict = integrate_interactive_mode(config_dict, 'nodejs')
+
+                # Convert back to GoobitsConfigSchema
+
+                goobits_config = GoobitsConfigSchema(**config_dict)
+
+            
+
+            # Integrate completion system support
+
+            if integrate_completion_system:
+
+                config_dict = goobits_config.dict()
+
+                config_dict = integrate_completion_system(config_dict, 'nodejs')
+
+                # Convert back to GoobitsConfigSchema
+
+                goobits_config = GoobitsConfigSchema(**config_dict)
+
+            
+
+            # Integrate plugin system support
+
+            if integrate_plugin_system:
+
+                config_dict = goobits_config.dict()
+
+                config_dict = integrate_plugin_system(config_dict, 'nodejs')
+
+                # Convert back to GoobitsConfigSchema
+
+                goobits_config = GoobitsConfigSchema(**config_dict)
+
+            
+
             # Generate using universal engine
 
             output_dir = Path(".")
@@ -543,6 +599,29 @@ class NodeJSGenerator(BaseGenerator):
 
         
 
+        # Integrate completion system for legacy mode
+
+        completion_features = None
+
+        if integrate_completion_system:
+
+            config_dict = config.dict() if hasattr(config, 'dict') else {
+
+                'cli': cli_config.dict() if hasattr(cli_config, 'dict') else cli_config
+
+            }
+
+            config_dict = integrate_completion_system(config_dict, 'nodejs')
+
+            # Update cli_config with completion features
+
+            if 'features' in config_dict and 'completion_system' in config_dict['features']:
+
+                # Add completion features to context
+
+                completion_features = config_dict['features']['completion_system']
+
+
         # Prepare context for template rendering
 
         context = {
@@ -564,6 +643,8 @@ class NodeJSGenerator(BaseGenerator):
             'installation': metadata['installation'],
 
             'hooks_path': metadata['hooks_path'],
+
+            'completion_features': completion_features,
 
         }
 
@@ -919,6 +1000,29 @@ export default cli;
 
         
 
+        # Integrate completion system for legacy mode
+
+        completion_features = None
+
+        if integrate_completion_system:
+
+            config_dict = config.dict() if hasattr(config, 'dict') else {
+
+                'cli': cli_config.dict() if hasattr(cli_config, 'dict') else cli_config
+
+            }
+
+            config_dict = integrate_completion_system(config_dict, 'nodejs')
+
+            # Update cli_config with completion features
+
+            if 'features' in config_dict and 'completion_system' in config_dict['features']:
+
+                # Add completion features to context
+
+                completion_features = config_dict['features']['completion_system']
+
+
         # Prepare context for template rendering
 
         context = {
@@ -940,6 +1044,8 @@ export default cli;
             'installation': metadata['installation'],
 
             'hooks_path': metadata['hooks_path'],
+
+            'completion_features': completion_features,
 
         }
 
@@ -1064,6 +1170,28 @@ export default cli;
         except TemplateNotFound:
 
             pass
+
+        
+
+        # Generate shell completion scripts if completion system is enabled
+
+        if integrate_completion_system and get_completion_files_for_language:
+
+            completion_files = get_completion_files_for_language('nodejs', context['command_name'])
+
+            for completion_file in completion_files:
+
+                try:
+
+                    template = self.env.get_template(completion_file['template'])
+
+                    files[completion_file['output']] = template.render(**context)
+
+                except TemplateNotFound:
+
+                    # Skip if template doesn't exist
+
+                    pass
 
         
 

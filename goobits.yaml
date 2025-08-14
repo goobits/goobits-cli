@@ -5,6 +5,7 @@ package_name: goobits-cli
 command_name: goobits
 display_name: "Goobits CLI Framework"
 description: "Build professional command-line tools with YAML configuration"
+# language: python  # Default language (can be overridden with nodejs, typescript, rust)
 
 # CLI generation configuration
 cli_output_path: "src/goobits_cli/generated_cli.py"

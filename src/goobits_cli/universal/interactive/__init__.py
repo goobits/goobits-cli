@@ -70,17 +70,40 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
     """
 
-    # Ensure root command has options list
+    # Handle different configuration structures
+    # Support both root_command and cli.options structures
 
-    if 'root_command' not in cli_config:
-
-        cli_config['root_command'] = {}
+    target_options = None
 
     
 
-    if 'options' not in cli_config['root_command']:
+    # Check for CLI structure (goobits format)
 
-        cli_config['root_command']['options'] = []
+    if 'cli' in cli_config:
+
+        if 'options' not in cli_config['cli']:
+
+            cli_config['cli']['options'] = []
+
+        target_options = cli_config['cli']['options']
+
+    else:
+
+        # Fallback to root_command structure
+
+        if 'root_command' not in cli_config:
+
+            cli_config['root_command'] = {}
+
+        
+
+        if 'options' not in cli_config['root_command']:
+
+            cli_config['root_command']['options'] = []
+
+        
+
+        target_options = cli_config['root_command']['options']
 
     
 
@@ -90,7 +113,7 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
         opt.get('name') == 'interactive'
 
-        for opt in cli_config['root_command']['options']
+        for opt in target_options
 
     )
 
@@ -98,21 +121,23 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
     if not has_interactive:
 
-        # Add the interactive flag
+        # Add the interactive flag using goobits option format
 
-        cli_config['root_command']['options'].append({
+        interactive_option = {
 
             'name': 'interactive',
 
             'short': 'i',
 
-            'description': 'Launch interactive mode',
+            'type': 'flag',
 
-            'type': 'boolean',
+            'desc': 'Launch interactive mode'
 
-            'default': False
+        }
 
-        })
+        
+
+        target_options.append(interactive_option)
 
     
 
@@ -124,11 +149,25 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
     
 
+    # Get CLI name from appropriate configuration structure
+
+    cli_name = 'cli'
+
+    if 'cli' in cli_config and 'name' in cli_config['cli']:
+
+        cli_name = cli_config['cli']['name']
+
+    elif 'root_command' in cli_config and 'name' in cli_config['root_command']:
+
+        cli_name = cli_config['root_command']['name']
+
+    
+
     cli_config['features']['interactive_mode'] = {
 
         'enabled': True,
 
-        'prompt': f"{cli_config['root_command'].get('name', 'cli')}> ",
+        'prompt': f"{cli_name}> ",
 
         'history_enabled': True,
 

@@ -1,15 +1,15 @@
-# Test Rust CLI
+# Goobits CLI Framework
 
-A test CLI built with Rust
+Build professional command-line tools with YAML configuration
 
-> Test CLI for Rust generation
+> Build professional command-line tools with YAML configuration
 
 ## Installation
 
 ### From Package Manager (Recommended)
 
 ```bash
-cargo install test-rust-cli
+npm install -g goobits-cli
 ```
 
 ### From Source
@@ -18,7 +18,7 @@ Clone this repository and build from source:
 
 ```bash
 git clone https://github.com/user/repo
-cd test-rust-cli
+cd goobits-cli
 ./setup.sh --dev
 ```
 
@@ -34,16 +34,36 @@ For development with live updates:
 
 ### Basic Commands
 
-#### `test_rust hello`
-Say hello
+#### `goobits build` 🔨
+Build CLI and setup scripts from goobits.yaml configuration
 
 ```bash
-test_rust hello [name] [OPTIONS]```
+goobits build [config_path] [OPTIONS]```
 
 **Arguments:**
-- `name`: Name to greet
+- `config_path`: Path to goobits.yaml file (defaults to ./goobits.yaml)
 **Options:**
-- `-g, --greeting <str>`: Custom greeting (default: Hello)
+- `-o, --output-dir <str>`: 📁 Output directory (defaults to same directory as config file)- `--output <str>`: 📝 Output filename for generated CLI (defaults to 'generated_cli.py')- `--backup`: 💾 Create backup files (.bak) when overwriting existing files- `--universal-templates`: 🧪 Use Universal Template System (experimental)
+#### `goobits init` 🆕
+Create initial goobits.yaml template
+
+```bash
+goobits init [project_name] [OPTIONS]```
+
+**Arguments:**
+- `project_name`: Name of the project (optional)
+**Options:**
+- `-t, --template <str>`: 🎯 Template type (default: basic)- `--force`: 🔥 Overwrite existing goobits.yaml file
+#### `goobits serve` 🌐
+Serve local PyPI-compatible package index
+
+```bash
+goobits serve <directory> [OPTIONS]```
+
+**Arguments:**
+- `directory`: Directory containing packages to serve
+**Options:**
+- `--host <str>`: 🌍 Host to bind the server to (default: localhost)- `-p, --port <int>`: 🔌 Port to run the server on (default: 8080)
 
 ### Global Options
 
@@ -51,7 +71,7 @@ All commands support these global options:
 
 - `--help`: Show help message and exit
 - `--version`: Show version information
-
+- `-v, --verbose`: Enable verbose output with detailed error messages and stack traces
 **Verbose Mode:**
 When `--verbose` is enabled, the CLI provides:
 - Detailed error messages with full context
@@ -63,29 +83,41 @@ When `--verbose` is enabled, the CLI provides:
 
 ```bash
 # Show help
-test_rust --help
+goobits --help
 
 # Show version
-test_rust --version
+goobits --version
 
 # Enable verbose output for detailed error messages
-test_rust --verbose hello
+goobits --verbose build
 
 # Short form of verbose flag
-test_rust -v hello
+goobits -v build
 
-# Example hello command
-test_rust hello
+# Example build command
+goobits build
 # Same command with verbose output
-test_rust --verbose hello
+goobits --verbose build
+# Example init command
+goobits init
+# Same command with verbose output
+goobits --verbose init
+# Example serve command
+goobits serve "example_directory"
+# Same command with verbose output
+goobits --verbose serve "example_directory"
 # Error handling examples
-test_rust invalid-command              # Standard error message
-test_rust --verbose invalid-command   # Detailed error with stack trace
+goobits invalid-command              # Standard error message
+goobits --verbose invalid-command   # Detailed error with stack trace
 ```
 
 ## Configuration
 
-The CLI stores configuration in `~/.config/test-rust-cli/config.yaml`.
+Configuration locations:
+
+- **Linux**: `~/.config/goobits-cli/`
+- **macOS**: `~/Library/Application Support/goobits-cli/`
+- **Windows**: `%APPDATA%\goobits-cli\`
 
 You can edit this file directly or use the CLI to manage settings.
 
@@ -103,12 +135,12 @@ You can also control verbose mode using environment variables:
 
 ```bash
 # Enable verbose mode for all commands
-export TEST_RUST_VERBOSE=true
-test_rust hello
+export GOOBITS_VERBOSE=true
+goobits build
 
 # Disable verbose mode (overrides config)
-export TEST_RUST_VERBOSE=false
-test_rust hello
+export GOOBITS_VERBOSE=false
+goobits build
 ```
 
 ## Development
@@ -116,31 +148,34 @@ test_rust hello
 ### Building
 
 ```bash
-# Debug build
-cargo build
+# Install dependencies
+npm install
 
-# Release build
-cargo build --release
+# Build (if TypeScript)
+npm run build
+
+# Run tests
+npm test
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-cargo test
+npm test
 
-# Run tests with output
-cargo test -- --nocapture
+# Run with coverage
+npm run test:coverage
 ```
 
 ### Running
 
 ```bash
-# Run from source (debug)
-cargo run -- --help
+# Run from source (development)
+node cli.js --help
 
-# Run specific command
-cargo run -- hello --help
+# Or using npm link
+npm link && goobits --help
 ```
 
 ## Shell Completions
@@ -160,7 +195,7 @@ This creates completion files in the `completions/` directory for:
 
 **Bash:**
 ```bash
-source completions/test_rust.bash
+source completions/goobits.bash
 ```
 
 **Zsh:**
@@ -172,28 +207,27 @@ autoload -U compinit && compinit
 
 **Fish:**
 ```bash
-cp completions/test_rust.fish ~/.config/fish/completions/
+cp completions/goobits.fish ~/.config/fish/completions/
 ```
 
 ## Architecture
 
 This CLI is built using:
 
-- **[Clap](https://docs.rs/clap/)**: Command-line argument parsing with derive macros
-- **[Anyhow](https://docs.rs/anyhow/)**: Flexible error handling
-- **[Serde](https://docs.rs/serde/)**: Serialization/deserialization for configuration
-- **[Tokio](https://docs.rs/tokio/)**: Async runtime (optional feature)
+- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
+- **[TypeScript](https://www.typescriptlang.org/)**: Typed superset of JavaScript
+- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
 
 ### Project Structure
 
 ```
-src/
-├── main.rs          # CLI entry point and command definitions
-├── lib.rs           # Library exports and core functionality  
-├── config.rs        # Configuration management
-├── commands.rs      # Command implementations
-├── hooks.rs         # User-defined business logic
-└── utils.rs         # Utility functions
+├── cli.ts           # CLI entry point
+├── package.json         # NPM package configuration
+├── src/
+│   ├── hooks.ts       # User-defined business logic
+│   ├── config.ts      # Configuration management
+│   └── utils.ts       # Utility functions
+└── completions/         # Shell completion scripts
 ```
 
 ## Contributing
@@ -216,4 +250,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 1.0.0
 - Initial release
 - Core CLI functionality implemented
-- `hello` command: Say hello
+- `build` command: Build CLI and setup scripts from goobits.yaml configuration
+- `init` command: Create initial goobits.yaml template
+- `serve` command: Serve local PyPI-compatible package index

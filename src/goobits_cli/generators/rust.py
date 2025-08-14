@@ -38,6 +38,12 @@ try:
 
     from ..universal.renderers.rust_renderer import RustRenderer
 
+    from ..universal.interactive import integrate_interactive_mode
+
+    from ..universal.completion import integrate_completion_system, get_completion_files_for_language
+
+    from ..universal.plugins import integrate_plugin_system
+
     UNIVERSAL_TEMPLATES_AVAILABLE = True
 
 except ImportError:
@@ -47,6 +53,14 @@ except ImportError:
     UniversalTemplateEngine = None
 
     RustRenderer = None
+
+    integrate_interactive_mode = None
+
+    integrate_completion_system = None
+
+    get_completion_files_for_language = None
+
+    integrate_plugin_system = None
 
 
 
@@ -395,6 +409,48 @@ class RustGenerator(BaseGenerator):
                 goobits_config = config
 
                 
+
+            # Integrate interactive mode support
+
+            if integrate_interactive_mode:
+
+                config_dict = goobits_config.dict()
+
+                config_dict = integrate_interactive_mode(config_dict, 'rust')
+
+                # Convert back to GoobitsConfigSchema
+
+                goobits_config = GoobitsConfigSchema(**config_dict)
+
+            
+
+            # Integrate completion system support
+
+            if integrate_completion_system:
+
+                config_dict = goobits_config.dict()
+
+                config_dict = integrate_completion_system(config_dict, 'rust')
+
+                # Convert back to GoobitsConfigSchema
+
+                goobits_config = GoobitsConfigSchema(**config_dict)
+
+            
+
+            # Integrate plugin system support
+
+            if integrate_plugin_system:
+
+                config_dict = goobits_config.dict()
+
+                config_dict = integrate_plugin_system(config_dict, 'rust')
+
+                # Convert back to GoobitsConfigSchema
+
+                goobits_config = GoobitsConfigSchema(**config_dict)
+
+            
 
             # Generate using universal engine
 

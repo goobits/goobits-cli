@@ -54,7 +54,7 @@ except ImportError:
     multiple=True,
     {%- endif %}
 )
-{%- endfor %}
+{% endfor %}
 
 def cli({% for option in cli.root_command.options %}{{ option.name.replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %}):
     """{{ cli.root_command.description }}"""
@@ -76,7 +76,7 @@ def cli({% for option in cli.root_command.options %}{{ option.name.replace('-', 
 @cli.command(name="{{ command.name }}", help="{{ command.description }}")
 {% for arg in command.arguments -%}
 @click.argument("{{ arg.name }}"{% if not arg.required %}, required=False{% endif %}{% if arg.multiple %}, nargs=-1{% endif %})
-{% endfor -%}
+{% endfor %}
 {% for option in command.options -%}
 @click.option(
     "--{{ option.name }}"{% if option.short %}, "-{{ option.short }}"{% endif %},
@@ -94,7 +94,7 @@ def cli({% for option in cli.root_command.options %}{{ option.name.replace('-', 
     multiple=True,
     {%- endif %}
 )
-{% endfor -%}
+{% endfor %}
 
 def {{ command.name.replace('-', '_') }}_command({% for arg in command.arguments %}{{ arg.name }}{% if command.options or not loop.last %}, {% endif %}{% endfor %}{% for option in command.options %}{{ option.name.replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %}):
     """{{ command.description }}"""

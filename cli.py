@@ -22,7 +22,12 @@ except ImportError:
     "--verbose", "-v",
     help="Enable verbose output with detailed error messages and stack traces",
     is_flag=True,)
-def cli(verbose):
+@click.option(
+    "--interactive", "-i",
+    help="Launch interactive mode",
+    is_flag=True,)
+
+def cli(verbose, interactive):
     """Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."""
     pass
 @cli.command(name="build", help="Build CLI and setup scripts from goobits.yaml configuration")
@@ -41,6 +46,7 @@ def cli(verbose):
     "--universal-templates",
     help="🧪 Use Universal Template System (experimental)",
     is_flag=True,)
+
 def build_command(config_path, output_dir, output, backup, universal_templates):
     """Build CLI and setup scripts from goobits.yaml configuration"""
     try:
@@ -86,6 +92,7 @@ def build_command(config_path, output_dir, output, backup, universal_templates):
     "--force",
     help="🔥 Overwrite existing goobits.yaml file",
     is_flag=True,)
+
 def init_command(project_name, template, force):
     """Create initial goobits.yaml template"""
     try:
@@ -130,6 +137,7 @@ def init_command(project_name, template, force):
 @click.option(
     "--port", "-p",
     help="🔌 Port to run the server on",    default=8080,)
+
 def serve_command(directory, host, port):
     """Serve local PyPI-compatible package index"""
     try:

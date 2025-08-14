@@ -14,49 +14,17 @@
 
 
 
-export interface CommandArgs {
-
-  commandName: string;
-
-  rawArgs?: Record<string, any>;
-
-  [key: string]: any;
-
-}
-
-
-
-/**
-
- * Hook function for unknown commands
-
- * @param args - Command arguments and options
-
- * @returns Promise<void>
-
- */
-
-export async function onUnknownCommand(args: CommandArgs): Promise<void> {
-
-  console.log(`🤔 Unknown command: ${args.commandName}`);
-
-  console.log('   Use --help to see available commands');
-
-}
-
-
-
 /**
 
  * Hook function for 'build' command
 
- * @param args - Command arguments and options
+ * @param {Object} args - Command arguments and options
 
- * @returns Promise<void>
+ * @returns {Promise<void>}
 
  */
 
-export async function onBuild(args: CommandArgs): Promise<void> {
+export async function onBuild(args) {
 
     // TODO: Implement your 'build' command logic here
 
@@ -84,17 +52,19 @@ export async function onBuild(args: CommandArgs): Promise<void> {
 
 }
 
+
+
 /**
 
  * Hook function for 'init' command
 
- * @param args - Command arguments and options
+ * @param {Object} args - Command arguments and options
 
- * @returns Promise<void>
+ * @returns {Promise<void>}
 
  */
 
-export async function onInit(args: CommandArgs): Promise<void> {
+export async function onInit(args) {
 
     // TODO: Implement your 'init' command logic here
 
@@ -122,17 +92,19 @@ export async function onInit(args: CommandArgs): Promise<void> {
 
 }
 
+
+
 /**
 
  * Hook function for 'serve' command
 
- * @param args - Command arguments and options
+ * @param {Object} args - Command arguments and options
 
- * @returns Promise<void>
+ * @returns {Promise<void>}
 
  */
 
-export async function onServe(args: CommandArgs): Promise<void> {
+export async function onServe(args) {
 
     // TODO: Implement your 'serve' command logic here
 
@@ -159,3 +131,22 @@ export async function onServe(args: CommandArgs): Promise<void> {
     console.log('✅ serve command completed successfully!');
 
 }
+
+
+
+/**
+
+ * Default hook for unhandled commands
+
+ * @param {Object} args - Command arguments
+
+ * @throws {Error} When no hook implementation is found
+
+ */
+
+export async function onUnknownCommand(args) {
+
+    throw new Error(`No hook implementation found for command: ${args.commandName}`);
+
+}
+
