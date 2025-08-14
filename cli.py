@@ -127,49 +127,13 @@ class CompletionEngine:
         """Generate shell completion script."""
         return "# Shell completion not available in consolidated mode"
 
-# Bash completion for Goobits CLI
-
-
-    # Global options
-
-    # Subcommands
-
-                    ;;            esac
-
-        return script
-
     def generate_zsh_completion(self) -> str:
         """Generate shell completion script."""
         return "# Shell completion not available in consolidated mode"
 
-# Zsh completion for Goobits CLI
-
-_Goobits CLI() {
-
-        '(--help -h){--help,-h}[Show help information]' \\
-        '(--version)--version[Show version information]' \\
-        '1: :_Goobits CLI_commands' \\
-        '*::arg:->args'
-
-                    _arguments \\
-                        '(--help -h){--help,-h}[Show help information]' \\                        '(--output-dir -o){--output-dir,-o}[📁 Output directory (defaults to same directory as config file)]' \\                        '(--output){--output}[📝 Output filename for generated CLI (defaults to 'generated_cli.py')]' \\                        '(--backup){--backup}[💾 Create backup files (.bak) when overwriting existing files]' \\                        '(--universal-templates){--universal-templates}[🧪 Use Universal Template System (experimental)]' \\                        '1:config_path:_files'                    ;;                init)
-                    _arguments \\
-                        '(--help -h){--help,-h}[Show help information]' \\                        '(--template -t){--template,-t}[🎯 Template type]' \\                        '(--force){--force}[🔥 Overwrite existing goobits.yaml file]' \\                        '1:project_name:_files'                    ;;                serve)
-                    _arguments \\
-                        '(--help -h){--help,-h}[Show help information]' \\                        '(--host){--host}[🌍 Host to bind the server to]' \\                        '(--port -p){--port,-p}[🔌 Port to run the server on]' \\                        '1:directory:_files'                    ;;            esac
-
-_Goobits CLI_commands() {
-
-_Goobits CLI "$@"
-        return script
-
     def generate_fish_completion(self) -> str:
         """Generate shell completion script."""
         return "# Shell completion not available in consolidated mode"
-
-# Global options
-
-        return script
 
     def install_completion(self, shell: str = None) -> bool:
         """Install completion script for the specified shell."""
@@ -197,7 +161,7 @@ _Goobits CLI "$@"
 
             filepath = os.path.join(completion_dir, filename)
             with open(filepath, 'w') as f:
-
+                f.write("# Shell completion not available in consolidated mode")
             print(f"Completion script installed: {filepath}")
             if shell == 'bash':
                 print("Please restart your terminal or run: source ~/.bashrc")
@@ -282,9 +246,9 @@ class ErrorHandler:
         Handle an error and exit the program with appropriate code.
 
         Args:
-            error: The exception that occurred
+        error: The exception that occurred
             context: Optional context information
-        """
+    """
         if isinstance(error, CliError):
             self._handle_cli_error(error, context)
         else:
@@ -406,7 +370,7 @@ class HookManager:
         Execute a hook function.
 
         Args:
-            hook_name: Name of the hook function
+        hook_name: Name of the hook function
             *args: Positional arguments to pass to the hook
             **kwargs: Keyword arguments to pass to the hook
 
@@ -416,7 +380,7 @@ class HookManager:
         Raises:
             HookNotFoundError: If the hook doesn't exist
             Exception: Any exception raised by the hook
-        """
+    """
         if not self.has_hook(hook_name):
             raise HookNotFoundError(f"Hook '{hook_name}' not found")
 
@@ -469,27 +433,37 @@ def on_build(config_path, output_dir=None, output=None, backup=None, universal_t
     """
     Build CLI and setup scripts from goobits.yaml configuration
 
-    Args:        config_path (str): Path to goobits.yaml file (defaults to ./goobits.yaml)        output_dir (str): 📁 Output directory (defaults to same directory as config file)        output (str): 📝 Output filename for generated CLI (defaults to 'generated_cli.py')        backup (str): 💾 Create backup files (.bak) when overwriting existing files        universal_templates (str): 🧪 Use Universal Template System (experimental)    """
+    """Command function."""
     # TODO: Implement your business logic here
-    print(f"Hook on_build called")    print(f"Arguments:config_path={config_path}")    print(f"Options:output_dir={output_dir}, output={output}, backup={backup}, universal_templates={universal_templates}")
+    print(f"Hook on_build called")
+    print(f"Arguments:config_path={config_path}")
+    print(f"Options:output_dir={output_dir}, output={output}, backup={backup}, universal_templates={universal_templates}")
     # Return 0 for success, non-zero for error
     return 0
 def on_init(project_name, template=None, force=None):
     """
     Create initial goobits.yaml template
 
-    Args:        project_name (str): Name of the project (optional)        template (str): 🎯 Template type        force (str): 🔥 Overwrite existing goobits.yaml file    """
+    Args:
+        project_name (str): Name of the project (optional)        template (str): [template] Template type        force (str): [force] Overwrite existing goobits.yaml file
+    """
     # TODO: Implement your business logic here
-    print(f"Hook on_init called")    print(f"Arguments:project_name={project_name}")    print(f"Options:template={template}, force={force}")
+    print(f"Hook on_init called")
+    print(f"Arguments:project_name={project_name}")
+    print(f"Options:template={template}, force={force}")
     # Return 0 for success, non-zero for error
     return 0
 def on_serve(directory, host=None, port=None):
     """
     Serve local PyPI-compatible package index
 
-    Args:        directory (str): Directory containing packages to serve        host (str): 🌍 Host to bind the server to        port (str): 🔌 Port to run the server on    """
+    Args:
+        directory (str): Directory containing packages to serve        host (str): [host] Host to bind the server to        port (str): [port] Port to run the server on
+    """
     # TODO: Implement your business logic here
-    print(f"Hook on_serve called")    print(f"Arguments:directory={directory}")    print(f"Options:host={host}, port={port}")
+    print(f"Hook on_serve called")
+    print(f"Arguments:directory={directory}")
+    print(f"Options:host={host}, port={port}")
     # Return 0 for success, non-zero for error
     return 0
 # Add any utility functions or classes here
@@ -554,17 +528,17 @@ def cli(verbose):
 @click.argument("config_path", required=False)
 @click.option(
     "--output-dir", "-o",
-    help="📁 Output directory (defaults to same directory as config file)",)
+    help="[folder] Output directory (defaults to same directory as config file)",)
 @click.option(
     "--output",
-    help="📝 Output filename for generated CLI (defaults to 'generated_cli.py')",)
+    help="[file] Output filename for generated CLI (defaults to 'generated_cli.py')",)
 @click.option(
     "--backup",
-    help="💾 Create backup files (.bak) when overwriting existing files",
+    help="[backup] Create backup files (.bak) when overwriting existing files",
     is_flag=True,)
 @click.option(
     "--universal-templates",
-    help="🧪 Use Universal Template System (experimental)",
+    help="[experimental] Use Universal Template System (experimental)",
     is_flag=True,)
 def build_command(config_path, output_dir, output, backup, universal_templates):
     """Build CLI and setup scripts from goobits.yaml configuration"""
@@ -604,10 +578,10 @@ def build_command(config_path, output_dir, output, backup, universal_templates):
 @click.argument("project_name", required=False)
 @click.option(
     "--template", "-t",
-    help="🎯 Template type",    default='basic',)
+    help="[template] Template type",    default='basic',)
 @click.option(
     "--force",
-    help="🔥 Overwrite existing goobits.yaml file",
+    help="[force] Overwrite existing goobits.yaml file",
     is_flag=True,)
 def init_command(project_name, template, force):
     """Create initial goobits.yaml template"""
@@ -647,10 +621,10 @@ def init_command(project_name, template, force):
 @click.argument("directory")
 @click.option(
     "--host",
-    help="🌍 Host to bind the server to",    default='localhost',)
+    help="[host] Host to bind the server to",    default='localhost',)
 @click.option(
     "--port", "-p",
-    help="🔌 Port to run the server on",    default=8080,)
+    help="[port] Port to run the server on",    default=8080,)
 def serve_command(directory, host, port):
     """Serve local PyPI-compatible package index"""
     try:

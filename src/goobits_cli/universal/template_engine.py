@@ -1572,6 +1572,9 @@ class UniversalTemplateEngine:
 
         context = renderer.get_template_context(ir)
 
+        # Add consolidation mode flag to context
+        context['consolidation_mode'] = consolidate
+
         
 
         # Get output structure

@@ -57,6 +57,10 @@ class PythonRenderer(LanguageRenderer):
     - Hook system integration
 
     """
+    
+    def __init__(self, consolidate: bool = False):
+        """Initialize Python renderer with optional consolidation mode."""
+        self.consolidate = consolidate
 
     
 
@@ -166,7 +170,9 @@ class PythonRenderer(LanguageRenderer):
 
                 "generator_version": "1.4.0",  # TODO: Get from version file
 
-            }
+            },
+
+            "consolidation_mode": self.consolidate
 
         })
 

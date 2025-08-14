@@ -26,6 +26,9 @@ class CompletionEngine:
     
     def generate_bash_completion(self) -> str:
         """Generate bash completion script."""
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode"
+{%- else %}
         script = '''#!/bin/bash
 # Bash completion for {{ cli.root_command.name }}
 
@@ -62,9 +65,13 @@ _{{ cli.root_command.name.replace("-", "_") }}_completions()
 complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
 '''
         return script
+{%- endif %}
     
     def generate_zsh_completion(self) -> str:
         """Generate zsh completion script."""
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode"
+{%- else %}
         script = f'''#compdef {{ cli.root_command.name }}
 # Zsh completion for {{ cli.root_command.name }}
 
@@ -110,9 +117,13 @@ _{{ cli.root_command.name.replace("-", "_") }}_commands() {
 _{{ cli.root_command.name.replace("-", "_") }} "$@"
 '''
         return script
+{%- endif %}
     
     def generate_fish_completion(self) -> str:
         """Generate fish completion script."""
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode"
+{%- else %}
         script = f'''# Fish completion for {{ cli.root_command.name }}
 
 # Global options
@@ -129,6 +140,7 @@ complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ comma
 {%- endfor %}
 '''
         return script
+{%- endif %}
     
     def install_completion(self, shell: str = None) -> bool:
         """Install completion script for the specified shell."""
@@ -184,6 +196,9 @@ class CompletionEngine {
     }
 
     generateBashCompletion() {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
         return `#!/bin/bash
 # Bash completion for {{ cli.root_command.name }}
 
@@ -219,9 +234,13 @@ _{{ cli.root_command.name.replace("-", "_") }}_completions()
 
 complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
 `;
+{%- endif %}
     }
 
     generateZshCompletion() {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
         return `#compdef {{ cli.root_command.name }}
 # Zsh completion for {{ cli.root_command.name }}
 
@@ -266,9 +285,13 @@ _{{ cli.root_command.name.replace("-", "_") }}_commands() {
 
 _{{ cli.root_command.name.replace("-", "_") }} "$@"
 `;
+{%- endif %}
     }
 
     generateFishCompletion() {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
         return `# Fish completion for {{ cli.root_command.name }}
 
 # Global options
@@ -284,6 +307,7 @@ complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ comma
 {%- endfor %}
 {%- endfor %}
 `;
+{%- endif %}
     }
 
     async installCompletion(shell = null) {
@@ -370,6 +394,9 @@ export class CompletionEngine {
     constructor(private cliSchema: CliSchema) {}
 
     public generateBashCompletion(): string {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
         return `#!/bin/bash
 # Bash completion for {{ cli.root_command.name }}
 
@@ -405,9 +432,13 @@ _{{ cli.root_command.name.replace("-", "_") }}_completions()
 
 complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
 `;
+{%- endif %}
     }
 
     public generateZshCompletion(): string {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
         return `#compdef {{ cli.root_command.name }}
 # Zsh completion for {{ cli.root_command.name }}
 
@@ -452,9 +483,13 @@ _{{ cli.root_command.name.replace("-", "_") }}_commands() {
 
 _{{ cli.root_command.name.replace("-", "_") }} "$@"
 `;
+{%- endif %}
     }
 
     public generateFishCompletion(): string {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
         return `# Fish completion for {{ cli.root_command.name }}
 
 # Global options
@@ -470,6 +505,7 @@ complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ comma
 {%- endfor %}
 {%- endfor %}
 `;
+{%- endif %}
     }
 
     public async installCompletion(shell: string | null = null): Promise<boolean> {
@@ -588,6 +624,9 @@ impl CompletionEngine {
     }
 
     pub fn generate_bash_completion(&self) -> String {
+{%- if consolidation_mode %}
+        "# Shell completion not available in consolidated mode".to_string()
+{%- else %}
         let mut script = format!(r#"#!/bin/bash
 # Bash completion for {}
 
@@ -642,9 +681,13 @@ complete -F _{}_completions {}
 "#, self.cli_name.replace("-", "_"), self.cli_name));
 
         script
+{%- endif %}
     }
 
     pub fn generate_zsh_completion(&self) -> String {
+{%- if consolidation_mode %}
+        "# Shell completion not available in consolidated mode".to_string()
+{%- else %}
         let mut script = format!(r#"#compdef {}
 # Zsh completion for {}
 
@@ -710,9 +753,13 @@ _{} "$@"
 "#, self.cli_name.replace("-", "_")));
 
         script
+{%- endif %}
     }
 
     pub fn generate_fish_completion(&self) -> String {
+{%- if consolidation_mode %}
+        "# Shell completion not available in consolidated mode".to_string()
+{%- else %}
         let mut script = format!(r#"# Fish completion for {}
 
 # Global options
@@ -741,6 +788,7 @@ complete -c {} -l version -d "Show version information"
 
         script.push('\n');
         script
+{%- endif %}
     }
 
     pub fn install_completion(&self, shell: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {

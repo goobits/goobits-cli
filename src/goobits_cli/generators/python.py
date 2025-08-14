@@ -199,7 +199,7 @@ class PythonGenerator(BaseGenerator):
 
                 self.universal_engine = UniversalTemplateEngine()
 
-                self.python_renderer = PythonRenderer()
+                self.python_renderer = PythonRenderer(consolidate=self.consolidate)
 
                 self.universal_engine.register_renderer("python", self.python_renderer)
 
