@@ -1,0 +1,27 @@
+package_name: test-advanced-cli
+command_name: test-cli
+display_name: "Test Advanced CLI"
+description: "Testing advanced features integration"
+
+cli_output_path: "test_cli.py"
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: []
+  optional: []
+
+cli:
+  root_command:
+    name: test-cli
+    description: "Test CLI for advanced features"
+    subcommands:
+      hello:
+        description: "Say hello"
+        arguments:
+          - name: name
+            description: "Name to greet"
+            required: false
+            default: "World"
