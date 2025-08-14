@@ -635,16 +635,6 @@ def build(
 
         help="Create backup files (.bak) when overwriting existing files"
 
-    ),
-
-    universal_templates: bool = typer.Option(
-
-        False,
-
-        "--universal-templates",
-
-        help="Use Universal Template System with single-file output (experimental)"
-
     )
 
 ):
@@ -719,15 +709,9 @@ def build(
 
     
 
-    # Show universal templates status
+    # Universal Template System is always enabled
 
-    if universal_templates:
-
-        typer.echo("🧪 Using Universal Template System with single-file output (experimental)")
-
-    else:
-
-        typer.echo("📝 Using legacy template system")
+    typer.echo("⚡ Using Universal Template System with single-file output")
 
     
 
@@ -771,7 +755,7 @@ def build(
 
             from goobits_cli.generators.nodejs import NodeJSGenerator
 
-            generator = NodeJSGenerator(use_universal_templates=universal_templates)
+            generator = NodeJSGenerator()
 
             
 
@@ -783,7 +767,7 @@ def build(
 
             from goobits_cli.generators.typescript import TypeScriptGenerator
 
-            generator = TypeScriptGenerator(use_universal_templates=universal_templates)
+            generator = TypeScriptGenerator()
 
             
 
@@ -795,7 +779,7 @@ def build(
 
             from goobits_cli.generators.rust import RustGenerator
 
-            generator = RustGenerator(use_universal_templates=universal_templates)
+            generator = RustGenerator()
 
             
 
@@ -809,7 +793,7 @@ def build(
 
             from goobits_cli.generators.python import PythonGenerator  
 
-            generator = PythonGenerator(use_universal_templates=universal_templates, consolidate=universal_templates)
+            generator = PythonGenerator()
 
             
 

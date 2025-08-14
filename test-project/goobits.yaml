@@ -1,0 +1,48 @@
+package_name: "test-app"
+command_name: "testapp"
+display_name: "Test Application"
+description: "A simple test CLI"
+language: python
+
+# Installation configuration  
+installation:
+  pypi_name: "test-app"
+  
+# Python configuration
+python:
+  min_version: "3.8"
+  
+# Dependencies
+dependencies:
+  python: []
+  
+# Shell integration  
+shell_integration:
+  enabled: false
+  alias: "testapp"
+  
+# Validation
+validation:
+  enabled: true
+  
+# Messages
+messages:
+  success: "CLI generated successfully!"
+
+cli:
+  name: testapp
+  tagline: "Test CLI Application"
+  description: "A simple CLI for testing"
+  commands:
+    hello:
+      desc: "Say hello to someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          type: string
+          required: true
+      options:
+        - name: loud
+          desc: "Use loud greeting"
+          short: l
+          type: flag

@@ -1274,7 +1274,7 @@ def build(ctx, config_path, output_dir, output, backup):
 
         
 
-        build(config_file, output_dir_path, output, backup, universal_templates=False)
+        build(config_file, output_dir_path, output, backup)
 
         click.echo("✅ Build completed successfully!")
 
