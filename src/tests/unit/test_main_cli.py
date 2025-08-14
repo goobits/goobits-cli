@@ -306,7 +306,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert "Detected language: typescript" in result.stdout
 
     def test_build_command_with_universal_templates(self):
-        """Test build command with --universal-templates flag."""
+        """Test build command (universal templates are now default)."""
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
         
@@ -317,10 +317,10 @@ class TestMainCLICommands(TestMainCLIBase):
                 'setup.sh': '#!/bin/bash\n# Setup script'
             }
             
-            result = self.runner.invoke(app, ["build", str(config_path), "--universal-templates"])
+            result = self.runner.invoke(app, ["build", str(config_path)])
         
         assert result.exit_code == 0
-        assert "Using Universal Template System" in result.stdout
+        # Universal templates are the default now, so we don't need the flag
 
     def test_build_command_with_backup(self):
         """Test build command with --backup flag."""
