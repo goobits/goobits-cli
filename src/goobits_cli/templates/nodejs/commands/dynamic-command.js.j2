@@ -29,7 +29,7 @@ export default function(program) {
     {% endfor %}
     {% for opt in (cmd_data.options or []) %}
     .option(
-      '{% if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <value>{% endif %}',
+      '{%- if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <value>{% endif %}',
       '{{ opt.desc }}'
       {%- if opt.default is not none and opt.type != "flag" %}, {{ opt.default | tojson }}{% endif %}
     )

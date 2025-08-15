@@ -551,8 +551,9 @@ export function hasHook(hookName: string): boolean {
 
 use std::collections::HashMap;
 use clap::ArgMatches;
+use anyhow::Result;
 
-pub type HookResult = Result<(), Box<dyn std::error::Error>>;
+pub type HookResult = Result<()>;
 
 /// Trait that all hook implementations must follow
 pub trait Hook {

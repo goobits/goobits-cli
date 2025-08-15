@@ -327,6 +327,7 @@ program.parse();
 {%- elif language == 'rust' -%}
 use clap::{Arg, Command, ArgMatches};
 use std::process;
+use anyhow::Result;
 
 mod hooks;
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}

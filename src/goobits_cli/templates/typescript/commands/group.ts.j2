@@ -4,7 +4,7 @@ const fs = require('fs');
 
 {% macro render_option(opt) -%}
   .option(
-    {%- if opt.short %}'-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <value>{% endif %}'
+    '{%- if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <value>{% endif %}'
     {%- if opt.desc %}, '{{ opt.desc }}'{% endif %}
     {%- if opt.default is not none and opt.type != "flag" %}, {{ opt.default | tojson }}{% endif %}
   )

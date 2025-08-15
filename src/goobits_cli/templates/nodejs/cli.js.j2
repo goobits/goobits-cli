@@ -323,7 +323,7 @@ const globalOptions = {};
 {% if cli.options %}
 {% for option in cli.options %}
 program.option(
-    {%- if option.short %}'-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != 'flag' %} <value>{% endif %}',
+    '{%- if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != 'flag' %} <value>{% endif %}',
     '{{ option.desc }}'
     {%- if option.default is not none %},
     {% if option.default is sameas true %}true{% elif option.default is sameas false %}false{% elif option.default is number %}{{ option.default }}{% else %}'{{ option.default }}'{% endif %}

@@ -24,7 +24,16 @@ import re
 
 import time
 
-from ..schemas import GoobitsConfigSchema
+# Lazy import for heavy Pydantic schemas
+_config_schema = None
+
+def _get_config_schema():
+    """Lazy load GoobitsConfigSchema to avoid Pydantic import overhead."""
+    global _config_schema
+    if _config_schema is None:
+        from ..schemas import GoobitsConfigSchema
+        _config_schema = GoobitsConfigSchema
+    return _config_schema
 
 
 
@@ -248,19 +257,20 @@ class ComponentRegistry:
 
         self.validation_enabled: bool = True
 
-        self._loader = jinja2.FileSystemLoader(str(self.components_dir))
+        # Lazy initialization for Jinja2 environment
+        self._loader = None
+        self._env = None
 
-        self._env = jinja2.Environment(loader=self._loader)
-
-        
-
-        # Add custom filters that templates expect
-
-        self._env.filters['snake_case'] = self._snake_case_filter
-
-        self._env.filters['camelCase'] = self._camel_case_filter
-
-        
+    def _get_env(self):
+        """Lazy load Jinja2 environment to avoid import overhead."""
+        if self._env is None:
+            self._loader = jinja2.FileSystemLoader(str(self.components_dir))
+            self._env = jinja2.Environment(loader=self._loader)
+            
+            # Add custom filters that templates expect
+            self._env.filters['snake_case'] = self._snake_case_filter
+            self._env.filters['camelCase'] = self._camel_case_filter
+        return self._env
 
     def load_components(self) -> None:
 
@@ -1008,7 +1018,7 @@ class ComponentRegistry:
 
             # Parse template to check for syntax errors
 
-            template = self._env.from_string(content)
+            template = self._get_env().from_string(content)
 
             
 
@@ -1106,23 +1116,22 @@ class UniversalTemplateEngine:
 
         
 
-        # Set up Jinja environment for direct template access
+        # Lazy initialization for Jinja environment
+        self.jinja_env = None
+        self._jinja_initialized = False
 
-        if template_dir:
-
-            self.jinja_env = jinja2.Environment(
-
-                loader=jinja2.FileSystemLoader(str(template_dir)),
-
-                autoescape=False
-
-            )
-
-        else:
-
-            self.jinja_env = jinja2.Environment(autoescape=False)
-
-        
+    def _get_jinja_env(self):
+        """Lazy load Jinja2 environment to avoid import overhead."""
+        if not self._jinja_initialized:
+            if self.template_dir:
+                self.jinja_env = jinja2.Environment(
+                    loader=jinja2.FileSystemLoader(str(self.template_dir)),
+                    autoescape=False
+                )
+            else:
+                self.jinja_env = jinja2.Environment(autoescape=False)
+            self._jinja_initialized = True
+        return self.jinja_env
 
         # Performance optimization components
 
@@ -1322,7 +1331,7 @@ class UniversalTemplateEngine:
 
     
 
-    def create_intermediate_representation(self, config: GoobitsConfigSchema) -> Dict[str, Any]:
+    def create_intermediate_representation(self, config) -> Dict[str, Any]:
 
         """
 
@@ -1362,7 +1371,7 @@ class UniversalTemplateEngine:
 
     
 
-    def render(self, config: GoobitsConfigSchema, language: str) -> Dict[str, Any]:
+    def render(self, config, language: str) -> Dict[str, Any]:
 
         """
 
@@ -1456,7 +1465,7 @@ class UniversalTemplateEngine:
 
     
 
-    def generate_cli(self, config: GoobitsConfigSchema, language: str, 
+    def generate_cli(self, config, language: str, 
 
                     output_dir: Path, consolidate: bool = False) -> Dict[str, str]:
 
@@ -1705,7 +1714,7 @@ class UniversalTemplateEngine:
 
     
 
-    def _build_intermediate_representation(self, config: GoobitsConfigSchema) -> Dict[str, Any]:
+    def _build_intermediate_representation(self, config) -> Dict[str, Any]:
 
         """
 
@@ -2191,7 +2200,7 @@ class UniversalTemplateEngine:
 
     
 
-    def _extract_dependencies(self, config: GoobitsConfigSchema) -> Dict[str, List[str]]:
+    def _extract_dependencies(self, config) -> Dict[str, List[str]]:
 
         """
 

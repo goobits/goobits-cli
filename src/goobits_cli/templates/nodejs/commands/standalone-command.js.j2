@@ -26,7 +26,7 @@ export default function registerCommand(program) {
     .argument('{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}', '{{ arg.description }}')
     {% endfor %}
     {% for option in options %}
-    .option('{% if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <value>{% endif %}', '{{ option.description }}'{% if option.default %}, {{ option.default | tojson }}{% endif %})
+    .option('{%- if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <value>{% endif %}', '{{ option.description }}'{% if option.default %}, {{ option.default | tojson }}{% endif %})
     {% endfor %}
     .action(async ({% if args %}{{ args | map(attribute='name') | join(', ') }}{% if options %}, {% endif %}{% endif %}options, command) => {
       try {

@@ -10,16 +10,35 @@ from typing import List, Dict, Any, Optional, Callable
 from pathlib import Path
 import logging
 
-# Enhanced imports for completion and plugin systems
-try:
-    from goobits_cli.universal.completion import get_completion_registry
-    from goobits_cli.universal.completion.integration import setup_completion_for_language
-    from goobits_cli.universal.plugins import get_plugin_manager
-    from goobits_cli.universal.plugins.integration import get_plugin_command_manager
-    ENHANCED_FEATURES_AVAILABLE = True
-except ImportError:
-    ENHANCED_FEATURES_AVAILABLE = False
-    logging.warning("Enhanced completion and plugin features not available")
+# Lazy loading globals for enhanced features
+_completion_registry = None
+_plugin_manager = None
+_plugin_command_manager = None
+ENHANCED_FEATURES_AVAILABLE = None
+
+
+def _lazy_load_enhanced_features():
+    """Lazy load heavy universal imports only when interactive mode is used."""
+    global _completion_registry, _plugin_manager, _plugin_command_manager, ENHANCED_FEATURES_AVAILABLE
+    
+    if ENHANCED_FEATURES_AVAILABLE is not None:
+        return ENHANCED_FEATURES_AVAILABLE
+    
+    try:
+        from goobits_cli.universal.completion import get_completion_registry
+        from goobits_cli.universal.completion.integration import setup_completion_for_language
+        from goobits_cli.universal.plugins import get_plugin_manager
+        from goobits_cli.universal.plugins.integration import get_plugin_command_manager
+        
+        _completion_registry = get_completion_registry
+        _plugin_manager = get_plugin_manager
+        _plugin_command_manager = get_plugin_command_manager
+        ENHANCED_FEATURES_AVAILABLE = True
+        return True
+    except ImportError:
+        ENHANCED_FEATURES_AVAILABLE = False
+        logging.warning("Enhanced completion and plugin features not available")
+        return False
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +60,8 @@ class Enhanced{{ cli_name | title }}Interactive:
         self.history = []
         self.commands = {}
         
-        # Enhanced features initialization
-        if ENHANCED_FEATURES_AVAILABLE:
+        # Lazy load enhanced features only when needed
+        if _lazy_load_enhanced_features():
             self._setup_enhanced_features()
         else:
             self._setup_basic_features()
@@ -53,11 +72,14 @@ class Enhanced{{ cli_name | title }}Interactive:
     def _setup_enhanced_features(self) -> None:
         """Setup enhanced completion and plugin features."""
         try:
+            # Import the needed functions using lazy loading
+            from goobits_cli.universal.completion.integration import setup_completion_for_language
+            
             # Setup dynamic completion
             self.completion_integrator = setup_completion_for_language('python')
             
             # Setup plugin command manager  
-            self.plugin_manager = get_plugin_command_manager()
+            self.plugin_manager = _plugin_command_manager()
             
             # Setup readline with enhanced completion
             self._setup_enhanced_readline()

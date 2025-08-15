@@ -1175,7 +1175,7 @@ fn build_cli(app: Command) -> Command {{
 
 
 
-fn handle_command(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>> {{
+fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
 
     match matches.subcommand() {{
 
@@ -1317,22 +1317,19 @@ fn handle_command(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>
 
             
             // Try to call hook, but gracefully handle if it doesn't exist
-            match hooks::on_{safe_cmd_name}(sub_matches) {{
-                Ok(_) => Ok(()),
-                Err(e) => {{
-                    // Check if it's a "function not found" type error
-                    let error_msg = format!("{{:?}}", e);
-                    if error_msg.contains("not implemented") || error_msg.contains("not found") {{
-                        // Hook not implemented - show placeholder behavior
-                        println!("Command '{cmd_name}' executed successfully (no custom implementation)");
-                        println!("To implement custom behavior, add the 'on_{safe_cmd_name}' function to src/hooks.rs");
-                        Ok(())
-                    }} else {{
-                        // Real error - propagate it
-                        Err(e)
-                    }}
+            if let Err(e) = hooks::on_{safe_cmd_name}(sub_matches) {{
+                // Check if it's a "function not found" type error
+                let error_msg = format!("{{:?}}", e);
+                if error_msg.contains("not implemented") || error_msg.contains("not found") {{
+                    // Hook not implemented - show placeholder behavior
+                    println!("Command '{cmd_name}' executed successfully (no custom implementation)");
+                    println!("To implement custom behavior, add the 'on_{safe_cmd_name}' function to src/hooks.rs");
+                }} else {{
+                    // Real error - propagate it
+                    return Err(e);
                 }}
             }}
+            Ok(())
 
         }}''')
 
