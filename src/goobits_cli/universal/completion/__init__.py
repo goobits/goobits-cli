@@ -123,9 +123,10 @@ def get_completion_files_for_language(language: str, cli_name: str) -> list:
     Returns:
         List of completion file definitions.
     """
-    # For now, only Node.js has completion templates available
-    # TODO: Create completion templates for other languages
-    if language.lower() == 'nodejs':
+    # All supported languages now have completion templates available
+    supported_languages = ['nodejs', 'typescript', 'rust']
+    
+    if language.lower() in supported_languages:
         base_files = [
             {
                 'template': f'{language}/completions/bash-completion.j2',

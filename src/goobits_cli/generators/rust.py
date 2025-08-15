@@ -775,6 +775,17 @@ class RustGenerator(BaseGenerator):
             generated_files['setup.sh'] = self._generate_fallback_setup_sh(template_vars)
 
         
+        
+        # Generate shell completion scripts if completion system is enabled
+        if integrate_completion_system and get_completion_files_for_language:
+            completion_files = get_completion_files_for_language('rust', template_vars['command_name'])
+            for completion_file in completion_files:
+                try:
+                    template = self.env.get_template(completion_file['template'])
+                    generated_files[completion_file['output']] = template.render(**template_vars)
+                except TemplateNotFound:
+                    # Skip if template doesn't exist
+                    pass
 
         # README.md
 

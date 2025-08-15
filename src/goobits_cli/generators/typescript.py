@@ -1155,6 +1155,17 @@ class TypeScriptGenerator(NodeJSGenerator):
             pass
 
         
+        
+        # Generate shell completion scripts if completion system is enabled
+        if integrate_completion_system and get_completion_files_for_language:
+            completion_files = get_completion_files_for_language('typescript', context['command_name'])
+            for completion_file in completion_files:
+                try:
+                    template = self.env.get_template(completion_file['template'])
+                    files[completion_file['output']] = template.render(**context)
+                except TemplateNotFound:
+                    # Skip if template doesn't exist
+                    pass
 
         # Generate README.md using shared documentation generator
 

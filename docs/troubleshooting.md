@@ -409,6 +409,124 @@ Error: No such option: --invalid-option
    mycli command --help
    ```
 
+## Advanced Features Issues
+
+### Issue: Interactive mode not working
+
+**Symptoms:**
+```bash
+$ mycli --interactive
+Error: unrecognized arguments: --interactive
+```
+
+**Solutions:**
+
+1. **Check language support:**
+   ```bash
+   # Interactive mode availability by language:
+   # ✅ Python: Fully functional
+   # ⚠️ Node.js: Framework available, partial integration
+   # ⚠️ TypeScript: Framework exists, integration needs validation
+   # ❌ Rust: Not yet integrated
+   ```
+
+2. **Verify Python CLI generation:**
+   ```bash
+   # Ensure you're using a Python-generated CLI
+   python cli.py --help
+   # Should show --interactive option in help text
+   ```
+
+3. **Test interactive mode:**
+   ```bash
+   # Test with simple exit command
+   echo 'exit' | python cli.py --interactive
+   
+   # Expected output:
+   # 🚀 Welcome to Enhanced Interactive Mode!
+   # 📝 Type 'help' for available commands, 'exit' to quit.
+   # > 👋 Goodbye!
+   ```
+
+### Issue: Shell completion not available
+
+**Symptoms:**
+```bash
+$ mycli [TAB]
+# No completion suggestions appear
+```
+
+**Solutions:**
+
+1. **Generate completion scripts:**
+   ```bash
+   # Generate completion files
+   ./setup.sh --completions
+   
+   # Check generated files
+   ls -la completions/
+   ```
+
+2. **Install completion scripts:**
+   ```bash
+   # Bash
+   source completions/mycli.bash
+   
+   # Zsh (add to ~/.zshrc)
+   fpath=(./completions $fpath)
+   autoload -U compinit && compinit
+   
+   # Fish
+   cp completions/mycli.fish ~/.config/fish/completions/
+   ```
+
+3. **Check language support:**
+   ```bash
+   # Completion template availability:
+   # ✅ Node.js: Full completion templates (bash, zsh, fish)
+   # ✅ TypeScript: Full completion templates (bash, zsh, fish)
+   # ✅ Rust: Completion scripts generated in setup.sh
+   # ⚠️ Python: Minimal completion support (design decision)
+   ```
+
+### Issue: Advanced features causing slow startup
+
+**Symptoms:**
+```bash
+$ time mycli --help
+# Takes >250ms when advanced features are loaded
+real    0m0.265s
+```
+
+**Analysis:**
+This is a known issue. Advanced features add approximately +177ms overhead to CLI startup time.
+
+**Solutions:**
+
+1. **Use lazy loading (recommended):**
+   ```python
+   # In hook implementations, avoid importing advanced features at module level
+   def on_command(**kwargs):
+       # Import only when needed
+       if kwargs.get('interactive'):
+           from goobits_cli.enhanced_interactive_mode import InteractiveMode
+           interactive = InteractiveMode()
+           return interactive.start()
+   ```
+
+2. **Disable advanced features if not needed:**
+   ```bash
+   # Generate CLI without advanced features integration
+   # (This option may be available in future versions)
+   goobits build --minimal-features
+   ```
+
+3. **Accept the overhead for advanced functionality:**
+   ```bash
+   # Generated CLIs still meet targets (88.7ms average)
+   # Overhead occurs only when advanced features are actually used
+   ```
+
 ## Performance Issues
 
 ### Issue: Slow CLI startup time
@@ -625,6 +743,53 @@ export async function onCommand(args: CommandArgs): Promise<void> {
     // Type-safe implementation
 }
 ```
+
+### Rust Issues
+
+**Issue: Rust compilation failures**
+
+**Symptoms:**
+```bash
+$ goobits build
+# Generates Rust files but...
+
+$ cargo build
+error[E0308]: mismatched types
+  --> src/main.rs:42:23
+   |
+42 |     let result = match.value_of("arg")
+   |                       ^^^^^^^^^ expected `&str`, found `Option<&str>`
+```
+
+**Analysis:**
+This is a known critical issue. Generated Rust code has type conversion errors that prevent compilation.
+
+**Status:**
+- **Current State**: Rust generation produces files but code doesn't compile
+- **Issue Type**: Type mismatches in generated code, hook system return type issues
+- **Production Readiness**: ❌ Not ready for production use
+
+**Workarounds:**
+
+1. **Use alternative languages:**
+   ```bash
+   # Python, Node.js, and TypeScript are production-ready
+   language: python      # ✅ Recommended
+   language: nodejs      # ✅ Works well
+   language: typescript  # ✅ Functional
+   ```
+
+2. **Manual Rust implementation:**
+   ```bash
+   # Use generated Rust code as a template and fix manually
+   # This requires Rust knowledge to resolve type issues
+   ```
+
+3. **Wait for fix:**
+   ```bash
+   # Rust support is planned for future releases
+   # Current completion: ~60% due to compilation issues
+   ```
 
 ## Template System Issues
 

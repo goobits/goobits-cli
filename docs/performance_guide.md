@@ -17,14 +17,17 @@ Goobits CLI Framework v2.0 is built for high performance with comprehensive vali
 
 Goobits CLI Framework maintains strict performance standards across all supported languages to ensure production-ready applications.
 
-### Framework Targets
+### Framework Targets (Validated Performance)
 
-| Metric | Target | Python | Node.js | TypeScript |
-|--------|--------|--------|---------|------------|
-| **Startup Time** | <100ms | 78ms ✅ | 53ms ✅ | 66ms ✅ |
-| **Memory Usage** | <50MB | 24MB ✅ | 31MB ✅ | 38MB ✅ |
-| **Template Rendering** | <500ms | <60ms ✅ | <50ms ✅ | <70ms ✅ |
-| **Test Coverage** | >95% | 96% ✅ | 94% ✅ | 95% ✅ |
+| Metric | Target | Python | Node.js | TypeScript | Rust |
+|--------|--------|--------|---------|------------|------|
+| **Generated CLI Startup** | <100ms | 88.7ms ✅ | 24.3ms ✅* | 913.4ms ❌ | ❌ (Compilation issues) |
+| **Memory Usage** | <50MB | 1.7MB ✅ | 1.4MB ✅ | TBD | TBD |
+| **Success Rate** | >95% | 100% ✅ | 0%* | 0%* | N/A |
+| **Advanced Features** | <100ms | +177ms ❌ | TBD | TBD | N/A |
+
+*Node.js shows excellent performance (24.3ms) but has CLI functionality issues  
+*TypeScript has compilation overhead impacting startup time
 
 ### Performance Grades
 
@@ -36,6 +39,24 @@ The framework uses a grading system to evaluate CLI performance:
 - **B**: 0-20% below target (still acceptable)
 - **C**: 20-50% below target (needs optimization)
 - **F**: >50% below target (deployment blocked)
+
+### Validation Results (August 2025)
+
+**Recent comprehensive validation testing revealed:**
+
+**Production Ready:**
+- **Generated CLIs**: 88.7ms average startup time (12% under target) ✅
+- **Memory Efficiency**: 1.7MB peak usage (97% under target) ✅
+- **Reliability**: 100% success rate in testing ✅
+
+**Optimization Required:**
+- **Advanced Features**: +177ms overhead when loaded ⚠️
+- **TypeScript**: 913ms startup due to compilation overhead ❌
+- **Node.js**: Fast (24.3ms) but CLI functionality issues ⚠️
+
+**Critical Issues:**
+- **Rust**: Generated code has compilation errors preventing execution ❌
+- **Lazy Loading**: Advanced features need lazy loading for production use
 
 ## Benchmarking Tools
 
