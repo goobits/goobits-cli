@@ -16,6 +16,8 @@ from pathlib import Path
 
 from typing import Dict, Any, List, Optional
 
+from datetime import datetime
+
 import re
 
 import jinja2
@@ -159,6 +161,24 @@ class TypeScriptRenderer(LanguageRenderer):
         # Convert names to TypeScript conventions
 
         context = self._apply_naming_conventions(context)
+
+        
+
+        # Add TypeScript-specific metadata with defensive defaults
+
+        context["metadata"] = {
+
+            **{k: v for k, v in context.get("metadata", {}).items() if not isinstance(v, str) or not v.startswith("{{")},
+
+            "timestamp": datetime.now().isoformat(),
+
+            "generator_version": "2.0.0-beta.1",
+
+            "package_name": context["project"]["package_name"],
+
+            "command_name": context["project"]["command_name"],
+
+        }
 
         
 

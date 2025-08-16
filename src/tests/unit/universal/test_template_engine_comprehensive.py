@@ -1392,7 +1392,7 @@ Camel case: {{ project.name | camel_case }}
         
         # Should handle missing optional fields
         assert ir["project"]["name"] == "Minimal CLI"  # Uses display_name
-        assert ir["cli"]["root_command"]["version"] is None  # No version specified
+        assert ir["cli"]["root_command"]["version"] == "1.0.0"  # Uses defensive default when None
         assert ir["cli"]["commands"] == {}  # Empty commands
     
     def test_dependency_extraction(self):

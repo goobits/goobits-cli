@@ -24,7 +24,7 @@ from typing import Dict, List, Optional
 class CompletionManager:
     """Advanced shell completion manager"""
     
-    def __init__(self, cli_name: str = "{{ project.name | lower | replace(' ', '-') }}"):
+    def __init__(self, cli_name: str = "{{ (project.name or 'app') | lower | replace(' ', '-') }}"):
         self.cli_name = cli_name
         self.script_name = cli_name
     
@@ -278,7 +278,7 @@ const path = require('path');
 const os = require('os');
 
 class CompletionManager {
-    constructor(cliName = '{{ project.name | lower | replace(" ", "-") }}') {
+    constructor(cliName = '{{ (project.name or "app") | lower | replace(" ", "-") }}') {
         this.cliName = cliName;
         this.scriptName = cliName;
     }

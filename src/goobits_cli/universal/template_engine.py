@@ -1117,21 +1117,8 @@ class UniversalTemplateEngine:
         
 
         # Lazy initialization for Jinja environment
-        self.jinja_env = None
+        self._jinja_env = None
         self._jinja_initialized = False
-
-    def _get_jinja_env(self):
-        """Lazy load Jinja2 environment to avoid import overhead."""
-        if not self._jinja_initialized:
-            if self.template_dir:
-                self.jinja_env = jinja2.Environment(
-                    loader=jinja2.FileSystemLoader(str(self.template_dir)),
-                    autoescape=False
-                )
-            else:
-                self.jinja_env = jinja2.Environment(autoescape=False)
-            self._jinja_initialized = True
-        return self.jinja_env
 
         # Performance optimization components
 
@@ -1173,7 +1160,23 @@ class UniversalTemplateEngine:
 
             self.component_registry.load_components()
 
-    
+    def _get_jinja_env(self):
+        """Lazy load Jinja2 environment to avoid import overhead."""
+        if not self._jinja_initialized:
+            if self.template_dir:
+                self._jinja_env = jinja2.Environment(
+                    loader=jinja2.FileSystemLoader(str(self.template_dir)),
+                    autoescape=False
+                )
+            else:
+                self._jinja_env = jinja2.Environment(autoescape=False)
+            self._jinja_initialized = True
+        return self._jinja_env
+
+    @property
+    def jinja_env(self):
+        """Get the Jinja2 environment, initializing it if necessary."""
+        return self._get_jinja_env()
 
     def _register_lazy_components(self):
 
@@ -1754,7 +1757,7 @@ class UniversalTemplateEngine:
 
                 "description": config.description,
 
-                "version": getattr(config.cli, 'version', '1.0.0') if config.cli else '1.0.0',
+                "version": (lambda v: v if v is not None else '1.0.0')(getattr(config.cli, 'version', '1.0.0')) if config.cli else '1.0.0',
 
                 "author": getattr(config, "author", ""),
 
@@ -1763,6 +1766,8 @@ class UniversalTemplateEngine:
                 "package_name": config.package_name,
 
                 "command_name": config.command_name,
+
+                "cli_output_path": getattr(config, "cli_output_path", None),
 
             },
 
@@ -1826,7 +1831,7 @@ class UniversalTemplateEngine:
 
                 "description": getattr(cli_config, 'description', cli_config.tagline),
 
-                "version": getattr(cli_config, 'version', '1.0.0'),
+                "version": (lambda v: v if v is not None else '1.0.0')(getattr(cli_config, 'version', '1.0.0')),
 
                 "arguments": [],
 

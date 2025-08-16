@@ -267,11 +267,20 @@ class TestNodeGeneratorE2E:
         with open(config_file, 'w') as f:
             yaml.dump(sample_nodejs_config, f)
         
+        # Set up environment with correct PYTHONPATH
+        env = os.environ.copy()
+        src_path = str(Path(__file__).parent.parent.parent.parent / "src")
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = f"{src_path}{os.pathsep}{env['PYTHONPATH']}"
+        else:
+            env["PYTHONPATH"] = src_path
+        
         # Run goobits build command
         result = subprocess.run(
             [sys.executable, "-m", "goobits_cli.main", "build", str(config_file), "-o", str(tmp_path / "output")],
             capture_output=True,
-            text=True
+            text=True,
+            env=env
         )
         
         # Should succeed

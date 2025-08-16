@@ -27,8 +27,8 @@ from typing import List, Dict, Optional
 def get_current_version() -> str:
     """Get the current installed version"""
     try:
-        import {{ project.name | lower | replace('-', '_') }}
-        return getattr({{ project.name | lower | replace('-', '_') }}, '__version__', 'unknown')
+        import {{ (project.name or 'app') | lower | replace('-', '_') }}
+        return getattr({{ (project.name or 'app') | lower | replace('-', '_') }}, '__version__', 'unknown')
     except ImportError:
         return 'not installed'
 
@@ -67,13 +67,13 @@ def install_from_source(development: bool = False) -> bool:
 
 {%- elif language == 'nodejs' -%}
 {
-  "name": "{{ project.name | lower | replace(' ', '-') }}",
+  "name": "{{ (project.name or 'app') | lower | replace(' ', '-') }}",
   "version": "{{ project.version }}",
   "description": "{{ project.description }}",
   "type": "module",
   "main": "index.js",
   "bin": {
-    "{{ project.name | lower | replace(' ', '-') }}": "./bin/cli.js"
+    "{{ (project.name or 'app') | lower | replace(' ', '-') }}": "./bin/cli.js"
   },
   "scripts": {
     "test": "jest",
@@ -132,13 +132,13 @@ def install_from_source(development: bool = False) -> bool:
 
 {%- elif language == 'typescript' -%}
 {
-  "name": "{{ project.name | lower | replace(' ', '-') }}",
+  "name": "{{ (project.name or 'app') | lower | replace(' ', '-') }}",
   "version": "{{ project.version }}",
   "description": "{{ project.description }}",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "{{ project.name | lower | replace(' ', '-') }}": "./dist/bin/cli.js"
+    "{{ (project.name or 'app') | lower | replace(' ', '-') }}": "./dist/bin/cli.js"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/bin/cli.js",

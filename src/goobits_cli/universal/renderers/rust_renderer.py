@@ -170,11 +170,15 @@ class RustRenderer(LanguageRenderer):
 
         context['metadata'] = {
 
-            **context.get('metadata', {}),
+            **{k: v for k, v in context.get('metadata', {}).items() if not isinstance(v, str) or not v.startswith('{{')},
 
             'timestamp': datetime.now().isoformat(),
 
-            'generator_version': '1.4.0',
+            'generator_version': '2.0.0-beta.1',
+
+            'package_name': context['project']['package_name'].replace('-', '_'),
+
+            'command_name': context['project']['command_name'],
 
             'rust_edition': '2021'
 

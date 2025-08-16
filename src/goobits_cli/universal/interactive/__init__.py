@@ -129,9 +129,11 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
             'short': 'i',
 
-            'type': 'flag',
+            'type': 'boolean',
 
-            'desc': 'Launch interactive mode'
+            'desc': 'Launch interactive mode',
+
+            'default': False
 
         }
 

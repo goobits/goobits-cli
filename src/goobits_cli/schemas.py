@@ -54,7 +54,7 @@ class OptionSchema(BaseModel):
 
     type: str = "str"
 
-    desc: str
+    desc: Optional[str] = None  # Make optional for defensive programming
 
     default: Optional[Any] = None
 

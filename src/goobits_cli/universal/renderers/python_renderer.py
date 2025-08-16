@@ -116,9 +116,35 @@ class PythonRenderer(LanguageRenderer):
 
         """
 
-        # Start with the base IR
+        # Start with the base IR and add defensive defaults
 
         context = ir.copy()
+
+        
+
+        # Ensure core fields have defensive defaults
+
+        if "project" in context:
+
+            context["project"] = {
+
+                "name": context["project"].get("name", "Unknown CLI"),
+
+                "description": context["project"].get("description", "A CLI application"),
+
+                "version": context["project"].get("version") or "1.0.0",
+
+                "author": context["project"].get("author", ""),
+
+                "license": context["project"].get("license", ""),
+
+                "package_name": context["project"].get("package_name", "cli_app"),
+
+                "command_name": context["project"].get("command_name", "cli"),
+
+                **{k: v for k, v in context["project"].items() if k not in ["name", "description", "version", "author", "license", "package_name", "command_name"]}
+
+            }
 
         
 
@@ -164,11 +190,15 @@ class PythonRenderer(LanguageRenderer):
 
             "metadata": {
 
-                **context.get("metadata", {}),
+                **{k: v for k, v in context.get("metadata", {}).items() if not isinstance(v, str) or not v.startswith("{{")},
 
                 "timestamp": datetime.now().isoformat(),
 
-                "generator_version": "1.4.0",  # TODO: Get from version file
+                "generator_version": "2.0.0-beta.1",
+
+                "package_name": context["project"]["package_name"].replace("-", "_"),
+
+                "command_name": context["project"]["command_name"],
 
             },
 
@@ -522,10 +552,19 @@ setup(
         """
         # Return only the main CLI file (consolidated)
         # The setup.sh is handled separately by the build system
-        package_name = ir["project"]["package_name"].replace("-", "_")
+        
+        # Use cli_output_path if specified in the config
+        if "cli_output_path" in ir["project"] and ir["project"]["cli_output_path"]:
+            cli_path = ir["project"]["cli_output_path"]
+            # Handle any template variables in the path
+            package_name = ir["project"]["package_name"]
+            cli_path = cli_path.format(package_name=package_name.replace("-", "_"))
+        else:
+            # Default fallback
+            cli_path = "cli.py"
         
         return {
-            "command_handler": f"{package_name}/cli.py",
+            "command_handler": cli_path,
             # setup.sh is handled by the main build system
         }
 

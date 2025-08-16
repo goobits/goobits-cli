@@ -46,7 +46,7 @@ class ConfigManager:
     
     def _get_default_config_path(self) -> str:
         """Get the default configuration file path."""
-        config_dir = Path.home() / ".config" / "{{ project.name.lower().replace(' ', '-') }}"
+        config_dir = Path.home() / ".config" / "{{ (project.name or 'app') | lower | replace(' ', '-') }}"
         config_dir.mkdir(parents=True, exist_ok=True)
         return str(config_dir / "config.yaml")
     
@@ -69,7 +69,7 @@ class ConfigManager:
                 print(f"Warning: Failed to load config file {self.config_file}: {e}")
         
         # Override with environment variables
-        env_prefix = "{{ project.name.upper().replace(' ', '_').replace('-', '_') }}_"
+        env_prefix = "{{ (project.name or 'APP') | upper | replace(' ', '_') | replace('-', '_') }}_"
         for key in asdict(self.config).keys():
             env_key = f"{env_prefix}{key.upper()}"
             if env_key in os.environ:
@@ -148,7 +148,7 @@ class ConfigManager {
     }
 
     _getDefaultConfigPath() {
-        const configDir = path.join(os.homedir(), '.config', '{{ project.name.lower().replace(' ', '-') }}');
+        const configDir = path.join(os.homedir(), '.config', '{{ (project.name or 'app') | lower | replace(' ', '-') }}');
         if (!fs.existsSync(configDir)) {
             fs.mkdirSync(configDir, { recursive: true });
         }
@@ -177,7 +177,7 @@ class ConfigManager {
         }
 
         // Override with environment variables
-        const envPrefix = '{{ project.name.upper().replace(' ', '_').replace('-', '_') }}_';
+        const envPrefix = '{{ (project.name or 'APP') | upper | replace(' ', '_') | replace('-', '_') }}_';
         for (const key of Object.keys(this.config)) {
             const envKey = `${envPrefix}${key.toUpperCase()}`;
             if (process.env[envKey]) {
@@ -283,7 +283,7 @@ export class ConfigManager {
     }
 
     private getDefaultConfigPath(): string {
-        const configDir = path.join(os.homedir(), '.config', '{{ project.name.lower().replace(' ', '-') }}');
+        const configDir = path.join(os.homedir(), '.config', '{{ (project.name or 'app') | lower | replace(' ', '-') }}');
         if (!fs.existsSync(configDir)) {
             fs.mkdirSync(configDir, { recursive: true });
         }
@@ -312,7 +312,7 @@ export class ConfigManager {
         }
 
         // Override with environment variables
-        const envPrefix = '{{ project.name.upper().replace(' ', '_').replace('-', '_') }}_';
+        const envPrefix = '{{ (project.name or 'APP') | upper | replace(' ', '_') | replace('-', '_') }}_';
         for (const key of Object.keys(this.config) as (keyof ConfigSchema)[]) {
             const envKey = `${envPrefix}${String(key).toUpperCase()}`;
             if (process.env[envKey]) {
@@ -430,7 +430,7 @@ impl ConfigManager {
         let home_dir = env::var("HOME").unwrap_or_else(|_| ".".to_string());
         let config_dir = PathBuf::from(home_dir)
             .join(".config")
-            .join("{{ project.name.lower().replace(' ', '-') }}");
+            .join("{{ (project.name or 'app') | lower | replace(' ', '-') }}");
         
         if let Err(_) = fs::create_dir_all(&config_dir) {
             eprintln!("Warning: Could not create config directory");
@@ -456,7 +456,7 @@ impl ConfigManager {
         }
 
         // Override with environment variables
-        let env_prefix = "{{ project.name.upper().replace(' ', '_').replace('-', '_') }}_";
+        let env_prefix = "{{ (project.name or 'APP') | upper | replace(' ', '_') | replace('-', '_') }}_";
         
 {%- if config_schema and config_schema.properties %}
 {%- for prop_name, prop_info in config_schema.properties.items() %}

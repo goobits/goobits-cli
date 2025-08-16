@@ -25,9 +25,9 @@ from typing import Optional, Dict, Any
 
 def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=False):
     """Built-in upgrade function for {{ project.name }}"""
-    package_name = "{{ installation.pypi_name | default(project.name | lower | replace('-', '_')) }}"
+    package_name = "{{ installation.pypi_name or (project.name | lower | replace('-', '_')) }}"
     command_name = "{{ project.name | lower | replace(' ', '-') }}"
-    display_name = "{{ project.display_name | default(project.name) }}"
+    display_name = "{{ project.display_name or project.name }}"
 
     # Get current version
     try:
@@ -254,7 +254,7 @@ const os = require('os');
 
 async function builtinUpgradeCommand(options = {}) {
     const packageName = '{{ project.name | lower | replace(" ", "-") }}';
-    const displayName = '{{ project.display_name | default(project.name) }}';
+    const displayName = '{{ project.display_name or project.name }}';
     
     // Get current version
     let currentVersion = 'unknown';
@@ -514,7 +514,7 @@ interface ConfigOptions {
 
 export async function builtinUpgradeCommand(options: UpgradeOptions = {}): Promise<void> {
     const packageName = '{{ project.name | lower | replace(" ", "-") }}';
-    const displayName = '{{ project.display_name | default(project.name) }}';
+    const displayName = '{{ project.display_name or project.name }}';
     
     // Get current version
     let currentVersion = 'unknown';
@@ -769,7 +769,7 @@ pub struct ConfigOptions {
 
 pub fn builtin_upgrade_command(options: UpgradeOptions) -> Result<()> {
     let package_name = "{{ project.name | lower | replace(' ', '-') }}";
-    let display_name = "{{ project.display_name | default(project.name) }}";
+    let display_name = "{{ project.display_name or project.name }}";
     
     // Get current version
     let current_version = env!("CARGO_PKG_VERSION");

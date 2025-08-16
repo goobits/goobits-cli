@@ -28,9 +28,9 @@ export PYTHONDONTWRITEBYTECODE=1
 # Core configuration
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PROJECT_DIR="$SCRIPT_DIR"
-readonly PACKAGE_NAME="{{ installation.pypi_name | default(project.name | lower | replace('-', '_')) }}"
-readonly COMMAND_NAME="{{ project.name | lower | replace(' ', '-') }}"
-readonly DISPLAY_NAME="{{ project.display_name | default(project.name) }}"
+readonly PACKAGE_NAME="{{ installation.pypi_name or ((project.name or 'app') | lower | replace('-', '_')) }}"
+readonly COMMAND_NAME="{{ (project.name or 'app') | lower | replace(' ', '-') }}"
+readonly DISPLAY_NAME="{{ project.display_name or project.name or 'App' }}"
 readonly VERSION="{{ project.version }}"
 readonly PYTHON_MIN_VERSION="{{ installation.python_version | default('3.8') }}"
 
@@ -192,8 +192,8 @@ set -e
 # Core configuration
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PACKAGE_NAME="{{ project.name | lower | replace(' ', '-') }}"
-readonly COMMAND_NAME="{{ project.name | lower | replace(' ', '-') }}"
-readonly DISPLAY_NAME="{{ project.display_name | default(project.name) }}"
+readonly COMMAND_NAME="{{ (project.name or 'app') | lower | replace(' ', '-') }}"
+readonly DISPLAY_NAME="{{ project.display_name or project.name or 'App' }}"
 readonly VERSION="{{ project.version }}"
 readonly NODE_MIN_VERSION="{{ installation.node_version | default('14.0.0') }}"
 
@@ -307,8 +307,8 @@ set -e
 # Core configuration
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly PACKAGE_NAME="{{ project.name | lower | replace(' ', '-') }}"
-readonly COMMAND_NAME="{{ project.name | lower | replace(' ', '-') }}"
-readonly DISPLAY_NAME="{{ project.display_name | default(project.name) }}"
+readonly COMMAND_NAME="{{ (project.name or 'app') | lower | replace(' ', '-') }}"
+readonly DISPLAY_NAME="{{ project.display_name or project.name or 'App' }}"
 readonly VERSION="{{ project.version }}"
 readonly NODE_MIN_VERSION="{{ installation.node_version | default('14.0.0') }}"
 

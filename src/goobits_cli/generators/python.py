@@ -416,11 +416,21 @@ class PythonGenerator(BaseGenerator):
 
             for file_path, content in generated_files.items():
 
-                # Extract relative filename for compatibility
+                # Keep the relative path from output_dir, not just the filename
+                # This preserves the cli_output_path configuration
 
-                relative_path = Path(file_path).name
+                path_obj = Path(file_path)
+                if path_obj.is_absolute():
+                    # Convert absolute path to relative from output_dir
+                    try:
+                        relative_path = path_obj.relative_to(Path(".").absolute())
+                    except ValueError:
+                        # If not relative to current dir, use the path as-is
+                        relative_path = path_obj
+                else:
+                    relative_path = path_obj
 
-                self._generated_files[relative_path] = content
+                self._generated_files[str(relative_path)] = content
 
             
 
@@ -505,8 +515,18 @@ if __name__ == "__main__":
     main()
 '''
         
+        # Respect cli_output_path even in legacy mode
+        output_filename = "cli.py"  # Default
+        if hasattr(config, 'cli_output_path') and config.cli_output_path:
+            output_filename = config.cli_output_path
+            # Handle template variables
+            if hasattr(config, 'package_name'):
+                output_filename = output_filename.format(
+                    package_name=config.package_name.replace('-', '_')
+                )
+        
         # Store for compatibility
-        self._generated_files = {'cli.py': basic_cli_code}
+        self._generated_files = {output_filename: basic_cli_code}
         
         return basic_cli_code
 
