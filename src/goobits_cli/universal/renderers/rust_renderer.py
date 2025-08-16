@@ -174,11 +174,11 @@ class RustRenderer(LanguageRenderer):
 
             'timestamp': datetime.now().isoformat(),
 
-            'generator_version': '2.0.0-beta.1',
+            'generator_version': '2.0.0-beta.2',
 
-            'package_name': context['project']['package_name'].replace('-', '_'),
+            'package_name': context['project'].get('package_name', 'cli').replace('-', '_'),
 
-            'command_name': context['project']['command_name'],
+            'command_name': context['project'].get('command_name', 'cli'),
 
             'rust_edition': '2021'
 

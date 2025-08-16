@@ -1,0 +1,30 @@
+# Python CLI Example
+package_name: demo-python-cli
+command_name: demo_py
+display_name: "Demo Python CLI"
+description: "A sample Python CLI built with Goobits"
+version: "1.0.0"
+language: python
+author: "Demo User"
+email: "demo@example.com"
+license: "MIT"
+
+cli:
+  name: demo_py
+  tagline: "Python CLI demonstration"
+  commands:
+    greet:
+      desc: "Greet someone"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true
+      options:
+        - name: enthusiastic
+          short: e
+          type: bool
+          desc: "Add exclamation marks"
+          default: false
+    
+    info:
+      desc: "Show system information"

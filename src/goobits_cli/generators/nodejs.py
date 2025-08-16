@@ -622,6 +622,12 @@ class NodeJSGenerator(BaseGenerator):
                 completion_features = config_dict['features']['completion_system']
 
 
+        # Determine main entry file name based on conflict detection
+        import os
+        main_entry_file = "index.js"
+        if os.path.exists("index.js"):
+            main_entry_file = "cli.js"
+
         # Prepare context for template rendering
 
         context = {
@@ -639,12 +645,30 @@ class NodeJSGenerator(BaseGenerator):
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
             'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            
+            'main_entry_file': main_entry_file,
 
             'installation': metadata['installation'],
 
             'hooks_path': metadata['hooks_path'],
 
             'completion_features': completion_features,
+
+            # Add missing metadata fields for package.json template (now included in metadata)
+
+            'author': metadata.get('author', ''),
+
+            'email': metadata.get('email', ''),
+
+            'license': metadata.get('license', 'MIT'),
+
+            'homepage': metadata.get('homepage', ''),
+
+            'repository': metadata.get('repository', ''),
+
+            'bugs_url': metadata.get('repository', '').replace('.git', '/issues') if metadata.get('repository', '') else '',
+
+            'keywords': metadata.get('keywords', []),
 
         }
 
@@ -1023,6 +1047,12 @@ export default cli;
                 completion_features = config_dict['features']['completion_system']
 
 
+        # Determine main entry file name based on conflict detection
+        import os
+        main_entry_file = "index.js"
+        if os.path.exists("index.js"):
+            main_entry_file = "cli.js"
+
         # Prepare context for template rendering
 
         context = {
@@ -1040,12 +1070,30 @@ export default cli;
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
             'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            
+            'main_entry_file': main_entry_file,
 
             'installation': metadata['installation'],
 
             'hooks_path': metadata['hooks_path'],
 
             'completion_features': completion_features,
+
+            # Add missing metadata fields for package.json template (now included in metadata)
+
+            'author': metadata.get('author', ''),
+
+            'email': metadata.get('email', ''),
+
+            'license': metadata.get('license', 'MIT'),
+
+            'homepage': metadata.get('homepage', ''),
+
+            'repository': metadata.get('repository', ''),
+
+            'bugs_url': metadata.get('repository', '').replace('.git', '/issues') if metadata.get('repository', '') else '',
+
+            'keywords': metadata.get('keywords', []),
 
         }
 
@@ -1478,6 +1526,30 @@ fi
                     else:
 
                         package_data["dependencies"][package] = "latest"
+
+        
+
+        # Update package.json with metadata from context
+
+        package_data["author"] = context.get('author', '')
+
+        package_data["license"] = context.get('license', 'MIT')
+
+        if context.get('homepage'):
+
+            package_data["homepage"] = context['homepage']
+
+        if context.get('repository'):
+
+            package_data["repository"]["url"] = context['repository']
+
+        if context.get('bugs_url'):
+
+            package_data["bugs"]["url"] = context['bugs_url']
+
+        if context.get('keywords'):
+
+            package_data["keywords"].extend(context['keywords'])
 
         
 

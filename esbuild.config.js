@@ -1,11 +1,17 @@
 /**
- * ESBuild configuration for Goobits CLI Framework
+ * ESBuild configuration for TestTSCLI
  * Ultra-fast TypeScript compilation and bundling
  */
 
-const { build } = require('esbuild');
-const { nodeExternalsPlugin } = require('esbuild-node-externals');
-const path = require('path');
+import { build } from 'esbuild';
+import { nodeExternalsPlugin } from 'esbuild-node-externals';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// ES Module equivalents of __filename and __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -52,7 +58,7 @@ const builds = [
   // Main library build
   {
     ...sharedConfig,
-    entryPoints: ['./index.ts'],
+    entryPoints: ['./cli.ts'],
     outfile: './dist/index.js',
     format: 'cjs',
   },
@@ -60,7 +66,7 @@ const builds = [
   // ESM build
   {
     ...sharedConfig,
-    entryPoints: ['./index.ts'],
+    entryPoints: ['./cli.ts'],
     outfile: './dist/index.mjs',
     format: 'esm',
   },
@@ -127,7 +133,7 @@ async function serve() {
   
   const ctx = await build({
     ...sharedConfig,
-    entryPoints: ['./index.ts'],
+    entryPoints: ['./cli.ts'],
     outfile: './dist/dev/index.js',
     watch: true,
     
@@ -157,12 +163,12 @@ async function analyze() {
   
   await build({
     ...sharedConfig,
-    entryPoints: ['./index.ts'],
+    entryPoints: ['./cli.ts'],
     outfile: './dist/analysis/index.js',
     metafile: true,
     write: false,
-  }).then((result) => {
-    const { analyzeMetafile } = require('esbuild');
+  }).then(async (result) => {
+    const { analyzeMetafile } = await import('esbuild');
     console.log(analyzeMetafile(result.metafile));
   });
 }
@@ -173,7 +179,7 @@ async function analyze() {
 async function typeCheck() {
   console.log('🔍 Type checking...');
   
-  const { execSync } = require('child_process');
+  const { execSync } = await import('child_process');
   
   try {
     execSync('tsc --noEmit', { stdio: 'inherit', cwd: __dirname });
@@ -185,7 +191,7 @@ async function typeCheck() {
 }
 
 // Export configurations and functions
-module.exports = {
+export {
   builds,
   sharedConfig,
   buildDev,
@@ -196,7 +202,7 @@ module.exports = {
 };
 
 // CLI interface
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const command = process.argv[2];
   
   switch (command) {

@@ -71,11 +71,18 @@ async function main() {
   
   // Import and run the main CLI
   try {
-    const mainPath = join(__dirname, '..', 'index.js');
+    const mainPath = join(__dirname, '..', '{{ main_entry_file }}');
+    {% if main_entry_file == "cli.js" %}
+    const { cliEntry } = await import(mainPath);
+    
+    // Run the CLI
+    await cliEntry();
+    {% else %}
     const { cli } = await import(mainPath);
     
     // Run the CLI
     await cli();
+    {% endif %}
   } catch (error) {
     // Use advanced error handling if available
     if (errorHandler) {

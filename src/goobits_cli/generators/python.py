@@ -194,8 +194,8 @@ class PythonGenerator(BaseGenerator):
         # Universal Templates are now the only option
         self.use_universal_templates = True and UNIVERSAL_TEMPLATES_AVAILABLE
         
-        # Always use single-file output (consolidation)
-        self.consolidate = True
+        # Disable consolidation temporarily to fix decorator syntax issues
+        self.consolidate = False
 
         
 

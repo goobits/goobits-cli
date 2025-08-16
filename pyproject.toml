@@ -1,6 +1,6 @@
 [project]
 name = "goobits-cli"
-version = "2.0.0-beta.1"
+version = "2.0.0-beta.2"
 description = "Universal CLI generation platform supporting Python, Node.js, TypeScript, and Rust with advanced features."
 dependencies = [ "pyyaml", "jinja2", "pydantic", "typer", "toml", "rich-click", "pinliner", "shiv", "psutil",]
 
@@ -9,7 +9,7 @@ requires = [ "setuptools>=61.0", "wheel",]
 build-backend = "setuptools.build_meta"
 
 [project.optional-dependencies]
-test = [ "pytest", "pytest-cov",]
+test = [ "pytest", "pytest-cov", "pytest-asyncio",]
 dev = [ "mypy", "types-PyYAML", "types-toml", "ruff",]
 
 [project.scripts]
@@ -21,6 +21,7 @@ goobits_cli = [ "templates/*.j2", "templates/**/*.j2", "setup.sh",]
 [tool.pytest.ini_options]
 pythonpath = [ "src",]
 testpaths = [ "src/tests",]
+asyncio_mode = "auto"
 markers = [ "unit: Unit tests (fast, <5s) - Test individual components in isolation", "integration: Integration tests (medium, <60s) - Test component interactions and real CLI generation", "e2e: End-to-end tests (slow, <300s) - Test complete workflows with subprocess execution", "performance: Performance benchmarks (very slow) - Measure startup times, memory usage", "user_accessible: Tests for features available in generated CLIs", "framework_only: Tests for framework features not yet integrated into generated CLIs", "integration_pending: Tests for features with framework-integration gap",]
 
 [tool.setuptools.packages.find]

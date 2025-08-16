@@ -128,7 +128,7 @@ class TestNodeGeneratorE2E:
                 full_path.chmod(0o755)
         
         # Verify key files exist
-        assert (tmp_path / "index.js").exists()
+        assert (tmp_path / "cli.js").exists()
         assert (tmp_path / "package.json").exists()
         assert (tmp_path / "bin/cli.js").exists()
         assert (tmp_path / "setup.sh").exists()
@@ -287,7 +287,7 @@ class TestNodeGeneratorE2E:
         assert result.returncode == 0, f"Build failed: {result.stderr}"
         
         # Verify files were created
-        assert (tmp_path / "output" / "index.js").exists()
+        assert (tmp_path / "output" / "cli.js").exists()
         assert (tmp_path / "output" / "package.json").exists()
         assert (tmp_path / "output" / "bin" / "cli.js").exists()
     

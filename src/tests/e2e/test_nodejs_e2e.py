@@ -47,7 +47,7 @@ class TestNodeJSE2E:
                 file_path.write_text(content)
                 
                 # Make scripts executable
-                if filename.endswith('.sh') or filename == 'index.js':
+                if filename.endswith('.sh') or filename == 'cli.js':
                     file_path.chmod(0o755)
             
             # Install npm dependencies if Node.js and npm are available
@@ -66,7 +66,7 @@ class TestNodeJSE2E:
     
     def test_generated_files_exist(self, temp_nodejs_project):
         """Test that all expected files are generated."""
-        expected_files = ['index.js', 'package.json', 'setup.sh', 'README.md']
+        expected_files = ['cli.js', 'package.json', 'setup.sh', 'README.md']
         
         for filename in expected_files:
             file_path = temp_nodejs_project / filename
@@ -92,7 +92,7 @@ class TestNodeJSE2E:
     def test_nodejs_cli_help(self, temp_nodejs_project):
         """Test generated CLI help output with Node.js."""
         result = subprocess.run(
-            ['node', 'index.js', '--help'],
+            ['node', 'cli.js', '--help'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -114,7 +114,7 @@ class TestNodeJSE2E:
     def test_nodejs_cli_version(self, temp_nodejs_project):
         """Test version flag with Node.js."""
         result = subprocess.run(
-            ['node', 'index.js', '--version'],
+            ['node', 'cli.js', '--version'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -127,7 +127,7 @@ class TestNodeJSE2E:
     def test_nodejs_cli_command_help(self, temp_nodejs_project):
         """Test command-specific help with Node.js."""
         result = subprocess.run(
-            ['node', 'index.js', 'deploy', '--help'],
+            ['node', 'cli.js', 'deploy', '--help'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -143,7 +143,7 @@ class TestNodeJSE2E:
     def test_nodejs_cli_subcommand_help(self, temp_nodejs_project):
         """Test subcommand help with Node.js."""
         result = subprocess.run(
-            ['node', 'index.js', 'server', 'start', '--help'],
+            ['node', 'cli.js', 'server', 'start', '--help'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -158,7 +158,7 @@ class TestNodeJSE2E:
     def test_nodejs_cli_missing_required_arg(self, temp_nodejs_project):
         """Test error handling for missing required arguments with Node.js."""
         result = subprocess.run(
-            ['node', 'index.js', 'init'],  # Missing required 'name' argument
+            ['node', 'cli.js', 'init'],  # Missing required 'name' argument
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -207,7 +207,7 @@ class TestNodeJSE2E:
     def test_global_options_inheritance(self, temp_nodejs_project):
         """Test that global options work with commands."""
         result = subprocess.run(
-            ['node', 'index.js', '--verbose', 'test', '--help'],
+            ['node', 'cli.js', '--verbose', 'test', '--help'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -297,7 +297,7 @@ cli:
                 file_path.write_text(content)
             
             # Verify generation
-            assert (Path(temp_dir) / "index.js").exists()
+            assert (Path(temp_dir) / "cli.js").exists()
             assert (Path(temp_dir) / "package.json").exists()
             
             # Test with Node.js if available
@@ -313,7 +313,7 @@ cli:
                 
                 # Test CLI execution
                 result = subprocess.run(
-                    ['node', 'index.js', 'api', 'generate', '--help'],
+                    ['node', 'cli.js', 'api', 'generate', '--help'],
                     cwd=temp_dir,
                     capture_output=True,
                     text=True
@@ -329,7 +329,7 @@ cli:
         """Test that commands execute without errors (simulation mode)."""
         # Test simple command
         result = subprocess.run(
-            ['node', 'index.js', 'test', 'unit'],
+            ['node', 'cli.js', 'test', 'unit'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -340,7 +340,7 @@ cli:
         
         # Test command with options
         result = subprocess.run(
-            ['node', 'index.js', 'server', 'start', '--port', '9000'],
+            ['node', 'cli.js', 'server', 'start', '--port', '9000'],
             cwd=temp_nodejs_project,
             capture_output=True,
             text=True
@@ -432,9 +432,9 @@ cli:
             python_files = generate_cli(python_config, "python.yaml")
             
             # Verify different outputs
-            assert 'index.js' in nodejs_files
+            assert 'cli.js' in nodejs_files
             assert 'package.json' in nodejs_files
-            assert 'index.js' not in python_files
+            assert 'cli.js' not in python_files
             assert 'package.json' not in python_files
             
             # Python should have different files

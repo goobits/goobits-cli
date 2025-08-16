@@ -134,6 +134,20 @@ class BaseGenerator(ABC):
 
                 'hooks_path': config.hooks_path,
 
+                # Add additional metadata fields
+
+                'author': getattr(config, 'author', ''),
+
+                'email': getattr(config, 'email', ''),
+
+                'license': getattr(config, 'license', 'MIT'),
+
+                'homepage': getattr(config, 'homepage', ''),
+
+                'repository': getattr(config, 'repository', ''),
+
+                'keywords': getattr(config, 'keywords', []),
+
             }
 
         else:  # ConfigSchema

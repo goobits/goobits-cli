@@ -252,7 +252,7 @@ class TestInteractiveMode:
         
         # Verify interactive mode integration
         assert "from .test_cli_interactive import run_interactive" in rendered
-        assert "if 'interactive' in ctx.params and ctx.params['interactive']:" in rendered
+        assert "if ctx.params.get('interactive'):" in rendered
         assert "run_interactive()" in rendered
         assert "sys.exit(0)" in rendered
     

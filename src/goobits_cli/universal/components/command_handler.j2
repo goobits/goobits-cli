@@ -22,7 +22,7 @@ import traceback
 import inspect
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 try:
-    from .{{ cli.name.replace('-', '_') }}_interactive import run_interactive
+    from .{{ (cli.root_command.name if cli.root_command else project.command_name).replace('-', '_') }}_interactive import run_interactive
 except ImportError:
     run_interactive = None
 {%- endif %}
@@ -77,11 +77,11 @@ except ImportError:
     is_flag=True,
     default=False
 )
-{%- if cli.options %}
+{% if cli.options %}
 {% for option in cli.options %}
 @click.option(
     "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
-    help="{{ (option.desc if option.desc is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
+    help="{{ (option.description if option.description is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
     is_flag=True{% elif option.type is defined and option.type == "integer" %},
     type=int{% elif option.type is defined and option.type == "float" %},
     type=float{% endif %},
@@ -96,9 +96,9 @@ except ImportError:
     {%- endif %}
 )
 {% endfor %}
-{%- endif %}
+{% endif %}
 @click.pass_context
-def main(ctx):
+def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
     """{{ (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description')) }}"""
     {% if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled -%}
     # Check if interactive mode was requested
@@ -112,16 +112,16 @@ def main(ctx):
     {%- endif %}
     pass
 
-{%- for command_name, command_config in cli.commands.items() %}
+{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
 
 @main.command()
-{%- for arg in command_config.args if command_config.args is defined %}
+{% for arg in command_config.arguments if command_config.arguments is defined %}
 @click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
-{%- endfor %}
-{%- for option in command_config.options if command_config.options is defined %}
+{% endfor %}
+{% for option in command_config.options if command_config.options is defined %}
 @click.option(
     "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
-    help="{{ (option.desc if option.desc is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
+    help="{{ (option.description if option.description is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
     is_flag=True{% elif option.type is defined and option.type == "integer" %},
     type=int{% elif option.type is defined and option.type == "float" %},
     type=float{% endif %},
@@ -135,10 +135,10 @@ def main(ctx):
     multiple=True,
     {%- endif %}
 )
-{%- endfor %}
+{% endfor %}
 @click.pass_context
-def {{ command_name.replace('-', '_') }}(ctx{% for arg in command_config.args if command_config.args is defined %}, {{ arg.name.lower() }}{% endfor %}{% for option in command_config.options if command_config.options is defined %}, {{ option.name.replace('-', '_') }}{% endfor %}):
-    """{{ (command_config.desc if command_config.desc is defined else (command_config.description if command_config.description is defined else ('Command ' + command_name))) }}"""
+def {{ command_config.name.replace('-', '_') }}(ctx{% for arg in command_config.arguments if command_config.arguments is defined %}, {{ arg.name.lower() }}{% endfor %}{% for option in command_config.options if command_config.options is defined %}, {{ option.name.replace('-', '_') }}{% endfor %}):
+    """{{ (command_config.description if command_config.description is defined else (command_config.descriptionription if command_config.descriptionription is defined else ('Command ' + command_name))) }}"""
     
     # Enhanced error handling for Python CLI
     verbose = ctx.parent.params.get('verbose', False) if ctx.parent else False
@@ -147,10 +147,10 @@ def {{ command_name.replace('-', '_') }}(ctx{% for arg in command_config.args if
         if hooks is None:
             raise ConfigError(
                 "Hook implementation not found. Please create 'app_hooks.py' with your command implementations.",
-                suggestion="Create app_hooks.py with function: def on_{{ command_name.replace('-', '_') }}(...): pass"
+                suggestion="Create app_hooks.py with function: def on_{{ command_config.name.replace('-', '_') }}(...): pass"
             )
         
-        hook_name = 'on_{{ command_name.replace('-', '_') }}'
+        hook_name = 'on_{{ command_config.name.replace('-', '_') }}'
         if not hasattr(hooks, hook_name):
             available_hooks = [name for name in dir(hooks) if not name.startswith('_') and callable(getattr(hooks, name))]
             raise ConfigError(
@@ -161,7 +161,7 @@ def {{ command_name.replace('-', '_') }}(ctx{% for arg in command_config.args if
         hook_function = getattr(hooks, hook_name)
         
         # Prepare arguments and options for the hook
-        args = [{% for arg in command_config.args if command_config.args is defined %}{{ arg.name.lower() }}{% if not loop.last %}, {% endif %}{% endfor %}]
+        args = [{% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name.lower() }}{% if not loop.last %}, {% endif %}{% endfor %}]
         options = {
         {%- for option in command_config.options if command_config.options is defined %}
             '{{ option.name }}': {{ option.name.replace('-', '_') }}{% if not loop.last %},{% endif %}
@@ -198,7 +198,7 @@ def {{ command_name.replace('-', '_') }}(ctx{% for arg in command_config.args if
         
         # Handle return codes
         if isinstance(result, int) and result != 0:
-            click.echo(f"Command '{{ command_name }}' failed with exit code {result}", err=True)
+            click.echo(f"Command '{{ command_config.name }}' failed with exit code {result}", err=True)
             sys.exit(result)
             
     except KeyboardInterrupt:
@@ -288,27 +288,27 @@ program
 {%- for option in cli.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
-    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
+    '{{ ((option.descriptionription if option.descriptionription is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
 {%- endfor %}
 
-{%- for command_name, command_config in cli.commands.items() %}
+{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
 
 program
-    .command('{{ command_name }}')
-    .description('{{ ((command_config.description if command_config.description is defined else (command_config.desc if command_config.desc is defined else 'No description'))) | js_string }}')
-{%- for arg in command_config.args if command_config.args is defined %}
+    .command('{{ command_config.name }}')
+    .description('{{ ((command_config.descriptionription if command_config.descriptionription is defined else (command_config.description if command_config.description is defined else 'No description'))) | js_string }}')
+{%- for arg in command_config.arguments if command_config.arguments is defined %}
     .argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}')
 {%- endfor %}
 {%- for option in command_config.options if command_config.options is defined %}
-    .option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.desc | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %})
+    .option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %})
 {%- endfor %}
-    .action(async ({% for arg in command_config.args if command_config.args is defined %}{{ arg.name }}{% if command_config.options or not loop.last %}, {% endif %}{% endfor %}options) => {
+    .action(async ({% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}{% if command_config.options or not loop.last %}, {% endif %}{% endfor %}options) => {
         const globalOpts = program.opts();
         const verbose = globalOpts.verbose || false;
         
         try {
-            const hookName = 'on{{ command_name | title | replace('-', '') }}';
+            const hookName = 'on{{ command_config.name | title | replace('-', '') }}';
             
             if (!hooks) {
                 throw new CLIError('Hook module not loaded', 2);
@@ -324,12 +324,12 @@ program
             }
             
             // Execute the hook function with proper error handling
-            const args = [{% for arg in command_config.args if command_config.args is defined %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-            const result = await hooks[hookName](...args{% if command_config.args %}, {% endif %}options);
+            const args = [{% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
+            const result = await hooks[hookName](...args{% if command_config.arguments %}, {% endif %}options);
             
             // Handle return codes
             if (typeof result === 'number' && result !== 0) {
-                throw new CLIError(`Command '{{ command_name }}' failed with exit code ${result}`, result);
+                throw new CLIError(`Command '{{ command_config.name }}' failed with exit code ${result}`, result);
             }
             
         } catch (error) {
@@ -441,27 +441,27 @@ program
 {%- for option in cli.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
-    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
+    '{{ ((option.descriptionription if option.descriptionription is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
 {%- endfor %}
 
-{%- for command_name, command_config in cli.commands.items() %}
+{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
 
 program
-    .command('{{ command_name }}')
-    .description('{{ ((command_config.description if command_config.description is defined else (command_config.desc if command_config.desc is defined else 'No description'))) | js_string }}')
-{%- for arg in command_config.args if command_config.args is defined %}
+    .command('{{ command_config.name }}')
+    .description('{{ ((command_config.descriptionription if command_config.descriptionription is defined else (command_config.description if command_config.description is defined else 'No description'))) | js_string }}')
+{%- for arg in command_config.arguments if command_config.arguments is defined %}
     .argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}')
 {%- endfor %}
 {%- for option in command_config.options if command_config.options is defined %}
-    .option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.desc | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %})
+    .option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %})
 {%- endfor %}
-    .action(async ({% for arg in command_config.args if command_config.args is defined %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if command_config.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
+    .action(async ({% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if command_config.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
         const globalOpts = program.opts();
         const verbose: boolean = globalOpts.verbose || false;
         
         try {
-            const hookName = 'on{{ command_name | title | replace('-', '') }}' as keyof typeof hooks;
+            const hookName = 'on{{ command_config.name | title | replace('-', '') }}' as keyof typeof hooks;
             
             if (!hooks) {
                 throw new CLIError('Hook module not loaded', 2);
@@ -477,12 +477,12 @@ program
             }
             
             // Execute the hook function with proper error handling
-            const args = [{% for arg in command_config.args if command_config.args is defined %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-            const result = await (hooks[hookName] as Function)(...args{% if command_config.args %}, {% endif %}options);
+            const args = [{% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
+            const result = await (hooks[hookName] as Function)(...args{% if command_config.arguments %}, {% endif %}options);
             
             // Handle return codes
             if (typeof result === 'number' && result !== 0) {
-                throw new CLIError(`Command '{{ command_name }}' failed with exit code ${result}`, result);
+                throw new CLIError(`Command '{{ command_config.name }}' failed with exit code ${result}`, result);
             }
             
         } catch (error: unknown) {
@@ -538,7 +538,7 @@ fn main() {
                 {%- if option.short is defined and option.short %}
                 .short('{{ option.short }}')
                 {%- endif %}
-                .help("{{ option.description }}")
+                .help("{{ option.descriptionription }}")
                 {%- if option.required is defined and option.required %}
                 .required(true)
                 {%- endif %}
@@ -551,11 +551,11 @@ fn main() {
                 {%- endif %}
         )
 {%- endfor %}
-{%- for command_name, command_config in cli.commands.items() %}
+{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
         .subcommand(
-            Command::new("{{ command_name }}")
-                .about("{{ (command_config.description if command_config.description is defined else (command_config.desc if command_config.desc is defined else 'No description')) }}")
-{%- for arg in command_config.args if command_config.args is defined %}
+            Command::new("{{ command_config.name }}")
+                .about("{{ (command_config.descriptionription if command_config.descriptionription is defined else (command_config.description if command_config.description is defined else 'No description')) }}")
+{%- for arg in command_config.arguments if command_config.arguments is defined %}
                 .arg(
                     Arg::new("{{ arg.name }}")
                         .help("{{ (arg.desc if arg.desc is defined else 'No description') }}")
@@ -576,7 +576,7 @@ fn main() {
                         {%- if option.short is defined and option.short %}
                         .short('{{ option.short }}')
                         {%- endif %}
-                        .help("{{ (option.desc if option.desc is defined else 'No description') }}")
+                        .help("{{ (option.description if option.description is defined else 'No description') }}")
                         {%- if option.required is defined and option.required %}
                         .required(true)
                         {%- endif %}
@@ -606,19 +606,19 @@ fn main() {
     {%- endif %}
 
     match matches.subcommand() {
-{%- for command_name, command_config in cli.commands.items() %}
-        Some(("{{ command_name }}", sub_matches)) => {
+{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+        Some(("{{ command_config.name }}", sub_matches)) => {
             // Enhanced error handling for Rust commands
             let hook_name = "on_{{ command_name | replace('-', '_') }}";
             match hooks::on_{{ command_name | replace('-', '_') }}(sub_matches) {
                 Ok(exit_code) => {
                     if exit_code != 0 {
-                        eprintln!("Command '{{ command_name }}' failed with exit code {}", exit_code);
+                        eprintln!("Command '{{ command_config.name }}' failed with exit code {}", exit_code);
                         process::exit(exit_code);
                     }
                 }
                 Err(e) => {
-                    let error_context = format!("Command '{{ command_name }}' execution");
+                    let error_context = format!("Command '{{ command_config.name }}' execution");
                     
                     // Check for specific error types
                     if e.to_string().contains("not implemented") {

@@ -22,7 +22,7 @@ from jinja2 import Template
 
 
 
-from .manager import get_plugin_manager, PluginInfo, PluginType
+from .manager import get_plugin_manager, PluginInfo, PluginType, PluginStatus
 
 
 
@@ -70,7 +70,7 @@ class PluginCLIIntegrator:
 
         command_plugins = {}
 
-        plugins = self.manager.list_plugins(status='enabled')
+        plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
         
 
@@ -102,7 +102,7 @@ class PluginCLIIntegrator:
 
         completion_plugins = []
 
-        plugins = self.manager.list_plugins(status='enabled')
+        plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
         
 
@@ -778,7 +778,7 @@ class PluginCommandManager:
 
         registered = {}
 
-        plugins = self.manager.list_plugins(status='enabled')
+        plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
         
 

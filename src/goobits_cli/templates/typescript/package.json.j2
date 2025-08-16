@@ -36,7 +36,8 @@
   },
   "keywords": [
     "cli",
-    "typescript"{% if cli and cli.tags %},
+    "typescript"{% if keywords %}{% for keyword in keywords %}{% if keyword not in ["cli", "typescript"] %},
+    "{{ keyword }}"{% endif %}{% endfor %}{% endif %}{% if cli and cli.tags %},
     {% for tag in cli.tags %}"{{ tag }}"{% if not loop.last %},{% endif %}
     {% endfor %}{% endif %}
   ],

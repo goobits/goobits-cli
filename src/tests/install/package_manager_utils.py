@@ -29,12 +29,21 @@ class PipManager:
     @staticmethod
     def is_available() -> bool:
         """Check if pip is available."""
-        return shutil.which("pip") is not None
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "pip", "--version"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            return True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return False
     
     @staticmethod
     def install_editable(package_path: str, timeout: int = 120) -> subprocess.CompletedProcess:
         """Install package in editable mode using pip."""
-        cmd = ["pip", "install", "-e", "."]
+        cmd = [sys.executable, "-m", "pip", "install", "-e", "."]
         return subprocess.run(
             cmd, 
             cwd=package_path, 
@@ -47,7 +56,7 @@ class PipManager:
     @staticmethod
     def install_from_path(package_path: str, timeout: int = 120) -> subprocess.CompletedProcess:
         """Install package from path using pip."""
-        cmd = ["pip", "install", "."]
+        cmd = [sys.executable, "-m", "pip", "install", "."]
         return subprocess.run(
             cmd, 
             cwd=package_path, 
@@ -60,7 +69,7 @@ class PipManager:
     @staticmethod
     def uninstall(package_name: str, timeout: int = 60) -> subprocess.CompletedProcess:
         """Uninstall package using pip."""
-        cmd = ["pip", "uninstall", "-y", package_name]
+        cmd = [sys.executable, "-m", "pip", "uninstall", "-y", package_name]
         return subprocess.run(
             cmd, 
             capture_output=True, 
@@ -74,7 +83,7 @@ class PipManager:
         """Get list of installed packages."""
         try:
             result = subprocess.run(
-                ["pip", "list", "--format=json"], 
+                [sys.executable, "-m", "pip", "list", "--format=json"], 
                 capture_output=True, 
                 text=True, 
                 check=True

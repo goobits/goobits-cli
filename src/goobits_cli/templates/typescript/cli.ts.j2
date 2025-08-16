@@ -489,7 +489,7 @@ const {{ cmd_name }}Cmd = program
             }
             {% endif %}
         } catch (error) {
-            const exitCode = handleCLIError(error as Error, options.verbose || (command.parent?.opts() as GlobalOptions)?.verbose);
+            const exitCode = handleCLIError(error as Error, options.verbose || false);
             process.exit(exitCode);
         }
     });
@@ -554,7 +554,7 @@ interface {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ 
                 {% endif %}
             }
         } catch (error) {
-            const exitCode = handleCLIError(error as Error, options.verbose || (command.parent?.parent?.opts() as GlobalOptions)?.verbose);
+            const exitCode = handleCLIError(error as Error, options.verbose || false);
             process.exit(exitCode);
         }
     });

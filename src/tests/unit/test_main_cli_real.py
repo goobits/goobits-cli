@@ -124,10 +124,15 @@ cli:
         expected_files = ["cli.js", "package.json", "setup.sh"]
         for filename in expected_files:
             filepath = self.temp_dir / filename
-            assert filepath.exists(), f"{filename} not generated for Node.js"
+            if not filepath.exists():
+                # Try Universal Template System default path
+                alt_path = self.temp_dir / "src" / "test-cli" / filename
+                assert alt_path.exists(), f"{filename} not generated for Node.js (checked {filepath} and {alt_path})"
             
         # Verify package.json structure
         package_json = self.temp_dir / "package.json"
+        if not package_json.exists():
+            package_json = self.temp_dir / "src" / "test-cli" / "package.json"
         content = package_json.read_text()
         assert '"name":' in content, "package.json missing name field"
         assert '"bin":' in content or '"main":' in content, "package.json missing entry point"
@@ -143,7 +148,10 @@ cli:
         expected_files = ["cli.ts", "package.json", "tsconfig.json", "setup.sh"]
         for filename in expected_files:
             filepath = self.temp_dir / filename
-            assert filepath.exists(), f"{filename} not generated for TypeScript"
+            if not filepath.exists():
+                # Try Universal Template System default path
+                alt_path = self.temp_dir / "src" / "test-cli" / filename
+                assert alt_path.exists(), f"{filename} not generated for TypeScript (checked {filepath} and {alt_path})"
             
     def test_rust_cli_generation(self):
         """Generate and validate a Rust CLI."""
@@ -153,9 +161,17 @@ cli:
         assert result.exit_code == 0, f"Build failed: {result.stdout}"
         
         # Check for Rust specific files
-        assert (self.temp_dir / "Cargo.toml").exists(), "Cargo.toml not generated"
+        cargo_toml = self.temp_dir / "Cargo.toml"
+        if not cargo_toml.exists():
+            # Try Universal Template System default path
+            cargo_toml = self.temp_dir / "src" / "test-cli" / "Cargo.toml"
+        assert cargo_toml.exists(), "Cargo.toml not generated"
+        
+        # Check for main.rs in multiple locations
         assert ((self.temp_dir / "src" / "main.rs").exists() or 
-                (self.temp_dir / "main.rs").exists()), "main.rs not generated"
+                (self.temp_dir / "main.rs").exists() or
+                (self.temp_dir / "src" / "test-cli" / "src" / "main.rs").exists() or
+                (self.temp_dir / "src" / "test-cli" / "main.rs").exists()), "main.rs not generated"
 
 
 @pytest.mark.execution
@@ -176,6 +192,7 @@ command_name: exectest
 display_name: "Execution Test"
 description: "Testing CLI execution"
 language: python
+cli_output_path: "cli.py"
 
 python:
   minimum_version: "3.8"
@@ -222,6 +239,9 @@ cli:
             cli_path = self.temp_dir / "generated_cli.py"
             if not cli_path.exists():
                 cli_path = self.temp_dir / "src" / "generated_cli.py"
+                if not cli_path.exists():
+                    # Try Universal Template System default path
+                    cli_path = self.temp_dir / "src" / "exec-test" / "cli.py"
                 
         assert cli_path.exists(), "No CLI file found"
         
@@ -255,6 +275,9 @@ def on_hello():
         cli_path = self.temp_dir / "cli.py"
         if not cli_path.exists():
             cli_path = self.temp_dir / "generated_cli.py"
+            if not cli_path.exists():
+                # Try Universal Template System default path
+                cli_path = self.temp_dir / "src" / "exec-test" / "cli.py"
             
         result = subprocess.run(
             [sys.executable, str(cli_path), "hello"],
@@ -348,6 +371,7 @@ command_name: {language}test
 display_name: "{language.title()} Test"
 description: "Testing {language}"
 language: {language}
+cli_output_path: "cli.{('py' if language == 'python' else 'js' if language == 'nodejs' else 'ts' if language == 'typescript' else 'rs')}"
 
 python:
   minimum_version: "3.8"
@@ -372,6 +396,9 @@ messages:
 cli:
   name: {language}test
   tagline: "{language} test"
+  commands:
+    hello:
+      desc: "Say hello"
 """
             config_path = lang_dir / "goobits.yaml"
             config_path.write_text(config_content)
@@ -382,9 +409,12 @@ cli:
             for filename in expected_files:
                 filepath = lang_dir / filename
                 if not filepath.exists():
-                    # Check alternative locations
-                    alt_path = lang_dir / "src" / filename
-                    assert alt_path.exists(), f"{filename} missing for {language}"
+                    # Check Universal Template System default path
+                    alt_path = lang_dir / "src" / f"{language}-test" / filename
+                    if not alt_path.exists():
+                        # Check legacy alternative locations
+                        alt_path = lang_dir / "src" / filename
+                    assert alt_path.exists(), f"{filename} missing for {language} (checked {filepath} and Universal Template path)"
 
 
 @pytest.mark.regression
@@ -456,6 +486,7 @@ command_name: stubtest
 display_name: "Stub Test"
 description: "Testing non-stub generation"
 language: python
+cli_output_path: "cli.py"
 
 python:
   minimum_version: "3.8"
@@ -478,6 +509,8 @@ messages:
   install_success: "Test CLI installed successfully!"
 
 cli:
+  name: stubtest
+  tagline: "Stub test CLI"
   commands:
     work:
       desc: "Should do work"
@@ -486,12 +519,15 @@ cli:
         config_path.write_text(config_content)
         
         result = self.runner.invoke(app, ["build", str(config_path)])
-        assert result.exit_code == 0
+        assert result.exit_code == 0, f"Build failed: {result.stdout}"
         
         # Find generated file
         cli_path = self.temp_dir / "cli.py"
         if not cli_path.exists():
             cli_path = self.temp_dir / "generated_cli.py"
+            if not cli_path.exists():
+                # Try Universal Template System default path
+                cli_path = self.temp_dir / "src" / "stub-test" / "cli.py"
             
         content = cli_path.read_text()
         
@@ -513,6 +549,7 @@ command_name: valtest
 display_name: "Validation Test"
 description: "Testing validation error handling"
 language: python
+cli_output_path: "cli.py"
 
 python:
   minimum_version: "3.8"
@@ -535,6 +572,8 @@ messages:
   install_success: "Test CLI installed successfully!"
 
 cli:
+  name: valtest
+  tagline: "Validation test CLI"
   options:
     - name: verbose
       type: bool
@@ -554,7 +593,9 @@ cli:
         # Should still generate something despite validation warning
         assert result.exit_code == 0, "Build should succeed despite validation warning"
         cli_path = self.temp_dir / "cli.py"
-        assert cli_path.exists() or (self.temp_dir / "generated_cli.py").exists()
+        assert (cli_path.exists() or 
+                (self.temp_dir / "generated_cli.py").exists() or
+                (self.temp_dir / "src" / "validation-test" / "cli.py").exists())
 
 
 if __name__ == "__main__":

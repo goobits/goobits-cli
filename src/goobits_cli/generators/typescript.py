@@ -466,6 +466,22 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             'hooks_path': metadata['hooks_path'],
 
+            # Add missing metadata fields for package.json template (now included in metadata)
+
+            'author': metadata.get('author', ''),
+
+            'email': metadata.get('email', ''),
+
+            'license': metadata.get('license', 'MIT'),
+
+            'homepage': metadata.get('homepage', ''),
+
+            'repository': metadata.get('repository', ''),
+
+            'bugs_url': metadata.get('repository', '').replace('.git', '/issues') if metadata.get('repository', '') else '',
+
+            'keywords': metadata.get('keywords', []),
+
         }
 
         
@@ -919,6 +935,22 @@ class TypeScriptGenerator(NodeJSGenerator):
             'installation': metadata['installation'],
 
             'hooks_path': metadata['hooks_path'],
+
+            # Add missing metadata fields for package.json template (now included in metadata)
+
+            'author': metadata.get('author', ''),
+
+            'email': metadata.get('email', ''),
+
+            'license': metadata.get('license', 'MIT'),
+
+            'homepage': metadata.get('homepage', ''),
+
+            'repository': metadata.get('repository', ''),
+
+            'bugs_url': metadata.get('repository', '').replace('.git', '/issues') if metadata.get('repository', '') else '',
+
+            'keywords': metadata.get('keywords', []),
 
         }
 
@@ -1679,6 +1711,12 @@ export default program;
 
             },
 
+            "keywords": ["cli", "typescript"] + context.get('keywords', []),
+
+            "author": context.get('author', ''),
+
+            "license": context.get('license', 'MIT'),
+
             "dependencies": {
 
                 "commander": "^11.1.0",
@@ -1697,9 +1735,45 @@ export default program;
 
             },
 
-            "type": "module"
+            "type": "module",
+
+            "repository": {
+
+                "type": "git",
+
+                "url": context.get('repository', '')
+
+            },
+
+            "bugs": {
+
+                "url": context.get('bugs_url', '')
+
+            },
+
+            "homepage": context.get('homepage', '')
 
         }
+
+        
+
+        # Add any npm packages from installation extras
+
+        if context.get('installation') and hasattr(context['installation'], 'extras'):
+
+            if hasattr(context['installation'].extras, 'npm'):
+
+                for package in context['installation'].extras.npm:
+
+                    if '@' in package:
+
+                        name, version = package.rsplit('@', 1)
+
+                        package_json["dependencies"][name] = f"^{version}"
+
+                    else:
+
+                        package_json["dependencies"][package] = "latest"
 
         return json.dumps(package_json, indent=2)
 

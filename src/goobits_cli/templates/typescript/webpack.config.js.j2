@@ -3,11 +3,19 @@
  * Optimized for CLI application bundling
  */
 
-const path = require('path');
-const nodeExternals = require('webpack-node-externals');
+import path from 'path';
+import nodeExternals from 'webpack-node-externals';
+import webpack from 'webpack';
+import TerserPlugin from 'terser-webpack-plugin';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// ES Module equivalents of __filename and __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 /** @type {import('webpack').Configuration} */
-module.exports = (env, argv) => {
+export default (env, argv) => {
   const isProduction = argv.mode === 'production';
   
   return {
@@ -68,7 +76,7 @@ module.exports = (env, argv) => {
     
     plugins: [
       // Add banner to output files
-      new (require('webpack')).BannerPlugin({
+      new webpack.BannerPlugin({
         banner: '#!/usr/bin/env node',
         raw: true,
         entryOnly: true,
@@ -79,7 +87,7 @@ module.exports = (env, argv) => {
     optimization: {
       minimize: isProduction,
       minimizer: isProduction ? [
-        new (require('terser-webpack-plugin'))({
+        new TerserPlugin({
           terserOptions: {
             keep_classnames: true,
             keep_fnames: true,

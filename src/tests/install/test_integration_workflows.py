@@ -167,12 +167,18 @@ class IntegrationTestRunner:
             from .package_manager_utils import PipManager
             
             if not PipManager.is_available():
+                print(f"❌ PipManager not available")
                 return False
             
             # Install in editable mode
             result = PipManager.install_editable(temp_dir)
+            if result.returncode != 0:
+                print(f"❌ Pip installation failed with return code {result.returncode}")
+                print(f"Stdout: {result.stdout}")
+                print(f"Stderr: {result.stderr}")
             return result.returncode == 0
-        except Exception:
+        except Exception as e:
+            print(f"❌ Python installation exception: {e}")
             return False
     
     def _test_nodejs_installation(self, config, temp_dir: str) -> bool:
@@ -181,10 +187,16 @@ class IntegrationTestRunner:
             from .package_manager_utils import NpmManager
             
             if not NpmManager.is_available():
+                print(f"❌ NpmManager not available")
                 return False
             
             # Install dependencies and link globally
-            NpmManager.install_dependencies(temp_dir)
+            deps_result = NpmManager.install_dependencies(temp_dir)
+            if deps_result.returncode != 0:
+                print(f"❌ npm install failed with return code {deps_result.returncode}")
+                print(f"Stdout: {deps_result.stdout}")
+                print(f"Stderr: {deps_result.stderr}")
+                return False
             
             # Make CLI executable
             cli_file = Path(temp_dir) / "cli.js"
@@ -196,8 +208,13 @@ class IntegrationTestRunner:
                 cli_file.chmod(0o755)
             
             result = NpmManager.link_global(temp_dir)
+            if result.returncode != 0:
+                print(f"❌ npm link failed with return code {result.returncode}")
+                print(f"Stdout: {result.stdout}")
+                print(f"Stderr: {result.stderr}")
             return result.returncode == 0
-        except Exception:
+        except Exception as e:
+            print(f"❌ Node.js installation exception: {e}")
             return False
     
     def _test_typescript_installation(self, config, temp_dir: str) -> bool:
@@ -206,14 +223,23 @@ class IntegrationTestRunner:
             from .package_manager_utils import NpmManager
             
             if not NpmManager.is_available():
+                print(f"❌ NpmManager not available")
                 return False
             
             # Install dependencies
-            NpmManager.install_dependencies(temp_dir)
+            deps_result = NpmManager.install_dependencies(temp_dir)
+            if deps_result.returncode != 0:
+                print(f"❌ npm install failed with return code {deps_result.returncode}")
+                print(f"Stdout: {deps_result.stdout}")
+                print(f"Stderr: {deps_result.stderr}")
+                return False
             
             # Build TypeScript
-            result = NpmManager.run_script("build", temp_dir)
-            if result.returncode != 0:
+            build_result = NpmManager.run_script("build", temp_dir)
+            if build_result.returncode != 0:
+                print(f"❌ npm run build failed with return code {build_result.returncode}")
+                print(f"Stdout: {build_result.stdout}")
+                print(f"Stderr: {build_result.stderr}")
                 return False
             
             # Make compiled CLI executable
@@ -227,8 +253,13 @@ class IntegrationTestRunner:
             
             # Link globally
             result = NpmManager.link_global(temp_dir)
+            if result.returncode != 0:
+                print(f"❌ npm link failed with return code {result.returncode}")
+                print(f"Stdout: {result.stdout}")
+                print(f"Stderr: {result.stderr}")
             return result.returncode == 0
-        except Exception:
+        except Exception as e:
+            print(f"❌ TypeScript installation exception: {e}")
             return False
     
     def _test_rust_installation(self, config, temp_dir: str) -> bool:
@@ -237,14 +268,40 @@ class IntegrationTestRunner:
             from .package_manager_utils import CargoManager
             
             if not CargoManager.is_available():
+                print(f"❌ CargoManager not available")
                 return False
             
             # Build and install
-            CargoManager.build(temp_dir)
+            build_result = CargoManager.build(temp_dir)
+            if build_result.returncode != 0:
+                print(f"❌ cargo build failed with return code {build_result.returncode}")
+                print(f"Stdout: {build_result.stdout}")
+                print(f"Stderr: {build_result.stderr}")
+                return False
+                
             result = CargoManager.install_from_path(temp_dir)
+            if result.returncode != 0:
+                print(f"❌ cargo install failed with return code {result.returncode}")
+                print(f"Stdout: {result.stdout}")
+                print(f"Stderr: {result.stderr}")
             return result.returncode == 0
-        except Exception:
+        except Exception as e:
+            print(f"❌ Rust installation exception: {e}")
             return False
+    
+    def _get_cli_command_path(self, command_name: str, language: str) -> str:
+        """Get the full path to the CLI command based on language and installation method."""
+        if language == "python":
+            # For Python, the CLI is installed in the virtual environment's bin directory
+            import sys
+            import os
+            venv_bin = os.path.dirname(sys.executable)
+            cli_path = os.path.join(venv_bin, command_name)
+            if os.path.exists(cli_path):
+                return cli_path
+        
+        # For other languages or if not found in venv, try system PATH
+        return command_name
     
     def _test_cli_functionality(self, config) -> Dict[str, any]:
         """Test CLI functionality after installation."""
@@ -256,7 +313,7 @@ class IntegrationTestRunner:
             "all_commands_work": False
         }
         
-        command_name = config.command_name
+        command_name = self._get_cli_command_path(config.command_name, config.language)
         test_commands = ["--help", "--version"]
         
         # Add specific commands from config
@@ -294,7 +351,8 @@ class IntegrationTestRunner:
                     results["commands_failed"].append({
                         "command": cmd,
                         "returncode": result.returncode,
-                        "stderr": result.stderr[:200]  # Truncate error
+                        "stderr": result.stderr[:200] if result.stderr else "No stderr",
+                        "stdout": result.stdout[:200] if result.stdout else "No stdout"
                     })
             
             except Exception as e:

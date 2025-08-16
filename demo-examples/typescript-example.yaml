@@ -1,0 +1,37 @@
+# TypeScript CLI Example  
+package_name: demo-typescript-cli
+command_name: demo_ts
+display_name: "Demo TypeScript CLI"
+description: "A sample TypeScript CLI built with Goobits"
+version: "1.0.0"
+language: typescript
+author: "Demo User"
+email: "demo@example.com"
+license: "MIT"
+
+cli:
+  name: demo_ts
+  tagline: "TypeScript CLI demonstration"
+  commands:
+    calculate:
+      desc: "Perform calculations"
+      args:
+        - name: operation
+          desc: "Math operation"
+          required: true
+          choices: ["add", "subtract", "multiply", "divide"]
+        - name: a
+          desc: "First number"
+          required: true
+        - name: b
+          desc: "Second number"
+          required: true
+      options:
+        - name: precision
+          short: p
+          type: int
+          desc: "Decimal precision"
+          default: 2
+    
+    status:
+      desc: "Show TypeScript environment status"

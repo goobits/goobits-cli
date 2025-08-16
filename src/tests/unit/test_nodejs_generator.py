@@ -46,13 +46,13 @@ class TestNodeJSGenerator:
         assert isinstance(output_files, dict)
         
         # Check for essential files
-        assert 'index.js' in output_files
+        assert 'cli.js' in output_files
         assert 'package.json' in output_files
         assert 'setup.sh' in output_files
         assert 'README.md' in output_files
         
-        # Verify basic content in index.js
-        index_content = output_files['index.js']
+        # Verify basic content in cli.js
+        index_content = output_files['cli.js']
         assert "test-cli" in index_content
         assert "Test CLI Application" in index_content
         assert "hello" in index_content
@@ -104,7 +104,7 @@ class TestNodeJSGenerator:
         output_files = generator.generate_all_files(config, "complex.yaml")
         
         # Check command generation
-        index_content = output_files['index.js']
+        index_content = output_files['cli.js']
         assert "deploy" in index_content
         assert "status" in index_content
         assert "environment" in index_content
@@ -147,7 +147,7 @@ class TestNodeJSGenerator:
         output_files = generator.generate_all_files(config, "nested.yaml")
         
         # Check subcommand structure
-        index_content = output_files['index.js']
+        index_content = output_files['cli.js']
         assert "database" in index_content
         assert "migrate" in index_content
         assert "backup" in index_content
@@ -178,7 +178,7 @@ class TestNodeJSGenerator:
         output_files = generator.generate_all_files(config, "global.yaml")
         
         # Check global options
-        index_content = output_files['index.js']
+        index_content = output_files['cli.js']
         assert "--verbose" in index_content
         assert "--config" in index_content
     
@@ -191,7 +191,7 @@ class TestNodeJSGenerator:
         assert isinstance(output_files, list)
         
         # Check for essential files
-        expected_files = ['index.js', 'package.json', 'setup.sh', 'README.md']
+        expected_files = ['cli.js', 'package.json', 'setup.sh', 'README.md']
         for file_name in expected_files:
             assert file_name in output_files
     
@@ -397,7 +397,7 @@ class TestNodeJSGeneratorErrorConditions:
             result = generator.generate_all_files(config, "large.yaml")
             assert isinstance(result, dict)
             # Check that essential files are still generated
-            assert 'index.js' in result
+            assert 'cli.js' in result
             assert 'package.json' in result
         except (MemoryError, RecursionError):
             # Acceptable to fail with extremely large configurations
@@ -448,7 +448,7 @@ class TestNodeJSGeneratorErrorConditions:
             assert isinstance(result, dict)
             
             # Check that generated content handles unicode properly
-            index_content = result.get('index.js', '')
+            index_content = result.get('cli.js', '')
             assert isinstance(index_content, str)
             
             # Unicode should either be preserved or safely encoded
@@ -703,7 +703,7 @@ class TestNodeJSGeneratorErrorConditions:
         output_files = generator.generate_all_files(config, "hooks.yaml")
         
         # Check hook references in generated code
-        index_content = output_files.get('index.js', '')
+        index_content = output_files.get('cli.js', '')
         # The hooks system exists but specific hook names may not appear directly
         # Check that hooks infrastructure is present
         assert "hooks" in index_content.lower() or "appHooks" in index_content
@@ -725,7 +725,7 @@ class TestNodeJSGeneratorErrorConditions:
         output_files = generator.generate_all_files(config, "special.yaml")
         
         # Should handle special characters without breaking JSON/JS
-        index_content = output_files['index.js']
+        index_content = output_files['cli.js']
         package_content = output_files['package.json']
         
         # Verify files are generated without syntax errors
@@ -756,7 +756,7 @@ class TestNodeJSGeneratorErrorConditions:
         expected_files = generator.get_output_files()
         for expected_file in expected_files:
             # Some files might be optional (like commands/*.js for complex CLIs)
-            if expected_file in ['index.js', 'package.json', 'setup.sh', 'README.md']:
+            if expected_file in ['cli.js', 'package.json', 'setup.sh', 'README.md']:
                 assert expected_file in output_files
     
     def test_generate_with_examples(self):
@@ -882,7 +882,7 @@ cli:
         output_files = generate_cli(config, "test_nodejs.yaml")
         
         # Check that we get Node.js files, not Python files
-        assert 'index.js' in output_files
+        assert 'cli.js' in output_files
         assert 'package.json' in output_files
         assert 'setup.sh' in output_files
         

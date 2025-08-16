@@ -194,7 +194,7 @@ class PythonRenderer(LanguageRenderer):
 
                 "timestamp": datetime.now().isoformat(),
 
-                "generator_version": "2.0.0-beta.1",
+                "generator_version": "2.0.0-beta.2",
 
                 "package_name": context["project"]["package_name"].replace("-", "_"),
 

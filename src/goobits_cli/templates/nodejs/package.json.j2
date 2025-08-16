@@ -20,7 +20,8 @@
     "postinstall": "node scripts/postinstall.js || true"
   },
   "keywords": [
-    "cli"{% if cli and cli.tags %},
+    "cli"{% if keywords %}{% for keyword in keywords %}{% if keyword != "cli" %},
+    "{{ keyword }}"{% endif %}{% endfor %}{% endif %}{% if cli and cli.tags %},
     {% for tag in cli.tags %}"{{ tag }}"{% if not loop.last %},{% endif %}
     {% endfor %}{% endif %}
   ],

@@ -378,6 +378,24 @@ class GoobitsConfigSchema(BaseModel):
 
     description: str
 
+    version: Optional[str] = "1.0.0"
+
+    
+
+    # Author and license information
+
+    author: Optional[str] = "Unknown Author"
+
+    email: Optional[str] = "unknown@example.com"
+
+    license: Optional[str] = "MIT"
+
+    homepage: Optional[str] = ""
+
+    repository: Optional[str] = ""
+
+    keywords: Optional[List[str]] = Field(default_factory=list)
+
     
 
     # Language selection (rust support now available)
@@ -396,13 +414,13 @@ class GoobitsConfigSchema(BaseModel):
 
     # Python configuration
 
-    python: PythonConfigSchema
+    python: Optional[PythonConfigSchema] = Field(default_factory=PythonConfigSchema)
 
     
 
     # Dependencies
 
-    dependencies: DependenciesSchema
+    dependencies: Optional[DependenciesSchema] = Field(default_factory=DependenciesSchema)
 
     
 
@@ -412,25 +430,25 @@ class GoobitsConfigSchema(BaseModel):
 
     # Installation settings
 
-    installation: InstallationSchema
+    installation: Optional[InstallationSchema] = None
 
     
 
     # Shell integration
 
-    shell_integration: ShellIntegrationSchema
+    shell_integration: Optional[ShellIntegrationSchema] = None
 
     
 
     # Validation rules
 
-    validation: ValidationSchema
+    validation: Optional[ValidationSchema] = Field(default_factory=ValidationSchema)
 
     
 
     # Post-installation messages
 
-    messages: MessagesSchema
+    messages: Optional[MessagesSchema] = Field(default_factory=MessagesSchema)
 
     
 
