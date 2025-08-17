@@ -81,7 +81,7 @@ def _find_and_import_hooks():
     from pathlib import Path
     
     # Primary location from configuration (with backward compatibility)
-    configured_hooks_path = "{{ project.cli_hooks | default(project.hooks_path) | default('') }}"
+    configured_hooks_path = "{{ (project.cli_hooks or project.hooks_path or 'app_hooks.py') }}"
     
     # Possible locations for hooks file (in order of preference)
     hook_locations = []
@@ -130,13 +130,16 @@ def _find_and_import_hooks():
                         sys.path.insert(0, abs_parent)
                     
                     imported = __import__(module_name)
-                    # Verify it has expected hook functions
-                    if hasattr(imported, 'on_build'):
+                    # Verify it has expected hook functions (check for any hook function)
+                    hook_functions = [name for name in dir(imported) if name.startswith('on_') and callable(getattr(imported, name))]
+                    if hook_functions:
                         return imported
             else:
                 # Simple import from current directory
                 imported = __import__(location)
-                if hasattr(imported, 'on_build'):
+                # Verify it has expected hook functions (check for any hook function)
+                hook_functions = [name for name in dir(imported) if name.startswith('on_') and callable(getattr(imported, name))]
+                if hook_functions:
                     return imported
                     
         except ImportError:
@@ -423,7 +426,7 @@ def {{ command_config.name.replace('-', '_') }}(ctx{% for arg in command_config.
     try:
         if hooks is None:
             # Provide helpful error with search paths
-            configured_path = "{{ project.cli_hooks | default(project.hooks_path) | default('') }}"
+            configured_path = "{{ (project.cli_hooks or project.hooks_path or '') }}"
             package_name = "{{ project.package_name | default('') }}"
             
             search_paths = []
