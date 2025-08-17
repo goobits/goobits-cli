@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-Auto-generated from goobits.yaml
+THIS FILE IS AUTO-GENERATED - DO NOT EDIT MANUALLY
+
+Generated from: goobits.yaml
+To regenerate: goobits build --universal-templates
+
+Any manual changes will be lost on regeneration.
 """
 
 import rich_click as click
@@ -55,8 +60,14 @@ try:
 except ImportError:
     hooks = None
 
-@click.group(cls=RichGroup)
-@click.version_option(version="1.0.0")
+class VersionedRichGroup(RichGroup):
+    def format_usage(self, ctx, formatter):
+        """Override to include version in usage."""
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write_usage("goobits v1.2.1", " ".join(pieces))
+
+@click.group(cls=VersionedRichGroup)
+@click.version_option(version="1.2.1", prog_name="goobits v1.2.1")
 @click.option(
     "--verbose", "-v",
     help="Enable verbose error output and debugging information",
@@ -68,7 +79,7 @@ def main(ctx, verbose):
     """Build professional command-line tools with YAML configuration
 
     \b
-    Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.
+    [italic #B3B8C0]Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.[/italic #B3B8C0]
     
     [bold yellow]🚀 Quick Start[/bold yellow]
     
@@ -103,7 +114,6 @@ def main(ctx, verbose):
     [dim] [/dim]
     
     📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6]
-    
     """
     pass
 @main.command()
@@ -348,4 +358,8 @@ if __name__ == "__main__":
 
 def cli_entry():
     """Entry point for the CLI."""
-    main()
+    try:
+        main()
+    finally:
+        # Ensure clean exit with trailing newline
+        print()

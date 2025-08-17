@@ -12,7 +12,12 @@
 {%- if language == 'python' -%}
 #!/usr/bin/env python3
 """
-Auto-generated from {{ config_filename | default('goobits.yaml') }}
+THIS FILE IS AUTO-GENERATED - DO NOT EDIT MANUALLY
+
+Generated from: {{ config_filename | default('goobits.yaml') }}
+To regenerate: goobits build --universal-templates
+
+Any manual changes will be lost on regeneration.
 """
 
 import rich_click as click
@@ -74,8 +79,14 @@ try:
 except ImportError:
     hooks = None
 
-@click.group(cls=RichGroup)
-@click.version_option(version="{{ cli.version | default('1.0.0') }}")
+class VersionedRichGroup(RichGroup):
+    def format_usage(self, ctx, formatter):
+        """Override to include version in usage."""
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write_usage("{{ project.command_name | default('cli') }} v{{ cli.version | default('1.0.0') }}", " ".join(pieces))
+
+@click.group(cls=VersionedRichGroup)
+@click.version_option(version="{{ cli.version | default('1.0.0') }}", prog_name="{{ project.command_name | default('cli') }} v{{ cli.version | default('1.0.0') }}")
 @click.option(
     "--verbose", "-v",
     help="Enable verbose error output and debugging information",
@@ -107,7 +118,7 @@ def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ opt
     """{{ cli.tagline | default((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}
 
     \b
-    {{ cli.description if cli.description is defined else (project.description if project.description is defined else 'Transform simple YAML configuration into rich terminal applications.') }}
+    [italic #B3B8C0]{{ cli.description if cli.description is defined else (project.description if project.description is defined else 'Transform simple YAML configuration into rich terminal applications.') }}[/italic #B3B8C0]
     
 {% if cli.header_sections %}{% for section in cli.header_sections %}
     [bold yellow]{{ section.title }}[/bold yellow]
@@ -129,7 +140,6 @@ def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ opt
     [dim] [/dim]
     
     {{ cli.footer_note }}
-    
 {% endif %}{% endif %}
     """
     {% if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled -%}
@@ -245,6 +255,14 @@ def {{ command_config.name.replace('-', '_') }}(ctx{% for arg in command_config.
 
 if __name__ == "__main__":
     main()
+
+def cli_entry():
+    """Entry point for the CLI."""
+    try:
+        main()
+    finally:
+        # Ensure clean exit with trailing newline
+        print()
 
 {%- elif language == 'nodejs' -%}
 #!/usr/bin/env node
