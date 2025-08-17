@@ -1,4 +1,4 @@
-language: python  # Change to nodejs or typescript to test other languages
+language: python
 
 package_name: simple-greeting
 command_name: greeting
@@ -12,6 +12,7 @@ dependencies:
   python: ["click>=8.0.0"]
 
 installation:
+  pypi_name: "simple-greeting"
   extras:
     npm: ["chalk@5.3.0"]  # For Node.js/TypeScript versions
 

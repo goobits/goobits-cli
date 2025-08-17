@@ -1,6 +1,6 @@
 [project]
 name = "goobits-cli"
-version = "2.0.0-beta.5"
+version = "2.0.0-rc1"
 description = "Universal CLI generation platform supporting Python, Node.js, TypeScript, and Rust with advanced features."
 dependencies = [ "pyyaml", "jinja2", "pydantic", "typer", "toml", "rich-click", "pinliner", "shiv", "psutil",]
 
