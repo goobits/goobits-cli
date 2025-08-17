@@ -54,11 +54,61 @@ click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
 click.rich_click.MARKUP_MODE = "rich"
 
-# Import hooks module with enhanced error handling
-try:
-    import app_hooks as hooks
-except ImportError:
-    hooks = None
+# Import hooks module with enhanced error handling and path resolution
+def _find_and_import_hooks():
+    """Find and import hooks module from various possible locations."""
+    import sys
+    import os
+    from pathlib import Path
+
+    # Possible locations for hooks file (in order of preference)
+    hook_locations = [
+        # Current directory (default)
+        "app_hooks",
+        # Common project patterns
+        "cli/app_hooks",
+        "src/app_hooks",
+    ]
+
+    # Add package-specific locations if available
+    package_name = "goobits-cli"
+    if package_name:
+        hook_locations.extend([
+            f"{package_name}/cli/app_hooks",
+            f"{package_name}/app_hooks",
+            f"src/{package_name}/app_hooks",
+        ])
+
+    for location in hook_locations:
+        try:
+            # Handle nested module paths
+            if "/" in location:
+                # Add parent directory to path and import module
+                parts = location.split("/")
+                parent_dir = "/".join(parts[:-1])
+                module_name = parts[-1]
+
+                if parent_dir and os.path.exists(parent_dir):
+                    abs_parent = os.path.abspath(parent_dir)
+                    if abs_parent not in sys.path:
+                        sys.path.insert(0, abs_parent)
+
+                    imported = __import__(module_name)
+                    # Verify it has expected hook functions
+                    if hasattr(imported, 'on_build'):
+                        return imported
+            else:
+                # Simple import from current directory
+                imported = __import__(location)
+                if hasattr(imported, 'on_build'):
+                    return imported
+
+        except ImportError:
+            continue
+
+    return None
+
+hooks = _find_and_import_hooks()
 
 class VersionedRichGroup(RichGroup):
     def format_usage(self, ctx, formatter):
@@ -141,9 +191,15 @@ def build(ctx, config_path, output_dir, output, backup, universal_templates):
 
     try:
         if hooks is None:
+            # Provide helpful error with search paths
+            package_name = "goobits-cli"
+            search_paths = ["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"]
+            if package_name:
+                search_paths.extend([f"./{package_name}/cli/app_hooks.py", f"./{package_name}/app_hooks.py"])
+
             raise ConfigError(
-                "Hook implementation not found. Please create 'app_hooks.py' with your command implementations.",
-                suggestion="Create app_hooks.py with function: def on_build(...): pass"
+                f"Hook implementation not found. Searched in: {', '.join(search_paths)}",
+                suggestion=f"Create app_hooks.py with function: def on_build(...): pass"
             )
 
         hook_name = 'on_build'
@@ -218,9 +274,15 @@ def init(ctx, project_name, template, force):
 
     try:
         if hooks is None:
+            # Provide helpful error with search paths
+            package_name = "goobits-cli"
+            search_paths = ["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"]
+            if package_name:
+                search_paths.extend([f"./{package_name}/cli/app_hooks.py", f"./{package_name}/app_hooks.py"])
+
             raise ConfigError(
-                "Hook implementation not found. Please create 'app_hooks.py' with your command implementations.",
-                suggestion="Create app_hooks.py with function: def on_init(...): pass"
+                f"Hook implementation not found. Searched in: {', '.join(search_paths)}",
+                suggestion=f"Create app_hooks.py with function: def on_init(...): pass"
             )
 
         hook_name = 'on_init'
@@ -294,9 +356,15 @@ def serve(ctx, directory, host, port):
 
     try:
         if hooks is None:
+            # Provide helpful error with search paths
+            package_name = "goobits-cli"
+            search_paths = ["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"]
+            if package_name:
+                search_paths.extend([f"./{package_name}/cli/app_hooks.py", f"./{package_name}/app_hooks.py"])
+
             raise ConfigError(
-                "Hook implementation not found. Please create 'app_hooks.py' with your command implementations.",
-                suggestion="Create app_hooks.py with function: def on_serve(...): pass"
+                f"Hook implementation not found. Searched in: {', '.join(search_paths)}",
+                suggestion=f"Create app_hooks.py with function: def on_serve(...): pass"
             )
 
         hook_name = 'on_serve'
