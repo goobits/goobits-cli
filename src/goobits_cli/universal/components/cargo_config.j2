@@ -1,0 +1,94 @@
+{# Universal Cargo Configuration Template
+   
+   This template generates Cargo.toml files for Rust projects,
+   supporting all major features and dependencies.
+   
+   Variables expected:
+   - language: Target language (should be 'rust')
+   - project: Project metadata (package_name, command_name, display_name, etc.)
+   - cli: CLI schema with commands
+#}
+
+{%- if language == 'rust' -%}
+[package]
+name = "{{ project.package_name | default(project.command_name) }}"
+version = "{{ project.version | default('0.1.0') }}"
+edition = "2021"
+authors = ["{{ project.author | default('Unknown Author') }} <{{ project.email | default('unknown@example.com') }}>"]
+description = "{{ project.description | default(project.display_name | default(project.package_name)) }}"
+{% if project.license -%}
+license = "{{ project.license }}"
+{% endif -%}
+{% if project.homepage -%}
+homepage = "{{ project.homepage }}"
+{% endif -%}
+{% if project.repository -%}
+repository = "{{ project.repository }}"
+{% endif -%}
+{% if project.keywords -%}
+keywords = {{ project.keywords | tojson }}
+{% endif -%}
+documentation = "https://docs.rs/{{ project.package_name | default(project.command_name) }}"
+readme = "README.md"
+exclude = [
+    ".gitignore",
+    "Cargo.lock",
+]
+
+[[bin]]
+name = "{{ project.command_name }}"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive", "color", "suggestions"] }
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+# Optional dependencies for advanced features
+colored = { version = "2.0", optional = true }
+dialoguer = { version = "0.11", optional = true }
+indicatif = { version = "0.17", optional = true }
+
+{% if project.dependencies and project.dependencies.required -%}
+# Project-specific required dependencies
+{% for dep in project.dependencies.required -%}
+{{ dep.name }} = "{{ dep.version | default('*') }}"
+{% endfor -%}
+{% endif -%}
+
+{% if project.dependencies and project.dependencies.optional -%}
+# Project-specific optional dependencies  
+{% for dep in project.dependencies.optional -%}
+{{ dep.name }} = { version = "{{ dep.version | default('*') }}", optional = true }
+{% endfor -%}
+{% endif -%}
+
+[features]
+default = []
+full = ["tokio", "colored", "dialoguer", "indicatif"]
+async = ["tokio"]
+interactive = ["dialoguer", "colored"]
+progress = ["indicatif", "colored"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+opt-level = 0
+
+{%- elif language == 'nodejs' -%}
+{# Node.js projects don't use Cargo.toml #}
+{%- elif language == 'typescript' -%}
+{# TypeScript projects don't use Cargo.toml #}
+{%- elif language == 'python' -%}
+{# Python projects don't use Cargo.toml #}
+{%- else -%}
+# Cargo.toml not applicable for {{ language }}
+{%- endif -%}

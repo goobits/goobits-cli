@@ -583,7 +583,7 @@ impl HookManager {
     pub fn execute_hook(&self, name: &str, args: &ArgMatches) -> HookResult {
         match self.hooks.get(name) {
             Some(hook) => hook.execute(args),
-            None => Err(format!("Hook '{}' not found", name).into()),
+            None => Err(anyhow::anyhow!("Hook '{}' not found", name)),
         }
     }
 
@@ -600,7 +600,7 @@ impl Default for HookManager {
 
 /// Generate a template hooks.rs file for the user
 pub fn generate_hooks_template() -> String {
-    format!(r#"//! Hook implementations for {{ project.name }}
+    r#"//! Hook implementations for {{ project.name }}
 //! 
 //! This file contains the business logic for your CLI commands.
 //! Implement the hook functions below to handle your CLI commands.
@@ -670,7 +670,7 @@ pub fn register_hooks(manager: &mut crate::HookManager) {
 }
 
 // Add any utility functions or structures here
-"#)
+"#.to_string()
 }
 
 // Global hook manager

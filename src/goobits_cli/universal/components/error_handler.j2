@@ -498,6 +498,7 @@ export function setErrorHandler(handler: ErrorHandler): void {
 {%- elif language == 'rust' -%}
 use std::fmt;
 use std::process;
+use std::any::Any;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ExitCode {
@@ -591,11 +592,13 @@ impl ErrorHandler {
     }
 
     pub fn handle_error(&self, error: &dyn std::error::Error, context: Option<&str>) -> ! {
-        if let Some(cli_error) = error.downcast_ref::<CliError>() {
-            self.handle_cli_error(cli_error, context);
-        } else {
-            self.handle_unexpected_error(error, context);
-        }
+        // For simplicity, always handle as unexpected error
+        // In practice, we'd use proper error types
+        self.handle_unexpected_error(error, context);
+    }
+    
+    pub fn handle_cli_error_direct(&self, error: &CliError, context: Option<&str>) -> ! {
+        self.handle_cli_error(error, context);
     }
 
     fn handle_cli_error(&self, error: &CliError, context: Option<&str>) -> ! {

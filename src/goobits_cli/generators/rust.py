@@ -486,11 +486,11 @@ class RustGenerator(BaseGenerator):
 
             for file_path, content in generated_files.items():
 
-                # Extract relative filename for compatibility
+                # Extract relative path from output_dir for compatibility
 
-                relative_path = Path(file_path).name
+                relative_path = Path(file_path).relative_to(output_dir)
 
-                self._generated_files[relative_path] = content
+                self._generated_files[str(relative_path)] = content
 
             
 
@@ -498,7 +498,7 @@ class RustGenerator(BaseGenerator):
 
             main_cli_file = next((content for path, content in generated_files.items() 
 
-                                if "main.rs" in path), "")
+                                if "src/main.rs" in path), "")
 
             
 

@@ -792,13 +792,14 @@ complete -c {} -l version -d "Show version information"
     }
 
     pub fn install_completion(&self, shell: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-        let shell = shell.unwrap_or_else(|| {
-            env::var("SHELL")
-                .unwrap_or_else(|_| "/bin/bash".to_string())
-                .split('/')
-                .last()
-                .unwrap_or("bash")
-        });
+        let shell_name = match shell {
+            Some(s) => s.to_string(),
+            None => {
+                let shell_path = env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string());
+                shell_path.split('/').last().unwrap_or("bash").to_string()
+            }
+        };
+        let shell = shell_name.as_str();
 
         let (script, completion_dir, filename) = match shell {
             "bash" => {
