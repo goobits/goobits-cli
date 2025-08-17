@@ -852,6 +852,35 @@ fn main() {
                 {%- endif %}
         )
 {%- endfor %}
+        // Built-in upgrade subcommand
+        .subcommand(
+            Command::new("upgrade")
+                .about("Upgrade {{ project.display_name | default(project.name) }} to the latest version")
+                .arg(
+                    Arg::new("check")
+                        .long("check")
+                        .help("Check for updates without installing")
+                        .action(clap::ArgAction::SetTrue)
+                )
+                .arg(
+                    Arg::new("version")
+                        .long("version")
+                        .help("Install specific version")
+                        .action(clap::ArgAction::Set)
+                )
+                .arg(
+                    Arg::new("pre")
+                        .long("pre")
+                        .help("Include pre-release versions")
+                        .action(clap::ArgAction::SetTrue)
+                )
+                .arg(
+                    Arg::new("dry-run")
+                        .long("dry-run")
+                        .help("Show what would be done without doing it")
+                        .action(clap::ArgAction::SetTrue)
+                )
+        )
 {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
         .subcommand(
             Command::new("{{ command_config.name }}")
@@ -907,6 +936,72 @@ fn main() {
     {%- endif %}
 
     match matches.subcommand() {
+        Some(("upgrade", sub_matches)) => {
+            // Built-in upgrade command implementation
+            let package_name = "{{ installation.pypi_name | default(project.package_name) | default(project.name) }}";
+            let command_name = "{{ project.command_name | default('cli') }}";
+            let display_name = "{{ project.display_name | default(project.name) }}";
+            
+            // Get current version (simple fallback for Rust)
+            let current_version = "{{ cli.version | default('1.0.0') }}";
+            println!("Current version: {}", current_version);
+            
+            let check_only = sub_matches.get_flag("check");
+            let version = sub_matches.get_one::<String>("version");
+            let pre = sub_matches.get_flag("pre");
+            let dry_run = sub_matches.get_flag("dry-run");
+            
+            if check_only {
+                println!("Checking for updates to {}...", display_name);
+                println!("Update check not yet implemented for Rust. Use without --check to upgrade.");
+                return;
+            }
+            
+            // Build the cargo install command
+            let mut cmd_args = vec!["install"];
+            
+            if let Some(v) = version {
+                cmd_args.push("--version");
+                cmd_args.push(v);
+            } else {
+                cmd_args.push("--force"); // Force reinstall for upgrade
+            }
+            
+            if pre {
+                // Cargo doesn't have direct pre-release flag, but we can note it
+                println!("Note: Cargo install will use the latest compatible version");
+            }
+            
+            cmd_args.push(package_name);
+            
+            if dry_run {
+                println!("Dry run - would execute: cargo {}", cmd_args.join(" "));
+                return;
+            }
+            
+            // Execute upgrade
+            println!("Upgrading {} with cargo...", display_name);
+            
+            let output = std::process::Command::new("cargo")
+                .args(&cmd_args)
+                .output();
+                
+            match output {
+                Ok(result) => {
+                    if result.status.success() {
+                        println!("✅ {} upgraded successfully!", display_name);
+                        println!("Run '{} --version' to verify the new version.", command_name);
+                    } else {
+                        eprintln!("❌ Upgrade failed with exit code {:?}", result.status.code());
+                        process::exit(result.status.code().unwrap_or(1));
+                    }
+                }
+                Err(e) => {
+                    eprintln!("❌ Failed to execute cargo install: {}", e);
+                    process::exit(1);
+                }
+            }
+        }
 {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
         Some(("{{ command_config.name }}", sub_matches)) => {
             // Enhanced error handling for Rust commands

@@ -192,7 +192,7 @@ class RustGenerator(BaseGenerator):
 
     
 
-    def __init__(self, use_universal_templates: bool = False):
+    def __init__(self, use_universal_templates: bool = True):
 
         """Initialize the Rust generator with Jinja2 environment.
 
@@ -218,7 +218,7 @@ class RustGenerator(BaseGenerator):
 
                 self.rust_renderer = RustRenderer()
 
-                self.universal_engine.register_renderer(self.rust_renderer)
+                self.universal_engine.register_renderer("rust", self.rust_renderer)
 
             except Exception as e:
 
