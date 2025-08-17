@@ -9,6 +9,7 @@ description: "Build professional command-line tools with YAML configuration"
 
 # CLI generation configuration
 cli_output_path: "src/goobits_cli/generated_cli.py"
+hooks_path: "app_hooks.py"
 
 python:
   minimum_version: "3.8"

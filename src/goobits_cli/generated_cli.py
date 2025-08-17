@@ -61,14 +61,26 @@ def _find_and_import_hooks():
     import os
     from pathlib import Path
 
+    # Primary location from configuration
+    configured_hooks_path = ""
+
     # Possible locations for hooks file (in order of preference)
-    hook_locations = [
+    hook_locations = []
+
+    # Add configured path first if available
+    if configured_hooks_path:
+        # Remove .py extension if present and convert to module name
+        module_path = configured_hooks_path.replace('.py', '').replace('/', '.')
+        hook_locations.append(configured_hooks_path.replace('.py', ''))
+
+    # Add fallback locations
+    hook_locations.extend([
         # Current directory (default)
         "app_hooks",
         # Common project patterns
         "cli/app_hooks",
         "src/app_hooks",
-    ]
+    ])
 
     # Add package-specific locations if available
     package_name = "goobits-cli"
@@ -192,13 +204,23 @@ def build(ctx, config_path, output_dir, output, backup, universal_templates):
     try:
         if hooks is None:
             # Provide helpful error with search paths
+            configured_path = ""
             package_name = "goobits-cli"
-            search_paths = ["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"]
+
+            search_paths = []
+            if configured_path:
+                search_paths.append(f"./{configured_path}")
+
+            search_paths.extend(["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"])
             if package_name:
                 search_paths.extend([f"./{package_name}/cli/app_hooks.py", f"./{package_name}/app_hooks.py"])
 
+            error_msg = f"Hook implementation not found. Searched in: {', '.join(search_paths)}"
+            if configured_path:
+                error_msg += f"\n💡 Configured hooks_path: {configured_path}"
+
             raise ConfigError(
-                f"Hook implementation not found. Searched in: {', '.join(search_paths)}",
+                error_msg,
                 suggestion=f"Create app_hooks.py with function: def on_build(...): pass"
             )
 
@@ -275,13 +297,23 @@ def init(ctx, project_name, template, force):
     try:
         if hooks is None:
             # Provide helpful error with search paths
+            configured_path = ""
             package_name = "goobits-cli"
-            search_paths = ["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"]
+
+            search_paths = []
+            if configured_path:
+                search_paths.append(f"./{configured_path}")
+
+            search_paths.extend(["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"])
             if package_name:
                 search_paths.extend([f"./{package_name}/cli/app_hooks.py", f"./{package_name}/app_hooks.py"])
 
+            error_msg = f"Hook implementation not found. Searched in: {', '.join(search_paths)}"
+            if configured_path:
+                error_msg += f"\n💡 Configured hooks_path: {configured_path}"
+
             raise ConfigError(
-                f"Hook implementation not found. Searched in: {', '.join(search_paths)}",
+                error_msg,
                 suggestion=f"Create app_hooks.py with function: def on_init(...): pass"
             )
 
@@ -357,13 +389,23 @@ def serve(ctx, directory, host, port):
     try:
         if hooks is None:
             # Provide helpful error with search paths
+            configured_path = ""
             package_name = "goobits-cli"
-            search_paths = ["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"]
+
+            search_paths = []
+            if configured_path:
+                search_paths.append(f"./{configured_path}")
+
+            search_paths.extend(["./app_hooks.py", "./cli/app_hooks.py", "./src/app_hooks.py"])
             if package_name:
                 search_paths.extend([f"./{package_name}/cli/app_hooks.py", f"./{package_name}/app_hooks.py"])
 
+            error_msg = f"Hook implementation not found. Searched in: {', '.join(search_paths)}"
+            if configured_path:
+                error_msg += f"\n💡 Configured hooks_path: {configured_path}"
+
             raise ConfigError(
-                f"Hook implementation not found. Searched in: {', '.join(search_paths)}",
+                error_msg,
                 suggestion=f"Create app_hooks.py with function: def on_serve(...): pass"
             )
 
