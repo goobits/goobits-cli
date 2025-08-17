@@ -634,8 +634,19 @@ def _lazy_load_and_start_interactive():
   {% endif %}
 {% endfor %}
 
+class VersionedRichGroup(RichGroup):
+    def format_usage(self, ctx, formatter):
+        """Override to include version in usage."""
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write_usage(f"{{ cli.name | default('cli') }} v{get_version()}", " ".join(pieces))
+    
+    def format_help(self, ctx, formatter):
+        """Override to add spacing after help."""
+        super().format_help(ctx, formatter)
+        formatter.write("\n")
+
 {% if ns.default_cmd %}
-class DefaultGroup(RichGroup):
+class DefaultGroup(VersionedRichGroup):
     """Allow a default command to be invoked without being specified."""
     
     def __init__(self, *args, default=None, **kwargs):
@@ -704,7 +715,7 @@ class DefaultGroup(RichGroup):
 {% if ns.default_cmd %}
 @click.group(cls=DefaultGroup, default='{{ ns.default_cmd }}', context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
 {% else %}
-@click.group(cls=RichGroup, context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
+@click.group(cls=VersionedRichGroup, context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
 {% endif %}
 @click.version_option(version=get_version(), prog_name="{{ cli.name }}")
 @click.pass_context

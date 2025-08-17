@@ -53,6 +53,7 @@ def handle_cli_error(error: Exception, verbose: bool = False) -> int:
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
 click.rich_click.MARKUP_MODE = "rich"
+click.rich_click.SHOW_EPILOG = True
 
 # Import hooks module with enhanced error handling and path resolution
 def _find_and_import_hooks():
@@ -132,6 +133,11 @@ class VersionedRichGroup(RichGroup):
         """Override to include version in usage."""
         pieces = self.collect_usage_pieces(ctx)
         formatter.write_usage("goobits v2.0.0-beta.3", " ".join(pieces))
+    
+    def format_help(self, ctx, formatter):
+        """Override to add spacing after help."""
+        super().format_help(ctx, formatter)
+        formatter.write("\n")
 
 @click.group(cls=VersionedRichGroup)
 @click.version_option(version="2.0.0-beta.3", prog_name="goobits v2.0.0-beta.3")
@@ -181,6 +187,8 @@ def main(ctx, verbose):
     [dim] [/dim]
 
     📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6]
+
+    \b
     """
     pass
 @main.command()

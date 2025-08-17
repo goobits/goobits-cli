@@ -146,14 +146,84 @@ def _find_and_import_hooks():
 
 hooks = _find_and_import_hooks()
 
+def get_version():
+    """Get version from pyproject.toml, package.json, Cargo.toml, or __init__.py"""
+    import re
+    from pathlib import Path
+    
+    try:
+        # Try to get version from pyproject.toml FIRST (Python projects)
+        possible_toml_paths = [
+            Path(__file__).parent.parent / "pyproject.toml",  # For flat structure
+            Path(__file__).parent.parent.parent / "pyproject.toml",  # For src/ structure
+        ]
+        for path in possible_toml_paths:
+            if path.exists():
+                content = path.read_text()
+                match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+                if match:
+                    return match.group(1)
+    except Exception:
+        pass
+    
+    try:
+        # Try package.json for Node.js/TypeScript projects
+        possible_json_paths = [
+            Path(__file__).parent.parent / "package.json",
+            Path(__file__).parent.parent.parent / "package.json",
+        ]
+        for path in possible_json_paths:
+            if path.exists():
+                import json
+                with open(path) as f:
+                    data = json.load(f)
+                    if 'version' in data:
+                        return data['version']
+    except Exception:
+        pass
+    
+    try:
+        # Try Cargo.toml for Rust projects
+        possible_cargo_paths = [
+            Path(__file__).parent.parent / "Cargo.toml",
+            Path(__file__).parent.parent.parent / "Cargo.toml",
+        ]
+        for path in possible_cargo_paths:
+            if path.exists():
+                content = path.read_text()
+                match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+                if match:
+                    return match.group(1)
+    except Exception:
+        pass
+    
+    try:
+        # Fallback to __init__.py
+        init_path = Path(__file__).parent / "__init__.py"
+        if init_path.exists():
+            content = init_path.read_text()
+            match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
+            if match:
+                return match.group(1)
+    except Exception:
+        pass
+    
+    # Final fallback
+    return "1.0.0"
+
 class VersionedRichGroup(RichGroup):
     def format_usage(self, ctx, formatter):
         """Override to include version in usage."""
         pieces = self.collect_usage_pieces(ctx)
-        formatter.write_usage("{{ project.command_name | default('cli') }} v{{ cli.version | default('1.0.0') }}", " ".join(pieces))
+        formatter.write_usage(f"{{ project.command_name | default('cli') }} v{get_version()}", " ".join(pieces))
+    
+    def format_help(self, ctx, formatter):
+        """Override to add spacing after help."""
+        super().format_help(ctx, formatter)
+        formatter.write("\n")
 
 @click.group(cls=VersionedRichGroup)
-@click.version_option(version="{{ cli.version | default('1.0.0') }}", prog_name="{{ project.command_name | default('cli') }} v{{ cli.version | default('1.0.0') }}")
+@click.version_option(version=get_version(), prog_name="{{ project.command_name | default('cli') }}")
 @click.option(
     "--verbose", "-v",
     help="Enable verbose error output and debugging information",
