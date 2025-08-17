@@ -95,21 +95,21 @@ def main(ctx, verbose):
     
     [bold yellow]💡 Core Commands[/bold yellow]
     
-    [green]   build  [/green]  🔨 Generate CLI and setup scripts from goobits.yaml
+    [green]   build[/green]   🔨 Generate CLI and setup scripts from goobits.yaml
     
-    [green]   serve  [/green]  🌐 Serve local PyPI-compatible package index
+    [green]   serve[/green]   🌐 Serve local PyPI-compatible package index
     
-    [green]   init  [/green]  🆕 Create initial goobits.yaml template
+    [green]   init[/green]    🆕 Create initial goobits.yaml template
     
     [dim] [/dim]
     
     [bold yellow]🔧 Development Workflow[/bold yellow]
     
-    [#B3B8C0]   1. Edit goobits.yaml: [/#B3B8C0][green]Define your CLI structure[/green]
+    [#B3B8C0]   1. Edit goobits.yaml:[/#B3B8C0]   [green]Define your CLI structure[/green]
     
-    [#B3B8C0]   2. goobits build: [/#B3B8C0][green]Generate implementation files[/green]
+    [#B3B8C0]   2. goobits build:[/#B3B8C0]       [green]Generate implementation files[/green]
     
-    [#B3B8C0]   3. Edit app_hooks.py: [/#B3B8C0][green]Add your business logic[/green]
+    [#B3B8C0]   3. Edit app_hooks.py:[/#B3B8C0]   [green]Add your business logic[/green]
     
     [dim] [/dim]
     
