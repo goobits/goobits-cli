@@ -1296,7 +1296,7 @@ class UniversalTemplateEngine:
 
         self.renderers[lang_name] = renderer
 
-        print(f"📝 Registered {lang_name} renderer for Universal Template System")
+        # Registered renderer (debug info only, not user-facing)
 
     
 
@@ -1546,7 +1546,8 @@ class UniversalTemplateEngine:
 
         
 
-        print(f"🚀 Generating {language} CLI using Universal Template System")
+        import typer
+        typer.echo(f"🚀 Generating {language} CLI using Universal Template System")
 
         
 
@@ -1661,7 +1662,7 @@ class UniversalTemplateEngine:
 
                 else:
 
-                    print(f"⚠️  Component '{component_name}' not found, skipping")
+                    typer.echo(f"⚠️  Component '{component_name}' not found, skipping", err=True)
 
                     failed_components.append(component_name)
 
@@ -1669,7 +1670,7 @@ class UniversalTemplateEngine:
 
             except Exception as e:
 
-                print(f"❌ Failed to render component '{component_name}': {e}")
+                typer.echo(f"❌ Failed to render component '{component_name}': {e}", err=True)
 
                 failed_components.append(component_name)
 
@@ -1677,11 +1678,11 @@ class UniversalTemplateEngine:
 
         # Report generation results
 
-        print(f"✅ Generated {len(generated_files)} files for {language}")
+        typer.echo(f"✅ Generated {len(generated_files)} files for {language}")
 
         if failed_components:
 
-            print(f"⚠️  Skipped {len(failed_components)} components: {', '.join(failed_components)}")
+            typer.echo(f"⚠️  Skipped {len(failed_components)} components: {', '.join(failed_components)}", err=True)
 
         
 
@@ -1693,7 +1694,7 @@ class UniversalTemplateEngine:
 
             # All requested components were missing/failed - this may be intentional for testing
 
-            print(f"ℹ️  No files generated - all {len(failed_components)} requested components unavailable")
+            typer.echo(f"ℹ️  No files generated - all {len(failed_components)} requested components unavailable", err=True)
 
         elif not generated_files and failed_components:
 
@@ -1713,15 +1714,16 @@ class UniversalTemplateEngine:
         if consolidate and language == "python" and generated_files:
             # Check if renderer supports consolidation
             if hasattr(renderer, 'consolidate_files'):
-                print("🔄 Consolidating files using Pinliner...")
+                import typer
+                typer.echo("🔄 Consolidating files using Pinliner...")
                 try:
                     generated_files = renderer.consolidate_files(generated_files, output_dir)
-                    print(f"✅ Consolidation completed: {len(generated_files)} files total")
+                    typer.echo(f"✅ Consolidation completed: {len(generated_files)} files total")
                 except Exception as e:
-                    print(f"⚠️  Consolidation failed: {e}")
+                    typer.echo(f"⚠️  Consolidation failed: {e}", err=True)
                     # Continue with original files if consolidation fails
             else:
-                print(f"⚠️  Consolidation not supported for {language}")
+                typer.echo(f"⚠️  Consolidation not supported for {language}", err=True)
         
         return generated_files
 

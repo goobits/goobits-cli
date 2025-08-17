@@ -53,7 +53,6 @@ def handle_cli_error(error: Exception, verbose: bool = False) -> int:
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
 click.rich_click.MARKUP_MODE = "rich"
-click.rich_click.SHOW_EPILOG = True
 
 # Import hooks module with enhanced error handling and path resolution
 def _find_and_import_hooks():
@@ -128,19 +127,84 @@ def _find_and_import_hooks():
 
 hooks = _find_and_import_hooks()
 
+def get_version():
+    """Get version from pyproject.toml, package.json, Cargo.toml, or __init__.py"""
+    import re
+    from pathlib import Path
+
+    try:
+        # Try to get version from pyproject.toml FIRST (Python projects)
+        possible_toml_paths = [
+            Path(__file__).parent.parent / "pyproject.toml",  # For flat structure
+            Path(__file__).parent.parent.parent / "pyproject.toml",  # For src/ structure
+        ]
+        for path in possible_toml_paths:
+            if path.exists():
+                content = path.read_text()
+                match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+                if match:
+                    return match.group(1)
+    except Exception:
+        pass
+
+    try:
+        # Try package.json for Node.js/TypeScript projects
+        possible_json_paths = [
+            Path(__file__).parent.parent / "package.json",
+            Path(__file__).parent.parent.parent / "package.json",
+        ]
+        for path in possible_json_paths:
+            if path.exists():
+                import json
+                with open(path) as f:
+                    data = json.load(f)
+                    if 'version' in data:
+                        return data['version']
+    except Exception:
+        pass
+
+    try:
+        # Try Cargo.toml for Rust projects
+        possible_cargo_paths = [
+            Path(__file__).parent.parent / "Cargo.toml",
+            Path(__file__).parent.parent.parent / "Cargo.toml",
+        ]
+        for path in possible_cargo_paths:
+            if path.exists():
+                content = path.read_text()
+                match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
+                if match:
+                    return match.group(1)
+    except Exception:
+        pass
+
+    try:
+        # Fallback to __init__.py
+        init_path = Path(__file__).parent / "__init__.py"
+        if init_path.exists():
+            content = init_path.read_text()
+            match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
+            if match:
+                return match.group(1)
+    except Exception:
+        pass
+
+    # Final fallback
+    return "1.0.0"
+
 class VersionedRichGroup(RichGroup):
     def format_usage(self, ctx, formatter):
         """Override to include version in usage."""
         pieces = self.collect_usage_pieces(ctx)
-        formatter.write_usage("goobits v2.0.0-beta.3", " ".join(pieces))
-    
+        formatter.write_usage(f"goobits v{get_version()}", " ".join(pieces))
+
     def format_help(self, ctx, formatter):
         """Override to add spacing after help."""
         super().format_help(ctx, formatter)
         formatter.write("\n")
 
 @click.group(cls=VersionedRichGroup)
-@click.version_option(version="2.0.0-beta.3", prog_name="goobits v2.0.0-beta.3")
+@click.version_option(version=get_version(), prog_name=f"goobits v{get_version()}")
 @click.option(
     "--verbose", "-v",
     help="Enable verbose error output and debugging information",
@@ -178,19 +242,95 @@ def main(ctx, verbose):
 
     [bold yellow]🔧 Development Workflow[/bold yellow]
 
-[#B3B8C0]   1. Edit goobits.yaml:  [/#B3B8C0]   [color(2)]Define your CLI structure[/color(2)]
+[#B3B8C0]   1. Edit goobits.yaml:  [/#B3B8C0]   [green]Define your CLI structure[/green]
 
-[#B3B8C0]   2. goobits build:      [/#B3B8C0]   [color(2)]Generate implementation files[/color(2)]
+[#B3B8C0]   2. goobits build:      [/#B3B8C0]   [green]Generate implementation files[/green]
 
-[#B3B8C0]   3. Edit app_hooks.py:  [/#B3B8C0]   [color(2)]Add your business logic[/color(2)]
+[#B3B8C0]   3. Edit app_hooks.py:  [/#B3B8C0]   [green]Add your business logic[/green]
 
     [dim] [/dim]
 
     📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6]
-
-    \b
     """
     pass
+
+# Built-in upgrade command
+@main.command()
+@click.option('--check', is_flag=True, help='Check for updates without installing')
+@click.option('--version', type=str, help='Install specific version')
+@click.option('--pre', is_flag=True, help='Include pre-release versions')
+@click.option('--dry-run', is_flag=True, help='Show what would be done without doing it')
+def upgrade(check, version, pre, dry_run):
+    """Upgrade Goobits CLI Framework to the latest version"""
+    import subprocess
+    import shutil
+    from pathlib import Path
+
+    package_name = "goobits-cli"
+    command_name = "goobits"
+    display_name = "Goobits CLI Framework"
+
+    # Get current version
+    current_version = get_version()
+    print(f"Current version: {current_version}")
+
+    if check:
+        print(f"Checking for updates to {display_name}...")
+        try:
+            import sys
+            result = subprocess.run([
+                sys.executable, '-m', 'pip', 'index', 'versions', package_name
+            ], capture_output=True, text=True)
+            if result.returncode == 0:
+                print("Version check completed")
+            else:
+                print("Update check not available. Run without --check to upgrade.")
+        except Exception:
+            print("Update check not available. Run without --check to upgrade.")
+        return
+
+    # Detect installation method
+    use_pipx = False
+    if shutil.which("pipx"):
+        result = subprocess.run(["pipx", "list"], capture_output=True, text=True)
+        if package_name in result.stdout:
+            use_pipx = True
+
+    # Build the upgrade command
+    if use_pipx:
+        print(f"Upgrading {display_name} with pipx...")
+        if version:
+            cmd = ["pipx", "install", f"{package_name}=={version}", "--force"]
+        else:
+            cmd = ["pipx", "upgrade", package_name]
+            if pre:
+                cmd.extend(["--pip-args", "--pre"])
+    else:
+        print(f"Upgrading {display_name} with pip...")
+        import sys
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade"]
+        if version:
+            cmd.append(f"{package_name}=={version}")
+        else:
+            cmd.append(package_name)
+            if pre:
+                cmd.append("--pre")
+
+    if dry_run:
+        print(f"Dry run - would execute: {' '.join(cmd)}")
+        return
+
+    # Execute upgrade
+    print("Upgrading...")
+    result = subprocess.run(cmd)
+
+    if result.returncode == 0:
+        print(f"✅ {display_name} upgraded successfully!")
+        print(f"Run '{command_name} --version' to verify the new version.")
+    else:
+        print(f"❌ Upgrade failed with exit code {result.returncode}")
+        import sys
+        sys.exit(1)
 @main.command()
 @click.argument('CONFIG_PATH', required=False)
 @click.option(

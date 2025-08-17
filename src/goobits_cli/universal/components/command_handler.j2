@@ -223,7 +223,7 @@ class VersionedRichGroup(RichGroup):
         formatter.write("\n")
 
 @click.group(cls=VersionedRichGroup)
-@click.version_option(version=get_version(), prog_name="{{ project.command_name | default('cli') }}")
+@click.version_option(version=get_version(), prog_name=f"{{ project.command_name | default('cli') }} v{get_version()}")
 @click.option(
     "--verbose", "-v",
     help="Enable verbose error output and debugging information",
@@ -293,6 +293,84 @@ def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ opt
             sys.exit(1)
     {%- endif %}
     pass
+
+# Built-in upgrade command
+@main.command()
+@click.option('--check', is_flag=True, help='Check for updates without installing')
+@click.option('--version', type=str, help='Install specific version')
+@click.option('--pre', is_flag=True, help='Include pre-release versions')
+@click.option('--dry-run', is_flag=True, help='Show what would be done without doing it')
+def upgrade(check, version, pre, dry_run):
+    """Upgrade {{ project.display_name | default(project.name) }} to the latest version"""
+    import subprocess
+    import shutil
+    from pathlib import Path
+    
+    package_name = "{{ installation.pypi_name | default(project.package_name) | default(project.name) }}"
+    command_name = "{{ project.command_name | default('cli') }}"
+    display_name = "{{ project.display_name | default(project.name) }}"
+    
+    # Get current version
+    current_version = get_version()
+    print(f"Current version: {current_version}")
+    
+    if check:
+        print(f"Checking for updates to {display_name}...")
+        try:
+            import sys
+            result = subprocess.run([
+                sys.executable, '-m', 'pip', 'index', 'versions', package_name
+            ], capture_output=True, text=True)
+            if result.returncode == 0:
+                print("Version check completed")
+            else:
+                print("Update check not available. Run without --check to upgrade.")
+        except Exception:
+            print("Update check not available. Run without --check to upgrade.")
+        return
+    
+    # Detect installation method
+    use_pipx = False
+    if shutil.which("pipx"):
+        result = subprocess.run(["pipx", "list"], capture_output=True, text=True)
+        if package_name in result.stdout:
+            use_pipx = True
+    
+    # Build the upgrade command
+    if use_pipx:
+        print(f"Upgrading {display_name} with pipx...")
+        if version:
+            cmd = ["pipx", "install", f"{package_name}=={version}", "--force"]
+        else:
+            cmd = ["pipx", "upgrade", package_name]
+            if pre:
+                cmd.extend(["--pip-args", "--pre"])
+    else:
+        print(f"Upgrading {display_name} with pip...")
+        import sys
+        cmd = [sys.executable, "-m", "pip", "install", "--upgrade"]
+        if version:
+            cmd.append(f"{package_name}=={version}")
+        else:
+            cmd.append(package_name)
+            if pre:
+                cmd.append("--pre")
+    
+    if dry_run:
+        print(f"Dry run - would execute: {' '.join(cmd)}")
+        return
+    
+    # Execute upgrade
+    print("Upgrading...")
+    result = subprocess.run(cmd)
+    
+    if result.returncode == 0:
+        print(f"✅ {display_name} upgraded successfully!")
+        print(f"Run '{command_name} --version' to verify the new version.")
+    else:
+        print(f"❌ Upgrade failed with exit code {result.returncode}")
+        import sys
+        sys.exit(1)
 
 {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
 
