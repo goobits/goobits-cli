@@ -24,6 +24,7 @@ from goobits_cli.schemas import (
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.generators.python import PythonGenerator
 from goobits_cli.generators.typescript import TypeScriptGenerator
+from goobits_cli.generators.rust import RustGenerator
 
 
 def determine_language(config: GoobitsConfigSchema) -> str:
@@ -36,7 +37,7 @@ def generate_cli(config: GoobitsConfigSchema, filename: str, version: Optional[s
     
     Returns a dictionary mapping file paths to their contents.
     For Python, returns a single-entry dict with the CLI script.
-    For Node.js/TypeScript, returns multiple files.
+    For Node.js/TypeScript/Rust, returns multiple files.
     """
     language = determine_language(config)
     
@@ -45,6 +46,9 @@ def generate_cli(config: GoobitsConfigSchema, filename: str, version: Optional[s
         return generator.generate_all_files(config, filename, version)
     elif language == "typescript":
         generator = TypeScriptGenerator()
+        return generator.generate_all_files(config, filename, version)
+    elif language == "rust":
+        generator = RustGenerator()
         return generator.generate_all_files(config, filename, version)
     else:
         # Default to Python

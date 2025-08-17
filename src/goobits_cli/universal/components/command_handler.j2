@@ -89,7 +89,7 @@ def _find_and_import_hooks():
     # Add configured path first if available
     if configured_hooks_path:
         # Remove .py extension if present and convert to module name
-        module_path = configured_hooks_path.replace('.py', '').replace('/', '.')
+        module_path = os.path.normpath(configured_hooks_path).replace('.py', '').replace(os.sep, '.')
         hook_locations.append(configured_hooks_path.replace('.py', ''))
     
     # Add fallback locations

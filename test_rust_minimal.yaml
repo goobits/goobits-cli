@@ -1,0 +1,22 @@
+package_name: test-rust-cli
+command_name: testcli
+display_name: "Test Rust CLI"
+description: "A test CLI for Rust generation"
+language: rust
+
+installation:
+  pypi_name: test-rust-cli
+  development_path: "."
+
+cli:
+  name: "Test CLI"
+  tagline: "Test CLI for debugging Rust generation"
+  description: "Simple test CLI to debug Rust generation issues"
+  
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        - name: "name"
+          desc: "Name to greet"
+          required: true

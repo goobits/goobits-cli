@@ -122,7 +122,7 @@ class RealPerformanceBenchmarkSuite:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         self.metrics: List[RealPerformanceMetric] = []
-        self.languages = ["python", "nodejs", "typescript"]
+        self.languages = ["python", "nodejs", "typescript", "rust"]
         self.test_commands = ["--help", "--version", "config --help"]
         
         # Performance targets based on Agent E's findings and production requirements
@@ -144,6 +144,12 @@ class RealPerformanceBenchmarkSuite:
                 "startup_time_ms": 1500,       # 1.5 seconds (compilation overhead)
                 "memory_mb": 100,              # 100MB (TypeScript overhead)
                 "installation_time_ms": 90000  # 90 seconds (build process)
+            },
+            "rust": {
+                "generation_time_ms": 2500,    # 2.5 seconds for generation (Rust enhancement)
+                "startup_time_ms": 100,        # 100ms startup target (Rust is very fast)
+                "memory_mb": 25,               # 25MB memory target (Rust is efficient)
+                "installation_time_ms": 180000 # 3 minutes (cargo build can be slow)
             }
         }
 
@@ -164,6 +170,11 @@ class RealPerformanceBenchmarkSuite:
             files = generator.generate_all_files(config, config_file)
         elif language == "typescript":
             generator = TypeScriptGenerator()
+            files = generator.generate_all_files(config, config_file)
+        elif language == "rust":
+            # Import Rust generator for performance testing (Rust enhancement)
+            from goobits_cli.generators.rust import RustGenerator
+            generator = RustGenerator()
             files = generator.generate_all_files(config, config_file)
         else:
             raise ValueError(f"Unsupported language: {language}")
@@ -480,6 +491,32 @@ class RealPerformanceBenchmarkSuite:
                             build_end = time.perf_counter()
                             build_time = (build_end - build_start) * 1000
                     
+                    elif language == "rust":
+                        # Rust: cargo build (Rust enhancement)
+                        cargo_toml = test_dir / "Cargo.toml"
+                        if cargo_toml.exists():
+                            # Check if cargo is available
+                            cargo_check = subprocess.run(
+                                ["cargo", "--version"], 
+                                capture_output=True, 
+                                text=True
+                            )
+                            if cargo_check.returncode != 0:
+                                raise Exception("Cargo not available for Rust build")
+                            
+                            # Build Rust project (debug mode for faster builds during testing)
+                            result = subprocess.run(
+                                ["cargo", "build"], 
+                                capture_output=True, 
+                                text=True, 
+                                timeout=300,  # Rust builds can take longer
+                                cwd=test_dir
+                            )
+                            
+                            dependency_end = time.perf_counter()
+                            dependency_time = (dependency_end - dependency_start) * 1000
+                            build_time = None  # Rust doesn't separate dependency and build phases clearly
+                    
                     dependency_end = dependency_end if 'dependency_end' in locals() else time.perf_counter()
                     dependency_time = (dependency_end - dependency_start) * 1000
                     
@@ -544,6 +581,24 @@ class RealPerformanceBenchmarkSuite:
             elif language == "typescript":
                 # For TypeScript, we need to compile first or use the compiled JS
                 cli_command = ["node", str(test_dir / "cli.js")] + cmd_parts
+            elif language == "rust":
+                # For Rust, use the compiled binary (Rust enhancement)
+                binary_name = config["command_name"] if "command_name" in config else "cli"
+                binary_paths = [
+                    test_dir / "target" / "debug" / binary_name,
+                    test_dir / "target" / "release" / binary_name
+                ]
+                
+                binary_path = None
+                for path in binary_paths:
+                    if path.exists():
+                        binary_path = path
+                        break
+                
+                if binary_path is None:
+                    raise Exception(f"Rust binary not found at {binary_paths}")
+                
+                cli_command = [str(binary_path)] + cmd_parts
             
             # Run multiple iterations for statistical accuracy
             execution_times = []
@@ -812,7 +867,8 @@ class RealPerformanceBenchmarkSuite:
         agent_e_baselines = {
             "python": 320.2,    # ms from integration tests
             "nodejs": 1682.6,   # ms from integration tests  
-            "typescript": 5065.0 # ms from integration tests
+            "typescript": 5065.0, # ms from integration tests
+            "rust": 50.0        # ms estimated baseline for Rust (Rust enhancement - very fast)
         }
         
         for language in self.languages:
@@ -1193,6 +1249,262 @@ def main():
         import traceback
         console.print(f"[red]Stack trace:[/red]\n{traceback.format_exc()}")
         return 1
+
+
+class RustSpecificPerformanceBenchmarks:
+    """Rust-specific performance benchmarks and validations (Rust enhancement)."""
+    
+    def __init__(self, output_dir: Path = Path("rust_performance_results")):
+        self.console = Console()
+        self.output_dir = output_dir
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+    def benchmark_rust_compilation_speed(self, iterations: int = 3) -> Dict[str, Any]:
+        """Benchmark Rust compilation performance specifically."""
+        self.console.print("[blue]🦀 Benchmarking Rust compilation speed[/blue]")
+        
+        compilation_times = []
+        binary_sizes = []
+        
+        for i in range(iterations):
+            test_dir = Path(tempfile.mkdtemp(prefix=f"rust_compile_bench_{i}_"))
+            
+            try:
+                # Create test CLI configuration
+                config_data = {
+                    "package_name": f"rust-compile-bench-{i}",
+                    "command_name": f"rust-bench-{i}",
+                    "display_name": f"Rust Compilation Benchmark {i}",
+                    "description": "Rust compilation speed test",
+                    "language": "rust",
+                    "python": {"minimum_version": "3.8"},
+                    "dependencies": {"required": []},
+                    "installation": {"pypi_name": f"rust-compile-bench-{i}"},
+                    "shell_integration": {"enabled": False},
+                    "validation": {"check_api_keys": False, "check_disk_space": False},
+                    "messages": {"install_success": "Rust bench CLI installed!"},
+                    "cli": {
+                        "name": f"rust-bench-{i}",
+                        "tagline": "Rust compilation benchmark",
+                        "commands": {
+                            "test": {"desc": "Test command"},
+                            "status": {"desc": "Status command"},
+                            "process": {"desc": "Process data command"}
+                        }
+                    }
+                }
+                
+                config_file = test_dir / "goobits.yaml"
+                with open(config_file, 'w') as f:
+                    yaml.dump(config_data, f)
+                
+                # Generate Rust CLI
+                from goobits_cli.generators.rust import RustGenerator
+                from goobits_cli.schemas import GoobitsConfigSchema
+                
+                config = GoobitsConfigSchema(**config_data)
+                generator = RustGenerator()
+                files = generator.generate_all_files(config, str(config_file))
+                
+                # Write files
+                for file_path, content in files.items():
+                    full_path = test_dir / file_path
+                    full_path.parent.mkdir(parents=True, exist_ok=True)
+                    full_path.write_text(content)
+                
+                # Check if cargo is available
+                cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
+                if cargo_check.returncode != 0:
+                    self.console.print("[yellow]⚠️ Cargo not available, skipping Rust compilation benchmarks[/yellow]")
+                    return {"error": "cargo_not_available"}
+                
+                # Benchmark compilation
+                start_time = time.perf_counter()
+                
+                compile_result = subprocess.run([
+                    "cargo", "build", "--release"
+                ], cwd=test_dir, capture_output=True, text=True, timeout=600)
+                
+                end_time = time.perf_counter()
+                compilation_time = (end_time - start_time) * 1000
+                
+                compilation_times.append(compilation_time)
+                
+                # Measure binary size
+                binary_name = f"rust-bench-{i}"
+                binary_path = test_dir / "target" / "release" / binary_name
+                
+                if binary_path.exists():
+                    binary_size = binary_path.stat().st_size
+                    binary_sizes.append(binary_size)
+                else:
+                    self.console.print(f"[yellow]⚠️ Binary not found for iteration {i}[/yellow]")
+                
+                if compile_result.returncode != 0:
+                    self.console.print(f"[red]❌ Compilation failed for iteration {i}: {compile_result.stderr}[/red]")
+                
+            except subprocess.TimeoutExpired:
+                self.console.print(f"[red]❌ Compilation timeout for iteration {i}[/red]")
+            except Exception as e:
+                self.console.print(f"[red]❌ Error in iteration {i}: {e}[/red]")
+            finally:
+                # Cleanup
+                shutil.rmtree(test_dir, ignore_errors=True)
+        
+        if compilation_times:
+            return {
+                "avg_compilation_time_ms": statistics.mean(compilation_times),
+                "min_compilation_time_ms": min(compilation_times),
+                "max_compilation_time_ms": max(compilation_times),
+                "compilation_times": compilation_times,
+                "avg_binary_size_bytes": statistics.mean(binary_sizes) if binary_sizes else 0,
+                "binary_sizes": binary_sizes,
+                "iterations": len(compilation_times),
+                "success_rate": len(compilation_times) / iterations
+            }
+        else:
+            return {"error": "no_successful_compilations"}
+    
+    def benchmark_rust_startup_performance(self, iterations: int = 10) -> Dict[str, Any]:
+        """Benchmark Rust CLI startup performance specifically."""
+        self.console.print("[blue]🦀 Benchmarking Rust startup performance[/blue]")
+        
+        test_dir = Path(tempfile.mkdtemp(prefix="rust_startup_bench_"))
+        
+        try:
+            # Generate and compile a Rust CLI
+            config_data = {
+                "package_name": "rust-startup-bench",
+                "command_name": "rust-startup-test",
+                "display_name": "Rust Startup Benchmark",
+                "description": "Rust startup performance test",
+                "language": "rust",
+                "python": {"minimum_version": "3.8"},
+                "dependencies": {"required": []},
+                "installation": {"pypi_name": "rust-startup-bench"},
+                "shell_integration": {"enabled": False},
+                "validation": {"check_api_keys": False, "check_disk_space": False},
+                "messages": {"install_success": "Rust startup bench CLI installed!"},
+                "cli": {
+                    "name": "rust-startup-test",
+                    "tagline": "Rust startup benchmark",
+                    "commands": {
+                        "quick": {"desc": "Quick test command"}
+                    }
+                }
+            }
+            
+            config_file = test_dir / "goobits.yaml"
+            with open(config_file, 'w') as f:
+                yaml.dump(config_data, f)
+            
+            # Generate and compile
+            from goobits_cli.generators.rust import RustGenerator
+            from goobits_cli.schemas import GoobitsConfigSchema
+            
+            config = GoobitsConfigSchema(**config_data)
+            generator = RustGenerator()
+            files = generator.generate_all_files(config, str(config_file))
+            
+            for file_path, content in files.items():
+                full_path = test_dir / file_path
+                full_path.parent.mkdir(parents=True, exist_ok=True)
+                full_path.write_text(content)
+            
+            # Compile binary
+            cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
+            if cargo_check.returncode != 0:
+                return {"error": "cargo_not_available"}
+            
+            compile_result = subprocess.run([
+                "cargo", "build", "--release"
+            ], cwd=test_dir, capture_output=True, text=True, timeout=600)
+            
+            if compile_result.returncode != 0:
+                return {"error": "compilation_failed", "stderr": compile_result.stderr}
+            
+            # Find binary
+            binary_path = test_dir / "target" / "release" / "rust-startup-test"
+            if not binary_path.exists():
+                return {"error": "binary_not_found"}
+            
+            # Benchmark startup times
+            startup_times = []
+            help_times = []
+            version_times = []
+            
+            for i in range(iterations):
+                # Test help command startup
+                start_time = time.perf_counter()
+                result = subprocess.run([
+                    str(binary_path), "--help"
+                ], capture_output=True, text=True, timeout=10)
+                end_time = time.perf_counter()
+                
+                if result.returncode == 0:
+                    help_time = (end_time - start_time) * 1000
+                    help_times.append(help_time)
+                
+                # Test version command startup
+                start_time = time.perf_counter()
+                result = subprocess.run([
+                    str(binary_path), "--version"
+                ], capture_output=True, text=True, timeout=10)
+                end_time = time.perf_counter()
+                
+                if result.returncode == 0:
+                    version_time = (end_time - start_time) * 1000
+                    version_times.append(version_time)
+            
+            return {
+                "avg_help_startup_ms": statistics.mean(help_times) if help_times else 0,
+                "min_help_startup_ms": min(help_times) if help_times else 0,
+                "max_help_startup_ms": max(help_times) if help_times else 0,
+                "avg_version_startup_ms": statistics.mean(version_times) if version_times else 0,
+                "min_version_startup_ms": min(version_times) if version_times else 0,
+                "max_version_startup_ms": max(version_times) if version_times else 0,
+                "help_times": help_times,
+                "version_times": version_times,
+                "iterations": iterations,
+                "success_rate_help": len(help_times) / iterations,
+                "success_rate_version": len(version_times) / iterations
+            }
+            
+        except Exception as e:
+            return {"error": str(e)}
+        finally:
+            # Cleanup
+            shutil.rmtree(test_dir, ignore_errors=True)
+    
+    def run_rust_performance_suite(self) -> Dict[str, Any]:
+        """Run comprehensive Rust-specific performance benchmarks."""
+        self.console.print(Panel.fit(
+            "[bold blue]🦀 Rust-Specific Performance Benchmark Suite[/bold blue]\n"
+            "Measuring Rust CLI compilation speed, startup performance, and memory efficiency",
+            title="Rust Performance Benchmarking"
+        ))
+        
+        results = {}
+        
+        # Compilation benchmarks
+        self.console.print("[blue]📊 Running compilation benchmarks...[/blue]")
+        compilation_results = self.benchmark_rust_compilation_speed(iterations=3)
+        results["compilation"] = compilation_results
+        
+        # Startup benchmarks
+        if not compilation_results.get("error"):
+            self.console.print("[blue]📊 Running startup benchmarks...[/blue]")
+            startup_results = self.benchmark_rust_startup_performance(iterations=10)
+            results["startup"] = startup_results
+        
+        # Save results
+        results_file = self.output_dir / "rust_specific_benchmarks.json"
+        with open(results_file, 'w') as f:
+            json.dump(results, f, indent=2)
+        
+        self.console.print(f"[green]📁 Rust-specific benchmarks saved to {results_file}[/green]")
+        
+        return results
 
 
 if __name__ == "__main__":

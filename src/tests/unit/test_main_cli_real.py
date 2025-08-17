@@ -12,6 +12,9 @@ from typing import Optional
 import pytest
 from typer.testing import CliRunner
 
+# Add src directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from goobits_cli.main import app
 
 
@@ -154,7 +157,7 @@ cli:
                 assert alt_path.exists(), f"{filename} not generated for TypeScript (checked {filepath} and {alt_path})"
             
     def test_rust_cli_generation(self):
-        """Generate and validate a Rust CLI."""
+        """Generate and validate a Rust CLI (Enhanced for comprehensive Rust testing)."""
         config_path = self.create_test_config(language="rust")
         
         result = self.runner.invoke(app, ["build", str(config_path)])
@@ -167,11 +170,155 @@ cli:
             cargo_toml = self.temp_dir / "src" / "test-cli" / "Cargo.toml"
         assert cargo_toml.exists(), "Cargo.toml not generated"
         
+        # Verify Cargo.toml has correct structure (Rust-specific enhancement)
+        cargo_content = cargo_toml.read_text()
+        assert "[package]" in cargo_content, "Cargo.toml missing [package] section"
+        assert "name = " in cargo_content, "Cargo.toml missing package name"
+        assert "version = " in cargo_content, "Cargo.toml missing version"
+        assert "[dependencies]" in cargo_content, "Cargo.toml missing [dependencies] section"
+        assert "clap" in cargo_content, "Cargo.toml missing clap dependency"
+        assert "anyhow" in cargo_content, "Cargo.toml missing anyhow dependency"
+        
         # Check for main.rs in multiple locations
-        assert ((self.temp_dir / "src" / "main.rs").exists() or 
-                (self.temp_dir / "main.rs").exists() or
-                (self.temp_dir / "src" / "test-cli" / "src" / "main.rs").exists() or
-                (self.temp_dir / "src" / "test-cli" / "main.rs").exists()), "main.rs not generated"
+        main_rs_paths = [
+            self.temp_dir / "src" / "main.rs",
+            self.temp_dir / "main.rs", 
+            self.temp_dir / "src" / "test-cli" / "src" / "main.rs",
+            self.temp_dir / "src" / "test-cli" / "main.rs"
+        ]
+        
+        main_rs = None
+        for path in main_rs_paths:
+            if path.exists():
+                main_rs = path
+                break
+        
+        assert main_rs is not None, f"main.rs not generated (checked: {[str(p) for p in main_rs_paths]})"
+        
+        # Verify main.rs uses Clap properly (Rust-specific enhancement)
+        main_content = main_rs.read_text()
+        assert "use clap::" in main_content, "main.rs doesn't import clap"
+        assert "fn main()" in main_content, "main.rs missing main function"
+        assert "match" in main_content or "Command::" in main_content, "main.rs doesn't use clap command parsing"
+        
+        # Check for hooks.rs and verify structure (Rust-specific enhancement)
+        hooks_rs_paths = [
+            self.temp_dir / "src" / "hooks.rs",
+            self.temp_dir / "src" / "test-cli" / "src" / "hooks.rs"
+        ]
+        
+        hooks_rs = None
+        for path in hooks_rs_paths:
+            if path.exists():
+                hooks_rs = path
+                break
+        
+        assert hooks_rs is not None, f"hooks.rs not generated (checked: {[str(p) for p in hooks_rs_paths]})"
+        
+        # Verify hooks.rs has correct signatures (Rust-specific enhancement)
+        hooks_content = hooks_rs.read_text()
+        assert "use clap::ArgMatches;" in hooks_content, "hooks.rs missing clap ArgMatches import"
+        assert "use anyhow::Result;" in hooks_content, "hooks.rs missing anyhow Result import"
+        assert "pub fn" in hooks_content, "hooks.rs missing public function definitions"
+
+    def test_rust_cli_compilation_validation(self):
+        """Test that generated Rust CLI can be validated with cargo check (Rust-specific enhancement)."""
+        config_path = self.create_test_config(language="rust")
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        assert result.exit_code == 0, f"Build failed: {result.stdout}"
+        
+        # Find the Rust project directory
+        project_dirs = [
+            self.temp_dir,
+            self.temp_dir / "src" / "test-cli"
+        ]
+        
+        project_dir = None
+        for dir_path in project_dirs:
+            if (dir_path / "Cargo.toml").exists():
+                project_dir = dir_path
+                break
+        
+        assert project_dir is not None, "Could not find Rust project directory with Cargo.toml"
+        
+        # Check if cargo is available
+        cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
+        if cargo_check.returncode != 0:
+            pytest.skip("Cargo not available for Rust validation")
+        
+        # Run cargo check to validate syntax
+        check_result = subprocess.run([
+            "cargo", "check"
+        ], cwd=project_dir, capture_output=True, text=True, timeout=120)
+        
+        assert check_result.returncode == 0, f"Cargo check failed: {check_result.stderr}"
+
+    def test_rust_cli_binary_execution(self):
+        """Test that Rust CLI can be compiled and executed (Rust-specific enhancement)."""
+        config_path = self.create_test_config(
+            language="rust",
+            package_name="rust-exec-test",
+            command_name="rustexec",
+            with_commands=True
+        )
+        
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        assert result.exit_code == 0, f"Build failed: {result.stdout}"
+        
+        # Find the Rust project directory
+        project_dirs = [
+            self.temp_dir,
+            self.temp_dir / "src" / "rust-exec-test"
+        ]
+        
+        project_dir = None
+        for dir_path in project_dirs:
+            if (dir_path / "Cargo.toml").exists():
+                project_dir = dir_path
+                break
+        
+        assert project_dir is not None, "Could not find Rust project directory"
+        
+        # Check if cargo is available
+        cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
+        if cargo_check.returncode != 0:
+            pytest.skip("Cargo not available for Rust compilation")
+        
+        # Compile the binary (use debug build for faster compilation)
+        try:
+            compile_result = subprocess.run([
+                "cargo", "build"
+            ], cwd=project_dir, capture_output=True, text=True, timeout=240)
+            
+            if compile_result.returncode != 0:
+                pytest.fail(f"Rust compilation failed: {compile_result.stderr}")
+            
+            # Find the compiled binary
+            binary_name = "rustexec"
+            binary_paths = [
+                project_dir / "target" / "debug" / binary_name,
+                project_dir / "target" / "release" / binary_name
+            ]
+            
+            binary_path = None
+            for path in binary_paths:
+                if path.exists():
+                    binary_path = path
+                    break
+            
+            assert binary_path is not None, f"Compiled binary not found (checked: {[str(p) for p in binary_paths]})"
+            
+            # Test binary execution
+            exec_result = subprocess.run([
+                str(binary_path), "--help"
+            ], capture_output=True, text=True, timeout=30)
+            
+            assert exec_result.returncode == 0, f"Binary execution failed: {exec_result.stderr}"
+            assert len(exec_result.stdout.strip()) > 0, "Binary produced no output"
+            
+        except subprocess.TimeoutExpired:
+            pytest.fail("Rust compilation or execution timed out")
 
 
 @pytest.mark.execution

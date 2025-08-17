@@ -22,7 +22,7 @@ goobits_cli = [ "templates/*.j2", "templates/**/*.j2", "setup.sh",]
 pythonpath = [ "src",]
 testpaths = [ "src/tests",]
 asyncio_mode = "auto"
-markers = [ "unit: Unit tests (fast, <5s) - Test individual components in isolation", "integration: Integration tests (medium, <60s) - Test component interactions and real CLI generation", "e2e: End-to-end tests (slow, <300s) - Test complete workflows with subprocess execution", "performance: Performance benchmarks (very slow) - Measure startup times, memory usage", "user_accessible: Tests for features available in generated CLIs", "framework_only: Tests for framework features not yet integrated into generated CLIs", "integration_pending: Tests for features with framework-integration gap",]
+markers = [ "unit: Unit tests (fast, <5s) - Test individual components in isolation", "integration: Integration tests (medium, <60s) - Test component interactions and real CLI generation", "e2e: End-to-end tests (slow, <300s) - Test complete workflows with subprocess execution", "performance: Performance benchmarks (very slow) - Measure startup times, memory usage", "user_accessible: Tests for features available in generated CLIs", "framework_only: Tests for framework features not yet integrated into generated CLIs", "integration_pending: Tests for features with framework-integration gap", "real_generation: Tests that generate real CLI files", "execution: Tests that execute generated CLI commands", "configuration: Tests for configuration file handling", "regression: Tests for regression prevention",]
 
 [tool.setuptools.packages.find]
 where = [ "src",]

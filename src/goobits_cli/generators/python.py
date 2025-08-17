@@ -360,7 +360,7 @@ class PythonGenerator(BaseGenerator):
 
             if integrate_interactive_mode:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_interactive_mode(config_dict, 'python')
 
@@ -374,7 +374,7 @@ class PythonGenerator(BaseGenerator):
 
             if integrate_completion_system:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_completion_system(config_dict, 'python')
 
@@ -388,7 +388,7 @@ class PythonGenerator(BaseGenerator):
 
             if integrate_plugin_system:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_plugin_system(config_dict, 'python')
 

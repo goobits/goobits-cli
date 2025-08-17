@@ -890,6 +890,8 @@ class NodeJSInteractiveUtils:
 
             try {
 
+                // SECURITY WARNING: This eval() is for REPL functionality only
+                // Never expose to untrusted input in production environments
                 const result = eval(jsCode);
 
                 if (result !== undefined) {
@@ -920,6 +922,8 @@ class NodeJSInteractiveUtils:
 
                 const asyncCode = `(async () => { return ${expression}; })()`;
 
+                // SECURITY WARNING: This eval() is for REPL functionality only
+                // Never expose to untrusted input in production environments
                 const result = await eval(asyncCode);
 
                 if (result !== undefined) {
@@ -1824,6 +1828,8 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             try {
 
+                // SECURITY WARNING: This eval() is for REPL functionality only
+                // Never expose to untrusted input in production environments
                 const result = eval(jsCode);
 
                 if (result !== undefined) {

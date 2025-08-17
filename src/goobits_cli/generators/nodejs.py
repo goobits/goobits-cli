@@ -182,7 +182,7 @@ class NodeJSGenerator(BaseGenerator):
 
             elif hasattr(x, 'dict'):
 
-                return json.dumps(x.dict(), indent=2)
+                return json.dumps(x.model_dump() if hasattr(x, 'model_dump') else x.dict(), indent=2)
 
             else:
 
@@ -469,7 +469,7 @@ class NodeJSGenerator(BaseGenerator):
 
             if integrate_interactive_mode:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_interactive_mode(config_dict, 'nodejs')
 
@@ -483,7 +483,7 @@ class NodeJSGenerator(BaseGenerator):
 
             if integrate_completion_system:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_completion_system(config_dict, 'nodejs')
 
@@ -497,7 +497,7 @@ class NodeJSGenerator(BaseGenerator):
 
             if integrate_plugin_system:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_plugin_system(config_dict, 'nodejs')
 
@@ -613,9 +613,9 @@ class NodeJSGenerator(BaseGenerator):
 
         if integrate_completion_system:
 
-            config_dict = config.dict() if hasattr(config, 'dict') else {
+            config_dict = config.model_dump() if hasattr(config, 'model_dump') else config.dict() if hasattr(config, 'dict') else {
 
-                'cli': cli_config.dict() if hasattr(cli_config, 'dict') else cli_config
+                'cli': cli_config.model_dump() if hasattr(cli_config, 'model_dump') else cli_config.dict() if hasattr(cli_config, 'dict') else cli_config
 
             }
 
@@ -1038,9 +1038,9 @@ export default cli;
 
         if integrate_completion_system:
 
-            config_dict = config.dict() if hasattr(config, 'dict') else {
+            config_dict = config.model_dump() if hasattr(config, 'model_dump') else config.dict() if hasattr(config, 'dict') else {
 
-                'cli': cli_config.dict() if hasattr(cli_config, 'dict') else cli_config
+                'cli': cli_config.model_dump() if hasattr(cli_config, 'model_dump') else cli_config.dict() if hasattr(cli_config, 'dict') else cli_config
 
             }
 

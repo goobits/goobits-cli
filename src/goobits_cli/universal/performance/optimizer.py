@@ -322,9 +322,11 @@ class CLIOptimizer:
 
                 self.cache_manager.optimize_caches()
 
-            except Exception:
+            except Exception as e:
 
-                pass
+                import logging
+
+                logging.debug(f"Cache optimization error (non-critical): {e}")
 
     
 

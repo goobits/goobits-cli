@@ -316,7 +316,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             if integrate_interactive_mode:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_interactive_mode(config_dict, 'typescript')
 
@@ -332,7 +332,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             if integrate_completion_system:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_completion_system(config_dict, 'typescript')
 
@@ -348,7 +348,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             if integrate_plugin_system:
 
-                config_dict = goobits_config.dict()
+                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
 
                 config_dict = integrate_plugin_system(config_dict, 'typescript')
 
@@ -618,7 +618,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         elif hasattr(x, 'dict'):
 
-            return json.dumps(x.dict(), indent=2)
+            return json.dumps(x.model_dump() if hasattr(x, 'model_dump') else x.dict(), indent=2)
 
         else:
 
