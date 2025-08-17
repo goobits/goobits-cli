@@ -1868,6 +1868,7 @@ class UniversalTemplateEngine:
             "description": getattr(cli_config, 'description', 'No description'),
             "header_sections": getattr(cli_config, 'header_sections', []),
             "footer_note": getattr(cli_config, 'footer_note', None),
+            "version": getattr(cli_config, 'version', '1.0.0'),
 
         }
 
