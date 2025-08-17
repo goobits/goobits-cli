@@ -63,7 +63,7 @@ messages:
 
 cli:
   name: "Goobits CLI"
-  version: "1.2.1"
+  version: "2.0.0-beta.3"
   display_version: true
   tagline: "Build professional command-line tools with YAML configuration"
   description: "Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."

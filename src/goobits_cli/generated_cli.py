@@ -64,10 +64,10 @@ class VersionedRichGroup(RichGroup):
     def format_usage(self, ctx, formatter):
         """Override to include version in usage."""
         pieces = self.collect_usage_pieces(ctx)
-        formatter.write_usage("goobits v1.2.1", " ".join(pieces))
+        formatter.write_usage("goobits v2.0.0-beta.3", " ".join(pieces))
 
 @click.group(cls=VersionedRichGroup)
-@click.version_option(version="1.2.1", prog_name="goobits v1.2.1")
+@click.version_option(version="2.0.0-beta.3", prog_name="goobits v2.0.0-beta.3")
 @click.option(
     "--verbose", "-v",
     help="Enable verbose error output and debugging information",
