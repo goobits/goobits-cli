@@ -128,7 +128,24 @@ def _find_and_import_hooks():
 hooks = _find_and_import_hooks()
 
 def get_version():
-    """Get version from pyproject.toml, package.json, Cargo.toml, or __init__.py"""
+    """Get version from package metadata or pyproject.toml"""
+    # First try to get version from installed package metadata
+    try:
+        from importlib.metadata import version, PackageNotFoundError
+        try:
+            # Try the package name
+            return version("goobits-cli")
+        except PackageNotFoundError:
+            pass
+    except ImportError:
+        # Python < 3.8
+        try:
+            import pkg_resources
+            return pkg_resources.get_distribution("goobits-cli").version
+        except:
+            pass
+
+    # Fallback to reading from pyproject.toml (development mode)
     import re
     from pathlib import Path
 
