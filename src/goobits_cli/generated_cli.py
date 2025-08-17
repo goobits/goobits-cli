@@ -172,11 +172,11 @@ def main(ctx, verbose):
 
     [bold yellow]🔧 Development Workflow[/bold yellow]
 
-[#B3B8C0]   1. Edit goobits.yaml:  [/#B3B8C0]   [green]Define your CLI structure[/green]
+[#B3B8C0]   1. Edit goobits.yaml:  [/#B3B8C0]   [color(2)]Define your CLI structure[/color(2)]
 
-[#B3B8C0]   2. goobits build:      [/#B3B8C0]   [green]Generate implementation files[/green]
+[#B3B8C0]   2. goobits build:      [/#B3B8C0]   [color(2)]Generate implementation files[/color(2)]
 
-[#B3B8C0]   3. Edit app_hooks.py:  [/#B3B8C0]   [green]Add your business logic[/green]
+[#B3B8C0]   3. Edit app_hooks.py:  [/#B3B8C0]   [color(2)]Add your business logic[/color(2)]
 
     [dim] [/dim]
 
