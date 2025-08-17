@@ -60,7 +60,10 @@ class TypeScriptRenderer(LanguageRenderer):
 
         # Setup Jinja2 environment with custom filters
 
-        self._env = jinja2.Environment()
+        self._env = jinja2.Environment(
+            trim_blocks=True,
+            lstrip_blocks=True
+        )
 
         self._add_custom_filters()
 

@@ -297,11 +297,10 @@ class NodeJSRenderer(LanguageRenderer):
         if self._jinja_env is None:
 
             self._jinja_env = jinja2.Environment(
-
                 loader=jinja2.BaseLoader(),
-
-                autoescape=False
-
+                autoescape=False,
+                trim_blocks=True,
+                lstrip_blocks=True
             )
 
             # Add custom filters

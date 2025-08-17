@@ -63,6 +63,11 @@ def handle_cli_error(error: Exception, verbose: bool = False) -> int:
             click.echo(f"Details: {traceback.format_exc()}", err=True)
         return 1
 
+# Set up rich-click configuration globally
+click.rich_click.USE_RICH_MARKUP = True  
+click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
+click.rich_click.MARKUP_MODE = "rich"
+
 # Import hooks module with enhanced error handling
 try:
     import app_hooks as hooks
@@ -99,7 +104,34 @@ except ImportError:
 {% endif %}
 @click.pass_context
 def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
-    """{{ (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description')) }}"""
+    """{{ cli.tagline | default((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}
+
+    \b
+    {{ cli.description if cli.description is defined else (project.description if project.description is defined else 'Transform simple YAML configuration into rich terminal applications.') }}
+    
+{% if cli.header_sections %}{% for section in cli.header_sections %}
+    [bold yellow]{{ section.title }}[/bold yellow]
+    
+    {% for item in section.items %}
+    {% if item.style == "example" %}[green]   {{ item.item }}  [/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
+    
+    {% elif item.style == "command" %}[green]   {{ item.item }}  [/green]  {{ item.desc }}
+    
+    {% elif item.style == "setup" %}[#B3B8C0]   {{ item.item }}: [/#B3B8C0][green]{{ item.desc }}[/green]
+    
+    {% endif %}{% endfor %}
+    {% if not loop.last %}
+    [dim] [/dim]
+    
+    {% endif %}
+{% endfor %}
+{% if cli.footer_note %}
+    [dim] [/dim]
+    
+    {{ cli.footer_note }}
+    
+{% endif %}{% endif %}
+    """
     {% if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled -%}
     # Check if interactive mode was requested
     if ctx.params.get('interactive'):
@@ -138,7 +170,7 @@ def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ opt
 {% endfor %}
 @click.pass_context
 def {{ command_config.name.replace('-', '_') }}(ctx{% for arg in command_config.arguments if command_config.arguments is defined %}, {{ arg.name.lower() }}{% endfor %}{% for option in command_config.options if command_config.options is defined %}, {{ option.name.replace('-', '_') }}{% endfor %}):
-    """{{ (command_config.description if command_config.description is defined else (command_config.descriptionription if command_config.descriptionription is defined else ('Command ' + command_name))) }}"""
+    """{{ (command_config.description if command_config.description is defined else ('Command ' + command_config.name)) }}"""
     
     # Enhanced error handling for Python CLI
     verbose = ctx.parent.params.get('verbose', False) if ctx.parent else False
@@ -288,7 +320,7 @@ program
 {%- for option in cli.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
-    '{{ ((option.descriptionription if option.descriptionription is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
+    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
 {%- endfor %}
 
@@ -296,7 +328,7 @@ program.option(
 
 program
     .command('{{ command_config.name }}')
-    .description('{{ ((command_config.descriptionription if command_config.descriptionription is defined else (command_config.description if command_config.description is defined else 'No description'))) | js_string }}')
+    .description('{{ ((command_config.description if command_config.description is defined else 'No description')) | js_string }}')
 {%- for arg in command_config.arguments if command_config.arguments is defined %}
     .argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}')
 {%- endfor %}
@@ -441,7 +473,7 @@ program
 {%- for option in cli.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
-    '{{ ((option.descriptionription if option.descriptionription is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
+    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
 {%- endfor %}
 
@@ -449,7 +481,7 @@ program.option(
 
 program
     .command('{{ command_config.name }}')
-    .description('{{ ((command_config.descriptionription if command_config.descriptionription is defined else (command_config.description if command_config.description is defined else 'No description'))) | js_string }}')
+    .description('{{ ((command_config.description if command_config.description is defined else 'No description')) | js_string }}')
 {%- for arg in command_config.arguments if command_config.arguments is defined %}
     .argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}')
 {%- endfor %}
@@ -538,7 +570,7 @@ fn main() {
                 {%- if option.short is defined and option.short %}
                 .short('{{ option.short }}')
                 {%- endif %}
-                .help("{{ option.descriptionription }}")
+                .help("{{ option.description }}")
                 {%- if option.required is defined and option.required %}
                 .required(true)
                 {%- endif %}
@@ -554,7 +586,7 @@ fn main() {
 {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
         .subcommand(
             Command::new("{{ command_config.name }}")
-                .about("{{ (command_config.descriptionription if command_config.descriptionription is defined else (command_config.description if command_config.description is defined else 'No description')) }}")
+                .about("{{ (command_config.description if command_config.description is defined else 'No description') }}")
 {%- for arg in command_config.arguments if command_config.arguments is defined %}
                 .arg(
                     Arg::new("{{ arg.name }}")
@@ -609,8 +641,8 @@ fn main() {
 {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
         Some(("{{ command_config.name }}", sub_matches)) => {
             // Enhanced error handling for Rust commands
-            let hook_name = "on_{{ command_name | replace('-', '_') }}";
-            match hooks::on_{{ command_name | replace('-', '_') }}(sub_matches) {
+            let hook_name = "on_{{ command_config.name | replace('-', '_') }}";
+            match hooks::on_{{ command_config.name | replace('-', '_') }}(sub_matches) {
                 Ok(exit_code) => {
                     if exit_code != 0 {
                         eprintln!("Command '{{ command_config.name }}' failed with exit code {}", exit_code);

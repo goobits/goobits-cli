@@ -868,7 +868,13 @@ class TemplateCache:
 
             loader = jinja2.FileSystemLoader(str(template_dir))
 
-            env = jinja2.Environment(loader=loader, **env_options)
+            # Set default options for better template rendering
+            default_options = {
+                'trim_blocks': True,
+                'lstrip_blocks': True
+            }
+            default_options.update(env_options)
+            env = jinja2.Environment(loader=loader, **default_options)
 
             
 

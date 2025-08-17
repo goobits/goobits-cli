@@ -158,7 +158,11 @@ class ComponentRegistry:
 
         self._loader = jinja2.FileSystemLoader(str(self.components_dir))
 
-        self._env = jinja2.Environment(loader=self._loader)
+        self._env = jinja2.Environment(
+            loader=self._loader,
+            trim_blocks=True,
+            lstrip_blocks=True
+        )
 
         
 

@@ -142,13 +142,21 @@ class NodeJSGenerator(BaseGenerator):
 
         if template_dir.exists():
 
-            self.env = Environment(loader=FileSystemLoader([template_dir, fallback_dir]))
+            self.env = Environment(
+                loader=FileSystemLoader([template_dir, fallback_dir]),
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
 
         else:
 
             # If nodejs subdirectory doesn't exist, use main templates dir
 
-            self.env = Environment(loader=FileSystemLoader(fallback_dir))
+            self.env = Environment(
+                loader=FileSystemLoader(fallback_dir),
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
 
             self.template_missing = True
 

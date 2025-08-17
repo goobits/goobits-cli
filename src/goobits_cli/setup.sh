@@ -658,14 +658,10 @@ install_with_pipx() {
         tree_node "info" "Installing in development mode" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
-        
         # Install system dependencies BEFORE Python packages
         install_system_dependencies
-        
 
-        
         (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[dev,test]" --force) &
-        
         local install_pid=$!
 
         tree_sub_node "progress" "Creating development environment..."
@@ -675,7 +671,6 @@ install_with_pipx() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "" "true"
-            
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "" "true"
@@ -685,14 +680,10 @@ install_with_pipx() {
         tree_node "info" "Installing from PyPI" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
-        
         # Install system dependencies BEFORE Python packages
         install_system_dependencies
-        
 
-        
         pipx install "$PYPI_NAME[dev,test]" --force &
-        
         local install_pid=$!
 
         tree_sub_node "progress" "Downloading and installing package..."
@@ -702,7 +693,6 @@ install_with_pipx() {
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "" "true"
-            
             show_install_success_message
         else
             tree_sub_node "error" "Installation failed" "" "true"
@@ -716,23 +706,18 @@ install_with_pip() {
 
     tree_sub_node "warning" "Using pip instead of pipx (not recommended)"
 
-    
     # Install system dependencies BEFORE Python packages
     install_system_dependencies
-    
 
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
-        
         (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[dev,test]" --user) &
-        
         show_spinner $!
         wait $!
         local exit_code=$?
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Development installation completed" "true"
-            
             show_dev_success_message
         else
             tree_sub_node "error" "Development installation failed" "true"
@@ -740,16 +725,13 @@ install_with_pip() {
         fi
     else
         tree_sub_node "progress" "Installing from PyPI with pip..."
-        
         python3 -m pip install "$PYPI_NAME[dev,test]" --user &
-        
         show_spinner $!
         wait $!
         local exit_code=$?
 
         if [[ $exit_code -eq 0 ]]; then
             tree_sub_node "success" "Installation completed" "true"
-            
             show_install_success_message
         else
             tree_sub_node "error" "Installation failed" "true"
@@ -785,9 +767,7 @@ upgrade_package() {
         tree_sub_node "progress" "Upgrading with pip..."
 
         # Capture pip output to prevent it from breaking tree structure
-        
         python3 -m pip install --upgrade "$PYPI_NAME[dev,test]" --user >/dev/null 2>&1 &
-        
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -869,44 +849,37 @@ show_uninstall_success_message() {
     echo
 }
 
-
 # System dependencies installation (before Python packages)
 install_system_dependencies() {
     if command -v apt-get >/dev/null 2>&1; then
         # Check which packages are missing
         local missing_packages=()
         
-        
         if ! dpkg -l | grep -q "^ii.*git" 2>/dev/null; then
             missing_packages+=("git")
         else
             tree_sub_node "success" "✓ Already installed: git"
         fi
-        
         if ! dpkg -l | grep -q "^ii.*python3-dev" 2>/dev/null; then
             missing_packages+=("python3-dev")
         else
             tree_sub_node "success" "✓ Already installed: python3-dev"
         fi
-        
         if ! dpkg -l | grep -q "^ii.*curl" 2>/dev/null; then
             missing_packages+=("curl")
         else
             tree_sub_node "success" "✓ Already installed: curl"
         fi
-        
         if ! dpkg -l | grep -q "^ii.*wget" 2>/dev/null; then
             missing_packages+=("wget")
         else
             tree_sub_node "success" "✓ Already installed: wget"
         fi
-        
         if ! dpkg -l | grep -q "^ii.*pipx" 2>/dev/null; then
             missing_packages+=("pipx")
         else
             tree_sub_node "success" "✓ Already installed: pipx"
         fi
-        
         
         # Only prompt for sudo if there are missing packages
         if [[ ${#missing_packages[@]} -gt 0 ]]; then
@@ -934,8 +907,6 @@ install_system_dependencies() {
 }
 
 
-
-
 # Shell integration
 setup_shell_integration() {
     if [[ "$SHELL_INTEGRATION" != "true" ]]; then
@@ -957,7 +928,6 @@ setup_shell_integration() {
     
     log_success "Shell integration configured"
 }
-
 validate_disk_space() {
     if [[ "$CHECK_DISK_SPACE" != "true" ]]; then
         return 0

@@ -265,7 +265,11 @@ class ComponentRegistry:
         """Lazy load Jinja2 environment to avoid import overhead."""
         if self._env is None:
             self._loader = jinja2.FileSystemLoader(str(self.components_dir))
-            self._env = jinja2.Environment(loader=self._loader)
+            self._env = jinja2.Environment(
+                loader=self._loader,
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
             
             # Add custom filters that templates expect
             self._env.filters['snake_case'] = self._snake_case_filter
@@ -1166,10 +1170,16 @@ class UniversalTemplateEngine:
             if self.template_dir:
                 self._jinja_env = jinja2.Environment(
                     loader=jinja2.FileSystemLoader(str(self.template_dir)),
-                    autoescape=False
+                    autoescape=False,
+                    trim_blocks=True,
+                    lstrip_blocks=True
                 )
             else:
-                self._jinja_env = jinja2.Environment(autoescape=False)
+                self._jinja_env = jinja2.Environment(
+                    autoescape=False,
+                    trim_blocks=True,
+                    lstrip_blocks=True
+                )
             self._jinja_initialized = True
         return self._jinja_env
 
@@ -1851,7 +1861,13 @@ class UniversalTemplateEngine:
 
                 "shells": ["bash", "zsh", "fish"],
 
-            }
+            },
+
+            # Preserve custom help sections
+            "tagline": getattr(cli_config, 'tagline', getattr(cli_config, 'description', 'No description')),
+            "description": getattr(cli_config, 'description', 'No description'),
+            "header_sections": getattr(cli_config, 'header_sections', []),
+            "footer_note": getattr(cli_config, 'footer_note', None),
 
         }
 

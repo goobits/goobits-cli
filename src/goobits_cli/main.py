@@ -287,7 +287,11 @@ def generate_setup_script(config: GoobitsConfigSchema, project_dir: Path) -> str
 
     template_dir = Path(__file__).parent / "templates"
 
-    env = Environment(loader=FileSystemLoader(template_dir))
+    env = Environment(
+        loader=FileSystemLoader(template_dir),
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
 
     
 

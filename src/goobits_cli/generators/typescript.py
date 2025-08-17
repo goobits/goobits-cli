@@ -129,7 +129,11 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         if template_dir.exists():
 
-            self.env = Environment(loader=FileSystemLoader([template_dir, fallback_dir]))
+            self.env = Environment(
+                loader=FileSystemLoader([template_dir, fallback_dir]),
+                trim_blocks=True,
+                lstrip_blocks=True
+            )
 
             self.template_missing = False
 
@@ -141,11 +145,19 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             if nodejs_dir.exists():
 
-                self.env = Environment(loader=FileSystemLoader([nodejs_dir, fallback_dir]))
+                self.env = Environment(
+                    loader=FileSystemLoader([nodejs_dir, fallback_dir]),
+                    trim_blocks=True,
+                    lstrip_blocks=True
+                )
 
             else:
 
-                self.env = Environment(loader=FileSystemLoader(fallback_dir))
+                self.env = Environment(
+                    loader=FileSystemLoader(fallback_dir),
+                    trim_blocks=True,
+                    lstrip_blocks=True
+                )
 
             self.template_missing = True
 
