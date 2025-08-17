@@ -124,7 +124,8 @@ def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ opt
     [bold yellow]{{ section.title }}[/bold yellow]
     
     {% for item in section.items %}
-    {% if item.style == "example" %}[green]   {{ item.item }}  [/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
+    {% if item.style == "example" -%}
+    [green]   {{ item.item.ljust(27) }}[/green]   [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
     
     {% elif item.style == "command" %}[green]   {{ item.item }}  [/green]  {{ item.desc }}
     

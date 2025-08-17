@@ -83,13 +83,13 @@ def main(ctx, verbose):
     
     [bold yellow]🚀 Quick Start[/bold yellow]
     
-    [green]   mkdir my-cli && cd my-cli  [/green] [italic][#B3B8C0]# Create new project directory[/#B3B8C0][/italic]
+    [green]   mkdir my-cli && cd my-cli[/green]   [italic][#B3B8C0]# Create new project directory[/#B3B8C0][/italic]
     
-    [green]   goobits init  [/green] [italic][#B3B8C0]# Generate initial goobits.yaml[/#B3B8C0][/italic]
+    [green]   goobits init[/green]                [italic][#B3B8C0]# Generate initial goobits.yaml[/#B3B8C0][/italic]
     
-    [green]   goobits build  [/green] [italic][#B3B8C0]# Create CLI and setup scripts[/#B3B8C0][/italic]
+    [green]   goobits build[/green]               [italic][#B3B8C0]# Create CLI and setup scripts[/#B3B8C0][/italic]
     
-    [green]   ./setup.sh install --dev  [/green] [italic][#B3B8C0]# Install for development[/#B3B8C0][/italic]
+    [green]   ./setup.sh install --dev[/green]   [italic][#B3B8C0]# Install for development[/#B3B8C0][/italic]
     
     [dim] [/dim]
     
