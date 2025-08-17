@@ -292,32 +292,32 @@ def {{ command_config.name.replace('-', '_') }}(ctx{% for arg in command_config.
         args = [{% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name.lower() }}{% if not loop.last %}, {% endif %}{% endfor %}]
         options = {
         {%- for option in command_config.options if command_config.options is defined %}
-            '{{ option.name }}': {{ option.name.replace('-', '_') }}{% if not loop.last %},{% endif %}
+            '{{ option.name.replace('-', '_') }}': {{ option.name.replace('-', '_') }}{% if not loop.last %},{% endif %}
         {%- endfor %}
         }
         
-        # Execute the hook function with proper signature detection
+        # Execute the hook function with signature-aware parameter filtering
         sig = inspect.signature(hook_function)
-        params = list(sig.parameters.keys())
+        expected_params = set(sig.parameters.keys())
+        accepts_kwargs = any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values())
         
-        # Call function with appropriate arguments
+        # Build kwargs with parameters the function expects
+        call_kwargs = {}
+        
+        # Add positional arguments as kwargs if function expects them
+        {% for arg in command_config.arguments if command_config.arguments is defined %}
+        if '{{ arg.name.lower() }}' in expected_params or accepts_kwargs:
+            call_kwargs['{{ arg.name.lower() }}'] = {{ arg.name.lower() }}
+        {% endfor %}
+        
+        # Add options that the function expects or if it accepts **kwargs
+        for param_name, param_value in options.items():
+            if param_name in expected_params or accepts_kwargs:
+                call_kwargs[param_name] = param_value
+        
+        # Call the hook function
         try:
-            if len(params) == 0:
-                result = hook_function()
-            elif len(params) == 1 and any(keyword in params[0].lower() for keyword in ['args', 'arguments']):
-                result = hook_function(args)
-            elif len(params) == 1 and any(keyword in params[0].lower() for keyword in ['opts', 'options']):
-                result = hook_function(options)
-            else:
-                # Try calling with individual arguments and options
-                if args and options:
-                    result = hook_function(*args, **options)
-                elif args:
-                    result = hook_function(*args)
-                elif options:
-                    result = hook_function(**options)
-                else:
-                    result = hook_function()
+            result = hook_function(**call_kwargs)
         except TypeError as te:
             raise HookError(
                 f"Hook function signature mismatch: {te}",
