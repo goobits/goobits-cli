@@ -316,7 +316,7 @@ class RustGenerator(BaseGenerator):
 
     
 
-    def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+    def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema, dict], 
 
                  config_filename: str, version: Optional[str] = None) -> str:
 
@@ -341,6 +341,14 @@ class RustGenerator(BaseGenerator):
             Generated Rust CLI code
 
         """
+        
+        # Handle dict config by converting to ConfigSchema
+        if isinstance(config, dict):
+            try:
+                config = ConfigSchema(**config)
+            except Exception as e:
+                typer.echo(f"Error: Invalid configuration: {e}", err=True)
+                raise typer.Exit(code=1)
 
         # Use Universal Template System if enabled
 

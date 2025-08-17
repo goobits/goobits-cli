@@ -93,28 +93,23 @@ class Builder:
         
 
         # Initialize the appropriate generator based on language (lazy import to avoid circular imports)
+        self._initialize_generator(language)
 
+    def _initialize_generator(self, language: str):
+        """Initialize the appropriate generator based on language."""
         if language == "nodejs":
-
             from .generators.nodejs import NodeJSGenerator
-
             self.generator = NodeJSGenerator()
-
         elif language == "typescript":
-
             from .generators.typescript import TypeScriptGenerator
-
             self.generator = TypeScriptGenerator()
-
+        elif language == "rust":
+            from .generators.rust import RustGenerator
+            self.generator = RustGenerator()
         else:
-
             # Default to Python
-
             from .generators.python import PythonGenerator
-
             self.generator = PythonGenerator()
-
-    
 
     def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema', None] = None, file_name: str = "config.yaml", version: Optional[str] = None) -> str:
 
@@ -132,6 +127,21 @@ class Builder:
 
             raise ValueError("No configuration provided")
 
+        
+        # Detect language from config and initialize appropriate generator if needed
+        config_language = None
+        if isinstance(config, dict):
+            config_language = config.get('language', 'python')
+        elif hasattr(config, 'language'):
+            config_language = config.language
+        else:
+            # For ConfigSchema, language might be under cli or a separate field
+            config_language = getattr(config, 'language', 'python')
+        
+        # If the detected language differs from initialized language, switch generator
+        if config_language != self.language:
+            self.language = config_language
+            self._initialize_generator(config_language)
             
 
         return self.generator.generate(config, file_name, version)

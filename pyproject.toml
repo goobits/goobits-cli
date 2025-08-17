@@ -14,9 +14,11 @@ dev = [ "mypy", "types-PyYAML", "types-toml", "ruff",]
 
 [project.scripts]
 goobits = "goobits_cli.generated_cli:cli_entry"
+testcli = "testcli.cli:cli_entry"
 
 [tool.setuptools.package-data]
 goobits_cli = [ "templates/*.j2", "templates/**/*.j2", "setup.sh",]
+testcli = [ "setup.sh",]
 
 [tool.pytest.ini_options]
 pythonpath = [ "src",]
