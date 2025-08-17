@@ -1,212 +1,179 @@
-# TestNodeCLI
+# Goobits CLI Framework
 
-Node.js test CLI for validation
+Universal CLI generation platform that creates professional command-line interfaces from YAML configuration files.
 
-> Node.js test CLI for validation
+> Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.
+
+## Features
+
+- **Multi-language support**: Python, Node.js, TypeScript, and Rust
+- **Universal Template System**: Single configuration generates for all languages
+- **Rich terminal interfaces**: Built with rich-click, Commander.js, and Clap
+- **Automated setup scripts**: Platform-aware installation and dependency management
+- **Self-hosting**: Framework generates its own CLI from goobits.yaml
 
 ## Installation
 
-### From Package Manager (Recommended)
+### From PyPI (Recommended)
 
 ```bash
-npm install -g test-node-cli
+pipx install goobits-cli
 ```
 
 ### From Source
 
-Clone this repository and build from source:
+Clone this repository and install in development mode:
 
 ```bash
-git clone 
-cd test-node-cli
-./setup.sh --dev
+git clone https://github.com/goobits/goobits-cli.git
+cd goobits-cli
+./setup.sh install --dev
 ```
 
-### Development Installation
+## Quick Start
 
-For development with live updates:
+Create a new CLI project:
 
 ```bash
-./setup.sh --dev
+# Start with the working example
+cp -r docs/examples/simple-greeting my-awesome-cli
+cd my-awesome-cli
+goobits build                 # Create CLI and setup scripts
+./setup.sh install --dev     # Install for development
 ```
 
-## Usage
-
-### Basic Commands
-
-#### `testnodecli hello`
-Say hello
-
+Or create from scratch in an existing goobits project directory:
 ```bash
-testnodecli hello <name>```
+goobits init my-cli           # Generate initial goobits.yaml template
+```
 
-**Arguments:**
-- `name`: Name to greet
+## Commands
 
-#### `testnodecli test`
-Run a test
+### `goobits build [CONFIG_PATH]`
+Generate CLI and setup scripts from goobits.yaml configuration
 
-```bash
-testnodecli test```
+**Options:**
+- `--output-dir, -o`: Output directory (defaults to same directory as config file)
+- `--output`: Output filename for generated CLI (defaults to 'generated_cli.py')
+- `--backup`: Create backup files (.bak) when overwriting existing files
+- `--universal-templates`: Use Universal Template System (experimental)
 
+### `goobits init [PROJECT_NAME]`
+Create initial goobits.yaml template
 
+**Options:**
+- `--template, -t`: Template type (basic, advanced, api-client, text-processor)
+- `--force`: Overwrite existing goobits.yaml file
 
+### `goobits serve DIRECTORY`
+Serve local PyPI-compatible package index
 
-### Global Options
+**Options:**
+- `--host`: Host to bind the server to (default: localhost)
+- `--port, -p`: Port to run the server on (default: 8080)
 
-All commands support these global options:
+## Global Options
 
-- `--help`: Show help message and exit
+- `--verbose, -v`: Enable verbose error output and debugging information
 - `--version`: Show version information
+- `--help`: Show help message
 
-**Verbose Mode:**
-When `--verbose` is enabled, the CLI provides:
-- Detailed error messages with full context
-- Stack traces for debugging issues
-- Additional diagnostic information
-- Progress details for long-running operations
+## Language Support
 
-### Examples
+### Python
+- Framework: Click with rich-click
+- Hook file: `app_hooks.py`
+- Example: `def on_command_name(*args, **kwargs):`
 
-```bash
-# Show help
-testnodecli --help
+### Node.js
+- Framework: Commander.js
+- Hook file: `src/hooks.js`
+- Example: `export async function onCommandName(args) {}`
 
-# Show version
-testnodecli --version
+### TypeScript
+- Framework: Commander.js with type safety
+- Hook file: `src/hooks.ts`
+- Example: `export async function onCommandName(args: string[]) {}`
 
-# Enable verbose output for detailed error messages
-testnodecli --verbose hello
-
-# Short form of verbose flag
-testnodecli -v hello
-
-# Example hello command
-testnodecli hello "example_name"
-# Same command with verbose output
-testnodecli --verbose hello "example_name"
-# Error handling examples
-testnodecli invalid-command              # Standard error message
-testnodecli --verbose invalid-command   # Detailed error with stack trace
-```
+### Rust
+- Framework: Clap
+- Hook file: `src/hooks.rs`
+- Example: `pub fn on_command_name(matches: &ArgMatches) -> Result<()> {}`
 
 ## Configuration
 
-Configuration locations:
+Basic `goobits.yaml` structure:
 
-- **Linux**: `~/.config/test-node-cli/`
-- **macOS**: `~/Library/Application Support/test-node-cli/`
-- **Windows**: `%APPDATA%\test-node-cli\`
+```yaml
+package_name: my-cli
+command_name: mycli
+display_name: "My Awesome CLI"
+description: "A description of what my CLI does"
+language: python  # python, nodejs, typescript, or rust
 
-You can edit this file directly or use the CLI to manage settings.
+cli_hooks: "app_hooks.py"  # Path to hooks file
 
-### Configuration Options
+cli:
+  name: "My CLI"
+  version: "1.0.0"
+  tagline: "Short description"
+  
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        - name: "name"
+          desc: "Name to greet"
+          required: true
+```
 
-- `settings.auto_update`: Enable automatic updates (default: false)
-- `settings.log_level`: Set logging level (debug, info, warn, error)
-- `settings.verbose`: Enable verbose output by default (default: false)
-- `features.colored_output`: Enable colored terminal output (default: true)
-- `features.progress_bars`: Show progress bars for long operations (default: true)
+## Development Workflow
 
-### Environment Variables
+1. **Edit goobits.yaml**: Define your CLI structure
+2. **Run goobits build**: Generate implementation files
+3. **Edit hooks file**: Add your business logic
+4. **Test**: `./setup.sh install --dev`
 
-You can also control verbose mode using environment variables:
+## Examples
 
-```bash
-# Enable verbose mode for all commands
-export TESTNODECLI_VERBOSE=true
-testnodecli hello
+See `docs/examples/` for complete working examples:
 
-# Disable verbose mode (overrides config)
-export TESTNODECLI_VERBOSE=false
-testnodecli hello
+- `simple-greeting/`: Basic CLI with hello command
+
+## Architecture
+
+```
+goobits.yaml → Generator Engine → Generated CLI
+     ↓              ↓                  ↓
+Configuration   Template         Python/JS/TS/Rust
+(User Input)   Processing        Applications
+              (Jinja2/Universal)
 ```
 
 ## Development
+
+### Prerequisites
+
+- Python 3.8+
+- pip/pipx
 
 ### Building
 
 ```bash
 # Install dependencies
-npm install
+./setup.sh install --dev
 
-# Build (if TypeScript)
-npm run build
+# Generate CLI from goobits.yaml (self-hosting)
+goobits build
 
 # Run tests
-npm test
-```
+pytest src/tests/
 
-### Testing
+# Type checking
+mypy src/goobits_cli/
 
-```bash
-# Run all tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-```
-
-### Running
-
-```bash
-# Run from source (development)
-node cli.js --help
-
-# Or using npm link
-npm link && testnodecli --help
-```
-
-## Shell Completions
-
-Generate shell completions for better command-line experience:
-
-```bash
-./setup.sh --completions
-```
-
-This creates completion files in the `completions/` directory for:
-- Bash
-- Zsh  
-- Fish
-
-### Installing Completions
-
-**Bash:**
-```bash
-source completions/testnodecli.bash
-```
-
-**Zsh:**
-```bash
-# Add to your ~/.zshrc
-fpath=(./completions $fpath)
-autoload -U compinit && compinit
-```
-
-**Fish:**
-```bash
-cp completions/testnodecli.fish ~/.config/fish/completions/
-```
-
-## Architecture
-
-This CLI is built using:
-
-- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
-- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
-- **[Chalk](https://github.com/chalk/chalk)**: Terminal string styling
-
-### Project Structure
-
-```
-├── cli.js           # CLI entry point
-├── package.json         # NPM package configuration
-├── src/
-│   ├── hooks.js       # User-defined business logic
-│   ├── config.js      # Configuration management
-│   └── utils.js       # Utility functions
-└── completions/         # Shell completion scripts
+# Linting
+ruff check src/
 ```
 
 ## Contributing
@@ -223,11 +190,3 @@ This CLI is built using:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Changelog
-
-### 1.0.0
-- Initial release
-- Core CLI functionality implemented
-- `hello` command: Say hello
-- `test` command: Run a test

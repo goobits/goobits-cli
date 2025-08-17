@@ -61,8 +61,8 @@ def _find_and_import_hooks():
     import os
     from pathlib import Path
 
-    # Primary location from configuration
-    configured_hooks_path = ""
+    # Primary location from configuration (with backward compatibility)
+    configured_hooks_path = "app_hooks.py"
 
     # Possible locations for hooks file (in order of preference)
     hook_locations = []
@@ -90,6 +90,11 @@ def _find_and_import_hooks():
             f"{package_name}/app_hooks",
             f"src/{package_name}/app_hooks",
         ])
+
+    # Ensure current working directory is in Python path for hooks
+    current_dir = os.getcwd()
+    if current_dir not in sys.path:
+        sys.path.insert(0, current_dir)
 
     for location in hook_locations:
         try:
@@ -204,7 +209,7 @@ def build(ctx, config_path, output_dir, output, backup, universal_templates):
     try:
         if hooks is None:
             # Provide helpful error with search paths
-            configured_path = ""
+            configured_path = "app_hooks.py"
             package_name = "goobits-cli"
 
             search_paths = []
@@ -217,7 +222,7 @@ def build(ctx, config_path, output_dir, output, backup, universal_templates):
 
             error_msg = f"Hook implementation not found. Searched in: {', '.join(search_paths)}"
             if configured_path:
-                error_msg += f"\n💡 Configured hooks_path: {configured_path}"
+                error_msg += f"\n💡 Configured cli_hooks: {configured_path}"
 
             raise ConfigError(
                 error_msg,
@@ -297,7 +302,7 @@ def init(ctx, project_name, template, force):
     try:
         if hooks is None:
             # Provide helpful error with search paths
-            configured_path = ""
+            configured_path = "app_hooks.py"
             package_name = "goobits-cli"
 
             search_paths = []
@@ -310,7 +315,7 @@ def init(ctx, project_name, template, force):
 
             error_msg = f"Hook implementation not found. Searched in: {', '.join(search_paths)}"
             if configured_path:
-                error_msg += f"\n💡 Configured hooks_path: {configured_path}"
+                error_msg += f"\n💡 Configured cli_hooks: {configured_path}"
 
             raise ConfigError(
                 error_msg,
@@ -389,7 +394,7 @@ def serve(ctx, directory, host, port):
     try:
         if hooks is None:
             # Provide helpful error with search paths
-            configured_path = ""
+            configured_path = "app_hooks.py"
             package_name = "goobits-cli"
 
             search_paths = []
@@ -402,7 +407,7 @@ def serve(ctx, directory, host, port):
 
             error_msg = f"Hook implementation not found. Searched in: {', '.join(search_paths)}"
             if configured_path:
-                error_msg += f"\n💡 Configured hooks_path: {configured_path}"
+                error_msg += f"\n💡 Configured cli_hooks: {configured_path}"
 
             raise ConfigError(
                 error_msg,

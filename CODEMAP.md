@@ -7,9 +7,9 @@ PROJECT SUMMARY
 ---------------
   Name:         Goobits CLI Framework
   Type:         Multi-language CLI generator
-  Language:     Python (core), Node.js, TypeScript (targets)
-  Framework:    Click (Python), Commander (Node.js), Clap (TS)
-  Entry Point:  src/goobits_cli/main.py
+  Language:     Python (core), Node.js, TypeScript, Rust (targets)
+  Framework:    rich-click (Python), Commander.js (Node.js/TS), Clap (Rust)
+  Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
   
   Total Files:  491 (175 Python, 93 JS, 188 TS, 35 YAML)
   Total LOC:    ~15,000+ (8.8K Python core)
@@ -19,10 +19,10 @@ PROJECT SUMMARY
 🏗️ ARCHITECTURE OVERVIEW
 ------------------------
 
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│    YAML     │────▶│  Generator  │────▶│  CLI Code   │
-│ goobits.yaml│     │   Engine    │     │ Python/JS/TS│
-└─────────────┘     └─────────────┘     └─────────────┘
+┌─────────────┐     ┌─────────────┐     ┌─────────────────┐
+│    YAML     │────▶│  Generator  │────▶│   CLI Code      │
+│ goobits.yaml│     │   Engine    │     │Python/JS/TS/Rust│
+└─────────────┘     └─────────────┘     └─────────────────┘
         │                   │                    │
    Configuration        Template            Generated
    (User Input)        Processing           Applications

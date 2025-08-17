@@ -1779,6 +1779,10 @@ class UniversalTemplateEngine:
 
                 "cli_output_path": getattr(config, "cli_output_path", None),
 
+                "cli_hooks": getattr(config, "cli_hooks", None),
+
+                "hooks_path": getattr(config, "hooks_path", None),
+
             },
 
             "cli": cli_schema,

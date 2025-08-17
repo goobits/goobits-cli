@@ -408,7 +408,8 @@ class GoobitsConfigSchema(BaseModel):
 
     cli_output_path: str = "src/{package_name}/cli.py"
 
-    hooks_path: Optional[str] = None
+    hooks_path: Optional[str] = None  # Deprecated, use cli_hooks
+    cli_hooks: Optional[str] = None
 
     
 

@@ -10,7 +10,7 @@ For rapid project understanding, see **CODEMAP.md** - a comprehensive project ma
 
 Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, TypeScript, and Rust** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.
 
-**Current Status**: v2.0.0-beta.2 with 4 language implementations **ALL PRODUCTION-READY** (Python 95%, Node.js 95%, TypeScript 95%, Rust 95% complete - TypeScript compilation issues resolved). Advanced features fully integrated with exceptional performance: <1ms overhead for advanced features (down from +177ms), all languages generate working CLIs, comprehensive testing complete.
+**Current Status**: v2.0.0-beta.3 with 4 language implementations **ALL PRODUCTION-READY** (Python 95%, Node.js 95%, TypeScript 95%, Rust 95% complete - TypeScript compilation issues resolved). Advanced features fully integrated with optimized performance, all languages generate working CLIs, comprehensive testing complete.
 
 ## Development Commands
 
@@ -205,7 +205,7 @@ The repository contains implementation phases and proposals:
 - **Phase 3**: Universal Template System - Single-source multi-language generation (✅ 100% COMPLETED)
 - **Phase 4**: Advanced Features - Interactive mode, plugins, performance optimization (✅ 95% COMPLETED - All features operational with exceptional performance)
 
-**Sprint 1 Achievements (Latest):** Critical blockers completely resolved - Rust compilation fixed, performance optimized to <1ms overhead (99% improvement), template syntax errors eliminated. Framework now 94% complete overall with all languages production-ready.
+**Sprint 1 Achievements (Latest):** Critical blockers completely resolved - Rust compilation fixed, performance optimized (~72ms generated CLI startup), template syntax errors eliminated. Framework now 94% complete overall with all languages production-ready.
 
 ## Common Tasks
 
@@ -244,7 +244,7 @@ Templates are in `src/goobits_cli/templates/`. After modifying:
 
 **Interactive Mode:** Available in all generated CLIs with lazy loading optimization:
 ```bash
-my-cli --interactive  # Works across all languages with <1ms overhead
+my-cli --interactive  # Works across all languages with optimized performance
 ```
 
 **Language Support:**
@@ -270,8 +270,7 @@ goobits build --universal-templates
 ```
 
 **Performance Monitoring:** 
-- Generated CLIs: 35ms startup time (exceeds <100ms target by 65%)
-- Advanced features: <1ms overhead (99% improvement from +177ms)
+- Generated CLIs: ~72ms startup time (meets <100ms target)
 - Memory usage: 1.7MB peak (excellent efficiency)
 
 **Production Readiness:**
