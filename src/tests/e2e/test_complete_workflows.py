@@ -120,9 +120,8 @@ class TestNodeJSGeneratorE2E:
             "name": "test-nodejs-cli",
             "tagline": "Test Node.js CLI for E2E testing",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "hello",
+            "commands": {
+                "hello": {
                     "desc": "Say hello",
                     "handler": "hello_handler",
                     "args": [
@@ -134,12 +133,11 @@ class TestNodeJSGeneratorE2E:
                         }
                     ]
                 },
-                {
-                    "name": "test",
+                "test": {
                     "desc": "Run tests",
                     "handler": "test_handler"
                 }
-            ]
+            }
         })
 
     def test_nodejs_generator_e2e(self, sample_nodejs_config, tmp_path):
@@ -231,13 +229,12 @@ class TestCompleteWorkflowValidation:
             "name": "minimal-cli",
             "tagline": "Minimal test CLI",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "status",
+            "commands": {
+                "status": {
                     "desc": "Show status",
                     "handler": "status_handler"
                 }
-            ]
+            }
         })
         
         # Generate CLI
@@ -261,13 +258,12 @@ class TestCompleteWorkflowValidation:
             "name": "minimal-cli",
             "tagline": "Minimal test CLI",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "status",
+            "commands": {
+                "status": {
                     "desc": "Show status",
                     "handler": "status_handler"
                 }
-            ]
+            }
         })
         
         # Generate CLI
@@ -294,13 +290,12 @@ class TestCompleteWorkflowValidation:
             "name": "minimal-cli",
             "tagline": "Minimal test CLI",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "status",
+            "commands": {
+                "status": {
                     "desc": "Show status",
                     "handler": "status_handler"
                 }
-            ]
+            }
         })
         
         # Generate CLI

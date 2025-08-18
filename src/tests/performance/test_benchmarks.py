@@ -73,9 +73,8 @@ class TestPerformanceBenchmarks:
             "name": "benchmark-cli",
             "tagline": "Performance benchmark CLI",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "hello",
+            "commands": {
+                "hello": {
                     "desc": "Say hello",
                     "handler": "hello_handler",
                     "args": [
@@ -94,13 +93,11 @@ class TestPerformanceBenchmarks:
                         }
                     ]
                 },
-                {
-                    "name": "test",
+                "test": {
                     "desc": "Run tests", 
                     "handler": "test_handler"
                 },
-                {
-                    "name": "build",
+                "build": {
                     "desc": "Build project",
                     "handler": "build_handler",
                     "options": [
@@ -111,7 +108,7 @@ class TestPerformanceBenchmarks:
                         }
                     ]
                 }
-            ]
+            }
         })
     
     @contextmanager
@@ -269,9 +266,8 @@ class TestPerformanceBenchmarks:
             "name": "large-cli",
             "tagline": "Large CLI for performance testing",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": f"command_{i}",
+            "commands": {
+                f"command_{i}": {
                     "desc": f"Command {i} description",
                     "handler": f"command_{i}_handler",
                     "args": [
@@ -296,7 +292,7 @@ class TestPerformanceBenchmarks:
                     ]
                 }
                 for i in range(20)  # 20 commands
-            ]
+            }
         })
         
         generator = PythonGenerator(use_universal_templates=False)
@@ -361,13 +357,12 @@ class TestSimpleBenchmarks:
             "name": "speed-test",
             "tagline": "Speed test CLI",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "fast",
+            "commands": {
+                "fast": {
                     "desc": "Fast command",
                     "handler": "fast_handler"
                 }
-            ]
+            }
         })
         
         generator = PythonGenerator(use_universal_templates=False)
@@ -387,13 +382,12 @@ class TestSimpleBenchmarks:
             "name": "speed-test",
             "tagline": "Speed test CLI", 
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "fast",
+            "commands": {
+                "fast": {
                     "desc": "Fast command",
                     "handler": "fast_handler"
                 }
-            ]
+            }
         })
         
         generator = NodeJSGenerator(use_universal_templates=False)
