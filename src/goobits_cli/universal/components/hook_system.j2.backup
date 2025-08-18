@@ -544,82 +544,51 @@ export function hasHook(hookName: string): boolean {
 }
 
 {%- elif language == 'rust' -%}
-//! Hook implementations for {{ project.name }}
+//! Hook system interface for {{ project.name }}
 //! 
-//! This file contains the business logic for your CLI commands.
-//! Implement the hook functions below to handle your CLI commands.
-//! 
-//! Each command in your CLI corresponds to a hook function.
+//! This module defines the interface between the generated CLI and user-defined hooks.
+//! Users should implement hook functions in hooks.rs to provide business logic.
 
+use std::collections::HashMap;
 use clap::ArgMatches;
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
-{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+pub type HookResult = Result<()>;
 
-/// Hook function for '{{ command_config.name }}' command
-/// {{ command_config.description if command_config.description is defined else 'No description' }}
-pub fn on_{{ command_config.name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
-    // TODO: Implement your business logic here
-    println!("Executing {{ command_config.name }} command...");
-    {% if command_config.arguments is defined and command_config.arguments %}
-    
-    // Extract arguments
-    {% for arg in command_config.arguments -%}
-    {% if arg.multiple is defined and arg.multiple -%}
-    if let Some({{ arg.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ arg.name }}") {
-        let {{ arg.name | replace('-', '_') }}: Vec<&str> = {{ arg.name | replace('-', '_') }}_values.collect();
-        println!("{{ arg.name }}: {:?}", {{ arg.name | replace('-', '_') }});
-    }
-    {% else -%}
-    if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
-        println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
-    }
-    {% endif -%}
-    {% endfor -%}
-    {% endif %}
-    {% if command_config.options is defined and command_config.options %}
-    
-    // Extract options
-    {% for option in command_config.options -%}
-    {% if option.type is defined and (option.type == 'boolean' or option.type == 'flag') -%}
-    let {{ option.name | replace('-', '_') }} = matches.get_flag("{{ option.name }}");
-    println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
-    {% elif option.multiple is defined and option.multiple -%}
-    if let Some({{ option.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ option.name }}") {
-        let {{ option.name | replace('-', '_') }}: Vec<&str> = {{ option.name | replace('-', '_') }}_values.collect();
-        println!("{{ option.name }}: {:?}", {{ option.name | replace('-', '_') }});
-    }
-    {% else -%}
-    if let Some({{ option.name | replace('-', '_') }}) = matches.get_one::<String>("{{ option.name }}") {
-        println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
-    }
-    {% endif -%}
-    {% endfor -%}
-    {% endif %}
-    
-    // Return Ok(()) for success, Err(...) for error
-    Ok(())
+/// Trait that all hook implementations must follow
+pub trait Hook {
+    fn execute(&self, args: &ArgMatches) -> HookResult;
 }
 
-{%- endfor %}
-
-/// Simple hook manager for compatibility with other templates
-pub struct HookManager;
+/// Hook manager that handles registration and execution of hooks
+pub struct HookManager {
+    hooks: HashMap<String, Box<dyn Hook>>,
+}
 
 impl HookManager {
-    /// Create a new hook manager
     pub fn new() -> Self {
-        Self
-    }
-    
-    /// Execute a hook by name
-    pub fn execute_hook(&self, name: &str, matches: &ArgMatches) -> Result<()> {
-        match name {
-        {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
-            "on_{{ command_config.name | replace('-', '_') }}" => on_{{ command_config.name | replace('-', '_') }}(matches),
-        {%- endfor %}
-            _ => Err(anyhow::anyhow!("Unknown hook: {}", name)),
+        Self {
+            hooks: HashMap::new(),
         }
+    }
+
+    pub fn register_hook<H: Hook + 'static>(&mut self, name: String, hook: H) {
+        self.hooks.insert(name, Box::new(hook));
+    }
+
+    pub fn has_hook(&self, name: &str) -> bool {
+        self.hooks.contains_key(name)
+    }
+
+    pub fn execute_hook(&self, name: &str, args: &ArgMatches) -> HookResult {
+        match self.hooks.get(name) {
+            Some(hook) => hook.execute(args),
+            None => Err(anyhow::anyhow!("Hook '{}' not found", name)),
+        }
+    }
+
+    pub fn list_hooks(&self) -> Vec<&String> {
+        self.hooks.keys().collect()
     }
 }
 
@@ -629,6 +598,100 @@ impl Default for HookManager {
     }
 }
 
+/// Generate a template hooks.rs file for the user
+pub fn generate_hooks_template() -> String {
+    r#"//! Hook implementations for {{ project.name }}
+//! 
+//! This file contains the business logic for your CLI commands.
+//! Implement the hook functions below to handle your CLI commands.
+//! 
+//! Each command in your CLI corresponds to a hook function.
+
+use clap::ArgMatches;
+use crate::{{HookResult, Hook}};
+
+{%- for command in cli.root_command.subcommands %}
+
+/// {{ command.description }}
+pub struct {{ command.name.title().replace('-', '') }}Hook;
+
+impl Hook for {{ command.name.title().replace('-', '') }}Hook {
+    fn execute(&self, args: &ArgMatches) -> HookResult {
+        // TODO: Implement your business logic here
+        println!("Hook {{ command.hook_name }} called");
+        
+        {%- if command.arguments %}
+        // Extract arguments
+        {%- for arg in command.arguments %}
+        {%- if arg.multiple %}
+        if let Some({{ arg.name }}_values) = args.get_many::<String>("{{ arg.name }}") {
+            let {{ arg.name }}: Vec<&str> = {{ arg.name }}_values.collect();
+            println!("{{ arg.name }}: {:?}", {{ arg.name }});
+        }
+        {%- else %}
+        if let Some({{ arg.name }}) = args.get_one::<String>("{{ arg.name }}") {
+            println!("{{ arg.name }}: {}", {{ arg.name }});
+        }
+        {%- endif %}
+        {%- endfor %}
+        {%- endif %}
+        
+        {%- if command.options %}
+        // Extract options
+        {%- for option in command.options %}
+        {%- if option.type == 'boolean' %}
+        let {{ option.name.replace('-', '_') }} = args.get_flag("{{ option.name }}");
+        println!("{{ option.name }}: {}", {{ option.name.replace('-', '_') }});
+        {%- elif option.multiple %}
+        if let Some({{ option.name.replace('-', '_') }}_values) = args.get_many::<String>("{{ option.name }}") {
+            let {{ option.name.replace('-', '_') }}: Vec<&str> = {{ option.name.replace('-', '_') }}_values.collect();
+            println!("{{ option.name }}: {:?}", {{ option.name.replace('-', '_') }});
+        }
+        {%- else %}
+        if let Some({{ option.name.replace('-', '_') }}) = args.get_one::<String>("{{ option.name }}") {
+            println!("{{ option.name }}: {}", {{ option.name.replace('-', '_') }});
+        }
+        {%- endif %}
+        {%- endfor %}
+        {%- endif %}
+        
+        // Return Ok(()) for success, Err(...) for error
+        Ok(())
+    }}
+}}
+
+{%- endfor %}
+
+/// Initialize and register all hooks
+pub fn register_hooks(manager: &mut crate::HookManager) {
+{%- for command in cli.root_command.subcommands %}
+    manager.register_hook("{{ command.hook_name }}".to_string(), {{ command.name.title().replace('-', '') }}Hook);
+{%- endfor %}
+}
+
 // Add any utility functions or structures here
+"#.to_string()
+}
+
+// Global hook manager
+static mut HOOK_MANAGER: Option<HookManager> = None;
+static INIT_HOOK_MANAGER: std::sync::Once = std::sync::Once::new();
+
+pub fn get_hook_manager() -> &'static mut HookManager {
+    unsafe {
+        INIT_HOOK_MANAGER.call_once(|| {
+            HOOK_MANAGER = Some(HookManager::new());
+        });
+        HOOK_MANAGER.as_mut().unwrap()
+    }
+}
+
+pub fn execute_hook(name: &str, args: &ArgMatches) -> HookResult {
+    get_hook_manager().execute_hook(name, args)
+}
+
+pub fn has_hook(name: &str) -> bool {
+    get_hook_manager().has_hook(name)
+}
 
 {%- endif -%}

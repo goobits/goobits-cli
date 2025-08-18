@@ -22,7 +22,7 @@ from .generators.python import PythonGenerator
 
 
 
-def load_yaml_config(file_path: str) -> ConfigSchema:
+def load_yaml_config(file_path: str) -> Union[ConfigSchema, 'GoobitsConfigSchema']:
 
     """Load and validate YAML configuration file."""
 
@@ -34,7 +34,14 @@ def load_yaml_config(file_path: str) -> ConfigSchema:
 
         
 
-        config = ConfigSchema(**data)
+        # Try to detect which schema format this is
+        # If it has top-level fields like package_name, language, etc., it's GoobitsConfigSchema
+        # If it only has 'cli' field, it's ConfigSchema
+        if any(key in data for key in ['package_name', 'command_name', 'language', 'hooks_path', 'installation']):
+            from .schemas import GoobitsConfigSchema
+            config = GoobitsConfigSchema(**data)
+        else:
+            config = ConfigSchema(**data)
 
         return config
 
@@ -131,12 +138,13 @@ class Builder:
         # Detect language from config and initialize appropriate generator if needed
         config_language = None
         if isinstance(config, dict):
-            config_language = config.get('language', 'python')
+            config_language = config.get('language', self.language)  # Use builder's language as default
         elif hasattr(config, 'language'):
             config_language = config.language
         else:
-            # For ConfigSchema, language might be under cli or a separate field
-            config_language = getattr(config, 'language', 'python')
+            # For ConfigSchema, use the language specified in the builder constructor
+            # This preserves backward compatibility for tests that specify language in Builder()
+            config_language = self.language
         
         # If the detected language differs from initialized language, switch generator
         if config_language != self.language:

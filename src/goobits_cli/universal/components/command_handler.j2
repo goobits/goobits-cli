@@ -193,7 +193,7 @@ def _find_and_import_hooks():
                     return hooks_module
     except Exception:
         pass
-    {% endif -%}
+    {% endif %}
     
     return None
 
@@ -872,7 +872,7 @@ program.parse();
 {%- elif language == 'rust' -%}
 use clap::{Arg, Command, ArgMatches};
 use std::process;
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 mod hooks;
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
@@ -880,16 +880,41 @@ mod {{ cli.name.replace('-', '_') }}_interactive;
 use {{ cli.name.replace('-', '_') }}_interactive::run_interactive;
 {%- endif %}
 
+/// Enhanced error handling function
+fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
+    eprintln!("❌ {}: {}", context, error);
+    
+    if verbose {
+        eprintln!("Details: {:#}", error);
+    }
+    
+    // Check for specific error types to provide better exit codes
+    if error.to_string().contains("not implemented") {
+        process::exit(2); // Configuration/implementation error
+    } else if error.to_string().contains("permission denied") {
+        process::exit(3); // Permission error
+    } else {
+        process::exit(1); // General error
+    }
+}
+
 fn main() {
     let app = Command::new("{{ cli.name }}")
         .version("{{ cli.version }}")
         .about("{{ (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description')) }}")
         .arg_required_else_help(true)
+        .arg(
+            Arg::new("verbose")
+                .long("verbose")
+                .short('v')
+                .help("Enable verbose error output and debugging information")
+                .action(clap::ArgAction::SetTrue)
+        )
 {%- for option in cli.options %}
         .arg(
             Arg::new("{{ option.name }}")
                 .long("{{ option.name }}")
-                {%- if option.short is defined and option.short %}
+                {%- if option.short is defined and option.short and option.short != 'None' %}
                 .short('{{ option.short }}')
                 {%- endif %}
                 .help("{{ option.description }}")
@@ -956,7 +981,7 @@ fn main() {
                 .arg(
                     Arg::new("{{ option.name }}")
                         .long("{{ option.name }}")
-                        {%- if option.short is defined and option.short %}
+                        {%- if option.short is defined and option.short and option.short != 'None' %}
                         .short('{{ option.short }}')
                         {%- endif %}
                         .help("{{ (option.description if option.description is defined else 'No description') }}")
@@ -975,14 +1000,16 @@ fn main() {
 
     let matches = app.get_matches();
     
+    // Extract verbose flag for global error handling
+    let verbose = matches.get_flag("verbose");
+    
     {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
     // Check for interactive mode
     if matches.get_flag("interactive") {
         match run_interactive() {
             Ok(_) => return,
             Err(e) => {
-                eprintln!("Error running interactive mode: {}", e);
-                process::exit(1);
+                handle_error(e.into(), "Interactive mode execution", verbose);
             }
         }
     }
@@ -1060,11 +1087,8 @@ fn main() {
             // Enhanced error handling for Rust commands
             let hook_name = "on_{{ command_config.name | replace('-', '_') }}";
             match hooks::on_{{ command_config.name | replace('-', '_') }}(sub_matches) {
-                Ok(exit_code) => {
-                    if exit_code != 0 {
-                        eprintln!("Command '{{ command_config.name }}' failed with exit code {}", exit_code);
-                        process::exit(exit_code);
-                    }
+                Ok(_) => {
+                    // Command executed successfully
                 }
                 Err(e) => {
                     let error_context = format!("Command '{{ command_config.name }}' execution");
@@ -1073,12 +1097,12 @@ fn main() {
                     if e.to_string().contains("not implemented") {
                         let enhanced_error = anyhow!(
                             "Hook function '{}' not implemented in src/hooks.rs. \
-                            Please implement: pub fn {}(matches: &ArgMatches) -> Result<i32>",
+                            Please implement: pub fn {}(matches: &ArgMatches) -> Result<()>",
                             hook_name, hook_name
                         );
                         handle_error(enhanced_error, &error_context, verbose);
                     } else {
-                        handle_error(e.context(error_context), "Command execution", verbose);
+                        handle_error(e, &error_context, verbose);
                     }
                 }
             }

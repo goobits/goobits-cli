@@ -54,83 +54,74 @@ click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
 click.rich_click.MARKUP_MODE = "rich"
 
-# Helper function to convert file path to Python import path
-def _path_to_import_path(file_path: str, package_name: str = "goobits-cli") -> tuple[str, str]:
-    """Convert a file path like 'mypackage/cli/hooks.py' to import path 'mypackage.cli.hooks'"""
-    # Remove .py extension
-    clean_path = file_path.replace(".py", "")
-
-    # Convert forward slashes to dots for Python import
-    import_path = clean_path.replace("/", ".")
-
-    # Remove 'src.' prefix if present
-    if import_path.startswith("src."):
-        import_path = import_path[4:]
-
-    # Extract just the module name (e.g., 'hooks' from 'mypackage.cli.hooks')
-    module_name = import_path.split(".")[-1]
-
-    return import_path, module_name
-
-# Robust hook discovery function with package-relative imports
+# Import hooks module with enhanced error handling and path resolution
 def _find_and_import_hooks():
-    """Find and import hooks using package-relative imports with filesystem fallback"""
-    import importlib
-    import importlib.util
+    """Find and import hooks module from various possible locations."""
+    import sys
+    import os
     from pathlib import Path
 
-# Using configured hooks path: app_hooks.py
-    configured_path = "app_hooks.py"
-    import_path, module_name = _path_to_import_path(configured_path)
+    # Primary location from configuration (with backward compatibility)
+    configured_hooks_path = "app_hooks.py"
 
-    # Strategy 1: Try package-relative import (works from any directory when installed)
-    try:
-        return importlib.import_module(import_path)
-    except ImportError:
-        pass
+    # Possible locations for hooks file (in order of preference)
+    hook_locations = []
 
-    # Strategy 2: Try relative import from current package
-    try:
-        if "." in import_path:
-            # Try importing from the base package
-            package_parts = import_path.split(".")
-            if len(package_parts) >= 2:
-                relative_import = ".".join(package_parts[1:])  # Remove package name
-                return importlib.import_module(f".{relative_import}", package="goobits-cli")
-        else:
-            # Direct relative import
-            return importlib.import_module(f".{module_name}", package="goobits-cli")
-    except ImportError:
-        pass
+    # Add configured path first if available
+    if configured_hooks_path:
+        # Remove .py extension if present and convert to module name
+        module_path = configured_hooks_path.replace('.py', '').replace('/', '.')
+        hook_locations.append(configured_hooks_path.replace('.py', ''))
 
-    # Strategy 3: Try direct module name import (for simple cases)
-    try:
-        return importlib.import_module(module_name)
-    except ImportError:
-        pass
+    # Add fallback locations
+    hook_locations.extend([
+        # Current directory (default)
+        "app_hooks",
+        # Common project patterns
+        "cli/app_hooks",
+        "src/app_hooks",
+    ])
 
-    # Strategy 4: File-based import as fallback (development mode)
-    try:
-        # Look for the file relative to the CLI script location
-        cli_dir = Path(__file__).parent
+    # Add package-specific locations if available
+    package_name = "goobits-cli"
+    if package_name:
+        hook_locations.extend([
+            f"{package_name}/cli/app_hooks",
+            f"{package_name}/app_hooks",
+            f"src/{package_name}/app_hooks",
+        ])
 
-        # Try multiple possible locations relative to CLI
-        search_paths = [
-            cli_dir / configured_path,                    # Same directory as CLI
-            cli_dir.parent / configured_path,             # Parent of CLI directory
-            cli_dir.parent.parent / configured_path,      # Two levels up (src structure)
-            cli_dir.parent.parent.parent / configured_path, # Three levels up (deep structure)
-        ]
+    # Ensure current working directory is in Python path for hooks
+    current_dir = os.getcwd()
+    if current_dir not in sys.path:
+        sys.path.insert(0, current_dir)
 
-        for hooks_file in search_paths:
-            if hooks_file.exists():
-                spec = importlib.util.spec_from_file_location(module_name, hooks_file)
-                if spec and spec.loader:
-                    hooks_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(hooks_module)
-                    return hooks_module
-    except Exception:
-        pass
+    for location in hook_locations:
+        try:
+            # Handle nested module paths
+            if "/" in location:
+                # Add parent directory to path and import module
+                parts = location.split("/")
+                parent_dir = "/".join(parts[:-1])
+                module_name = parts[-1]
+
+                if parent_dir and os.path.exists(parent_dir):
+                    abs_parent = os.path.abspath(parent_dir)
+                    if abs_parent not in sys.path:
+                        sys.path.insert(0, abs_parent)
+
+                    imported = __import__(module_name)
+                    # Verify it has expected hook functions
+                    if hasattr(imported, 'on_build'):
+                        return imported
+            else:
+                # Simple import from current directory
+                imported = __import__(location)
+                if hasattr(imported, 'on_build'):
+                    return imported
+
+        except ImportError:
+            continue
 
     return None
 

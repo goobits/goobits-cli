@@ -1344,7 +1344,7 @@ class UniversalTemplateEngine:
 
     
 
-    def create_intermediate_representation(self, config) -> Dict[str, Any]:
+    def create_intermediate_representation(self, config, config_filename: str = "goobits.yaml") -> Dict[str, Any]:
 
         """
 
@@ -1359,6 +1359,8 @@ class UniversalTemplateEngine:
         Args:
 
             config: Validated Goobits configuration
+
+            config_filename: Name of the configuration file (for source attribution)
 
             
 
@@ -1380,7 +1382,7 @@ class UniversalTemplateEngine:
 
         
 
-        return self._build_intermediate_representation(config)
+        return self._build_intermediate_representation(config, config_filename)
 
     
 
@@ -1480,7 +1482,8 @@ class UniversalTemplateEngine:
 
     def generate_cli(self, config, language: str, 
 
-                    output_dir: Path, consolidate: bool = False) -> Dict[str, str]:
+                    output_dir: Path, consolidate: bool = False, 
+                    config_filename: str = "goobits.yaml") -> Dict[str, str]:
 
         """
 
@@ -1497,6 +1500,8 @@ class UniversalTemplateEngine:
             output_dir: Directory to write generated files
 
             consolidate: Whether to consolidate multiple files into single file
+
+            config_filename: Name of the configuration file (for source attribution)
 
             
 
@@ -1579,7 +1584,7 @@ class UniversalTemplateEngine:
 
             else:
 
-                ir = self._build_intermediate_representation(config)
+                ir = self._build_intermediate_representation(config, config_filename)
 
                 # Cache the IR for future use
 
@@ -1587,7 +1592,7 @@ class UniversalTemplateEngine:
 
         else:
 
-            ir = self._build_intermediate_representation(config)
+            ir = self._build_intermediate_representation(config, config_filename)
 
         
 
@@ -1729,7 +1734,7 @@ class UniversalTemplateEngine:
 
     
 
-    def _build_intermediate_representation(self, config) -> Dict[str, Any]:
+    def _build_intermediate_representation(self, config, config_filename: str = "goobits.yaml") -> Dict[str, Any]:
 
         """
 
@@ -1808,6 +1813,8 @@ class UniversalTemplateEngine:
                 "generator_version": "{{ version }}",  # Will be replaced during rendering
 
                 "source_config": config.model_dump(),
+
+                "config_filename": config_filename,
 
             }
 

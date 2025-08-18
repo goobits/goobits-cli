@@ -1277,14 +1277,13 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
 
                     short_flag = f'-{opt.short}' if hasattr(opt, 'short') and opt.short else ''
 
+                    short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
                     cmd_def += f'''
 
             .arg(Arg::new("{opt.name}")
 
                 .help("{opt.desc}")
-
-                .short('{opt.short}')
-
+                {short_part}
                 .long("{opt.name}")'''
 
                     if opt.type == 'flag':

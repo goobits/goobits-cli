@@ -322,7 +322,10 @@ class PythonGenerator(BaseGenerator):
             if isinstance(config, ConfigSchema):
 
                 # Create minimal GoobitsConfigSchema for universal system with defaults
-                from ..schemas import PythonConfigSchema, DependenciesSchema, InstallationSchema
+                from ..schemas import PythonConfigSchema, DependenciesSchema, InstallationSchema, ShellIntegrationSchema, ValidationSchema
+
+                # Get hooks_path from config if available
+                hooks_path = getattr(config, 'hooks_path', None)
 
                 goobits_config = GoobitsConfigSchema(
 
@@ -342,11 +345,13 @@ class PythonGenerator(BaseGenerator):
 
                     installation=InstallationSchema(pypi_name=getattr(config, 'package_name', config.cli.name)),  # Use defaults with required field
 
-                    shell_integration={},  # Use defaults
+                    shell_integration=None,  # Use None to allow pydantic defaults
 
-                    validation={},  # Use defaults
+                    validation=ValidationSchema(),  # Use proper schema with defaults
 
-                    messages={}  # Use defaults
+                    messages={},  # Use empty dict for messages
+
+                    hooks_path=hooks_path  # Pass hooks_path if specified
 
                 )
 
@@ -404,7 +409,8 @@ class PythonGenerator(BaseGenerator):
 
             generated_files = self.universal_engine.generate_cli(
 
-                goobits_config, "python", output_dir, consolidate=self.consolidate
+                goobits_config, "python", output_dir, consolidate=self.consolidate,
+                config_filename=config_filename
 
             )
 

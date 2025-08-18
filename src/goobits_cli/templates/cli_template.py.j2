@@ -547,7 +547,7 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
         config_file = Path(config_path) if config_path else Path("goobits.yaml")
         output_dir_path = Path(output_dir) if output_dir else None
         
-        build(config_file, output_dir_path, output, backup, universal_templates={{ universal_templates | default(True) }})
+        build(config_file, output_dir_path, output, backup, universal_templates={% if universal_templates %}True{% else %}False{% endif %})
         click.echo("✅ Build completed successfully!")
         click.echo("   - Generated setup.sh")
         click.echo("   - Updated CLI files")

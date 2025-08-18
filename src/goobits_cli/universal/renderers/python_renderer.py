@@ -202,6 +202,8 @@ class PythonRenderer(LanguageRenderer):
 
             },
 
+            "config_filename": context.get("metadata", {}).get("config_filename", "goobits.yaml"),
+
             "consolidation_mode": self.consolidate
 
         })

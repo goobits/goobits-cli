@@ -54,7 +54,7 @@ pub fn build_cli() -> Command {
                 .arg(
                     Arg::new("{{ option.name }}")
                         .long("{{ option.name }}")
-                        {% if option.short -%}
+                        {% if option.short is defined and option.short and option.short != 'None' -%}
                         .short('{{ option.short }}')
                         {%- endif %}
                         .help("{{ option.desc | default('No description provided') }}")

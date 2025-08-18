@@ -20,7 +20,12 @@ def on_build(config_path: Optional[str], output_dir: Optional[str], output: Opti
 
     """Hook for build command - delegate to main.py implementation."""
 
-    import goobits_cli.main as main  # type: ignore[import-untyped]
+    try:
+        # Try package import first (when installed)
+        import goobits_cli.main as main  # type: ignore[import-untyped]
+    except ImportError:
+        # Fallback to relative import (development mode)
+        from . import main  # type: ignore[import-untyped]
 
     
 
@@ -50,7 +55,12 @@ def on_init(project_name: Optional[str], template: str, force: bool) -> None:
 
     """Hook for init command - delegate to main.py implementation."""
 
-    import goobits_cli.main as main  # type: ignore[import-untyped]
+    try:
+        # Try package import first (when installed)
+        import goobits_cli.main as main  # type: ignore[import-untyped]
+    except ImportError:
+        # Fallback to relative import (development mode)
+        from . import main  # type: ignore[import-untyped]
 
     
 
@@ -70,7 +80,12 @@ def on_serve(directory: str, host: str, port: int) -> None:
 
     """Hook for serve command - delegate to main.py implementation."""
 
-    import goobits_cli.main as main  # type: ignore[import-untyped]
+    try:
+        # Try package import first (when installed)
+        import goobits_cli.main as main  # type: ignore[import-untyped]
+    except ImportError:
+        # Fallback to relative import (development mode)
+        from . import main  # type: ignore[import-untyped]
 
     
 

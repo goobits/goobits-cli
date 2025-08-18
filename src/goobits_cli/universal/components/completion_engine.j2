@@ -561,7 +561,7 @@ complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ comma
 }
 
 {%- elif language == 'rust' -%}
-use std::fs;
+{% raw %}use std::fs;
 use std::path::PathBuf;
 use std::env;
 
@@ -594,48 +594,48 @@ struct CompletionArgument {
 impl CompletionEngine {
     pub fn new() -> Self {
         Self {
-            cli_name: "{{ cli.root_command.name }}".to_string(),
-            commands: vec![
+            cli_name: "{% endraw %}{{ cli.root_command.name }}{% raw %}".to_string(),
+            commands: vec![{% endraw %}
 {%- for command in cli.root_command.subcommands %}
-                CompletionCommand {
-                    name: "{{ command.name }}".to_string(),
-                    description: "{{ command.description }}".to_string(),
-                    options: vec![
+{% raw %}                CompletionCommand {
+                    name: "{% endraw %}{{ command.name }}{% raw %}".to_string(),
+                    description: "{% endraw %}{{ command.description }}{% raw %}".to_string(),
+                    options: vec![{% endraw %}
 {%- for opt in command.options %}
-                        CompletionOption {
-                            name: "{{ opt.name }}".to_string(),
-                            short: {% if opt.short %}Some("{{ opt.short }}".to_string()){% else %}None{% endif %},
-                            description: "{{ opt.description }}".to_string(),
-                        },
+{% raw %}                        CompletionOption {
+                            name: "{% endraw %}{{ opt.name }}{% raw %}".to_string(),
+                            short: {% endraw %}{% if opt.short %}{% raw %}Some("{% endraw %}{{ opt.short }}{% raw %}".to_string()){% endraw %}{% else %}{% raw %}None{% endraw %}{% endif %}{% raw %},
+                            description: "{% endraw %}{{ opt.description }}{% raw %}".to_string(),
+                        },{% endraw %}
 {%- endfor %}
-                    ],
-                    arguments: vec![
+{% raw %}                    ],
+                    arguments: vec![{% endraw %}
 {%- for arg in command.arguments %}
-                        CompletionArgument {
-                            name: "{{ arg.name }}".to_string(),
-                            description: "{{ arg.description }}".to_string(),
-                        },
+{% raw %}                        CompletionArgument {
+                            name: "{% endraw %}{{ arg.name }}{% raw %}".to_string(),
+                            description: "{% endraw %}{{ arg.description }}{% raw %}".to_string(),
+                        },{% endraw %}
 {%- endfor %}
-                    ],
-                },
+{% raw %}                    ],
+                },{% endraw %}
 {%- endfor %}
-            ],
+{% raw %}            ],
         }
-    }
+    }{% endraw %}
 
-    pub fn generate_bash_completion(&self) -> String {
+{% raw %}    pub fn generate_bash_completion(&self) -> String {{% endraw %}
 {%- if consolidation_mode %}
-        "# Shell completion not available in consolidated mode".to_string()
+{% raw %}        "# Shell completion not available in consolidated mode".to_string(){% endraw %}
 {%- else %}
-        let mut script = format!(r#"#!/bin/bash
+{% raw %}        let mut script = format!(r#"#!/bin/bash
 # Bash completion for {}
 
 _{}_completions()
-{
+{{
     local cur prev words cword
     COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    cur="${{COMP_WORDS[COMP_CWORD]}}"
+    prev="${{COMP_WORDS[COMP_CWORD-1]}}"
     
     # Global options
     local global_opts="--help -h --version"
@@ -649,12 +649,12 @@ _{}_completions()
 
         script.push_str(r#""
     
-    case ${COMP_CWORD} in
+    case ${{COMP_CWORD}} in
         1)
             COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
             ;;
         *)
-            case "${words[1]}" in"#);
+            case "${{words[1]}}" in"#);
 
         for cmd in &self.commands {
             script.push_str(&format!("\n                {})\n                    local {}_opts=\"--help -h", 
@@ -675,27 +675,27 @@ _{}_completions()
             esac
             ;;
     esac
-}
+}}
 
 complete -F _{}_completions {}
 "#, self.cli_name.replace("-", "_"), self.cli_name));
 
-        script
+        script{% endraw %}
 {%- endif %}
-    }
+{% raw %}    }{% endraw %}
 
-    pub fn generate_zsh_completion(&self) -> String {
+{% raw %}    pub fn generate_zsh_completion(&self) -> String {{% endraw %}
 {%- if consolidation_mode %}
-        "# Shell completion not available in consolidated mode".to_string()
+{% raw %}        "# Shell completion not available in consolidated mode".to_string(){% endraw %}
 {%- else %}
-        let mut script = format!(r#"#compdef {}
+{% raw %}        let mut script = format!(r#"#compdef {}
 # Zsh completion for {}
 
-_{}() {
+_{}() {{
     local context state line
     
     _arguments -C \
-        '(--help -h){--help,-h}[Show help information]' \
+        '(--help -h){{--help,-h}}[Show help information]' \
         '(--version)--version[Show version information]' \
         '1: :_{}_commands' \
         '*::arg:->args'
@@ -708,11 +708,11 @@ _{}() {
 
         for cmd in &self.commands {
             script.push_str(&format!("\n                {})\n                    _arguments \\", cmd.name));
-            script.push_str("\n                        '(--help -h){--help,-h}[Show help information]' \\");
+            script.push_str("\n                        '(--help -h){{--help,-h}}[Show help information]' \\");
             
             for opt in &cmd.options {
                 if let Some(short) = &opt.short {
-                    script.push_str(&format!("\n                        '(--{} -{}){--{},-{}}[{}]' \\", 
+                    script.push_str(&format!("\n                        '(--{} -{}){{--{},-{}}}[{}]' \\", 
                         opt.name, short, opt.name, short, opt.description));
                 } else {
                     script.push_str(&format!("\n                        '(--{})--{}[{}]' \\", 
@@ -734,9 +734,9 @@ _{}() {
             esac
             ;;
     esac
-}
+}}
 
-_{}_commands() {
+_{}_commands() {{
     local commands
     commands=("#, self.cli_name.replace("-", "_")));
 
@@ -747,20 +747,20 @@ _{}_commands() {
         script.push_str(&format!(r#"
     )
     _describe 'commands' commands
-}
+}}
 
 _{} "$@"
 "#, self.cli_name.replace("-", "_")));
 
-        script
+        script{% endraw %}
 {%- endif %}
-    }
+{% raw %}    }{% endraw %}
 
-    pub fn generate_fish_completion(&self) -> String {
+{% raw %}    pub fn generate_fish_completion(&self) -> String {{% endraw %}
 {%- if consolidation_mode %}
-        "# Shell completion not available in consolidated mode".to_string()
+{% raw %}        "# Shell completion not available in consolidated mode".to_string(){% endraw %}
 {%- else %}
-        let mut script = format!(r#"# Fish completion for {}
+{% raw %}        let mut script = format!(r#"# Fish completion for {}
 
 # Global options
 complete -c {} -f
@@ -787,11 +787,11 @@ complete -c {} -l version -d "Show version information"
         }
 
         script.push('\n');
-        script
+        script{% endraw %}
 {%- endif %}
-    }
+{% raw %}    }{% endraw %}
 
-    pub fn install_completion(&self, shell: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+{% raw %}    pub fn install_completion(&self, shell: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
         let shell_name = match shell {
             Some(s) => s.to_string(),
             None => {
@@ -837,6 +837,6 @@ complete -c {} -l version -d "Show version information"
 
         Ok(())
     }
-}
+}{% endraw %}
 
 {%- endif -%}

@@ -67,6 +67,32 @@ class TestCLIE2E:
         # Make CLI executable
         cli_file.chmod(0o755)
         
+        # Create app_hooks.py file with required hook implementations for testing
+        hooks_file = package_dir / "app_hooks.py"
+        hooks_content = '''"""
+Hook implementations for E2E testing.
+
+These are minimal implementations that allow the CLI commands to execute
+successfully during testing while demonstrating the hook system functionality.
+"""
+
+def on_greet(**kwargs):
+    """Hook implementation for the greet command."""
+    print("Command greet executed")
+    return 0
+
+def on_hello(**kwargs):
+    """Hook implementation for the hello command."""
+    print("Command hello executed")
+    return 0
+
+def on_goodbye(**kwargs):
+    """Hook implementation for the goodbye command."""
+    print("Command goodbye executed")
+    return 0
+'''
+        hooks_file.write_text(hooks_content)
+        
         # Install required dependencies in venv
         subprocess.run([
             str(pip_exe), "install", "rich-click", "pydantic", "jinja2", "pyyaml"
@@ -89,7 +115,7 @@ class TestCLIE2E:
         # Verify successful execution
         assert result.returncode == 0
         
-        # Verify expected output (Legacy Template format)
+        # Verify expected output
         assert "Command greet executed" in result.stdout
         
         # Verify no error output
@@ -97,18 +123,18 @@ class TestCLIE2E:
 
     def test_cli_hello_command_with_arguments(self, installed_cli):
         """Test the hello command with name argument and uppercase option."""
-        # Note: Legacy template doesn't generate arguments/options properly
-        # So we test without arguments
+        # Universal Template System properly generates arguments, so provide the required name argument
         result = subprocess.run([
             str(installed_cli["python_exe"]),
             str(installed_cli["cli_file"]),
-            "hello"
+            "hello",
+            "TestUser"  # Required NAME argument
         ], capture_output=True, text=True)
         
         # Verify successful execution
         assert result.returncode == 0
         
-        # Verify expected output contains command execution (Legacy Template format)
+        # Verify expected output contains command execution
         assert "Command hello executed" in result.stdout
         
         # Verify no error output
@@ -116,20 +142,22 @@ class TestCLIE2E:
 
     def test_cli_hello_command_without_required_argument(self, installed_cli):
         """Test hello command fails when required argument is missing."""
-        # Note: Legacy template doesn't generate arguments, so this command will succeed
+        # Universal Template System properly validates required arguments
         result = subprocess.run([
             str(installed_cli["python_exe"]),
             str(installed_cli["cli_file"]),
             "hello"
         ], capture_output=True, text=True)
         
-        # Legacy template doesn't enforce arguments, so command succeeds
-        assert result.returncode == 0
-        assert "Command hello executed" in result.stdout
+        # Should fail with non-zero exit code when required argument is missing
+        assert result.returncode != 0
+        
+        # Should show helpful error message about missing argument
+        assert "Missing argument" in result.stderr or "NAME" in result.stderr
 
     def test_cli_goodbye_command_with_option(self, installed_cli):
         """Test goodbye command with custom message option."""
-        # Note: Legacy template doesn't generate options, so test without options
+        # Universal Template System properly generates options
         result = subprocess.run([
             str(installed_cli["python_exe"]),
             str(installed_cli["cli_file"]),
@@ -139,7 +167,7 @@ class TestCLIE2E:
         # Verify successful execution
         assert result.returncode == 0
         
-        # Verify expected output (Legacy Template format)
+        # Verify expected output
         assert "Command goodbye executed" in result.stdout
         
         # Verify no error output
@@ -156,7 +184,7 @@ class TestCLIE2E:
         # Verify successful execution
         assert result.returncode == 0
         
-        # Verify CLI metadata from test YAML (Legacy Template format)
+        # Verify CLI metadata from test YAML
         assert "A test CLI for integration tests." in result.stdout
         
         # Verify commands are listed
