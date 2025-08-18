@@ -97,6 +97,31 @@ class BaseGenerator(ABC):
         pass
 
     
+    def generate_to_directory(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+                              output_directory: str, config_filename: str = "goobits.yaml", 
+                              version: Optional[str] = None) -> dict:
+        """
+        Generate CLI files and write them to the specified output directory.
+        
+        Default implementation that subclasses can override for more efficient handling.
+        
+        Args:
+            config: The configuration object
+            output_directory: Directory where files should be written  
+            config_filename: Name of the configuration file (default: "goobits.yaml")
+            version: Optional version string
+            
+        Returns:
+            Dictionary mapping file paths to their contents
+            
+        Raises:
+            NotImplementedError: If subclass doesn't implement this method
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement generate_to_directory() method"
+        )
+
+    
 
     def _extract_config_metadata(self, config: Union[ConfigSchema, GoobitsConfigSchema]) -> dict:
 
