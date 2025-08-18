@@ -331,6 +331,7 @@ installation:
 
 cli:
   name: "CompileTest"
+  tagline: "Simple CLI for compilation testing"
   version: "1.0.0"
   commands:
     hello:
