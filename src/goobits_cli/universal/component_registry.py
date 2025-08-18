@@ -171,6 +171,8 @@ class ComponentRegistry:
         self._env.filters['snake_case'] = self._snake_case_filter
 
         self._env.filters['camelCase'] = self._camel_case_filter
+        
+        self._env.filters['js_string'] = self._js_string_filter
 
         
 
@@ -693,6 +695,16 @@ class ComponentRegistry:
         words = re.split(r'[-_\s]+', text.lower())
 
         return words[0] + ''.join(word.capitalize() for word in words[1:])
+
+    
+    
+    def _js_string_filter(self, value: str) -> str:
+        """Escape string for JavaScript and wrap in quotes."""
+        if not isinstance(value, str):
+            return f'"{str(value)}"'
+        
+        escaped = value.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+        return f'"{escaped}"'
 
     
 
