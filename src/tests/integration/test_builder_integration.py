@@ -122,35 +122,35 @@ class TestBuilderIntegration:
     def _assert_command_structure_present(self, generated_code):
         """Assert that command structure from YAML is present in generated code."""
         # Check for Python function definitions for each command
-        assert "def greet(ctx" in generated_code
-        assert "def hello(ctx" in generated_code
-        assert "def goodbye(ctx" in generated_code
+        # Universal template generates full function signatures with parameters
+        assert "def greet(ctx)" in generated_code
+        assert "def hello(ctx, name, uppercase)" in generated_code
+        assert "def goodbye(ctx, message)" in generated_code
         
         # Check for click decorators
         assert "@main.command()" in generated_code
-        # Legacy template doesn't generate @click.option decorators
+        # Universal template generates full click decorators
     
     def _assert_hello_command_structure(self, generated_code):
         """Assert that the hello command structure is properly represented."""
-        # Legacy template only generates function with ctx parameter
-        assert "def hello(ctx)" in generated_code
+        # Universal template generates function with ctx and command-specific parameters
+        assert "def hello(ctx, name, uppercase)" in generated_code
         
         # Check for command description in docstring
         assert "Says hello to a user." in generated_code
         
-        # Legacy template doesn't generate option help text or decorators
-        # Only check that the command exists with basic structure
-        # The word "name" appears in the docstring as argument description
+        # Universal template generates proper parameter handling
+        # Check that the function signature includes the expected parameters
     
     def _assert_goodbye_command_structure(self, generated_code):
         """Assert that the goodbye command structure is properly represented."""
-        # Legacy template only generates function with ctx parameter
-        assert "def goodbye(ctx)" in generated_code
+        # Universal template generates function with ctx and command-specific parameters
+        assert "def goodbye(ctx, message)" in generated_code
         
         # Check for command description in docstring
         assert "Says goodbye with optional message." in generated_code
         
-        # Legacy template doesn't include option defaults or decorators
+        # Universal template includes full parameter handling
 
 
 class TestBuilderIntegrationErrorCases:
