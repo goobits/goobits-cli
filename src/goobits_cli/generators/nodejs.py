@@ -1808,3 +1808,62 @@ logs/
 config.local.json
 
 """
+
+    def _to_camelcase(self, text: str) -> str:
+        """Convert snake_case, kebab-case, or PascalCase to camelCase."""
+        if not text:
+            return text
+        
+        # Handle different separators: underscores, hyphens, spaces
+        # Also handle PascalCase by inserting underscores before capitals
+        import re
+        
+        # First, handle PascalCase by converting to snake_case
+        # Insert underscore before each capital letter (except first)
+        text = re.sub(r'(?<!^)(?=[A-Z])', '_', text)
+        
+        # Replace spaces and hyphens with underscores for consistent processing
+        text = text.replace('-', '_').replace(' ', '_')
+        
+        # Split by underscores and handle the conversion
+        parts = [part.lower() for part in text.split('_') if part]
+        if len(parts) <= 1:
+            return text.lower()
+        
+        # First part stays lowercase, subsequent parts are capitalized
+        return parts[0] + ''.join(part.capitalize() for part in parts[1:])
+
+    def _to_pascalcase(self, text: str) -> str:
+        """Convert snake_case, kebab-case, or camelCase to PascalCase."""
+        if not text:
+            return text
+        
+        # Handle different separators: underscores, hyphens, spaces
+        import re
+        
+        # First, handle existing camelCase/PascalCase by inserting underscores
+        text = re.sub(r'(?<!^)(?=[A-Z])', '_', text)
+        
+        # Replace spaces and hyphens with underscores for consistent processing
+        text = text.replace('-', '_').replace(' ', '_')
+        
+        # Split by underscores and capitalize each part
+        parts = [part.lower() for part in text.split('_') if part]
+        return ''.join(part.capitalize() for part in parts)
+
+    def _to_kebabcase(self, text: str) -> str:
+        """Convert snake_case, camelCase, or PascalCase to kebab-case."""
+        if not text:
+            return text
+        
+        # Handle different input formats
+        import re
+        
+        # First, handle camelCase/PascalCase by inserting hyphens before capitals
+        text = re.sub(r'(?<!^)(?=[A-Z])', '-', text)
+        
+        # Replace underscores and spaces with hyphens
+        text = text.replace('_', '-').replace(' ', '-')
+        
+        # Convert to lowercase and clean up multiple consecutive hyphens
+        return re.sub(r'-+', '-', text.lower()).strip('-')
