@@ -164,14 +164,14 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "test_rust.yaml")
         
-        # Verify core files are generated (Universal Template System generates different files)
-        expected_core_files = ['main.rs', 'hooks.rs']
+        # Verify core files are generated (Universal Template System generates proper Rust project structure)
+        expected_core_files = ['src/main.rs', 'src/hooks.rs']
         for expected_file in expected_core_files:
             assert expected_file in output_files, f"Missing expected file: {expected_file}"
             assert len(output_files[expected_file]) > 0, f"Empty file: {expected_file}"
         
-        # Additional files that may be generated
-        possible_files = ['completion.rs', 'config.rs', 'errors.rs']
+        # Additional files that may be generated in src/ directory
+        possible_files = ['src/completion.rs', 'src/config.rs', 'src/errors.rs']
         generated_count = len(output_files)
         assert generated_count >= 2, f"Expected at least 2 files, got {generated_count}"
     
@@ -215,8 +215,8 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "test_rust.yaml")
         
-        # main.rs is generated without the src/ prefix in Universal Template System
-        main_content = output_files['main.rs']
+        # main.rs is generated in proper Rust project structure under src/
+        main_content = output_files['src/main.rs']
         
         # Check basic Rust structure
         assert "use clap::" in main_content or "clap" in main_content
@@ -239,7 +239,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "test_rust.yaml")
         
-        hooks_content = output_files['hooks.rs']
+        hooks_content = output_files['src/hooks.rs']
         
         # Check that hooks.rs contains hook-related code
         assert "hook" in hooks_content.lower() or "Hook" in hooks_content
@@ -278,13 +278,15 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "test_rust.yaml")
         
-        # Test that core Rust files exist (regardless of directory structure)
-        assert 'main.rs' in output_files
-        assert 'hooks.rs' in output_files
+        # Test that core Rust files exist in proper Rust project structure
+        assert 'src/main.rs' in output_files
+        assert 'src/hooks.rs' in output_files
         
-        # Test that files have reasonable names
+        # Test that files have reasonable names and known extensions
+        allowed_extensions = ['.rs', '.toml', '.sh', '.md', '.gitignore']
         for filename in output_files.keys():
-            assert filename.endswith('.rs') or filename.endswith('.toml') or filename.endswith('.sh') or filename.endswith('.md')
+            has_valid_extension = any(filename.endswith(ext) for ext in allowed_extensions)
+            assert has_valid_extension, f"Unknown file extension for: {filename}"
             assert len(filename) > 0
     
     def test_integration_with_main_cli(self):
@@ -295,7 +297,7 @@ cli:
         output_files = generate_cli(config, "test_rust.yaml")
         
         # Should detect Rust language and generate Rust files
-        assert 'main.rs' in output_files
+        assert 'src/main.rs' in output_files
         rust_files = [f for f in output_files.keys() if f.endswith('.rs')]
         assert len(rust_files) >= 2, "Should generate at least 2 Rust files"
         
@@ -698,7 +700,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "hook_test.yaml")
         
-        hooks_content = output_files['hooks.rs']
+        hooks_content = output_files['src/hooks.rs']
         
         # Check that hook-related code exists (may not be individual functions in Universal Template System)
         assert "process" in hooks_content or "Process" in hooks_content
@@ -710,7 +712,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "hook_test.yaml")
         
-        hooks_content = output_files['hooks.rs']
+        hooks_content = output_files['src/hooks.rs']
         
         # Check for hook management system (Universal Template System approach)
         assert "Hook" in hooks_content or "hook" in hooks_content
@@ -724,7 +726,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "hook_test.yaml")
         
-        hooks_content = output_files['hooks.rs']
+        hooks_content = output_files['src/hooks.rs']
         
         # Check that parameter access is demonstrated in comments or examples
         assert "input" in hooks_content  # Should reference the input argument
@@ -736,7 +738,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "hook_test.yaml")
         
-        main_content = output_files['main.rs']
+        main_content = output_files['src/main.rs']
         
         # Check that hooks module is imported (Universal Template System approach)
         assert "mod hooks" in main_content or "use hooks" in main_content or "hooks::" in main_content
@@ -747,11 +749,11 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "hook_test.yaml")
         
-        hooks_content = output_files['hooks.rs']
+        hooks_content = output_files['src/hooks.rs']
         
         # Check error handling patterns
         assert "Result<()>" in hooks_content
-        assert "anyhow::Result" in hooks_content or "use anyhow::Result" in hooks_content
+        assert "anyhow::Result" in hooks_content or "use anyhow::Result" in hooks_content or "use anyhow::{Result," in hooks_content
     
     def test_hook_compilation_with_cargo(self):
         """Test that generated hooks compile correctly."""
@@ -993,7 +995,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complex_test.yaml")
         
-        main_content = output_files['main.rs']
+        main_content = output_files['src/main.rs']
         
         # Check that main.rs has basic CLI structure
         assert "clap::" in main_content
@@ -1009,7 +1011,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complex_test.yaml")
         
-        main_content = output_files['main.rs']
+        main_content = output_files['src/main.rs']
         
         # Check that main.rs contains CLI building blocks
         assert "Command::new" in main_content
@@ -1025,7 +1027,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complex_test.yaml")
         
-        main_content = output_files['main.rs']
+        main_content = output_files['src/main.rs']
         
         # Check subcommand structure is present
         assert "subcommand" in main_content
@@ -1038,7 +1040,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complex_test.yaml")
         
-        main_content = output_files['main.rs']
+        main_content = output_files['src/main.rs']
         
         # Check that argument parsing infrastructure is present
         assert "ArgMatches" in main_content
@@ -1051,7 +1053,7 @@ cli:
         generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complex_test.yaml")
         
-        hooks_content = output_files['hooks.rs']
+        hooks_content = output_files['src/hooks.rs']
         
         # Check that command names appear in hooks (may not be individual functions)
         assert "server" in hooks_content or "Server" in hooks_content
