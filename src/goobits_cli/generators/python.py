@@ -12,6 +12,8 @@ from typing import List, Optional, Union, Dict
 
 import typer
 
+from jinja2 import Environment, DictLoader
+
 
 
 from . import BaseGenerator
@@ -240,6 +242,14 @@ class PythonGenerator(BaseGenerator):
         # Initialize generated files storage
 
         self._generated_files = {}
+
+        
+
+        # Initialize template environment for backward compatibility with tests
+
+        # The PythonGenerator uses Universal Template System, but tests expect a template_env
+
+        self.template_env = Environment(loader=DictLoader({}))
 
         
 
