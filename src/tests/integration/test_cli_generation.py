@@ -212,13 +212,11 @@ class TestCLIGenerationIntegration:
             "name": "testcli",
             "tagline": "Test CLI for integration",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "hello",
-                    "desc": "Say hello",
-                    "handler": "hello_handler"
+            "commands": {
+                "hello": {
+                    "desc": "Say hello"
                 }
-            ]
+            }
         })
         
         # Generate Python CLI
@@ -246,13 +244,11 @@ class TestCLIGenerationIntegration:
             "name": "testcli",
             "tagline": "Test CLI for integration",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "hello",
-                    "desc": "Say hello",
-                    "handler": "hello_handler"
+            "commands": {
+                "hello": {
+                    "desc": "Say hello"
                 }
-            ]
+            }
         })
         
         # Generate Node.js CLI
@@ -286,13 +282,11 @@ class TestCLIGenerationIntegration:
             "name": "testcli",
             "tagline": "Test CLI for integration",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "hello",
-                    "desc": "Say hello",
-                    "handler": "hello_handler"
+            "commands": {
+                "hello": {
+                    "desc": "Say hello"
                 }
-            ]
+            }
         })
         
         # Generate Rust CLI
@@ -320,13 +314,11 @@ class TestCLIGenerationIntegration:
             "name": "consistent-cli",
             "tagline": "Cross-language consistency test",
             "version": "1.0.0",
-            "commands": [
-                {
-                    "name": "test",
-                    "desc": "Test command",
-                    "handler": "test_handler"
+            "commands": {
+                "test": {
+                    "desc": "Test command"
                 }
-            ]
+            }
         })
         
         # Test each generator
