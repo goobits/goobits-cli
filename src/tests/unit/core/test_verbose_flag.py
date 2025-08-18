@@ -283,7 +283,7 @@ class TestVerboseFlag:
         import yaml
         import os
         
-        goobits_yaml_path = os.path.join(os.path.dirname(__file__), "../../../goobits.yaml")
+        goobits_yaml_path = os.path.join(os.path.dirname(__file__), "../../../../goobits.yaml")
         with open(goobits_yaml_path, 'r') as f:
             goobits_config = yaml.safe_load(f)
         
