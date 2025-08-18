@@ -6,7 +6,7 @@ from pathlib import Path
 
 from typing import Dict, List, Optional, Union
 
-from jinja2 import TemplateNotFound
+from jinja2 import TemplateNotFound, Environment, DictLoader
 import typer
 
 
@@ -199,6 +199,10 @@ class TypeScriptGenerator(NodeJSGenerator):
         self.doc_generator = None  # Will be initialized when config is available
 
         self.validator = TestDataValidator()
+
+        # Initialize template environment for backward compatibility with tests
+        # The TypeScriptGenerator uses Universal Template System, but tests expect a template_env
+        self.template_env = Environment(loader=DictLoader({}))
 
         
 
