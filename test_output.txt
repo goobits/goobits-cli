@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.4.1, pluggy-1.6.0 -- /workspace/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /workspace
+configfile: pyproject.toml
+plugins: asyncio-1.1.0, cov-6.2.1
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 682 items
+
+src/tests/e2e/test_cli_e2e.py::TestCLIE2E::test_cli_greet_command PASSED [  0%]
+src/tests/e2e/test_cli_e2e.py::TestCLIE2E::test_cli_hello_command_with_arguments PASSED [  0%]
+src/tests/e2e/test_cli_e2e.py::TestCLIE2E::test_cli_hello_command_without_required_argument PASSED [  0%]
+src/tests/e2e/test_cli_e2e.py::TestCLIE2E::test_cli_goodbye_command_with_option PASSED [  0%]
+src/tests/e2e/test_cli_e2e.py::TestCLIE2E::test_cli_help_output PASSED   [  0%]
+src/tests/e2e/test_cli_e2e.py::TestCLIE2E::test_invalid_command_shows_error PASSED [  0%]
+src/tests/e2e/test_cli_e2e.py::TestRustCLIE2E::test_rust_cli_generation_and_compilation ERROR [  1%]
+src/tests/e2e/test_cli_e2e.py::TestRustCLIE2E::test_rust_cli_command_execution ERROR [  1%]
+src/tests/e2e/test_cli_e2e.py::TestRustCLIE2E::test_rust_cli_help_output ERROR [  1%]
+src/tests/e2e/test_cli_e2e.py::TestRustCLIE2E::test_rust_cli_version_output ERROR [  1%]
+src/tests/e2e/test_cli_e2e.py::TestRustCLIE2E::test_rust_cli_invalid_command ERROR [  1%]
+src/tests/e2e/test_cli_e2e.py::TestRustCLIE2E::test_rust_cli_performance_baseline ERROR [  1%]
+src/tests/e2e/test_hook_discovery_e2e.py::TestHookDiscoveryE2E::test_custom_hooks_path_discovery PASSED [  1%]
+src/tests/e2e/test_hook_discovery_e2e.py::TestHookDiscoveryE2E::test_hook_discovery_from_different_directories PASSED [  2%]
+src/tests/e2e/test_hook_discovery_e2e.py::TestHookDiscoveryE2E::test_default_hooks_fallback PASSED [  2%]
+src/tests/e2e/test_hook_discovery_e2e.py::TestHookDiscoveryE2E::test_hook_path_conversion_function PASSED [  2%]
+src/tests/e2e/test_hook_discovery_e2e.py::TestHookDiscoveryE2E::test_full_e2e_hook_execution_workflow PASSED [  2%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_generated_files_exist PASSED [  2%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_package_json_is_valid PASSED [  2%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_nodejs_cli_help PASSED [  2%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_nodejs_cli_version PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_nodejs_cli_command_help PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_nodejs_cli_subcommand_help PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_nodejs_cli_missing_required_arg PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_setup_script_execution PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_readme_generation PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_global_options_inheritance PASSED [  3%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_complex_yaml_to_nodejs_workflow PASSED [  4%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_command_execution_simulation PASSED [  4%]
+src/tests/e2e/test_nodejs_e2e.py::TestNodeJSE2E::test_nodejs_vs_python_generation_difference PASSED [  4%]
+src/tests/e2e/test_nodejs_generator_e2e.py::TestNodeGeneratorE2E::test_nodejs_generator_e2e PASSED [  4%]
+src/tests/e2e/test_nodejs_generator_e2e.py::TestNodeGeneratorE2E::test_typescript_generator_e2e 

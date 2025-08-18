@@ -1549,11 +1549,11 @@ fi
 
         if context.get('repository'):
 
-            package_data["repository"]["url"] = context['repository']
+            package_data["repository"] = {"type": "git", "url": context['repository']}
 
         if context.get('bugs_url'):
 
-            package_data["bugs"]["url"] = context['bugs_url']
+            package_data["bugs"] = {"url": context['bugs_url']}
 
         if context.get('keywords'):
 

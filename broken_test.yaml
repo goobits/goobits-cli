@@ -1,0 +1,20 @@
+name: broken-cli
+version: 1.0.0
+language: python
+
+cli:
+  name: brokencli
+  commands:
+    - name: hello
+      description: Say hello
+      options:
+        - name: --name
+          description Name to greet  # Missing colon
+          type: string
+    - name goodbye  # Missing colon
+      description: Say goodbye
+      invalid_field: test  # Unknown field
+      options
+        - name: --message  # Invalid indentation
+        type: string
+]  # Random bracket

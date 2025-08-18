@@ -19,7 +19,7 @@ from .package_manager_utils import (
     cleanup_global_packages
 )
 from .test_configs import TestConfigTemplates, TestScenarioRunner
-from .test_installation_workflows import CLITestHelper
+from .test_installation_flows import CLITestHelper
 
 
 class IntegrationTestRunner:

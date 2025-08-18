@@ -472,12 +472,13 @@ process.exit(0);
         temp_dir = self._create_temp_dir()
         config = TestConfigTemplates.dependency_heavy_config("python")
         
-        # Modify config to include specific extras
-        config.installation.extras = {
-            "python": ["requests", "pyyaml"],
-            "apt": [],
-            "npm": None
-        }
+        # Modify config to include specific extras using proper schema
+        from goobits_cli.schemas import ExtrasSchema
+        config.installation.extras = ExtrasSchema(
+            python=["requests", "pyyaml"],
+            apt=[],
+            npm=None
+        )
         
         # Generate CLI
         from .test_installation_workflows import CLITestHelper
@@ -754,11 +755,12 @@ process.exit(0);
         config = TestConfigTemplates.dependency_heavy_config("python")
         
         # Create a scenario that might have conflicts
-        config.installation.extras = {
-            "python": ["requests>=2.25.0", "urllib3>=1.26.0"],  # Potential conflict area
-            "apt": [],
-            "npm": None
-        }
+        from goobits_cli.schemas import ExtrasSchema
+        config.installation.extras = ExtrasSchema(
+            python=["requests>=2.25.0", "urllib3>=1.26.0"],  # Potential conflict area
+            apt=[],
+            npm=None
+        )
         
         # Generate and try to install
         from .test_installation_workflows import CLITestHelper
@@ -845,6 +847,70 @@ process.exit(0);
         assert not test_venv.exists(), "Test virtual environment should be cleaned up"
         assert not (project_path / ".npm_prefix").exists(), "NPM prefix should be cleaned up"
         assert not (project_path / ".cargo_home").exists(), "Cargo home should be cleaned up"
+    
+    def test_real_cli_execution_validation(self):
+        """Test that generated CLIs actually execute correctly with real dependencies - no mocking."""
+        # Test all languages that have available package managers
+        for language in ["python", "nodejs", "rust"]:  # Skip typescript for now (compilation complexity)
+            if language == "python" and not PipManager.is_available():
+                continue
+            elif language == "nodejs" and not NpmManager.is_available():
+                continue
+            elif language == "rust" and not CargoManager.is_available():
+                continue
+            
+            print(f"Testing real CLI execution for {language}...")
+            
+            temp_dir = self._create_temp_dir()
+            config = TestConfigTemplates.minimal_config(language)
+            
+            try:
+                # Generate and install CLI using REAL package managers
+                command_name = self._generate_and_install_cli(config, temp_dir)
+                
+                # Test 1: Verify CLI is actually callable
+                help_result = subprocess.run([command_name, "--help"], 
+                                           capture_output=True, text=True, timeout=30)
+                assert help_result.returncode == 0, f"{language} CLI help failed: {help_result.stderr}"
+                assert len(help_result.stdout) > 0, f"{language} CLI help produced no output"
+                
+                # Test 2: Execute a real command to verify dependencies work
+                if language == "python":
+                    # Test that Click dependency works
+                    version_result = subprocess.run([command_name, "--version"], 
+                                                  capture_output=True, text=True, timeout=30)
+                    # Should either show version or fail gracefully (not crash with ImportError)
+                    if version_result.returncode != 0:
+                        error_text = version_result.stderr.lower()
+                        assert "importerror" not in error_text, f"Python dependency missing: {version_result.stderr}"
+                        assert "modulenotfounderror" not in error_text, f"Python module missing: {version_result.stderr}"
+                
+                elif language == "nodejs":
+                    # Test that commander dependency works
+                    # Try to run with invalid argument to trigger commander error handling
+                    invalid_result = subprocess.run([command_name, "--nonexistent-flag"], 
+                                                  capture_output=True, text=True, timeout=30)
+                    # Should get commander error, not "Cannot find module"
+                    if invalid_result.returncode != 0:
+                        error_text = invalid_result.stderr.lower()
+                        assert "cannot find module" not in error_text, f"Node.js dependency missing: {invalid_result.stderr}"
+                        assert "module_not_found" not in error_text, f"Node.js module missing: {invalid_result.stderr}"
+                
+                elif language == "rust":
+                    # Test that clap dependency works by checking help output format
+                    help_text = help_result.stdout.lower()
+                    # Clap typically generates "usage:" in help output
+                    assert "usage" in help_text or "help" in help_text, f"Rust CLI help doesn't show clap formatting: {help_result.stdout}"
+                
+                print(f"✅ {language} CLI execution validation passed")
+                
+            except subprocess.TimeoutExpired:
+                pytest.fail(f"{language} CLI execution timed out")
+            except subprocess.CalledProcessError as e:
+                if language == "rust" and "Could not connect" in str(e):
+                    pytest.skip(f"Skipping {language} due to network connectivity issues")
+                else:
+                    pytest.fail(f"{language} CLI execution failed: {e}")
 
 
 if __name__ == "__main__":

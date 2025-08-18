@@ -1,0 +1,15 @@
+name: invalid-cli
+version: 1.0.0
+language: python
+
+cli:
+  name: invalidcli
+  commands:
+    - name: hello
+      description: Say hello
+      options:
+        - name: --name
+          description: "Name to greet
+          type: string  # Unclosed quote above
+    - name: [goodbye, farewell]  # Invalid list in scalar context
+      description: Say goodbye

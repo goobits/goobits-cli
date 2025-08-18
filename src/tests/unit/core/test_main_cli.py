@@ -1,5 +1,5 @@
 """
-Tests for main CLI functionality in main.py
+Comprehensive tests for main CLI functionality in main.py
 
 This unified test suite covers all main CLI functionality:
 - CLI commands (build, init, serve, upgrade)
@@ -7,6 +7,14 @@ This unified test suite covers all main CLI functionality:
 - Template generation and processing
 - Utility functions and helpers
 - Error conditions and edge cases
+
+ORGANIZATION:
+- Mock-based tests: Test business logic with controlled inputs/outputs
+- Real generation tests: Test actual file generation and CLI execution
+- Integration tests: Test end-to-end workflows
+
+Merged from test_main_cli.py and test_main_cli_real.py to eliminate duplication
+and provide comprehensive coverage in a single organized file.
 """
 import pytest
 import tempfile
