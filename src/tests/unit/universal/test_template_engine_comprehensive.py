@@ -639,11 +639,12 @@ program.parse(process.argv);
         engine = UniversalTemplateEngine(self.templates_dir)
         
         class FileTestRenderer(MockRenderer):
-            def get_output_files(self, ir: Dict[str, Any]) -> Dict[str, str]:
+            def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
+                # Override to return custom output structure
                 return {
-                    f"{ir['project']['name']}.js": "main_cli_content",
-                    "package.json": "package_json_content",
-                    "README.md": "readme_content"
+                    "cli": f"{ir['project']['name']}.js",
+                    "main": "package.json",
+                    "readme": "README.md"
                 }
         
         renderer = FileTestRenderer("file_test")
@@ -653,12 +654,14 @@ program.parse(process.argv);
         result = engine.render(config, "file_test")
         
         files = result["files"]
-        assert "cli" in files
-        assert "main" in files
-        # The files dict contains component names as keys, with file extensions as values
-        # The FileTestRenderer inherits from MockRenderer which returns {"cli": "cli.test", "main": "main.test"}
-        assert files["cli"] == "cli.test"
-        assert files["main"] == "main.test"
+        # Now files dict contains actual file paths as keys, mapped to rendered content
+        assert "Test CLI.js" in files  # Project name is "Test CLI" 
+        assert "package.json" in files
+        assert "README.md" in files
+        
+        # Verify that components are actually rendered (not just static content)
+        assert "file_test component: cli" in files["Test CLI.js"]
+        assert "Component 'readme' not found" in files["README.md"]  # readme component doesn't exist
     
     @patch('goobits_cli.universal.template_engine.PERFORMANCE_AVAILABLE', True)
     def test_performance_integration(self):
