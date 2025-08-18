@@ -70,6 +70,23 @@ mypy src/goobits_cli/
 ruff check src/
 ```
 
+### Prerequisites
+
+For full test coverage including Rust CLI generation and compilation tests, install Cargo:
+
+```bash
+# Install Rust and Cargo (required for Rust CLI tests)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+source ~/.cargo/env
+
+# Verify installation
+cargo --version
+```
+
+**Location**: Cargo is installed to `~/.cargo/bin/` and the environment is sourced from `~/.cargo/env`
+
+Without Cargo, Rust-related tests will skip automatically with appropriate messages.
+
 ## Architecture
 
 ### Code Generation Flow

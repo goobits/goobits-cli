@@ -188,8 +188,8 @@ class CLITestHelper:
         # Try to get all files from the generator if it supports generate_all_files
         all_generated_files = {}
         try:
-            if hasattr(builder, '_generator') and hasattr(builder._generator, 'generate_all_files'):
-                all_generated_files = builder._generator.generate_all_files(config, "test_config.yaml", config.version)
+            if hasattr(builder, 'generator') and hasattr(builder.generator, 'generate_all_files'):
+                all_generated_files = builder.generator.generate_all_files(config, "test_config.yaml", config.version)
         except Exception:
             # Fall back to single file generation
             pass
@@ -205,6 +205,12 @@ class CLITestHelper:
                 
                 # Track the main CLI file
                 if filename.endswith('.py') and ('cli' in filename or 'main' in filename):
+                    result['cli_file'] = str(file_path)
+                elif filename.endswith('.js') and ('cli' in filename or 'main' in filename):
+                    result['cli_file'] = str(file_path)
+                elif filename.endswith('.ts') and ('cli' in filename or 'main' in filename):
+                    result['cli_file'] = str(file_path)
+                elif filename.endswith('.rs') and ('main' in filename):
                     result['cli_file'] = str(file_path)
                 elif filename == 'package.json':
                     result['package_file'] = str(file_path)
@@ -439,10 +445,9 @@ def print_info(message: str):
     @staticmethod
     def _generate_python_setup_structured(config: GoobitsConfigSchema, cli_file: Path) -> str:
         """Generate setup.py content for structured Python CLI."""
-        # Extract package path from CLI file
-        relative_path = cli_file.relative_to(cli_file.parts[0])  # Remove temp dir part
-        package_parts = relative_path.parts[1:-1]  # Remove 'src' and 'cli.py'
-        package_name = '.'.join(package_parts)
+        # Extract package name from config, not from file path
+        # The config.package_name (like "test-deps-cli") needs to be converted to module name
+        package_name = config.package_name.replace("-", "_")
         
         return f'''#!/usr/bin/env python3
 """Setup script for {config.package_name}."""
@@ -485,10 +490,9 @@ setup(
     @staticmethod
     def _generate_pyproject_toml_structured(config: GoobitsConfigSchema, cli_file: Path) -> str:
         """Generate pyproject.toml content for structured Python CLI."""
-        # Extract package path from CLI file
-        relative_path = cli_file.relative_to(cli_file.parts[0])  # Remove temp dir part
-        package_parts = relative_path.parts[1:-1]  # Remove 'src' and 'cli.py'
-        package_name = '.'.join(package_parts)
+        # Extract package name from config, not from file path
+        # The config.package_name (like "test-deps-cli") needs to be converted to module name
+        package_name = config.package_name.replace("-", "_")
         
         return f'''[build-system]
 requires = ["setuptools>=61.0", "wheel"]

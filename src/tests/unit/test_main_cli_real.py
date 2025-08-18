@@ -4,6 +4,7 @@ Real (unmocked) tests for the main CLI functionality.
 These tests actually generate files and run them to ensure everything works.
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -243,8 +244,7 @@ cli:
         assert project_dir is not None, "Could not find Rust project directory with Cargo.toml"
         
         # Check if cargo is available
-        cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
-        if cargo_check.returncode != 0:
+        if not shutil.which('cargo'):
             pytest.skip("Cargo not available for Rust validation")
         
         # Run cargo check to validate syntax
@@ -281,8 +281,7 @@ cli:
         assert project_dir is not None, "Could not find Rust project directory"
         
         # Check if cargo is available
-        cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
-        if cargo_check.returncode != 0:
+        if not shutil.which('cargo'):
             pytest.skip("Cargo not available for Rust compilation")
         
         # Compile the binary (use debug build for faster compilation)

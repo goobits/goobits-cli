@@ -7,6 +7,7 @@ These tests simulate the complete user experience:
 4. Verify output, stderr, and exit codes
 """
 import pytest
+import shutil
 import subprocess
 import tempfile
 import venv
@@ -281,8 +282,7 @@ class TestRustCLIE2E:
             full_path.write_text(content)
         
         # Check if Cargo is available
-        cargo_check = subprocess.run(["cargo", "--version"], capture_output=True, text=True)
-        if cargo_check.returncode != 0:
+        if not shutil.which('cargo'):
             pytest.skip("Cargo not available for Rust compilation")
         
         # Compile the Rust binary

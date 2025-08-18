@@ -7,8 +7,10 @@ package managers (pip, npm, yarn, cargo, pipx) during installation testing.
 import json
 import os
 import shutil
+import socket
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -321,11 +323,13 @@ class CargoManager:
         return shutil.which("cargo") is not None
     
     @staticmethod
-    def build(package_path: str, release: bool = False, timeout: int = 300) -> subprocess.CompletedProcess:
+    def build(package_path: str, release: bool = False, offline: bool = False, timeout: int = 300) -> subprocess.CompletedProcess:
         """Build package using cargo."""
         cmd = ["cargo", "build"]
         if release:
             cmd.append("--release")
+        if offline:
+            cmd.append("--offline")
         return subprocess.run(
             cmd, 
             cwd=package_path, 
@@ -361,9 +365,11 @@ class CargoManager:
         )
     
     @staticmethod
-    def check(package_path: str, timeout: int = 120) -> subprocess.CompletedProcess:
+    def check(package_path: str, offline: bool = False, timeout: int = 120) -> subprocess.CompletedProcess:
         """Check package for errors using cargo."""
         cmd = ["cargo", "check"]
+        if offline:
+            cmd.append("--offline")
         return subprocess.run(
             cmd, 
             cwd=package_path, 
@@ -372,6 +378,37 @@ class CargoManager:
             timeout=timeout,
             check=True
         )
+    
+    @staticmethod
+    def check_network_connectivity(timeout: int = 5) -> bool:
+        """Check if crates.io is accessible."""
+        try:
+            # Try to connect to crates.io index repository
+            response = urllib.request.urlopen(
+                'https://index.crates.io/',
+                timeout=timeout
+            )
+            return response.getcode() == 200
+        except (urllib.error.URLError, socket.timeout, OSError):
+            return False
+    
+    @staticmethod
+    def try_build_with_fallback(package_path: str, release: bool = False, timeout: int = 300) -> subprocess.CompletedProcess:
+        """Try to build with network, fall back to offline mode if network fails."""
+        try:
+            # First try normal build
+            return CargoManager.build(package_path, release=release, timeout=timeout)
+        except subprocess.CalledProcessError as e:
+            # If build fails and it's due to network issues, try offline
+            if "Could not connect" in e.stderr or "network" in e.stderr.lower():
+                try:
+                    return CargoManager.build(package_path, release=release, offline=True, timeout=timeout)
+                except subprocess.CalledProcessError:
+                    # If offline also fails, re-raise original error
+                    raise e
+            else:
+                # If it's not a network error, re-raise
+                raise e
     
     @staticmethod
     def list_installed() -> List[str]:

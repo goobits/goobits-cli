@@ -198,9 +198,20 @@ class TestDependencyResolution:
         
         elif config.language == "rust":
             if CargoManager.is_available():
-                CargoManager.build(temp_dir)
-                CargoManager.install_from_path(temp_dir)
-                self._track_installation("cargo", config.package_name)
+                try:
+                    # Try building with network fallback
+                    CargoManager.try_build_with_fallback(temp_dir)
+                    CargoManager.install_from_path(temp_dir)
+                    self._track_installation("cargo", config.package_name)
+                except subprocess.CalledProcessError as e:
+                    # If build fails due to network and offline doesn't work,
+                    # check if it's a known network issue and skip
+                    if ("Could not connect" in e.stderr or 
+                        "network" in e.stderr.lower() or
+                        "index.crates.io" in e.stderr):
+                        pytest.skip(f"Network connectivity issue with crates.io: {e.stderr[:100]}...")
+                    else:
+                        raise
             else:
                 pytest.skip("cargo not available")
         
@@ -314,6 +325,23 @@ class TestDependencyResolution:
         assert "anyhow" in content
         # Check for features specification
         assert "features" in content or "derive" in content
+        
+        # Test network-aware build validation
+        try:
+            if CargoManager.check_network_connectivity(timeout=3):
+                # Network is available, try normal check
+                CargoManager.check(temp_dir, timeout=30)
+            else:
+                # Network unavailable, skip dependency download test
+                pytest.skip("Network connectivity to crates.io unavailable")
+        except subprocess.CalledProcessError as e:
+            if ("Could not connect" in e.stderr or 
+                "network" in e.stderr.lower() or
+                "index.crates.io" in e.stderr):
+                pytest.skip(f"Network connectivity issue: {e.stderr[:100]}...")
+            else:
+                # Re-raise for other build errors
+                raise
     
     def test_dependency_version_constraints(self):
         """Test that dependency version constraints are properly specified."""
@@ -421,8 +449,17 @@ class TestDependencyResolution:
                 # Rust CLI needs to be compiled first
                 if CargoManager.is_available():
                     try:
-                        CargoManager.check(temp_dir)
+                        # Try check with offline mode if network issues
+                        if not CargoManager.check_network_connectivity():
+                            CargoManager.check(temp_dir, offline=True)
+                        else:
+                            CargoManager.check(temp_dir)
                     except subprocess.CalledProcessError as e:
+                        # Skip if it's a network connectivity issue
+                        if ("Could not connect" in e.stderr or
+                            "network" in e.stderr.lower() or
+                            "index.crates.io" in e.stderr):
+                            pytest.skip(f"Network connectivity issue: {e.stderr[:100]}...")
                         # Should fail with dependency errors if deps missing
                         assert "error" in e.stderr.lower() or "failed" in e.stderr.lower()
         
@@ -464,6 +501,40 @@ class TestDependencyResolution:
                 
             except Exception as e:
                 pytest.fail(f"Cross-platform test failed for {language}: {e}")
+    
+    def test_network_resilient_rust_dependencies(self):
+        """Test that Rust dependency tests are resilient to network issues."""
+        if not CargoManager.is_available():
+            pytest.skip("cargo not available")
+        
+        temp_dir = self._create_temp_dir()
+        config = TestConfigTemplates.minimal_config("rust")  # Use minimal config to reduce network dependencies
+        
+        # Generate CLI
+        from .test_installation_workflows import CLITestHelper
+        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        
+        # Test network connectivity and build strategy
+        network_available = CargoManager.check_network_connectivity(timeout=2)
+        
+        if network_available:
+            # Network is available, try normal build
+            try:
+                result = CargoManager.build(temp_dir, timeout=60)
+                assert result.returncode == 0, f"Build failed with network: {result.stderr}"
+            except subprocess.CalledProcessError as e:
+                if "Could not connect" in e.stderr:
+                    pytest.skip(f"Intermittent network issue: {e.stderr[:100]}...")
+                else:
+                    raise
+        else:
+            # Network unavailable, test offline capabilities
+            try:
+                # This should fail gracefully
+                CargoManager.build(temp_dir, offline=True, timeout=30)
+            except subprocess.CalledProcessError:
+                # Expected to fail if dependencies haven't been cached
+                pytest.skip("Network unavailable and dependencies not cached")
     
     def test_dependency_conflict_resolution(self):
         """Test that CLIs handle potential dependency conflicts."""
