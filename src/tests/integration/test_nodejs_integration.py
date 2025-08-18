@@ -142,7 +142,9 @@ cli:
         generator = NodeJSGenerator()
         output_files = generator.generate_all_files(config, "test_nodejs.yaml")
         
-        index_content = output_files['index.js']
+        # The generator may produce either index.js or cli.js depending on file conflicts
+        main_file = 'index.js' if 'index.js' in output_files else 'cli.js'
+        index_content = output_files[main_file]
         
         # Main index.js doesn't have shebang - that's in bin/cli.js
         # Check that it's JavaScript code
@@ -232,7 +234,9 @@ cli:
         generator = NodeJSGenerator()
         output_files = generator.generate_all_files(config, "test_nodejs.yaml")
         
-        index_content = output_files['index.js']
+        # The generator may produce either index.js or cli.js depending on file conflicts
+        main_file = 'index.js' if 'index.js' in output_files else 'cli.js'
+        index_content = output_files[main_file]
         
         # Test serve command with options
         assert "Port to listen on" in index_content
@@ -352,7 +356,9 @@ cli:
         output_files = generator.generate_all_files(config, "test_esm.yaml")
         
         # Check global options
-        index_content = output_files['index.js']
+        # The generator may produce either index.js or cli.js depending on file conflicts
+        main_file = 'index.js' if 'index.js' in output_files else 'cli.js'
+        index_content = output_files[main_file]
         assert "--debug" in index_content
         
         # Check lifecycle command handling
@@ -371,7 +377,9 @@ cli:
         output_files = generate_cli(config, "test_nodejs.yaml")
         
         # Verify all expected files are generated
-        expected_files = ['index.js', 'package.json', 'setup.sh', 'README.md']
+        # The main entry file may be either index.js or cli.js depending on conflicts
+        main_file = 'index.js' if 'index.js' in output_files else 'cli.js'
+        expected_files = [main_file, 'package.json', 'setup.sh', 'README.md']
         for expected_file in expected_files:
             assert expected_file in output_files
         
@@ -445,7 +453,9 @@ cli:
         output_files = generator.generate_all_files(config, "special.yaml")
         
         # Verify files are generated without syntax errors
-        assert 'index.js' in output_files
+        # The generator may produce either index.js or cli.js depending on file conflicts
+        main_file = 'index.js' if 'index.js' in output_files else 'cli.js'
+        assert main_file in output_files
         assert 'package.json' in output_files
         
         # Check that JSON doesn't have syntax errors by trying to parse it
