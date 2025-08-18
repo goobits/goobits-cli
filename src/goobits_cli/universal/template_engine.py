@@ -86,6 +86,43 @@ def _safe_to_dict(obj: Any) -> Dict[str, Any]:
     return {}
 
 
+def _safe_get_attr(obj: Any, attr: str, default: Any = "") -> Any:
+    """
+    Safely get an attribute from an object or dict.
+    
+    This handles cases where the object might be:
+    - A Pydantic model with attributes
+    - A plain dictionary with keys
+    - None or other types
+    
+    Args:
+        obj: Object to get attribute from
+        attr: Attribute name to get
+        default: Default value if attribute not found
+        
+    Returns:
+        Attribute value or default
+    """
+    if obj is None:
+        return default
+    
+    # If it's a dictionary, use dict access
+    if isinstance(obj, dict):
+        return obj.get(attr, default)
+    
+    # If it's an object with attributes, use getattr
+    if hasattr(obj, attr):
+        return getattr(obj, attr, default)
+    
+    # If it's a dict-like object that doesn't respond to hasattr properly
+    try:
+        return obj[attr] if attr in obj else default
+    except (TypeError, KeyError):
+        pass
+    
+    return default
+
+
 
 # Import performance optimization components
 
@@ -1034,25 +1071,25 @@ class UniversalTemplateEngine:
 
             "project": {
 
-                "name": getattr(config, 'display_name', config.command_name),
+                "name": _safe_get_attr(config, 'display_name', _safe_get_attr(config, 'command_name')),
 
-                "description": config.description,
+                "description": _safe_get_attr(config, "description"),
 
-                "version": (lambda v: v if v is not None else '1.0.0')(getattr(config.cli, 'version', '1.0.0')) if config.cli else '1.0.0',
+                "version": (lambda v: v if v is not None else '1.0.0')(_safe_get_attr(_safe_get_attr(config, 'cli', {}), 'version', '1.0.0')) if _safe_get_attr(config, 'cli') else '1.0.0',
 
-                "author": getattr(config, "author", ""),
+                "author": _safe_get_attr(config, "author"),
 
-                "license": getattr(config, "license", ""),
+                "license": _safe_get_attr(config, "license"),
 
-                "package_name": config.package_name,
+                "package_name": _safe_get_attr(config, "package_name"),
 
-                "command_name": config.command_name,
+                "command_name": _safe_get_attr(config, "command_name"),
 
-                "cli_output_path": getattr(config, "cli_output_path", None),
+                "cli_output_path": _safe_get_attr(config, "cli_output_path"),
 
-                "cli_hooks": getattr(config, "cli_hooks", None),
+                "cli_hooks": _safe_get_attr(config, "cli_hooks"),
 
-                "hooks_path": getattr(config, "hooks_path", None),
+                "hooks_path": _safe_get_attr(config, "hooks_path"),
 
             },
 
@@ -1060,11 +1097,11 @@ class UniversalTemplateEngine:
 
             "installation": {
 
-                "pypi_name": getattr(config.installation, "pypi_name", config.package_name),
+                "pypi_name": _safe_get_attr(_safe_get_attr(config, "installation", {}), "pypi_name", _safe_get_attr(config, "package_name")),
 
-                "development_path": getattr(config.installation, "development_path", "."),
+                "development_path": _safe_get_attr(_safe_get_attr(config, "installation", {}), "development_path", "."),
 
-                "extras": _safe_to_dict(getattr(config.installation, "extras", {})),
+                "extras": _safe_to_dict(_safe_get_attr(_safe_get_attr(config, "installation", {}), "extras", {})),
 
             },
 
@@ -1076,7 +1113,7 @@ class UniversalTemplateEngine:
 
                 "generator_version": "{{ version }}",  # Will be replaced during rendering
 
-                "source_config": config.model_dump(),
+                "source_config": _safe_to_dict(config),
 
                 "config_filename": config_filename,
 
@@ -1143,11 +1180,11 @@ class UniversalTemplateEngine:
             },
 
             # Preserve custom help sections
-            "tagline": getattr(cli_config, 'tagline', getattr(cli_config, 'description', 'No description')),
-            "description": getattr(cli_config, 'description', 'No description'),
-            "header_sections": getattr(cli_config, 'header_sections', []),
-            "footer_note": getattr(cli_config, 'footer_note', None),
-            "version": getattr(cli_config, 'version', '1.0.0'),
+            "tagline": _safe_get_attr(cli_config, 'tagline', _safe_get_attr(cli_config, 'description', 'No description')),
+            "description": _safe_get_attr(cli_config, 'description', 'No description'),
+            "header_sections": _safe_get_attr(cli_config, 'header_sections', []),
+            "footer_note": _safe_get_attr(cli_config, 'footer_note'),
+            "version": _safe_get_attr(cli_config, 'version', '1.0.0'),
 
         }
 
@@ -1161,15 +1198,15 @@ class UniversalTemplateEngine:
 
                 schema["root_command"]["arguments"].append({
 
-                    "name": arg.name,
+                    "name": _safe_get_attr(arg, "name"),
 
-                    "description": arg.desc,
+                    "description": _safe_get_attr(arg, "desc"),
 
-                    "type": getattr(arg, "type", "string"),
+                    "type": _safe_get_attr(arg, "type", "string"),
 
-                    "required": getattr(arg, "required", True),
+                    "required": _safe_get_attr(arg, "required", True),
 
-                    "multiple": getattr(arg, "nargs", None) == "*",
+                    "multiple": _safe_get_attr(arg, "nargs") == "*",
 
                 })
 
@@ -1183,19 +1220,19 @@ class UniversalTemplateEngine:
 
                 option_data = {
 
-                    "name": opt.name,
+                    "name": _safe_get_attr(opt, "name"),
 
-                    "short": getattr(opt, "short", None),
+                    "short": _safe_get_attr(opt, "short"),
 
-                    "description": opt.desc,
+                    "description": _safe_get_attr(opt, "desc"),
 
-                    "type": getattr(opt, "type", "str"),
+                    "type": _safe_get_attr(opt, "type", "str"),
 
-                    "default": getattr(opt, "default", None),
+                    "default": _safe_get_attr(opt, "default"),
 
                     "required": False,  # Global options typically not required
 
-                    "multiple": getattr(opt, "multiple", False),
+                    "multiple": _safe_get_attr(opt, "multiple", False),
 
                 }
 
@@ -1285,15 +1322,15 @@ class UniversalTemplateEngine:
 
                         command_data["arguments"].append({
 
-                            "name": arg.name,
+                            "name": _safe_get_attr(arg, "name"),
 
-                            "description": arg.desc,  # Note: ArgumentSchema uses 'desc'
+                            "description": _safe_get_attr(arg, "desc"),  # Note: ArgumentSchema uses 'desc'
 
-                            "type": getattr(arg, "type", "string"),
+                            "type": _safe_get_attr(arg, "type", "string"),
 
-                            "required": getattr(arg, "required", True),
+                            "required": _safe_get_attr(arg, "required", True),
 
-                            "multiple": getattr(arg, "nargs", None) == "*",
+                            "multiple": _safe_get_attr(arg, "nargs") == "*",
 
                         })
 
@@ -1307,19 +1344,19 @@ class UniversalTemplateEngine:
 
                         command_data["options"].append({
 
-                            "name": opt.name,
+                            "name": _safe_get_attr(opt, "name"),
 
-                            "short": getattr(opt, "short", None),
+                            "short": _safe_get_attr(opt, "short"),
 
-                            "description": opt.desc,  # Note: OptionSchema uses 'desc'
+                            "description": _safe_get_attr(opt, "desc"),  # Note: OptionSchema uses 'desc'
 
-                            "type": getattr(opt, "type", "str"),
+                            "type": _safe_get_attr(opt, "type", "str"),
 
-                            "default": getattr(opt, "default", None),
+                            "default": _safe_get_attr(opt, "default"),
 
                             "required": False,  # Options are typically not required
 
-                            "multiple": getattr(opt, "multiple", False),
+                            "multiple": _safe_get_attr(opt, "multiple", False),
 
                         })
 
@@ -1371,7 +1408,7 @@ class UniversalTemplateEngine:
 
                 "name": cmd_name,
 
-                "description": cmd.desc,
+                "description": _safe_get_attr(cmd, "desc"),
 
                 "arguments": [],
 
@@ -1393,15 +1430,15 @@ class UniversalTemplateEngine:
 
                     command_data["arguments"].append({
 
-                        "name": arg.name,
+                        "name": _safe_get_attr(arg, "name"),
 
-                        "description": arg.desc,
+                        "description": _safe_get_attr(arg, "desc"),
 
-                        "type": getattr(arg, "type", "string"),
+                        "type": _safe_get_attr(arg, "type", "string"),
 
-                        "required": getattr(arg, "required", True),
+                        "required": _safe_get_attr(arg, "required", True),
 
-                        "multiple": getattr(arg, "nargs", None) == "*",
+                        "multiple": _safe_get_attr(arg, "nargs") == "*",
 
                     })
 
@@ -1413,19 +1450,19 @@ class UniversalTemplateEngine:
 
                     command_data["options"].append({
 
-                        "name": opt.name,
+                        "name": _safe_get_attr(opt, "name"),
 
-                        "short": getattr(opt, "short", None),
+                        "short": _safe_get_attr(opt, "short"),
 
-                        "description": opt.desc,
+                        "description": _safe_get_attr(opt, "desc"),
 
-                        "type": getattr(opt, "type", "str"),
+                        "type": _safe_get_attr(opt, "type", "str"),
 
-                        "default": getattr(opt, "default", None),
+                        "default": _safe_get_attr(opt, "default"),
 
                         "required": False,
 
-                        "multiple": getattr(opt, "multiple", False),
+                        "multiple": _safe_get_attr(opt, "multiple", False),
 
                     })
 
@@ -1473,9 +1510,9 @@ class UniversalTemplateEngine:
 
             command_data = {
 
-                "name": cmd.name,
+                "name": _safe_get_attr(cmd, "name"),
 
-                "description": cmd.description,
+                "description": _safe_get_attr(cmd, "description"),
 
                 "arguments": [],
 
@@ -1483,7 +1520,7 @@ class UniversalTemplateEngine:
 
                 "subcommands": [],
 
-                "hook_name": f"on_{cmd.name.replace('-', '_')}",
+                "hook_name": f"on_{_safe_get_attr(cmd, 'name', '').replace('-', '_')}",
 
             }
 
@@ -1497,15 +1534,15 @@ class UniversalTemplateEngine:
 
                     command_data["arguments"].append({
 
-                        "name": arg.name,
+                        "name": _safe_get_attr(arg, "name"),
 
-                        "description": arg.description,
+                        "description": _safe_get_attr(arg, "description"),
 
-                        "type": getattr(arg, "type", "string"),
+                        "type": _safe_get_attr(arg, "type", "string"),
 
-                        "required": getattr(arg, "required", True),
+                        "required": _safe_get_attr(arg, "required", True),
 
-                        "multiple": getattr(arg, "multiple", False),
+                        "multiple": _safe_get_attr(arg, "multiple", False),
 
                     })
 
@@ -1517,19 +1554,19 @@ class UniversalTemplateEngine:
 
                     command_data["options"].append({
 
-                        "name": opt.name,
+                        "name": _safe_get_attr(opt, "name"),
 
-                        "short": getattr(opt, "short", None),
+                        "short": _safe_get_attr(opt, "short"),
 
-                        "description": opt.description,
+                        "description": _safe_get_attr(opt, "description"),
 
-                        "type": getattr(opt, "type", "string"),
+                        "type": _safe_get_attr(opt, "type", "string"),
 
-                        "default": getattr(opt, "default", None),
+                        "default": _safe_get_attr(opt, "default"),
 
-                        "required": getattr(opt, "required", False),
+                        "required": _safe_get_attr(opt, "required", False),
 
-                        "multiple": getattr(opt, "multiple", False),
+                        "multiple": _safe_get_attr(opt, "multiple", False),
 
                     })
 
@@ -1587,17 +1624,18 @@ class UniversalTemplateEngine:
 
         # Extract from dependencies section
 
-        if hasattr(config, 'dependencies') and config.dependencies:
+        dependencies_obj = _safe_get_attr(config, 'dependencies')
+        if dependencies_obj:
 
             # Handle required dependencies
 
-            if config.dependencies.required:
+            if _safe_get_attr(dependencies_obj, 'required'):
 
-                for dep in config.dependencies.required:
+                for dep in _safe_get_attr(dependencies_obj, 'required', []):
 
                     if hasattr(dep, 'name'):  # DependencyItem object
 
-                        dependencies["python"].append(dep.name)
+                        dependencies["python"].append(_safe_get_attr(dep, "name"))
 
                     else:  # String
 
@@ -1607,13 +1645,13 @@ class UniversalTemplateEngine:
 
             # Handle optional dependencies  
 
-            if config.dependencies.optional:
+            if _safe_get_attr(dependencies_obj, 'optional'):
 
-                for dep in config.dependencies.optional:
+                for dep in _safe_get_attr(dependencies_obj, 'optional', []):
 
                     if hasattr(dep, 'name'):  # DependencyItem object
 
-                        dependencies["python"].append(dep.name)
+                        dependencies["python"].append(_safe_get_attr(dep, "name"))
 
                     else:  # String
 
@@ -1623,9 +1661,10 @@ class UniversalTemplateEngine:
 
         # Extract from installation extras
 
-        if hasattr(config, 'installation') and config.installation:
+        installation_obj = _safe_get_attr(config, 'installation')
+        if installation_obj:
 
-            extras = getattr(config.installation, 'extras', {})
+            extras = _safe_get_attr(installation_obj, 'extras', {})
 
             if isinstance(extras, dict):
 
