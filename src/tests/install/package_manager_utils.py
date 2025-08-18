@@ -25,6 +25,53 @@ class PackageInstallationError(Exception):
     pass
 
 
+class TestEnvironmentManager:
+    """Manages test-scoped environments and PATH isolation."""
+    
+    @staticmethod
+    def create_test_environment(project_dir: str, language: str) -> dict:
+        """Create isolated environment for test execution."""
+        test_env = os.environ.copy()
+        project_path = Path(project_dir).resolve()
+        
+        if language == "python":
+            venv_path = project_path / ".test_venv"
+            if venv_path.exists():
+                bin_path = venv_path / "bin"
+                if not bin_path.exists():
+                    bin_path = venv_path / "Scripts"  # Windows
+                test_env['PATH'] = f"{bin_path}{os.pathsep}{test_env['PATH']}"
+                test_env['VIRTUAL_ENV'] = str(venv_path)
+                
+        elif language in ["nodejs", "typescript"]:
+            npm_prefix = project_path / ".npm_prefix"
+            if npm_prefix.exists():
+                bin_path = npm_prefix / "bin"
+                test_env['PATH'] = f"{bin_path}{os.pathsep}{test_env['PATH']}"
+                test_env['npm_config_prefix'] = str(npm_prefix)
+                
+        elif language == "rust":
+            cargo_home = project_path / ".cargo_home"
+            if cargo_home.exists():
+                bin_path = cargo_home / "bin"
+                test_env['PATH'] = f"{bin_path}{os.pathsep}{test_env['PATH']}"
+                test_env['CARGO_HOME'] = str(cargo_home)
+                test_env['CARGO_INSTALL_ROOT'] = str(cargo_home)
+                
+        return test_env
+    
+    @staticmethod
+    def cleanup_test_environment(project_dir: str):
+        """Clean up test-scoped environment files."""
+        project_path = Path(project_dir)
+        
+        # Remove test virtual environments
+        for env_dir in [".test_venv", ".npm_prefix", ".cargo_home"]:
+            env_path = project_path / env_dir
+            if env_path.exists():
+                shutil.rmtree(env_path, ignore_errors=True)
+
+
 class PipManager:
     """Utility class for pip package manager interactions."""
     
@@ -54,6 +101,29 @@ class PipManager:
             timeout=timeout,
             check=True
         )
+    
+    @staticmethod
+    def install_editable_scoped(project_dir: str, venv_path: str = None) -> subprocess.CompletedProcess:
+        """Install package in editable mode within a scoped virtual environment."""
+        if venv_path is None:
+            venv_path = f"{project_dir}/.test_venv"
+        
+        project_path = Path(project_dir).resolve()
+        venv_path = Path(venv_path).resolve()
+        
+        # Create virtual environment if it doesn't exist
+        if not venv_path.exists():
+            result = subprocess.run([sys.executable, "-m", "venv", str(venv_path)], 
+                                  capture_output=True, text=True, check=True)
+        
+        # Install in virtual environment
+        pip_exe = venv_path / "bin" / "pip"
+        if not pip_exe.exists():
+            pip_exe = venv_path / "Scripts" / "pip.exe"  # Windows
+        
+        return subprocess.run([
+            str(pip_exe), "install", "-e", "."
+        ], cwd=str(project_path), capture_output=True, text=True, check=True)
     
     @staticmethod
     def install_from_path(package_path: str, timeout: int = 120) -> subprocess.CompletedProcess:
@@ -178,6 +248,48 @@ class NpmManager:
             timeout=timeout,
             check=True
         )
+    
+    @staticmethod
+    def install_with_prefix(project_dir: str, prefix_path: str = None) -> subprocess.CompletedProcess:
+        """Install npm package with isolated prefix to avoid global pollution."""
+        if prefix_path is None:
+            prefix_path = f"{project_dir}/.npm_prefix"
+        
+        project_path = Path(project_dir).resolve()
+        prefix_path = Path(prefix_path).resolve()
+        
+        # Create prefix directory
+        prefix_path.mkdir(exist_ok=True)
+        
+        # Install dependencies first in the project directory
+        install_result = subprocess.run([
+            "npm", "install"
+        ], cwd=str(project_path), capture_output=True, text=True, check=True)
+        
+        # Then install the package itself to the prefix
+        env = os.environ.copy()
+        env['npm_config_prefix'] = str(prefix_path)
+        
+        return subprocess.run([
+            "npm", "install", "-g", str(project_path)
+        ], capture_output=True, text=True, env=env, check=True)
+
+    @staticmethod  
+    def link_with_prefix(project_dir: str, prefix_path: str = None) -> subprocess.CompletedProcess:
+        """Create local link without affecting global npm packages."""
+        if prefix_path is None:
+            prefix_path = f"{project_dir}/.npm_prefix"
+            
+        project_path = Path(project_dir).resolve()
+        prefix_path = Path(prefix_path).resolve()
+        
+        # Create local symlink in prefix bin directory
+        env = os.environ.copy()
+        env['npm_config_prefix'] = str(prefix_path)
+        
+        return subprocess.run([
+            "npm", "link", "--prefix", str(prefix_path)
+        ], cwd=str(project_path), capture_output=True, text=True, env=env, check=True)
     
     @staticmethod
     def unlink_global(package_name: str, timeout: int = 60) -> subprocess.CompletedProcess:
@@ -353,6 +465,35 @@ class CargoManager:
         )
     
     @staticmethod
+    def install_from_path_scoped(project_dir: str, cargo_home: str = None) -> subprocess.CompletedProcess:
+        """Install package from path using cargo with scoped CARGO_HOME."""
+        if cargo_home is None:
+            cargo_home = f"{project_dir}/.cargo_home"
+        
+        project_path = Path(project_dir).resolve()
+        cargo_home_path = Path(cargo_home).resolve()
+        
+        # Create cargo home directory
+        cargo_home_path.mkdir(exist_ok=True)
+        (cargo_home_path / "bin").mkdir(exist_ok=True)
+        
+        # Set scoped cargo environment
+        env = os.environ.copy()
+        env['CARGO_HOME'] = str(cargo_home_path)
+        env['CARGO_INSTALL_ROOT'] = str(cargo_home_path)
+        
+        cmd = ["cargo", "install", "--path", ".", "--root", str(cargo_home_path)]
+        return subprocess.run(
+            cmd, 
+            cwd=str(project_path), 
+            capture_output=True, 
+            text=True, 
+            env=env,
+            timeout=300,
+            check=True
+        )
+    
+    @staticmethod
     def uninstall(package_name: str, timeout: int = 60) -> subprocess.CompletedProcess:
         """Uninstall package using cargo."""
         cmd = ["cargo", "uninstall", package_name]
@@ -443,6 +584,11 @@ class PackageManagerRegistry:
         "yarn": YarnManager,
         "cargo": CargoManager
     }
+    
+    @classmethod
+    def get_test_environment_manager(cls):
+        """Get the test environment manager for scoped testing."""
+        return TestEnvironmentManager
     
     @classmethod
     def get_manager(cls, name: str):

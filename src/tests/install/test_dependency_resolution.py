@@ -16,7 +16,7 @@ import pytest
 
 from .package_manager_utils import (
     PackageManagerRegistry, validate_installation_environment,
-    PipManager, NpmManager, CargoManager
+    PipManager, NpmManager, CargoManager, TestEnvironmentManager
 )
 from .test_configs import TestConfigTemplates
 from goobits_cli.schemas import GoobitsConfigSchema
@@ -117,20 +117,69 @@ class DependencyValidator:
                 results[cmd] = False
         
         return results
+    
+    @staticmethod
+    def check_runtime_dependencies_with_env(command_name: str, test_env: dict, test_commands: List[str] = None) -> Dict[str, bool]:
+        """Check if CLI can run without dependency errors using provided environment."""
+        if test_commands is None:
+            test_commands = ["--help", "--version"]
+        
+        results = {}
+        
+        for cmd in test_commands:
+            try:
+                result = subprocess.run(
+                    [command_name, cmd],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    env=test_env,
+                    check=False
+                )
+                # Success if command runs without import/dependency errors
+                success = (
+                    result.returncode == 0 and
+                    "ImportError" not in result.stderr and
+                    "ModuleNotFoundError" not in result.stderr and
+                    "Error: Cannot find module" not in result.stderr and
+                    "dylib" not in result.stderr.lower()
+                )
+                results[cmd] = success
+                # Debug info when test fails
+                if not success:
+                    print(f"Debug: Command '{command_name} {cmd}' failed")
+                    print(f"Return code: {result.returncode}")
+                    print(f"Stdout: {result.stdout[:200]}")
+                    print(f"Stderr: {result.stderr[:200]}")
+            except (FileNotFoundError, subprocess.TimeoutExpired) as e:
+                results[cmd] = False
+                print(f"Debug: Command '{command_name} {cmd}' exception: {e}")
+        
+        return results
 
 
 class TestDependencyResolution:
     """Test dependency resolution for generated CLIs."""
     
-    @pytest.fixture(autouse=True)
-    def setup_method(self):
-        """Set up test environment."""
+    def setup_method(self, method):
+        """Set up test environment and track original state."""
         self.temp_dirs = []
         self.installed_packages = []
         self.env_info = validate_installation_environment()
+        
+        # Store original PATH for restoration
+        self._original_path = os.environ.get('PATH', '')
+        
+        # Store original NODE_PATH if it exists
+        self._original_node_path = os.environ.get('NODE_PATH', '')
     
-    def teardown_method(self):
-        """Clean up test environment."""
+    def teardown_method(self, method):
+        """Clean up after each test method to prevent pollution."""
+        # Clean up test-scoped environments first
+        for temp_dir in self.temp_dirs:
+            if Path(temp_dir).exists():
+                TestEnvironmentManager.cleanup_test_environment(temp_dir)
+        
         # Clean up temporary directories
         for temp_dir in self.temp_dirs:
             if Path(temp_dir).exists():
@@ -143,6 +192,15 @@ class TestDependencyResolution:
                 self._cleanup_package(package_info)
             except Exception:
                 pass
+        
+        # Clean up global npm packages
+        self._cleanup_npm_global_packages()
+        
+        # Clean up pip installed packages
+        self._cleanup_pip_packages()
+        
+        # Reset environment PATH
+        self._reset_environment_path()
     
     def _create_temp_dir(self) -> str:
         """Create temporary directory for testing."""
@@ -169,53 +227,106 @@ class TestDependencyResolution:
         elif manager_name == "cargo":
             CargoManager.uninstall(package_name)
     
+    def _cleanup_npm_global_packages(self):
+        """Remove globally linked npm packages."""
+        for package_info in self.installed_packages:
+            if package_info["manager"] == "npm":
+                try:
+                    # Try npm unlink first
+                    subprocess.run(["npm", "unlink", "-g", package_info["package"]], 
+                                 capture_output=True, check=False, timeout=30)
+                    # Also try npm uninstall as fallback
+                    subprocess.run(["npm", "uninstall", "-g", package_info["package"]], 
+                                 capture_output=True, check=False, timeout=30)
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    pass
+    
+    def _cleanup_pip_packages(self):
+        """Remove pip installed packages."""
+        for package_info in self.installed_packages:
+            if package_info["manager"] == "pip":
+                try:
+                    subprocess.run(["pip", "uninstall", "-y", package_info["package"]], 
+                                 capture_output=True, check=False, timeout=30)
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    pass
+    
+    def _reset_environment_path(self):
+        """Reset PATH to original state."""
+        if hasattr(self, '_original_path'):
+            os.environ['PATH'] = self._original_path
+        if hasattr(self, '_original_node_path'):
+            if self._original_node_path:
+                os.environ['NODE_PATH'] = self._original_node_path
+            elif 'NODE_PATH' in os.environ:
+                del os.environ['NODE_PATH']
+    
     def _generate_and_install_cli(self, config: GoobitsConfigSchema, temp_dir: str) -> str:
         """Generate CLI and install it, returning the command name."""
         from .test_installation_workflows import CLITestHelper
         
-        # Generate CLI files
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        # Create unique package name to prevent conflicts
+        timestamp = int(time.time() * 1000)
+        test_id = f"{timestamp}_{id(self) % 10000}"  # Add object id for extra uniqueness
+        original_package_name = config.package_name
+        original_command_name = config.command_name
         
-        # Install based on language
-        if config.language == "python":
-            if PipManager.is_available():
-                PipManager.install_editable(temp_dir)
-                self._track_installation("pip", config.package_name)
-            else:
-                pytest.skip("pip not available")
+        # Make package names unique with test isolation
+        config.package_name = f"{original_package_name}-test-{test_id}"
+        config.command_name = f"{original_command_name}-test-{test_id}"
         
-        elif config.language in ["nodejs", "typescript"]:
-            if NpmManager.is_available():
-                NpmManager.install_dependencies(temp_dir)
-                
-                if config.language == "typescript":
-                    NpmManager.run_script("build", temp_dir)
-                
-                NpmManager.link_global(temp_dir)
-                self._track_installation("npm", config.package_name)
-            else:
-                pytest.skip("npm not available")
+        try:
+            # Generate CLI files
+            generated_files = CLITestHelper.generate_cli(config, temp_dir)
+            
+            # Install based on language using scoped environments
+            if config.language == "python":
+                if PipManager.is_available():
+                    # Use scoped installation instead of global
+                    PipManager.install_editable_scoped(temp_dir)
+                    self._track_installation("pip", config.package_name)
+                else:
+                    pytest.skip("pip not available")
+            
+            elif config.language in ["nodejs", "typescript"]:
+                if NpmManager.is_available():
+                    # Use prefix-based installation to avoid global pollution
+                    NpmManager.install_with_prefix(temp_dir)
+                    
+                    if config.language == "typescript":
+                        NpmManager.run_script("build", temp_dir)
+                    
+                    NpmManager.link_with_prefix(temp_dir)
+                    self._track_installation("npm", config.package_name)
+                else:
+                    pytest.skip("npm not available")
+            
+            elif config.language == "rust":
+                if CargoManager.is_available():
+                    try:
+                        # Try building with network fallback
+                        CargoManager.try_build_with_fallback(temp_dir)
+                        # Use scoped cargo installation
+                        CargoManager.install_from_path_scoped(temp_dir)
+                        self._track_installation("cargo", config.package_name)
+                    except subprocess.CalledProcessError as e:
+                        # If build fails due to network and offline doesn't work,
+                        # check if it's a known network issue and skip
+                        if ("Could not connect" in e.stderr or 
+                            "network" in e.stderr.lower() or
+                            "index.crates.io" in e.stderr):
+                            pytest.skip(f"Network connectivity issue with crates.io: {e.stderr[:100]}...")
+                        else:
+                            raise
+                else:
+                    pytest.skip("cargo not available")
+            
+            return config.command_name  # Return the unique command name
         
-        elif config.language == "rust":
-            if CargoManager.is_available():
-                try:
-                    # Try building with network fallback
-                    CargoManager.try_build_with_fallback(temp_dir)
-                    CargoManager.install_from_path(temp_dir)
-                    self._track_installation("cargo", config.package_name)
-                except subprocess.CalledProcessError as e:
-                    # If build fails due to network and offline doesn't work,
-                    # check if it's a known network issue and skip
-                    if ("Could not connect" in e.stderr or 
-                        "network" in e.stderr.lower() or
-                        "index.crates.io" in e.stderr):
-                        pytest.skip(f"Network connectivity issue with crates.io: {e.stderr[:100]}...")
-                    else:
-                        raise
-            else:
-                pytest.skip("cargo not available")
-        
-        return config.command_name
+        finally:
+            # Restore original names for any subsequent operations
+            config.package_name = original_package_name
+            config.command_name = original_command_name
     
     @pytest.mark.parametrize("language", ["python", "nodejs", "typescript", "rust"])
     def test_minimal_dependencies(self, language):
@@ -557,18 +668,86 @@ class TestDependencyResolution:
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         try:
-            PipManager.install_editable(temp_dir)
+            # Use scoped installation to prevent global conflicts
+            PipManager.install_editable_scoped(temp_dir)
             self._track_installation("pip", config.package_name)
+            
+            # Create test environment for runtime testing
+            test_env = TestEnvironmentManager.create_test_environment(temp_dir, "python")
             
             # Test that CLI works despite potential conflicts
             command_name = config.command_name
-            runtime_results = DependencyValidator.check_runtime_dependencies(command_name)
+            runtime_results = DependencyValidator.check_runtime_dependencies_with_env(
+                command_name, test_env)
             assert all(runtime_results.values()), f"Dependency conflicts caused runtime issues: {runtime_results}"
             
         except subprocess.CalledProcessError as e:
             # If installation fails due to conflicts, that's acceptable
             # But the error should be informative
             assert "conflict" in e.stderr.lower() or "incompatible" in e.stderr.lower()
+
+
+    def test_cross_language_isolation(self):
+        """Test that different language tests don't interfere with each other."""
+        # Test Python followed by Node.js installation
+        python_temp_dir = self._create_temp_dir()
+        python_config = TestConfigTemplates.minimal_config("python")
+        
+        nodejs_temp_dir = self._create_temp_dir()
+        nodejs_config = TestConfigTemplates.minimal_config("nodejs")
+        
+        # Install Python CLI in scoped environment
+        if PipManager.is_available():
+            python_command = self._generate_and_install_cli(python_config, python_temp_dir)
+            python_env = TestEnvironmentManager.create_test_environment(python_temp_dir, "python")
+            
+            # Verify Python CLI works in its environment
+            python_results = DependencyValidator.check_runtime_dependencies_with_env(
+                python_command, python_env)
+            assert all(python_results.values()), f"Python CLI failed in scoped environment: {python_results}"
+        else:
+            pytest.skip("pip not available")
+        
+        # Install Node.js CLI in separate scoped environment
+        if NpmManager.is_available():
+            nodejs_command = self._generate_and_install_cli(nodejs_config, nodejs_temp_dir)
+            nodejs_env = TestEnvironmentManager.create_test_environment(nodejs_temp_dir, "nodejs")
+            
+            # Verify Node.js CLI works in its environment
+            nodejs_results = DependencyValidator.check_runtime_dependencies_with_env(
+                nodejs_command, nodejs_env)
+            assert all(nodejs_results.values()), f"Node.js CLI failed in scoped environment: {nodejs_results}"
+            
+            # Verify Python CLI still works (no cross-contamination)
+            python_results_after = DependencyValidator.check_runtime_dependencies_with_env(
+                python_command, python_env)
+            assert all(python_results_after.values()), f"Python CLI contaminated by Node.js installation: {python_results_after}"
+        else:
+            pytest.skip("npm not available")
+    
+    def test_environment_cleanup_effectiveness(self):
+        """Test that environment cleanup properly removes all test artifacts."""
+        temp_dir = self._create_temp_dir()
+        config = TestConfigTemplates.minimal_config("python")
+        
+        if not PipManager.is_available():
+            pytest.skip("pip not available")
+        
+        # Install CLI in scoped environment
+        PipManager.install_editable_scoped(temp_dir)
+        
+        # Verify test environment files exist
+        project_path = Path(temp_dir)
+        test_venv = project_path / ".test_venv"
+        assert test_venv.exists(), "Test virtual environment should be created"
+        
+        # Clean up test environment
+        TestEnvironmentManager.cleanup_test_environment(temp_dir)
+        
+        # Verify cleanup removed all artifacts
+        assert not test_venv.exists(), "Test virtual environment should be cleaned up"
+        assert not (project_path / ".npm_prefix").exists(), "NPM prefix should be cleaned up"
+        assert not (project_path / ".cargo_home").exists(), "Cargo home should be cleaned up"
 
 
 if __name__ == "__main__":

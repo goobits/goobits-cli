@@ -337,17 +337,9 @@ class TypeScriptRenderer(LanguageRenderer):
 
             'typescript_config': 'tsconfig.json',
 
-            'typescript_build_config': 'tsconfig.build.json',
-
             'eslint_config': '.eslintrc.json',
 
             'prettier_config': '.prettierrc',
-
-            'esbuild_config': 'esbuild.config.js',
-
-            'rollup_config': 'rollup.config.js',
-
-            'webpack_config': 'webpack.config.js',
 
             
 
@@ -699,7 +691,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
     def _generate_build_config(self, ir: Dict[str, Any]) -> Dict[str, Any]:
 
-        """Generate TypeScript build configuration."""
+        """Generate simple TypeScript build configuration."""
 
         return {
 
@@ -707,11 +699,11 @@ class TypeScriptRenderer(LanguageRenderer):
 
                 'compilerOptions': {
 
-                    'target': 'ES2022',
+                    'target': 'ES2020',
 
-                    'module': 'NodeNext',
+                    'module': 'CommonJS',
 
-                    'moduleResolution': 'NodeNext',
+                    'moduleResolution': 'node',
 
                     'outDir': './dist',
 
@@ -722,8 +714,6 @@ class TypeScriptRenderer(LanguageRenderer):
                     'skipLibCheck': True,
 
                     'declaration': True,
-
-                    'declarationMap': True,
 
                     'sourceMap': True
 
