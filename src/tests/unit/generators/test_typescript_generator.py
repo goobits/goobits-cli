@@ -24,9 +24,10 @@ class TestTypeScriptGenerator:
         # Create a minimal config
         config = ConfigSchema(cli=CLISchema(
             name="test-cli",
+            tagline="Test CLI",
             description="Test CLI",
             version="1.0.0",
-            commands=[]
+            commands={}
         ))
         
         generator = TypeScriptGenerator(use_universal_templates=False)
@@ -42,15 +43,14 @@ class TestTypeScriptGenerator:
         """Test generation with commands."""
         config = ConfigSchema(cli=CLISchema(
             name="test-cli",
+            tagline="Test CLI",
             description="Test CLI",
             version="1.0.0",
-            commands=[
-                CommandSchema(
-                    name="hello",
-                    description="Say hello",
-                    handler="hello_handler"
+            commands={
+                "hello": CommandSchema(
+                    desc="Say hello"
                 )
-            ]
+            }
         ))
         
         generator = TypeScriptGenerator(use_universal_templates=False)
@@ -69,9 +69,10 @@ class TestTypeScriptGenerator:
         
         config = ConfigSchema(cli=CLISchema(
             name="test-cli",
+            tagline="Test CLI",
             description="Test CLI", 
             version="1.0.0",
-            commands=[]
+            commands={}
         ))
         
         generator = TypeScriptGenerator()
