@@ -203,6 +203,10 @@ class CLITestHelper:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(content)
                 
+                # Make files executable as needed (matching main.py logic)
+                if filename.startswith('bin/') or filename in ['setup.sh'] or (filename.endswith('.js') and 'cli' in filename):
+                    file_path.chmod(0o755)
+                
                 # Track the main CLI file
                 if filename.endswith('.py') and ('cli' in filename or 'main' in filename):
                     result['cli_file'] = str(file_path)
@@ -236,6 +240,11 @@ class CLITestHelper:
             
             # Write the generated CLI file
             cli_file.write_text(generated_code)
+            
+            # Make CLI file executable if it's a JavaScript file
+            if config.language in ["nodejs", "typescript"] and cli_file.name.endswith('.js'):
+                cli_file.chmod(0o755)
+            
             result = {"cli_file": str(cli_file)}
         
         # For Python, ensure we have the proper package structure and setup files

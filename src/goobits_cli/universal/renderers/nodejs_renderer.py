@@ -369,6 +369,8 @@ class NodeJSRenderer(LanguageRenderer):
 
             "bin_entry": "bin/cli.js",
 
+            "postinstall_script": "scripts/postinstall.js",
+
             "readme": "README.md",
 
             "gitignore": ".gitignore",

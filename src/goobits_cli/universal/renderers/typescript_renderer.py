@@ -333,6 +333,8 @@ class TypeScriptRenderer(LanguageRenderer):
 
             'package_config': 'package.json',
 
+            'postinstall_script': 'scripts/postinstall.js',
+
             'typescript_config': 'tsconfig.json',
 
             'typescript_build_config': 'tsconfig.build.json',
