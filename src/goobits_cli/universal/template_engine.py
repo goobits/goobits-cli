@@ -38,6 +38,54 @@ def _get_config_schema():
     return _config_schema
 
 
+def _safe_to_dict(obj: Any) -> Dict[str, Any]:
+    """
+    Safely convert a Pydantic model or dict to a plain dictionary.
+    
+    This handles the type conversion issues where objects might be:
+    - Pydantic v2 models (with model_dump())
+    - Pydantic v1 models (with dict())
+    - Plain dictionaries already
+    - None or other types
+    
+    Args:
+        obj: Object to convert to dict
+        
+    Returns:
+        Dictionary representation of the object
+    """
+    if obj is None:
+        return {}
+    
+    # If it's already a dict, return it as-is
+    if isinstance(obj, dict):
+        return obj
+    
+    # Try Pydantic v2 model_dump() first
+    if hasattr(obj, 'model_dump') and callable(getattr(obj, 'model_dump')):
+        try:
+            return obj.model_dump()
+        except Exception:
+            pass
+    
+    # Try Pydantic v1 dict() method
+    if hasattr(obj, 'dict') and callable(getattr(obj, 'dict')):
+        try:
+            return obj.dict()
+        except Exception:
+            pass
+    
+    # If all else fails, try to convert using vars() or return empty dict
+    try:
+        if hasattr(obj, '__dict__'):
+            return vars(obj)
+    except Exception:
+        pass
+    
+    # Last resort: return empty dict
+    return {}
+
+
 
 # Import performance optimization components
 
@@ -780,7 +828,8 @@ class UniversalTemplateEngine:
 
         # Build intermediate representation (with caching if available)
 
-        ir_cache_key = f"ir_{hash(str(config.model_dump()))}"
+        config_dict = _safe_to_dict(config)
+        ir_cache_key = f"ir_{hash(str(config_dict))}"
 
         
 
@@ -974,7 +1023,10 @@ class UniversalTemplateEngine:
 
         # Extract CLI schema information
 
-        cli_schema = self._extract_config_schema(config.cli)
+        # Convert config to dict for safe access
+        config_dict = _safe_to_dict(config)
+        
+        cli_schema = self._extract_config_schema(config_dict.get('cli', {}))
 
         
 
@@ -1012,7 +1064,7 @@ class UniversalTemplateEngine:
 
                 "development_path": getattr(config.installation, "development_path", "."),
 
-                "extras": getattr(config.installation, "extras", {}).model_dump() if hasattr(getattr(config.installation, "extras", {}), 'model_dump') else getattr(config.installation, "extras", {}).dict() if hasattr(getattr(config.installation, "extras", {}), 'dict') else {},
+                "extras": _safe_to_dict(getattr(config.installation, "extras", {})),
 
             },
 
@@ -1057,16 +1109,18 @@ class UniversalTemplateEngine:
             Normalized CLI schema
 
         """
+        # Convert cli_config to dict for safe access
+        cli_dict = _safe_to_dict(cli_config)
 
         schema = {
 
             "root_command": {
 
-                "name": cli_config.name,
+                "name": cli_dict.get('name', ''),
 
-                "description": getattr(cli_config, 'description', cli_config.tagline),
+                "description": cli_dict.get('description', cli_dict.get('tagline', '')),
 
-                "version": (lambda v: v if v is not None else '1.0.0')(getattr(cli_config, 'version', '1.0.0')),
+                "version": (lambda v: v if v is not None else '1.0.0')(cli_dict.get('version', '1.0.0')),
 
                 "arguments": [],
 
@@ -1101,9 +1155,9 @@ class UniversalTemplateEngine:
 
         # Extract arguments (CLI root rarely has arguments in current schema)
 
-        if hasattr(cli_config, 'args') and cli_config.args:
+        if 'args' in cli_dict and cli_dict['args']:
 
-            for arg in cli_config.args:
+            for arg in cli_dict['args']:
 
                 schema["root_command"]["arguments"].append({
 
@@ -1123,9 +1177,9 @@ class UniversalTemplateEngine:
 
         # Extract options
 
-        if hasattr(cli_config, 'options') and cli_config.options:
+        if 'options' in cli_dict and cli_dict['options']:
 
-            for opt in cli_config.options:
+            for opt in cli_dict['options']:
 
                 option_data = {
 
@@ -1151,15 +1205,65 @@ class UniversalTemplateEngine:
 
         # Extract subcommands
 
-        if hasattr(cli_config, 'commands') and cli_config.commands:
-
-            for cmd_name, cmd in cli_config.commands.items():
+        if 'commands' in cli_dict and cli_dict['commands']:
+            commands = cli_dict['commands']
+            
+            if isinstance(commands, dict):
+                # Old format: {"hello": {...}}
+                for cmd_name, cmd in commands.items():
+                    cmd_dict = _safe_to_dict(cmd)
+                    
+                    command_data = {
+                        "name": cmd_name,
+                        "description": cmd_dict.get('description', cmd_dict.get('desc', '')),
+                        "arguments": [],
+                        "options": [],
+                        "subcommands": [],
+                        "hook_name": f"on_{cmd_name.replace('-', '_')}",
+                    }
+                    
+                    # Extract command arguments
+                    if 'args' in cmd_dict and cmd_dict['args']:
+                        for arg in cmd_dict['args']:
+                            arg_dict = _safe_to_dict(arg)
+                            command_data["arguments"].append({
+                                "name": arg_dict.get("name", ""),
+                                "description": arg_dict.get("desc", arg_dict.get("description", "")),
+                                "type": arg_dict.get("type", "string"),
+                                "required": arg_dict.get("required", False),
+                                "default": arg_dict.get("default"),
+                            })
+                    
+                    # Extract command options
+                    if 'options' in cmd_dict and cmd_dict['options']:
+                        for opt in cmd_dict['options']:
+                            opt_dict = _safe_to_dict(opt)
+                            command_data["options"].append({
+                                "name": opt_dict.get("name", ""),
+                                "description": opt_dict.get("desc", opt_dict.get("description", "")),
+                                "type": opt_dict.get("type", "string"),
+                                "required": opt_dict.get("required", False),
+                                "short": opt_dict.get("short"),
+                                "default": opt_dict.get("default"),
+                            })
+                    
+                    # Handle nested subcommands
+                    if 'subcommands' in cmd_dict and cmd_dict['subcommands']:
+                        command_data["subcommands"] = self._extract_subcommands_dict(cmd_dict['subcommands'])
+                    
+                    schema["commands"][cmd_name] = command_data
+                    
+            elif isinstance(commands, list):
+                # New format: [{"name": "hello", ...}]
+                for cmd in commands:
+                    cmd_dict = _safe_to_dict(cmd)
+                    cmd_name = cmd_dict.get('name', 'unknown')
 
                 command_data = {
 
                     "name": cmd_name,
 
-                    "description": cmd.desc,  # Note: CLISchema uses 'desc' not 'description'
+                    "description": cmd_dict.get('description', cmd_dict.get('desc', '')),
 
                     "arguments": [],
 
@@ -1175,9 +1279,9 @@ class UniversalTemplateEngine:
 
                 # Extract command arguments
 
-                if hasattr(cmd, 'args') and cmd.args:
+                if 'args' in cmd_dict and cmd_dict['args']:
 
-                    for arg in cmd.args:
+                    for arg in cmd_dict['args']:
 
                         command_data["arguments"].append({
 
@@ -1197,9 +1301,9 @@ class UniversalTemplateEngine:
 
                 # Extract command options
 
-                if hasattr(cmd, 'options') and cmd.options:
+                if 'options' in cmd_dict and cmd_dict['options']:
 
-                    for opt in cmd.options:
+                    for opt in cmd_dict['options']:
 
                         command_data["options"].append({
 
@@ -1223,9 +1327,9 @@ class UniversalTemplateEngine:
 
                 # Handle nested subcommands recursively
 
-                if hasattr(cmd, 'subcommands') and cmd.subcommands:
+                if 'subcommands' in cmd_dict and cmd_dict['subcommands']:
 
-                    command_data["subcommands"] = self._extract_subcommands_dict(cmd.subcommands)
+                    command_data["subcommands"] = self._extract_subcommands_dict(cmd_dict['subcommands'])
 
                 
 

@@ -8,7 +8,7 @@ import sys
 
 from pathlib import Path
 
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Any
 
 import typer
 
@@ -19,6 +19,54 @@ from jinja2 import Environment, DictLoader
 from . import BaseGenerator
 
 from ..schemas import ConfigSchema, GoobitsConfigSchema
+
+
+def _safe_to_dict(obj: Any) -> Dict[str, Any]:
+    """
+    Safely convert a Pydantic model or dict to a plain dictionary.
+    
+    This handles the type conversion issues where objects might be:
+    - Pydantic v2 models (with model_dump())
+    - Pydantic v1 models (with dict())
+    - Plain dictionaries already
+    - None or other types
+    
+    Args:
+        obj: Object to convert to dict
+        
+    Returns:
+        Dictionary representation of the object
+    """
+    if obj is None:
+        return {}
+    
+    # If it's already a dict, return it as-is
+    if isinstance(obj, dict):
+        return obj
+    
+    # Try Pydantic v2 model_dump() first
+    if hasattr(obj, 'model_dump') and callable(getattr(obj, 'model_dump')):
+        try:
+            return obj.model_dump()
+        except Exception:
+            pass
+    
+    # Try Pydantic v1 dict() method
+    if hasattr(obj, 'dict') and callable(getattr(obj, 'dict')):
+        try:
+            return obj.dict()
+        except Exception:
+            pass
+    
+    # If all else fails, try to convert using vars() or return empty dict
+    try:
+        if hasattr(obj, '__dict__'):
+            return vars(obj)
+    except Exception:
+        pass
+    
+    # Last resort: return empty dict
+    return {}
 
 
 
@@ -375,7 +423,7 @@ class PythonGenerator(BaseGenerator):
 
             if integrate_interactive_mode:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = _safe_to_dict(goobits_config)
 
                 config_dict = integrate_interactive_mode(config_dict, 'python')
 
@@ -389,7 +437,7 @@ class PythonGenerator(BaseGenerator):
 
             if integrate_completion_system:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = _safe_to_dict(goobits_config)
 
                 config_dict = integrate_completion_system(config_dict, 'python')
 
@@ -403,7 +451,7 @@ class PythonGenerator(BaseGenerator):
 
             if integrate_plugin_system:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = _safe_to_dict(goobits_config)
 
                 config_dict = integrate_plugin_system(config_dict, 'python')
 
