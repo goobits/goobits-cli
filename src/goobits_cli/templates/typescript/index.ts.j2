@@ -24,7 +24,7 @@ import type {
   GlobalOptions,
   HookRegistry,
   ConfigSchema,
-} from './types/cli';
+} from './types/cli.js';
 
 // Import comprehensive error handling
 import type {
@@ -35,7 +35,7 @@ import type {
   PluginError,
   FileSystemError,
   SystemError,
-} from './types/errors';
+} from './types/errors.js';
 import {
   CLIErrorCode,
   ExitCode,
@@ -53,7 +53,7 @@ import {
   isSuccess,
   isFailure,
   handleError,
-} from './lib/errors';
+} from './lib/errors.js';
 
 // Import decorator system (optional) - loaded dynamically when needed
 let registerDecoratorCommands: any = null;

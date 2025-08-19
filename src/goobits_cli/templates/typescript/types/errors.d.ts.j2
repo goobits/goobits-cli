@@ -176,6 +176,124 @@ export declare class CancelledError extends CLIError {
   constructor(message?: string);
 }
 
+export declare class SystemError extends CLIError {
+  readonly system?: string;
+  readonly command?: string;
+
+  constructor(
+    message: string,
+    system?: string,
+    command?: string,
+    cause?: Error
+  );
+}
+
+export declare class CommandError extends CLIError {
+  readonly commandName: string;
+  readonly exitCode?: number;
+
+  constructor(
+    commandName: string,
+    message: string,
+    exitCode?: number,
+    cause?: Error
+  );
+}
+
+export declare class FileSystemError extends CLIError {
+  readonly filePath: string;
+  readonly operation: 'read' | 'write' | 'delete' | 'create' | 'access' | 'stat';
+
+  constructor(
+    filePath: string,
+    operation: 'read' | 'write' | 'delete' | 'create' | 'access' | 'stat',
+    message: string,
+    cause?: Error
+  );
+}
+
+// Additional Result type variants
+export type Success<T> = {
+  success: true;
+  data: T;
+};
+
+export type Failure<E> = {
+  success: false;
+  error: E;
+};
+
+// Error code enum
+export enum CLIErrorCode {
+  // General errors
+  UNKNOWN = 'UNKNOWN',
+  INVALID_INPUT = 'INVALID_INPUT',
+  MISSING_DEPENDENCY = 'MISSING_DEPENDENCY',
+  
+  // Command errors
+  COMMAND_NOT_FOUND = 'COMMAND_NOT_FOUND',
+  COMMAND_FAILED = 'COMMAND_FAILED',
+  INVALID_COMMAND = 'INVALID_COMMAND',
+  
+  // File system errors
+  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
+  FILE_ACCESS_DENIED = 'FILE_ACCESS_DENIED',
+  FILE_WRITE_ERROR = 'FILE_WRITE_ERROR',
+  
+  // System errors
+  SYSTEM_ERROR = 'SYSTEM_ERROR',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  
+  // Configuration errors
+  CONFIG_NOT_FOUND = 'CONFIG_NOT_FOUND',
+  CONFIG_INVALID = 'CONFIG_INVALID',
+  CONFIG_PARSE_ERROR = 'CONFIG_PARSE_ERROR',
+  
+  // Hook errors
+  HOOK_NOT_FOUND = 'HOOK_NOT_FOUND',
+  HOOK_EXECUTION_ERROR = 'HOOK_EXECUTION_ERROR',
+  
+  // Plugin errors
+  PLUGIN_NOT_FOUND = 'PLUGIN_NOT_FOUND',
+  PLUGIN_LOAD_ERROR = 'PLUGIN_LOAD_ERROR',
+  PLUGIN_EXECUTION_ERROR = 'PLUGIN_EXECUTION_ERROR',
+  
+  // Validation errors
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  TYPE_ERROR = 'TYPE_ERROR'
+}
+
+// Error factory types
+export type ErrorFactory<T extends CLIError> = (
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+) => T;
+
+// Error management interfaces
+export interface ErrorManager {
+  handleError(error: CLIError, context?: ErrorContext): void;
+  formatError(error: CLIError): string;
+  shouldExit(error: CLIError): boolean;
+}
+
+export interface ErrorFormatter {
+  format(error: CLIError): string;
+  formatStack(error: CLIError): string;
+  formatSuggestions(error: CLIError): string[];
+}
+
+export interface ErrorRecovery<T = unknown> {
+  canRecover(error: CLIError): boolean;
+  recover(error: CLIError): Promise<T>;
+}
+
+// Base error class alias
+export type BaseCLIError = CLIError;
+
 // Utility functions
 export declare function handleError(
   error: CLIError,
@@ -238,3 +356,85 @@ export declare function retryOperation<T>(
     strategy?: ErrorRecoveryStrategy<T>;
   }
 ): Promise<T>;
+
+// Error creator functions
+export declare function createSystemError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): SystemError;
+
+export declare function createCommandError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): CommandError;
+
+export declare function createFileSystemError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): FileSystemError;
+
+export declare function createConfigError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): ConfigError;
+
+export declare function createHookError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): HookError;
+
+export declare function createPluginError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): PluginError;
+
+export declare function createValidationError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): ValidationError;
+
+export declare function createNetworkError(
+  message: string,
+  context?: {
+    cause?: Error;
+    metadata?: Record<string, unknown>;
+  }
+): NetworkError;
+
+// Result pattern utility functions
+export declare function success<T>(data: T, warnings?: readonly string[]): Success<T>;
+export declare function failure<E extends CLIError>(error: E, recoverable?: boolean): Failure<E>;
+export declare function isSuccess<T, E extends CLIError>(result: Result<T, E>): result is Success<T>;
+export declare function isFailure<T, E extends CLIError>(result: Result<T, E>): result is Failure<E>;
+
+// Result pattern async utilities
+export declare function asyncResult<T, E extends CLIError>(
+  operation: () => Promise<T>,
+  errorHandler: (error: unknown) => E
+): Promise<Result<T, E>>;
+
+export declare function syncResult<T, E extends CLIError>(
+  operation: () => T,
+  errorHandler: (error: unknown) => E
+): Result<T, E>;
