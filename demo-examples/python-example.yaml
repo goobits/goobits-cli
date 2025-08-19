@@ -8,6 +8,7 @@ language: python
 author: "Demo User"
 email: "demo@example.com"
 license: "MIT"
+cli_output_path: "src/demo_cli/cli.py"
 
 cli:
   name: demo_py

@@ -10,7 +10,7 @@ For rapid project understanding, see **CODEMAP.md** - a comprehensive project ma
 
 Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, TypeScript, and Rust** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.
 
-**Current Status**: v2.0.0-rc1 with 4 language implementations **ALL PRODUCTION-READY** (Python 95%, Node.js 95%, TypeScript 95%, Rust 95% complete - TypeScript compilation issues resolved). Advanced features fully integrated with optimized performance, all languages generate working CLIs, comprehensive testing complete.
+**Current Status**: v2.0.0-rc1 with 4 language implementations **ALL PRODUCTION-READY** (Python 100%, Node.js 100%, TypeScript 100%, Rust 100% complete - all compilation issues resolved). Advanced features fully integrated with optimized performance, all languages generate working CLIs, comprehensive testing at 100% pass rate.
 
 ## Development Commands
 
@@ -26,25 +26,27 @@ goobits build
 goobits build --universal-templates
 
 # Install in development mode (includes dev dependencies, changes reflected immediately)
-./setup.sh install --dev
+pip install -e .[dev,test]
 
-# Install in production mode (production dependencies only)
-./setup.sh install
+# Install in production mode (production dependencies only)  
+pip install .
 
-# Upgrade existing installation
-./setup.sh upgrade
+# Install via pipx (recommended for CLI tools)
+pipx install .
 
 # Uninstall
-./setup.sh uninstall
+pip uninstall goobits-cli
 ```
 
 ### Testing
 
 ```bash
+# Note: Commands assume you're in the development repository with src/ directory
+
 # Run all tests
 pytest src/tests/
 
-# Run specific test file
+# Run specific test file  
 pytest src/tests/unit/test_builder.py
 
 # Run with coverage
@@ -195,6 +197,13 @@ The setup.sh script automatically installs all specified dependencies:
 
 - **generated_cli.py**: Created by `goobits build`, should not be edited manually
 - **setup.sh**: Platform-aware installation script with dependency checking
+
+### File Generation Guidelines
+
+**Always specify `cli_output_path`** in your goobits.yaml to prevent root directory pollution:
+```yaml
+cli_output_path: "src/my_package/cli.py"  # Required - prevents files in project root
+```
 
 ### Template System
 

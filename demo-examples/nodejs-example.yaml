@@ -8,6 +8,7 @@ language: nodejs
 author: "Demo User"
 email: "demo@example.com"
 license: "MIT"
+cli_output_path: "src/demo_cli/cli.js"
 
 cli:
   name: demo_js

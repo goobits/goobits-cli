@@ -1033,13 +1033,28 @@ class ConfigValidator(BaseValidator):
     def _validate_paths(self, config: Any, result: ValidationResult, context: ValidationContext) -> None:
         """Validate file paths and references."""
         
-        # Validate CLI output path
+        # Validate CLI output path - now required
         cli_output_path = self.get_field_value(config, 'cli_output_path')
-        if cli_output_path:
+        if not cli_output_path:
+            result.add_error(
+                "cli_output_path is required to prevent root directory pollution",
+                'cli_output_path',
+                "Specify explicit output path like 'src/my_package/cli.py'"
+            )
+        else:
             if not cli_output_path.endswith('.py'):
                 result.add_warning(
                     f"CLI output path '{cli_output_path}' should end with .py",
                     'cli_output_path'
+                )
+            
+            # Prevent root directory generation
+            path_obj = Path(cli_output_path)
+            if len(path_obj.parts) == 1:  # File directly in root
+                result.add_error(
+                    f"CLI output path '{cli_output_path}' cannot be in root directory",
+                    'cli_output_path',
+                    "Use subdirectory like 'src/my_package/cli.py'"
                 )
             
             # Check if directory exists (if working directory is available)
