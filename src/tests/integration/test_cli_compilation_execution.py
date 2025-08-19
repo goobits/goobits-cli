@@ -203,20 +203,23 @@ class TestPythonCLICompilation:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(content)
                 
+                # Prioritize cli.py over __init__.py for execution
                 if filename.endswith('.py') and ('cli' in filename or 'main' in filename):
-                    cli_file = file_path
+                    if cli_file is None or 'cli.py' in filename:
+                        cli_file = file_path
             
             # Create a minimal virtual environment for testing
             venv_dir = Path(temp_dir) / "test_venv"
             subprocess.run([sys.executable, '-m', 'venv', str(venv_dir)], check=True)
             
-            # Install click in the virtual environment
+            # Install required dependencies in the virtual environment
             pip_executable = venv_dir / "bin" / "pip"
             if not pip_executable.exists():  # Windows
                 pip_executable = venv_dir / "Scripts" / "pip.exe"
             
             try:
-                subprocess.run([str(pip_executable), 'install', 'click'], check=True, timeout=60)
+                # Install both click and rich-click as required by generated CLI
+                subprocess.run([str(pip_executable), 'install', 'click', 'rich-click'], check=True, timeout=60)
             except subprocess.TimeoutExpired:
                 pytest.skip("pip install timed out during dependency installation")
             
