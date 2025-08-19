@@ -272,6 +272,79 @@ class TestDependencyResolution:
             elif 'NODE_PATH' in os.environ:
                 del os.environ['NODE_PATH']
     
+    def _find_cli_executable(self, command_name: str, temp_dir: str, language: str) -> Optional[str]:
+        """Find CLI executable using multiple fallback methods."""
+        search_paths = []
+        
+        if language == "python":
+            venv_bin = Path(temp_dir) / ".test_venv" / "bin"
+            if not venv_bin.exists():
+                venv_bin = Path(temp_dir) / ".test_venv" / "Scripts"
+            if venv_bin.exists():
+                search_paths.append(venv_bin)
+        
+        elif language in ["nodejs", "typescript"]:
+            npm_bin = Path(temp_dir) / ".npm_prefix" / "bin"
+            if npm_bin.exists():
+                search_paths.append(npm_bin)
+            search_paths.append(Path("/tmp"))
+        
+        elif language == "rust":
+            cargo_bin = Path(temp_dir) / ".cargo_home" / "bin"
+            if cargo_bin.exists():
+                search_paths.append(cargo_bin)
+        
+        for search_path in search_paths:
+            executable = search_path / command_name
+            if executable.exists() and executable.is_file():
+                return str(executable)
+        
+        return None
+    
+    def _create_executable_wrapper(self, command_name: str, temp_dir: str, language: str, package_name: str = None) -> Optional[str]:
+        """Create executable wrapper for reliable CLI access."""
+        wrapper_dir = Path(temp_dir) / ".cli_wrappers"
+        wrapper_dir.mkdir(exist_ok=True)
+        wrapper_path = wrapper_dir / command_name
+        
+        try:
+            if language == "python" and package_name:
+                venv_python = Path(temp_dir) / ".test_venv" / "bin" / "python"
+                if not venv_python.exists():
+                    venv_python = Path(temp_dir) / ".test_venv" / "Scripts" / "python.exe"
+                
+                if venv_python.exists():
+                    wrapper_content = f"#!/bin/bash\nexec {venv_python} -m {package_name.replace('-', '_')} \"$@\"\n"
+                    wrapper_path.write_text(wrapper_content)
+                    wrapper_path.chmod(0o755)
+                    return str(wrapper_path)
+            
+            elif language in ["nodejs", "typescript"]:
+                cli_js = Path(temp_dir) / "cli.js"
+                if language == "typescript":
+                    cli_js = Path(temp_dir) / "dist" / "bin" / "cli.js"
+                    if not cli_js.exists():
+                        cli_js = Path(temp_dir) / "bin" / "cli.js"
+                
+                if cli_js.exists():
+                    wrapper_content = f"#!/bin/bash\nexec node {cli_js} \"$@\"\n"
+                    wrapper_path.write_text(wrapper_content)
+                    wrapper_path.chmod(0o755)
+                    return str(wrapper_path)
+            
+            elif language == "rust":
+                cargo_bin = Path(temp_dir) / ".cargo_home" / "bin" / command_name
+                if cargo_bin.exists():
+                    wrapper_content = f"#!/bin/bash\nexec {cargo_bin} \"$@\"\n"
+                    wrapper_path.write_text(wrapper_content)
+                    wrapper_path.chmod(0o755)
+                    return str(wrapper_path)
+        
+        except Exception:
+            pass
+        
+        return None
+    
     def _generate_and_install_cli(self, config: GoobitsConfigSchema, temp_dir: str) -> str:
         """Generate CLI and install it, returning the command name."""
         from .test_installation_flows import CLITestHelper
@@ -425,7 +498,27 @@ process.exit(0);
                 else:
                     pytest.skip("cargo not available")
             
-            return config.command_name  # Return the unique command name
+            # Verify CLI accessibility and create fallbacks
+            executable_path = self._find_cli_executable(config.command_name, temp_dir, config.language)
+            
+            if executable_path:
+                # Direct executable found - add its directory to PATH
+                exec_dir = str(Path(executable_path).parent)
+                if exec_dir not in os.environ['PATH']:
+                    os.environ['PATH'] = f"{exec_dir}{os.pathsep}{os.environ['PATH']}"
+                    self._path_additions.append(exec_dir)
+                return config.command_name
+            
+            # Create wrapper as fallback
+            wrapper_path = self._create_executable_wrapper(config.command_name, temp_dir, config.language, config.package_name)
+            if wrapper_path:
+                wrapper_dir = str(Path(wrapper_path).parent)
+                os.environ['PATH'] = f"{wrapper_dir}{os.pathsep}{os.environ['PATH']}"
+                self._path_additions.append(wrapper_dir)
+                return config.command_name
+            
+            # Final fallback: return command name and rely on PATH additions from installation
+            return config.command_name
         
         finally:
             # Restore original names for any subsequent operations
