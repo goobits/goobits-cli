@@ -596,7 +596,7 @@ def _get_version():
     try:
         # Fall back to installed package metadata
         import importlib.metadata
-        return importlib.metadata.version("{package_name}")
+        return importlib.metadata.version("{metadata['package_name']}")
     except Exception:
         # Final fallback
         return "{version or '1.0.0'}"
