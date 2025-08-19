@@ -1,8 +1,8 @@
 /**
 
- * Hook functions for TestNodeCLI
+ * Hook functions for TestConflictCLI
 
- * Auto-generated from test_nodejs_cli.yaml
+ * Auto-generated from test_conflict.yaml
 
  * 
 
@@ -16,7 +16,7 @@
 
 /**
 
- * Hook function for 'hello' command
+ * Hook function for 'config' command
 
  * @param {Object} args - Command arguments and options
 
@@ -24,11 +24,11 @@
 
  */
 
-export async function onHello(args) {
+export async function onConfig(args) {
 
-    // TODO: Implement your 'hello' command logic here
+    // TODO: Implement your 'config' command logic here
 
-    console.log('🚀 Executing hello command...');
+    console.log('🚀 Executing config command...');
 
     console.log('   Command:', args.commandName);
 
@@ -48,7 +48,7 @@ export async function onHello(args) {
 
     
 
-    console.log('✅ hello command completed successfully!');
+    console.log('✅ config command completed successfully!');
 
 }
 
@@ -56,7 +56,7 @@ export async function onHello(args) {
 
 /**
 
- * Hook function for 'test' command
+ * Hook function for 'completion' command
 
  * @param {Object} args - Command arguments and options
 
@@ -64,11 +64,11 @@ export async function onHello(args) {
 
  */
 
-export async function onTest(args) {
+export async function onCompletion(args) {
 
-    // TODO: Implement your 'test' command logic here
+    // TODO: Implement your 'completion' command logic here
 
-    console.log('🚀 Executing test command...');
+    console.log('🚀 Executing completion command...');
 
     console.log('   Command:', args.commandName);
 
@@ -88,7 +88,87 @@ export async function onTest(args) {
 
     
 
-    console.log('✅ test command completed successfully!');
+    console.log('✅ completion command completed successfully!');
+
+}
+
+
+
+/**
+
+ * Hook function for 'daemon' command
+
+ * @param {Object} args - Command arguments and options
+
+ * @returns {Promise<void>}
+
+ */
+
+export async function onDaemon(args) {
+
+    // TODO: Implement your 'daemon' command logic here
+
+    console.log('🚀 Executing daemon command...');
+
+    console.log('   Command:', args.commandName);
+
+    
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
+    }
+
+    
+
+    console.log('✅ daemon command completed successfully!');
+
+}
+
+
+
+/**
+
+ * Hook function for 'plugin' command
+
+ * @param {Object} args - Command arguments and options
+
+ * @returns {Promise<void>}
+
+ */
+
+export async function onPlugin(args) {
+
+    // TODO: Implement your 'plugin' command logic here
+
+    console.log('🚀 Executing plugin command...');
+
+    console.log('   Command:', args.commandName);
+
+    
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
+    }
+
+    
+
+    console.log('✅ plugin command completed successfully!');
 
 }
 

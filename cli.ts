@@ -1,23 +1,20 @@
 #!/usr/bin/env node
 /**
- * Auto-generated from test_conflict.yaml
- * TestConflictCLI CLI - Node.js Implementation
+ * Auto-generated from test_typescript_cli.yaml
+ * TestTSCLI CLI - TypeScript Implementation
  */
 
 import { Command } from 'commander';
-import path from 'path';
-import fs from 'fs';
-import { spawn, execSync } from 'child_process';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-// ES Module equivalents of __filename and __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import * as path from 'path';
+import * as fs from 'fs';
+import { execSync } from 'child_process';
 
 // Enhanced Error Classes
 class CLIError extends Error {
-    constructor(message, exitCode = 1, suggestion = null) {
+    public exitCode: number;
+    public suggestion: string | null;
+
+    constructor(message: string, exitCode: number = 1, suggestion: string | null = null) {
         super(message);
         this.name = 'CLIError';
         this.exitCode = exitCode;
@@ -26,14 +23,16 @@ class CLIError extends Error {
 }
 
 class ConfigError extends CLIError {
-    constructor(message, suggestion = null) {
+    constructor(message: string, suggestion: string | null = null) {
         super(message, 2, suggestion);
         this.name = 'ConfigError';
     }
 }
 
 class HookError extends CLIError {
-    constructor(message, hookName = null) {
+    public hookName: string | null;
+
+    constructor(message: string, hookName: string | null = null) {
         const suggestion = hookName ? `Check the '${hookName}' function in your hooks file` : null;
         super(message, 3, suggestion);
         this.name = 'HookError';
@@ -42,7 +41,10 @@ class HookError extends CLIError {
 }
 
 class DependencyError extends CLIError {
-    constructor(message, dependency, installCommand = null) {
+    public dependency: string;
+    public installCommand: string | null;
+
+    constructor(message: string, dependency: string, installCommand: string | null = null) {
         const suggestion = installCommand ? `Install with: ${installCommand}` : `Install the '${dependency}' package`;
         super(message, 4, suggestion);
         this.name = 'DependencyError';
@@ -51,15 +53,35 @@ class DependencyError extends CLIError {
     }
 }
 
+// Interface definitions
+interface GlobalOptions {
+}
+
+interface CommandArgs {
+    [key: string]: any;
+}
+
+interface HookFunction {
+    (args: CommandArgs): Promise<any> | any;
+}
+
+interface ManagedCommand {
+    execute(args: CommandArgs): Promise<any> | any;
+}
+
+interface AppHooks {
+    [key: string]: HookFunction | ManagedCommand;
+}
+
 // Global error handler
-function handleCLIError(error, verbose = false) {
+function handleCLIError(error: Error, verbose: boolean = false): number {
     if (error instanceof CLIError) {
         console.error(`❌ Error: ${error.message}`);
         if (error.suggestion) {
             console.error(`💡 Suggestion: ${error.suggestion}`);
         }
         if (verbose) {
-            console.error('\n🔍 Debug traceback:');
+            console.error('\n🔍 Verbose traceback:');
             console.error(error.stack);
         }
         return error.exitCode;
@@ -79,23 +101,51 @@ function handleCLIError(error, verbose = false) {
 }
 
 // Helper module loading with error handling
-let configManager, progressHelper, promptsHelper, completionHelper;
+let configManager: any, progressHelper: any, promptsHelper: any, completionHelper: any;
 let HAS_CONFIG_MANAGER = false;
 let HAS_PROGRESS_HELPER = false;
 let HAS_PROMPTS_HELPER = false;
 let HAS_COMPLETION_HELPER = false;
 
+try {
+    configManager = require('./lib/config');
+    HAS_CONFIG_MANAGER = true;
+} catch (e) {
+    if (process.env.DEBUG) console.debug('Config manager not available:', (e as Error).message);
+}
+
+try {
+    progressHelper = require('./lib/progress');
+    HAS_PROGRESS_HELPER = true;
+} catch (e) {
+    if (process.env.DEBUG) console.debug('Progress helper not available:', (e as Error).message);
+}
+
+try {
+    promptsHelper = require('./lib/prompts');
+    HAS_PROMPTS_HELPER = true;
+} catch (e) {
+    if (process.env.DEBUG) console.debug('Prompts helper not available:', (e as Error).message);
+}
+
+try {
+    completionHelper = require('./lib/completion');
+    HAS_COMPLETION_HELPER = true;
+} catch (e) {
+    if (process.env.DEBUG) console.debug('Completion helper not available:', (e as Error).message);
+}
+
 // Initialize global helpers
-let config = null;
-let progress = null;
-let prompts = null;
-let completion = null;
+let config: any = null;
+let progress: any = null;
+let prompts: any = null;
+let completion: any = null;
 
 if (HAS_CONFIG_MANAGER) {
     try {
         config = configManager.getConfig();
     } catch (e) {
-        console.warn(`Failed to initialize config manager: ${e.message}`);
+        console.warn(`Failed to initialize config manager: ${(e as Error).message}`);
         HAS_CONFIG_MANAGER = false;
     }
 }
@@ -104,7 +154,7 @@ if (HAS_PROGRESS_HELPER) {
     try {
         progress = progressHelper.getProgressHelper();
     } catch (e) {
-        console.warn(`Failed to initialize progress helper: ${e.message}`);
+        console.warn(`Failed to initialize progress helper: ${(e as Error).message}`);
         HAS_PROGRESS_HELPER = false;
     }
 }
@@ -113,7 +163,7 @@ if (HAS_PROMPTS_HELPER) {
     try {
         prompts = promptsHelper.getPromptsHelper();
     } catch (e) {
-        console.warn(`Failed to initialize prompts helper: ${e.message}`);
+        console.warn(`Failed to initialize prompts helper: ${(e as Error).message}`);
         HAS_PROMPTS_HELPER = false;
     }
 }
@@ -122,43 +172,39 @@ if (HAS_COMPLETION_HELPER) {
     try {
         completion = completionHelper.getCompletionHelper();
     } catch (e) {
-        console.warn(`Failed to initialize completion helper: ${e.message}`);
+        console.warn(`Failed to initialize completion helper: ${(e as Error).message}`);
         HAS_COMPLETION_HELPER = false;
     }
 }
 
-// Load hooks module - will be loaded async on first use
-let appHooks = null;
-
-// Async hook loader
-async function loadHooks() {
-    if (appHooks !== null) return appHooks; // Already loaded
+// Load hooks module
+let appHooks: AppHooks | null = null;
+// No hooks path configured, try default locations
+try {
+    // Try relative to script location
+    const possiblePaths = [
+        path.join(__dirname, '../hooks.ts'),
+        path.join(__dirname, '../hooks.js'),
+        path.join(__dirname, '../src/hooks.ts'),
+        path.join(__dirname, '../src/hooks.js'),
+        path.join(process.cwd(), 'hooks.ts'),
+        path.join(process.cwd(), 'hooks.js'),
+        path.join(process.cwd(), 'src/hooks.ts'),
+        path.join(process.cwd(), 'src/hooks.js')
+    ];
     
-    try {
-        // No hooks path configured, try default locations
-        const possiblePaths = [
-            path.join(__dirname, '../hooks.js'),
-            path.join(__dirname, '../src/hooks.js'),
-            path.join(process.cwd(), 'hooks.js'),
-            path.join(process.cwd(), 'src/hooks.js')
-        ];
-        
-        for (const hookPath of possiblePaths) {
-            if (fs.existsSync(hookPath)) {
-                appHooks = await import(hookPath);
-                break;
-            }
+    for (const hookPath of possiblePaths) {
+        if (fs.existsSync(hookPath)) {
+            appHooks = require(hookPath);
+            break;
         }
-    } catch (e) {
-        // No hooks module found - use empty hooks object
-        appHooks = {};
     }
-    
-    return appHooks;
+} catch (e) {
+    // No hooks module found
 }
 
 // Get version function
-function getVersion() {
+function getVersion(): string {
     try {
         // Try package.json first
         const packagePath = path.join(__dirname, '../package.json');
@@ -175,24 +221,24 @@ function getVersion() {
 }
 
 // Built-in upgrade command
-async function builtinUpgradeCommand(checkOnly = false, pre = false, version = null, dryRun = false) {
+async function builtinUpgradeCommand(checkOnly: boolean = false, pre: boolean = false, version: string | null = null, dryRun: boolean = false): Promise<void> {
     if (checkOnly) {
-        console.log(`Checking for updates to TestConflictCLI...`);
+        console.log(`Checking for updates to TestTSCLI...`);
         console.log('Update check not yet implemented. Run without --check to upgrade.');
         return;
     }
 
     if (dryRun) {
-        console.log('Dry run - would execute: npm update -g test-conflict-cli');
+        console.log('Dry run - would execute: npm update -g test-ts-cli');
         return;
     }
 
     // Find the setup.sh script
-    let setupScript = null;
+    let setupScript: string | null = null;
     const searchPaths = [
         path.join(__dirname, 'setup.sh'),
         path.join(__dirname, '../setup.sh'),
-        path.join(process.env.HOME, '.local', 'share', 'test-conflict-cli', 'setup.sh')
+        path.join(process.env.HOME || process.env.USERPROFILE || '', '.local', 'share', 'test-ts-cli', 'setup.sh')
     ];
     
     for (const scriptPath of searchPaths) {
@@ -204,18 +250,18 @@ async function builtinUpgradeCommand(checkOnly = false, pre = false, version = n
     
     if (!setupScript) {
         // Fallback to basic upgrade
-        console.log(`Enhanced setup script not found. Using basic upgrade for TestConflictCLI...`);
+        console.log(`Enhanced setup script not found. Using basic upgrade for TestTSCLI...`);
         
-        const packageName = 'test-conflict-cli';
-        const npmName = 'test-conflict-cli';
+        const packageName = 'test-ts-cli';
+        const npmName = 'test-ts-cli';
         
         try {
             const cmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
             execSync(`${cmd} update -g ${npmName}`, { stdio: 'inherit' });
-            console.log(`✅ TestConflictCLI upgraded successfully!`);
-            console.log(`Run 'testconflict --version' to verify the new version.`);
+            console.log(`✅ TestTSCLI upgraded successfully!`);
+            console.log(`Run 'testtscli --version' to verify the new version.`);
         } catch (e) {
-            console.error(`❌ Upgrade failed: ${e.message}`);
+            console.error(`❌ Upgrade failed: ${(e as Error).message}`);
             process.exit(1);
         }
         return;
@@ -224,15 +270,15 @@ async function builtinUpgradeCommand(checkOnly = false, pre = false, version = n
     // Use the enhanced setup.sh script
     try {
         execSync(`${setupScript} upgrade`, { stdio: 'inherit' });
-    } catch (e) {
+    } catch (e: any) {
         process.exit(e.status || 1);
     }
 }
 
 // Plugin loading
-async function loadPlugins(program) {
+function loadPlugins(program: Command): void {
     const pluginDirs = [
-        path.join(process.env.HOME || process.env.USERPROFILE, '.config', 'goobits', 'testconflict', 'plugins'),
+        path.join(process.env.HOME || process.env.USERPROFILE || '', '.config', 'goobits', 'TestTSCLI', 'plugins'),
         path.join(__dirname, 'plugins')
     ];
     
@@ -241,24 +287,22 @@ async function loadPlugins(program) {
         
         const files = fs.readdirSync(pluginDir);
         for (const file of files) {
-            if (!file.endsWith('.js') || file.startsWith('_')) continue;
-            if (['loader.js', 'index.js'].includes(file)) continue;
+            if (!file.endsWith('.js') && !file.endsWith('.ts')) continue;
+            if (file.startsWith('_')) continue;
+            if (['loader.js', 'loader.ts', 'index.js', 'index.ts'].includes(file)) continue;
             
-            const pluginName = path.basename(file, '.js');
+            const pluginName = path.basename(file, path.extname(file));
             
             try {
                 const pluginPath = path.join(pluginDir, file);
-                const plugin = await import(pluginPath);
+                const plugin = require(pluginPath);
                 
-                if (typeof plugin.default?.registerPlugin === 'function') {
-                    plugin.default.registerPlugin(program);
-                    console.error(`Loaded plugin: ${pluginName}`);
-                } else if (typeof plugin.registerPlugin === 'function') {
+                if (typeof plugin.registerPlugin === 'function') {
                     plugin.registerPlugin(program);
                     console.error(`Loaded plugin: ${pluginName}`);
                 }
             } catch (e) {
-                console.error(`Failed to load plugin ${pluginName}: ${e.message}`);
+                console.error(`Failed to load plugin ${pluginName}: ${(e as Error).message}`);
             }
         }
     }
@@ -269,9 +313,9 @@ const program = new Command();
 
 // Configure program
 program
-    .name('testconflict')
+    .name('TestTSCLI')
     .version(getVersion())
-    .description(`testconflict v${getVersion()} - Test CLI to validate variable naming fixes`)
+    .description(`TestTSCLI v${getVersion()} - TypeScript test CLI for validation`)
     .helpOption('-h, --help', 'Display help for command')
     .configureHelp({
         sortSubcommands: true,
@@ -284,150 +328,98 @@ program.addHelpText('after', `
 `);
 
 // Global options
-const globalOptions = {};
+const globalOptions: Partial<GlobalOptions> = {};
 
 // Built-in upgrade command
 program
     .command('upgrade')
-    .description('Upgrade TestConflictCLI to the latest version')
+    .description('Upgrade TestTSCLI to the latest version')
     .option('--check', 'Check for updates without installing')
     .option('--version <version>', 'Install specific version')
     .option('--pre', 'Include pre-release versions')
     .option('--dry-run', 'Show what would be done without doing it')
-    .action(async (options) => {
+    .action(async (options: { check?: boolean; version?: string; pre?: boolean; dryRun?: boolean }) => {
         await builtinUpgradeCommand(options.check, options.pre, options.version, options.dryRun);
     });
 
 // Commands from configuration
-// Command: config
-const configCmd = program
-    .command('config')
-    .description('User-defined config command')
-    .option('--key <value>', 'Configuration key')
-    .option('--value <value>', 'Configuration value')
-    .action(async (options, command) => {
+// Command: hello
+interface HelloOptions {
+    verbose?: boolean;
+}
+
+const helloCmd = program
+    .command('hello')
+    .description('Say hello')
+    .argument('<name>', 'Name to greet')
+    .action(async (name: string, options: HelloOptions, command: Command) => {
         try {
             // Standard command - use hook pattern
-            const hookName = 'onConfig';
-            const hooks = await loadHooks();
-            if (hooks && typeof hooks[hookName] === 'function') {
-                const kwargs = {
-                    commandName: 'config',
+            const hookName = 'onHello';
+            if (appHooks && typeof appHooks[hookName] === 'function') {
+                const kwargs: CommandArgs = {
+                    commandName: 'hello',
+                    name: name,
                     ...options,
                     // Add global options
                 };
                 
-                await hooks[hookName](kwargs);
+                await (appHooks[hookName] as HookFunction)(kwargs);
             } else {
                 // Default placeholder behavior
-                console.log(`Executing config command...`);
-                console.log(`  key: ${options.key}`);
-                console.log(`  value: ${options.value}`);
+                console.log(`Executing hello command...`);
+                console.log(`  name: $${name}`);  
             }
         } catch (error) {
-            handleCLIError(error, options.verbose || command.parent.opts().verbose);
-            process.exit(error.exitCode || 1);
+            const exitCode = handleCLIError(error as Error, options.verbose || false);
+            process.exit(exitCode);
         }
     });
 
-// Command: completion
-const completionCmd = program
-    .command('completion')
-    .description('User-defined completion command')
-    .option('--shell <value>', 'Shell type')
-    .action(async (options, command) => {
-        try {
-            // Standard command - use hook pattern
-            const hookName = 'onCompletion';
-            const hooks = await loadHooks();
-            if (hooks && typeof hooks[hookName] === 'function') {
-                const kwargs = {
-                    commandName: 'completion',
-                    ...options,
-                    // Add global options
-                };
-                
-                await hooks[hookName](kwargs);
-            } else {
-                // Default placeholder behavior
-                console.log(`Executing completion command...`);
-                console.log(`  shell: ${options.shell}`);
-            }
-        } catch (error) {
-            handleCLIError(error, options.verbose || command.parent.opts().verbose);
-            process.exit(error.exitCode || 1);
-        }
-    });
+// Command: build
+interface BuildOptions {
+    watch: boolean | undefined;
+    verbose?: boolean;
+}
 
-// Command: daemon
-const daemonCmd = program
-    .command('daemon')
-    .description('User-defined daemon command')
-    .option('--action <value>', 'Daemon action')
-    .action(async (options, command) => {
+const buildCmd = program
+    .command('build')
+    .description('Build the project')
+    .option('--watch', 'Watch for changes')
+    .action(async (options: BuildOptions, command: Command) => {
         try {
             // Standard command - use hook pattern
-            const hookName = 'onDaemon';
-            const hooks = await loadHooks();
-            if (hooks && typeof hooks[hookName] === 'function') {
-                const kwargs = {
-                    commandName: 'daemon',
+            const hookName = 'onBuild';
+            if (appHooks && typeof appHooks[hookName] === 'function') {
+                const kwargs: CommandArgs = {
+                    commandName: 'build',
                     ...options,
                     // Add global options
                 };
                 
-                await hooks[hookName](kwargs);
+                await (appHooks[hookName] as HookFunction)(kwargs);
             } else {
                 // Default placeholder behavior
-                console.log(`Executing daemon command...`);
-                console.log(`  action: ${options.action}`);
+                console.log(`Executing build command...`);
+                console.log(`  watch: ${options.watch}`);
             }
         } catch (error) {
-            handleCLIError(error, options.verbose || command.parent.opts().verbose);
-            process.exit(error.exitCode || 1);
-        }
-    });
-
-// Command: plugin
-const pluginCmd = program
-    .command('plugin')
-    .description('User-defined plugin command')
-    .option('--name <value>', 'Plugin name')
-    .action(async (options, command) => {
-        try {
-            // Standard command - use hook pattern
-            const hookName = 'onPlugin';
-            const hooks = await loadHooks();
-            if (hooks && typeof hooks[hookName] === 'function') {
-                const kwargs = {
-                    commandName: 'plugin',
-                    ...options,
-                    // Add global options
-                };
-                
-                await hooks[hookName](kwargs);
-            } else {
-                // Default placeholder behavior
-                console.log(`Executing plugin command...`);
-                console.log(`  name: ${options.name}`);
-            }
-        } catch (error) {
-            handleCLIError(error, options.verbose || command.parent.opts().verbose);
-            process.exit(error.exitCode || 1);
+            const exitCode = handleCLIError(error as Error, options.verbose || false);
+            process.exit(exitCode);
         }
     });
 
 
 // Completion commands
-const builtin_completionCmd = program
+const completionCmd = program
     .command('completion')
     .description('🔧 Shell completion management');
 
-builtin_completionCmd
+completionCmd
     .command('generate <shell>')
     .description('Generate shell completion script')
     .option('-o, --output <file>', 'Output file path')
-    .action((shell, options) => {
+    .action((shell: string, options: { output?: string }) => {
         if (!HAS_COMPLETION_HELPER) {
             console.error('❌ Completion helper not available. Missing completion module.');
             return;
@@ -443,16 +435,16 @@ builtin_completionCmd
                 console.log(script);
             }
         } catch (e) {
-            console.error(`❌ Error generating ${shell} completion: ${e.message}`);
+            console.error(`❌ Error generating ${shell} completion: ${(e as Error).message}`);
         }
     });
 
-builtin_completionCmd
+completionCmd
     .command('install <shell>')
     .description('Install shell completion script')
     .option('--user', 'Install for current user (default)', true)
     .option('--system', 'Install system-wide (requires sudo)')
-    .action(async (shell, options) => {
+    .action(async (shell: string, options: { user?: boolean; system?: boolean }) => {
         if (!HAS_COMPLETION_HELPER) {
             console.error('❌ Completion helper not available. Missing completion module.');
             return;
@@ -473,14 +465,14 @@ builtin_completionCmd
                 console.error(`❌ Failed to install ${shell} completion`);
             }
         } catch (e) {
-            console.error(`❌ Error installing ${shell} completion: ${e.message}`);
+            console.error(`❌ Error installing ${shell} completion: ${(e as Error).message}`);
         }
     });
 
-builtin_completionCmd
+completionCmd
     .command('instructions <shell>')
     .description('Show installation instructions for shell completion')
-    .action((shell) => {
+    .action((shell: string) => {
         if (!HAS_COMPLETION_HELPER) {
             console.error('❌ Completion helper not available. Missing completion module.');
             return;
@@ -496,11 +488,11 @@ builtin_completionCmd
         
         console.log('🏠 User installation (recommended):');
         console.log(`   mkdir -p ${path.dirname(instructions.userScriptPath)}`);
-        console.log(`   testconflict completion generate ${shell} > completion.${shell}`);
+        console.log(`   TestTSCLI completion generate ${shell} > completion.${shell}`);
         console.log(`   cp completion.${shell} ${instructions.userScriptPath}\n`);
         
         console.log('🌐 System-wide installation:');
-        console.log(`   testconflict completion generate ${shell} > completion.${shell}`);
+        console.log(`   TestTSCLI completion generate ${shell} > completion.${shell}`);
         console.log(`   ${instructions.installCmd}\n`);
         
         console.log('🔄 Reload shell:');
@@ -511,35 +503,35 @@ builtin_completionCmd
 program
     .command('_completion <shell> <currentLine> [cursorPos]', { hidden: true })
     .option('--debug', 'Debug completion engine')
-    .action(async (shell, currentLine, cursorPos, options) => {
+    .action((shell: string, currentLine: string, cursorPos?: string, options?: { debug?: boolean }) => {
         try {
             const enginePath = path.join(__dirname, 'completion_engine.js');
             
             if (fs.existsSync(enginePath)) {
-                const { CompletionEngine } = await import(enginePath);
+                const CompletionEngine = require(enginePath).CompletionEngine;
                 const engine = new CompletionEngine();
                 const completions = engine.getCompletions(shell, currentLine, cursorPos);
                 
-                completions.forEach(completion => console.log(completion));
-            } else if (options.debug) {
+                completions.forEach((completion: string) => console.log(completion));
+            } else if (options?.debug) {
                 console.error('completion_engine.js not found');
             }
         } catch (e) {
-            if (options.debug) {
-                console.error(`Completion error: ${e.message}`);
+            if (options?.debug) {
+                console.error(`Completion error: ${(e as Error).message}`);
             }
         }
     });
 
 // Config commands
-const builtin_configCmd = program
+const configCmd = program
     .command('config')
     .description('⚙️ Configuration management');
 
-builtin_configCmd
+configCmd
     .command('get [key]')
     .description('Get configuration value')
-    .action((key) => {
+    .action((key?: string) => {
         if (!HAS_CONFIG_MANAGER) {
             console.error('❌ Configuration manager not available.');
             return;
@@ -559,14 +551,14 @@ builtin_configCmd
                 console.log(JSON.stringify(configData, null, 2));
             }
         } catch (e) {
-            console.error(`❌ Error getting configuration: ${e.message}`);
+            console.error(`❌ Error getting configuration: ${(e as Error).message}`);
         }
     });
 
-builtin_configCmd
+configCmd
     .command('set <key> <value>')
     .description('Set configuration value')
-    .action((key, value) => {
+    .action((key: string, value: string) => {
         if (!HAS_CONFIG_MANAGER) {
             console.error('❌ Configuration manager not available.');
             return;
@@ -574,7 +566,7 @@ builtin_configCmd
         
         try {
             // Try to parse value as JSON for complex types
-            let parsedValue;
+            let parsedValue: any;
             try {
                 parsedValue = JSON.parse(value);
             } catch (e) {
@@ -588,11 +580,11 @@ builtin_configCmd
                 console.error('❌ Failed to set configuration value');
             }
         } catch (e) {
-            console.error(`❌ Error setting configuration: ${e.message}`);
+            console.error(`❌ Error setting configuration: ${(e as Error).message}`);
         }
     });
 
-builtin_configCmd
+configCmd
     .command('reset')
     .description('Reset configuration to defaults')
     .action(async () => {
@@ -615,11 +607,11 @@ builtin_configCmd
                 console.log('✅ Configuration reset to defaults');
             }
         } catch (e) {
-            console.error(`❌ Error resetting configuration: ${e.message}`);
+            console.error(`❌ Error resetting configuration: ${(e as Error).message}`);
         }
     });
 
-builtin_configCmd
+configCmd
     .command('path')
     .description('Show configuration file path')
     .action(() => {
@@ -638,16 +630,16 @@ builtin_configCmd
                 console.log(`📄 Active RC file: ${rcFile}`);
             }
         } catch (e) {
-            console.error(`❌ Error getting configuration path: ${e.message}`);
+            console.error(`❌ Error getting configuration path: ${(e as Error).message}`);
         }
     });
 
 
 // CLI entry point
-async function cliEntry() {
+function cliEntry(): void {
     try {
         // Load plugins before parsing
-        await loadPlugins(program);
+        loadPlugins(program);
         
         // Parse command line
         program.parse(process.argv);
@@ -657,27 +649,30 @@ async function cliEntry() {
             program.outputHelp();
         }
     } catch (e) {
-        if (e.code === 'commander.help') {
+        if ((e as any).code === 'commander.help') {
             // Normal help display
             process.exit(0);
         }
         
+        // Get verbose flag from program options
         const verbose = program.opts().verbose || false;
-        const exitCode = handleCLIError(e, verbose);
+        const exitCode = handleCLIError(e as Error, verbose);
         process.exit(exitCode);
     }
 }
 
 // Handle uncaught errors
-process.on('uncaughtException', (error) => {
-    const verbose = program.opts().verbose || false;
+process.on('uncaughtException', (error: Error) => {
+    // Get verbose flag from program options if available, fallback to process.argv check
+    const verbose = program.opts().verbose || process.argv.includes('--verbose');
     const exitCode = handleCLIError(error, verbose);
     process.exit(exitCode);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    const verbose = program.opts().verbose || false;
+    // Get verbose flag from program options if available, fallback to process.argv check
+    const verbose = program.opts().verbose || process.argv.includes('--verbose');
     const exitCode = handleCLIError(error, verbose);
     process.exit(exitCode);
 });
@@ -692,12 +687,6 @@ process.on('SIGINT', () => {
 export { program, cliEntry };
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-    cliEntry().catch(error => {
-        console.error('Fatal error:', error.message);
-        if (process.env.DEBUG) {
-            console.error(error.stack);
-        }
-        process.exit(1);
-    });
+if (require.main === module) {
+    cliEntry();
 }

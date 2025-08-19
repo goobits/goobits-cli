@@ -15,15 +15,13 @@
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
   "include": [
-    "cli.ts",
+    "index.ts",
     "bin/**/*.ts",
     "commands/**/*.ts",
     "lib/**/*.ts",
     "examples/**/*.ts",
     "types/**/*.ts",
-    
-    "src/hooks.ts",
-    
+    "app_hooks.ts",
     "scripts/**/*.ts"
   ],
   "exclude": [

@@ -1,182 +1,213 @@
-# Goobits CLI Framework
+# TestTSCLI
 
-Universal CLI generation platform that creates professional command-line interfaces from YAML configuration files.
+TypeScript test CLI for validation
 
-> Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility.
-
-## Features
-
-- **Multi-language support**: Python, Node.js, TypeScript, and Rust (all production-ready)
-- **Universal Template System**: Single configuration generates for all languages
-- **Rich terminal interfaces**: Built with rich-click, Commander.js, and Clap
-- **Automated setup scripts**: Platform-aware installation and dependency management
-- **Self-hosting**: Framework generates its own CLI from goobits.yaml
-- **Performance optimized**: <100ms startup times, <2MB memory usage
+> TypeScript test CLI for validation
 
 ## Installation
 
-### From PyPI (Recommended)
+### From Package Manager (Recommended)
 
 ```bash
-pipx install goobits-cli
+npm install -g test-ts-cli
 ```
 
 ### From Source
 
-Clone this repository and install in development mode:
+Clone this repository and build from source:
 
 ```bash
-git clone https://github.com/goobits/goobits-cli.git
-cd goobits-cli
-./setup.sh install --dev
+git clone 
+cd test-ts-cli
+./setup.sh --dev
 ```
 
-## Quick Start
+### Development Installation
 
-Create a new CLI project:
+For development with live updates:
 
 ```bash
-# Start with the working example
-cp -r docs/examples/simple-greeting my-awesome-cli
-cd my-awesome-cli
-goobits build                 # Create CLI and setup scripts
-./setup.sh install --dev     # Install for development
+./setup.sh --dev
 ```
 
-Or create from scratch in an existing goobits project directory:
+## Usage
+
+### Basic Commands
+
+#### `testtscli hello`
+Say hello
+
 ```bash
-goobits init my-cli           # Generate initial goobits.yaml template
-```
+testtscli hello <name>```
 
-## Commands
+**Arguments:**
+- `name`: Name to greet
 
-### `goobits build [CONFIG_PATH]`
-Generate CLI and setup scripts from goobits.yaml configuration
+#### `testtscli build`
+Build the project
 
-**Options:**
-- `--output-dir, -o`: Output directory (defaults to same directory as config file)
-- `--output`: Output filename for generated CLI (defaults to 'generated_cli.py')
-- `--backup`: Create backup files (.bak) when overwriting existing files
-- `--universal-templates`: Use Universal Template System (production-ready but marked experimental in CLI)
+```bash
+testtscli build [OPTIONS]```
 
-### `goobits init [PROJECT_NAME]`
-Create initial goobits.yaml template
 
 **Options:**
-- `--template, -t`: Template type (basic, advanced, api-client, text-processor)
-- `--force`: Overwrite existing goobits.yaml file
+- `--watch`: Watch for changes
 
-### `goobits serve DIRECTORY`
-Serve local PyPI-compatible package index
+### Global Options
 
-**Options:**
-- `--host`: Host to bind the server to (default: localhost)
-- `--port, -p`: Port to run the server on (default: 8080)
+All commands support these global options:
 
-## Global Options
-
-- `--verbose, -v`: Enable verbose error output and debugging information
+- `--help`: Show help message and exit
 - `--version`: Show version information
-- `--help`: Show help message
 
-## Language Support
+**Verbose Mode:**
+When `--verbose` is enabled, the CLI provides:
+- Detailed error messages with full context
+- Stack traces for debugging issues
+- Additional diagnostic information
+- Progress details for long-running operations
 
-### Python
-- Framework: Click with rich-click
-- Hook file: `app_hooks.py`
-- Example: `def on_command_name(*args, **kwargs):`
+### Examples
 
-### Node.js
-- Framework: Commander.js
-- Hook file: `src/hooks.js`
-- Example: `export async function onCommandName(args) {}`
+```bash
+# Show help
+testtscli --help
 
-### TypeScript
-- Framework: Commander.js with type safety
-- Hook file: `src/hooks.ts`
-- Example: `export async function onCommandName(args: string[]) {}`
+# Show version
+testtscli --version
 
-### Rust
-- Framework: Clap (high-performance native binaries)
-- Hook file: `src/hooks.rs`
-- Example: `pub fn on_command_name(matches: &ArgMatches) -> Result<()> {}`
+# Enable verbose output for detailed error messages
+testtscli --verbose hello
+
+# Short form of verbose flag
+testtscli -v hello
+
+# Example hello command
+testtscli hello "example_name"
+# Same command with verbose output
+testtscli --verbose hello "example_name"
+# Error handling examples
+testtscli invalid-command              # Standard error message
+testtscli --verbose invalid-command   # Detailed error with stack trace
+```
 
 ## Configuration
 
-Basic `goobits.yaml` structure:
+Configuration locations:
 
-```yaml
-package_name: my-cli
-command_name: mycli
-display_name: "My Awesome CLI"
-description: "A description of what my CLI does"
-language: python  # python, nodejs, typescript, or rust
+- **Linux**: `~/.config/test-ts-cli/`
+- **macOS**: `~/Library/Application Support/test-ts-cli/`
+- **Windows**: `%APPDATA%\test-ts-cli\`
 
-cli_hooks: "app_hooks.py"  # For Python (nodejs: src/hooks.js, rust: src/hooks.rs)
+You can edit this file directly or use the CLI to manage settings.
 
-cli:
-  name: "My CLI"
-  version: "1.0.0"
-  tagline: "Short description"
-  
-  commands:
-    hello:
-      desc: "Say hello"
-      args:
-        - name: "name"
-          desc: "Name to greet"
-          required: true
-```
+### Configuration Options
 
-## Development Workflow
+- `settings.auto_update`: Enable automatic updates (default: false)
+- `settings.log_level`: Set logging level (debug, info, warn, error)
+- `settings.verbose`: Enable verbose output by default (default: false)
+- `features.colored_output`: Enable colored terminal output (default: true)
+- `features.progress_bars`: Show progress bars for long operations (default: true)
 
-1. **Edit goobits.yaml**: Define your CLI structure
-2. **Run goobits build**: Generate implementation files
-3. **Edit hooks file**: Add your business logic
-4. **Test**: `./setup.sh install --dev`
+### Environment Variables
 
-## Examples
+You can also control verbose mode using environment variables:
 
-See working examples in the repository:
+```bash
+# Enable verbose mode for all commands
+export TESTTSCLI_VERBOSE=true
+testtscli hello
 
-- `demo-examples/`: Complete multi-language CLI examples
-- `rust_test_cli/`: Rust CLI implementation example
-- Self-hosting: This framework's own CLI is built from `goobits.yaml`
-
-## Architecture
-
-```
-goobits.yaml → Generator Engine → Generated CLI
-     ↓              ↓                  ↓
-Configuration   Template         Python/JS/TS/Rust
-(User Input)   Processing        Applications
-              (Jinja2/Universal)
+# Disable verbose mode (overrides config)
+export TESTTSCLI_VERBOSE=false
+testtscli hello
 ```
 
 ## Development
-
-### Prerequisites
-
-- Python 3.8+
-- pip/pipx
 
 ### Building
 
 ```bash
 # Install dependencies
-./setup.sh install --dev
+npm install
 
-# Generate CLI from goobits.yaml (self-hosting)
-goobits build
+# Build (if TypeScript)
+npm run build
 
 # Run tests
-pytest src/tests/
+npm test
+```
 
-# Type checking
-mypy src/goobits_cli/
+### Testing
 
-# Linting
-ruff check src/
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+```
+
+### Running
+
+```bash
+# Run from source (development)
+node cli.js --help
+
+# Or using npm link
+npm link && testtscli --help
+```
+
+## Shell Completions
+
+Generate shell completions for better command-line experience:
+
+```bash
+./setup.sh --completions
+```
+
+This creates completion files in the `completions/` directory for:
+- Bash
+- Zsh  
+- Fish
+
+### Installing Completions
+
+**Bash:**
+```bash
+source completions/testtscli.bash
+```
+
+**Zsh:**
+```bash
+# Add to your ~/.zshrc
+fpath=(./completions $fpath)
+autoload -U compinit && compinit
+```
+
+**Fish:**
+```bash
+cp completions/testtscli.fish ~/.config/fish/completions/
+```
+
+## Architecture
+
+This CLI is built using:
+
+- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
+- **[TypeScript](https://www.typescriptlang.org/)**: Typed superset of JavaScript
+- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
+
+### Project Structure
+
+```
+├── cli.ts           # CLI entry point
+├── package.json         # NPM package configuration
+├── src/
+│   ├── hooks.ts       # User-defined business logic
+│   ├── config.ts      # Configuration management
+│   └── utils.ts       # Utility functions
+└── completions/         # Shell completion scripts
 ```
 
 ## Contributing
@@ -193,3 +224,11 @@ ruff check src/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Changelog
+
+### 1.0.0
+- Initial release
+- Core CLI functionality implemented
+- `hello` command: Say hello
+- `build` command: Build the project

@@ -7,7 +7,7 @@ import rich_click as click
 from rich_click import RichGroup
 
 @click.group(cls=RichGroup)
-@click.version_option(version="2.0.0-beta.1")
+@click.version_option(version="2.0.0-rc1")
 def main():
     """Build professional command-line tools with YAML configuration"""
     pass

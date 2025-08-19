@@ -76,3 +76,21 @@ logs/
 
 config.local.json
 
+
+
+# TypeScript
+
+dist/
+
+*.tsbuildinfo
+
+.eslintcache
+
+
+
+# TypeScript test coverage
+
+coverage/
+
+.nyc_output/
+

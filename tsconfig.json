@@ -40,9 +40,7 @@
     "commands/**/*.ts",
     "lib/**/*.ts",
     "scripts/**/*.ts",
-    
     "app_hooks.ts",
-    
     "types/**/*.ts"
   ],
   "exclude": [

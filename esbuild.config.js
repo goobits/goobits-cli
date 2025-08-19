@@ -58,7 +58,7 @@ const builds = [
   // Main library build
   {
     ...sharedConfig,
-    entryPoints: ['./cli.ts'],
+    entryPoints: ['./index.ts'],
     outfile: './dist/index.js',
     format: 'cjs',
   },
@@ -66,7 +66,7 @@ const builds = [
   // ESM build
   {
     ...sharedConfig,
-    entryPoints: ['./cli.ts'],
+    entryPoints: ['./index.ts'],
     outfile: './dist/index.mjs',
     format: 'esm',
   },
@@ -133,7 +133,7 @@ async function serve() {
   
   const ctx = await build({
     ...sharedConfig,
-    entryPoints: ['./cli.ts'],
+    entryPoints: ['./index.ts'],
     outfile: './dist/dev/index.js',
     watch: true,
     
@@ -163,7 +163,7 @@ async function analyze() {
   
   await build({
     ...sharedConfig,
-    entryPoints: ['./cli.ts'],
+    entryPoints: ['./index.ts'],
     outfile: './dist/analysis/index.js',
     metafile: true,
     write: false,

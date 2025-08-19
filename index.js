@@ -62,7 +62,7 @@ const getVersion = asyncErrorHandler(async function getVersion() {
     if (process.env.DEBUG) {
       console.debug('Could not load version from package.json:', error.message);
     }
-    return '2.0.0-beta.1';
+    return '2.0.0-rc1';
   }
 });
 
