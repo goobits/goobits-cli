@@ -1288,6 +1288,7 @@ class UniversalTemplateEngine:
                     if 'subcommands' in cmd_dict and cmd_dict['subcommands']:
                         command_data["subcommands"] = self._extract_subcommands_dict(cmd_dict['subcommands'])
                     
+                    schema["root_command"]["subcommands"].append(command_data)
                     schema["commands"][cmd_name] = command_data
                     
             elif isinstance(commands, list):
