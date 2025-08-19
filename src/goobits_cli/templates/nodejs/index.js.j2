@@ -452,7 +452,7 @@ export const cli = asyncErrorHandler(async function cli() {
     });
 
   // Internal completion command (hidden from help)
-  const completionCmd = program
+  const builtin_completionCmd = program
     .command('_completion <shell> <current_line> [cursor_pos]', { hidden: true })
     .option('--debug', 'Debug completion engine')
     .action(async (shell, currentLine, cursorPos, options) => {

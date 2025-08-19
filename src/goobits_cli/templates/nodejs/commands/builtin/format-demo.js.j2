@@ -8,16 +8,16 @@ import chalk from 'chalk';
 import { addFormatOption, outputFormatted } from '../../lib/formatter.js';
 
 export default function registerFormatDemoCommand(program) {
-  const formatDemoCmd = program
+  const builtin_formatDemoCmd = program
     .command('format-demo')
     .description('🎨 Demonstrate output formatting capabilities')
     .alias('demo');
 
   // Add format options to the command
-  addFormatOption(formatDemoCmd);
+  addFormatOption(builtin_formatDemoCmd);
 
   // Add demo-specific options
-  formatDemoCmd
+  builtin_formatDemoCmd
     .option('--sample <type>', 'Sample data type (simple|complex|list|mixed)', 'simple')
     .action(async (options) => {
       try {
@@ -47,7 +47,7 @@ export default function registerFormatDemoCommand(program) {
       }
     });
 
-  return formatDemoCmd;
+  return builtin_formatDemoCmd;
 }
 
 /**

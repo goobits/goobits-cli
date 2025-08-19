@@ -211,9 +211,13 @@ class NodeJSGenerator(BaseGenerator):
 
     
 
-    def _check_file_conflicts(self, target_files: dict, target_directory: Optional[str] = None) -> dict:
+    def _check_file_conflicts(self, target_files: dict, target_directory: Optional[str] = None) -> tuple[dict, dict]:
 
-        """Check for file conflicts and adjust paths if needed."""
+        """Check for file conflicts and adjust paths if needed.
+        
+        Returns:
+            Tuple of (adjusted_files, conflict_info) where conflict_info tracks renames
+        """
 
         import os
 
@@ -222,6 +226,8 @@ class NodeJSGenerator(BaseGenerator):
         adjusted_files = {}
 
         warnings = []
+        
+        conflict_info = {}
 
         
 
@@ -252,6 +258,8 @@ class NodeJSGenerator(BaseGenerator):
                 new_filepath = "cli.js"
 
                 adjusted_files[new_filepath] = content
+                
+                conflict_info['main_entry_file_renamed'] = {'from': 'index.js', 'to': 'cli.js'}
 
                 warnings.append(f"⚠️  Existing index.js detected. Generated cli.js instead.")
 
@@ -283,7 +291,7 @@ class NodeJSGenerator(BaseGenerator):
 
         
 
-        return adjusted_files
+        return adjusted_files, conflict_info
 
     
 
@@ -693,13 +701,8 @@ class NodeJSGenerator(BaseGenerator):
         # Determine main entry file name based on conflict detection
         import os
         main_entry_file = "index.js"
-        # For now, skip conflict detection in legacy method since file generation handles it
-        # if target_directory:
-        #     check_path = os.path.join(target_directory, "index.js")
-        # else:
-        #     check_path = "index.js"
-        # if os.path.exists(check_path):
-        #     main_entry_file = "cli.js"
+        if os.path.exists("index.js"):
+            main_entry_file = "cli.js"
 
         # Prepare context for template rendering
 
@@ -1163,13 +1166,8 @@ export default cli;
         # Determine main entry file name based on conflict detection
         import os
         main_entry_file = "index.js"
-        # For now, skip conflict detection in legacy method since file generation handles it
-        # if target_directory:
-        #     check_path = os.path.join(target_directory, "index.js")
-        # else:
-        #     check_path = "index.js"
-        # if os.path.exists(check_path):
-        #     main_entry_file = "cli.js"
+        if os.path.exists("index.js"):
+            main_entry_file = "cli.js"
 
         # Prepare context for template rendering
 
@@ -1375,7 +1373,35 @@ export default cli;
 
         # Check for file conflicts and adjust if needed
 
-        files = self._check_file_conflicts(files, target_directory)
+        files, conflict_info = self._check_file_conflicts(files, target_directory)
+
+        
+
+        # Update main_entry_file in context if it was renamed due to conflicts
+        
+        if conflict_info.get('main_entry_file_renamed'):
+        
+            actual_main_file = conflict_info['main_entry_file_renamed']['to']
+            
+            # Update any template content that references the old filename
+            
+            for filepath, content in files.items():
+            
+                if filepath == 'package.json':
+                
+                    # Update package.json to reference the correct main file
+                    
+                    files[filepath] = content.replace('"main": "index.js"', f'"main": "{actual_main_file}"')
+                    
+                    files[filepath] = files[filepath].replace('"start": "node index.js"', f'"start": "node {actual_main_file}"')
+                    
+                    files[filepath] = files[filepath].replace('"index.js"', f'"{actual_main_file}"')
+                    
+                elif filepath == 'bin/cli.js':
+                
+                    # The bin/cli.js template should already handle this via main_entry_file context
+                    
+                    pass
 
         
 
@@ -1545,7 +1571,7 @@ if [ $? -eq 0 ]; then
 
     echo "✅ Setup successful!"
 
-    echo "📍 CLI location: index.js"
+    echo "📍 CLI location: {context.get('main_entry_file', 'index.js')}"
 
     echo ""
 
@@ -1557,7 +1583,7 @@ if [ $? -eq 0 ]; then
 
     echo "To run locally:"
 
-    echo "   node index.js --help"
+    echo "   node {context.get('main_entry_file', 'index.js')} --help"
 
 else
 
@@ -1577,6 +1603,10 @@ fi
 
         # Use minimal fallback approach only
 
+        main_entry_file = context.get('main_entry_file', 'index.js')
+
+        
+
         package_data = {
 
             "name": context['package_name'],
@@ -1585,11 +1615,11 @@ fi
 
             "description": context['description'],
 
-            "main": "index.js",
+            "main": main_entry_file,
 
             "bin": {
 
-                context['command_name']: "./index.js"
+                context['command_name']: f"./{main_entry_file}"
 
             },
 
@@ -1597,7 +1627,7 @@ fi
 
                 "test": "echo \"Error: no test specified\" && exit 1",
 
-                "start": "node index.js"
+                "start": f"node {main_entry_file}"
 
             },
 

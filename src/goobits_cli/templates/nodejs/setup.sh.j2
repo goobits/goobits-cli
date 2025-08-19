@@ -104,7 +104,7 @@ log_error() {
 
 # Check if we're in a development environment
 is_development() {
-    [ -f "package.json" ] && [ -f "{{ cli.name | lower | replace(' ', '-') }}.js" -o -f "cli.js" ]
+    [ -f "package.json" ] && [ -f "{{ main_entry_file }}" ]
 }
 
 # Check Node.js version
@@ -539,7 +539,7 @@ install() {
         echo "  • Use anywhere: $COMMAND_NAME"
     else
         echo -e "${GREEN}Local installation completed:${NC}"
-        echo "  • Run locally: ./cli.js"
+        echo "  • Run locally: ./{{ main_entry_file }}"
         echo "  • Or install globally: npm install -g ."
     fi
     

@@ -10,13 +10,13 @@ import { existsSync } from 'fs';
 import { execSync } from 'child_process';
 
 export default function registerCompletionCommand(program) {
-  const completionCmd = program
+  const builtin_completionCmd = program
     .command('completion')
     .description('🔧 Generate shell completion scripts')
     .alias('completions');
 
   // Generate completion subcommand
-  completionCmd
+  builtin_completionCmd
     .command('generate <shell>')
     .description('Generate completion script for specified shell')
     .option('--output <file>', 'Write to file instead of stdout')
@@ -48,7 +48,7 @@ export default function registerCompletionCommand(program) {
     });
 
   // Install completion subcommand
-  completionCmd
+  builtin_completionCmd
     .command('install <shell>')
     .description('Install completion script for specified shell')
     .option('--force', 'Overwrite existing completion script')
@@ -75,7 +75,7 @@ export default function registerCompletionCommand(program) {
     });
 
   // Uninstall completion subcommand
-  completionCmd
+  builtin_completionCmd
     .command('uninstall <shell>')
     .description('Uninstall completion script for specified shell')
     .action(async (shell) => {
@@ -95,7 +95,7 @@ export default function registerCompletionCommand(program) {
     });
 
   // Status subcommand
-  completionCmd
+  builtin_completionCmd
     .command('status')
     .description('Show completion installation status')
     .action(async () => {
@@ -117,7 +117,7 @@ export default function registerCompletionCommand(program) {
       console.log(chalk.gray('Run "completion install <shell>" to install for a specific shell.'));
     });
 
-  return completionCmd;
+  return builtin_completionCmd;
 }
 
 /**

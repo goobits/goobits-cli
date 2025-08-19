@@ -10,13 +10,13 @@ import { join, resolve } from 'path';
 import { existsSync } from 'fs';
 
 export default function registerPluginCommand(program) {
-  const pluginCmd = program
+  const builtin_pluginCmd = program
     .command('plugin')
     .description('🔌 Manage plugins for {{ display_name }}')
     .alias('plugins');
 
   // List plugins subcommand
-  pluginCmd
+  builtin_pluginCmd
     .command('list')
     .alias('ls')
     .description('List all available and loaded plugins')
@@ -66,7 +66,7 @@ export default function registerPluginCommand(program) {
     });
 
   // Install plugin subcommand
-  pluginCmd
+  builtin_pluginCmd
     .command('install <plugin-name>')
     .description('Install a plugin from npm')
     .option('-g, --global', 'Install globally')
@@ -77,7 +77,7 @@ export default function registerPluginCommand(program) {
     });
 
   // Uninstall plugin subcommand
-  pluginCmd
+  builtin_pluginCmd
     .command('uninstall <plugin-name>')
     .alias('remove')
     .description('Uninstall a plugin')
@@ -88,7 +88,7 @@ export default function registerPluginCommand(program) {
     });
 
   // Create plugin subcommand
-  pluginCmd
+  builtin_pluginCmd
     .command('create <plugin-name>')
     .description('Create a new plugin template')
     .option('--type <type>', 'Plugin type (function|class|npm)', 'function')
@@ -104,7 +104,7 @@ export default function registerPluginCommand(program) {
     });
 
   // Info plugin subcommand
-  pluginCmd
+  builtin_pluginCmd
     .command('info <plugin-name>')
     .description('Show detailed information about a plugin')
     .action(async (pluginName) => {
@@ -147,7 +147,7 @@ export default function registerPluginCommand(program) {
       }
     });
 
-  return pluginCmd;
+  return builtin_pluginCmd;
 }
 
 /**

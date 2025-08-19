@@ -499,11 +499,11 @@ const {{ cmd_name }}Cmd = program
 {% endfor %}
 
 // Completion commands
-const completionCmd = program
+const builtin_completionCmd = program
     .command('completion')
     .description('🔧 Shell completion management');
 
-completionCmd
+builtin_completionCmd
     .command('generate <shell>')
     .description('Generate shell completion script')
     .option('-o, --output <file>', 'Output file path')
@@ -527,7 +527,7 @@ completionCmd
         }
     });
 
-completionCmd
+builtin_completionCmd
     .command('install <shell>')
     .description('Install shell completion script')
     .option('--user', 'Install for current user (default)', true)
@@ -557,7 +557,7 @@ completionCmd
         }
     });
 
-completionCmd
+builtin_completionCmd
     .command('instructions <shell>')
     .description('Show installation instructions for shell completion')
     .action((shell) => {
@@ -612,11 +612,11 @@ program
     });
 
 // Config commands
-const configCmd = program
+const builtin_configCmd = program
     .command('config')
     .description('⚙️ Configuration management');
 
-configCmd
+builtin_configCmd
     .command('get [key]')
     .description('Get configuration value')
     .action((key) => {
@@ -643,7 +643,7 @@ configCmd
         }
     });
 
-configCmd
+builtin_configCmd
     .command('set <key> <value>')
     .description('Set configuration value')
     .action((key, value) => {
@@ -672,7 +672,7 @@ configCmd
         }
     });
 
-configCmd
+builtin_configCmd
     .command('reset')
     .description('Reset configuration to defaults')
     .action(async () => {
@@ -699,7 +699,7 @@ configCmd
         }
     });
 
-configCmd
+builtin_configCmd
     .command('path')
     .description('Show configuration file path')
     .action(() => {
@@ -812,11 +812,11 @@ program
         }
     });
 
-const daemonCmd = program
+const builtin_daemonCmd = program
     .command('daemon')
     .description('🔧 Daemon system integration commands');
 
-daemonCmd
+builtin_daemonCmd
     .command('install <commandName>')
     .description('🔧 Generate systemd service file for daemon management')
     .option('--user', 'Install as user service (default)', true)

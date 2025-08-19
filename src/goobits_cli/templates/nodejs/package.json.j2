@@ -3,7 +3,7 @@
   "version": "{{ version | default('1.0.0') }}",
   "description": "{{ description | default(cli.description if cli else 'A CLI tool built with goobits') }}",
   "type": "module",
-  "main": "index.js",
+  "main": "{{ main_entry_file }}",
   "bin": {
     "{{ command_name }}": "./bin/cli.js"
   },
@@ -15,7 +15,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "build": "echo \"No build step required\"",
-    "start": "node index.js",
+    "start": "node {{ main_entry_file }}",
     "completion:install": "node bin/cli.js completion install",
     "postinstall": "node scripts/postinstall.js || true"
   },
@@ -52,7 +52,7 @@
     "commands/",
     "lib/",
     "completions/",
-    "index.js",
+    "{{ main_entry_file }}",
     "README.md"
   ],
   "repository": {
