@@ -579,8 +579,30 @@ Auto-generated from {config_filename}
 import rich_click as click
 from rich_click import RichGroup
 
+def _get_version():
+    """Get version from pyproject.toml or package metadata."""
+    try:
+        # Try to read from pyproject.toml first
+        import tomllib
+        from pathlib import Path
+        pyproject_path = Path(__file__).parent / "pyproject.toml"
+        if pyproject_path.exists():
+            with open(pyproject_path, "rb") as f:
+                data = tomllib.load(f)
+            return data["project"]["version"]
+    except Exception:
+        pass
+    
+    try:
+        # Fall back to installed package metadata
+        import importlib.metadata
+        return importlib.metadata.version("{package_name}")
+    except Exception:
+        # Final fallback
+        return "{version or '1.0.0'}"
+
 @click.group(cls=RichGroup)
-@click.version_option(version="{version or '1.0.0'}")
+@click.version_option(version=_get_version)
 def main():
     """{cli_config.tagline or cli_config.description}"""
     pass

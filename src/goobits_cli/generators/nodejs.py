@@ -269,6 +269,19 @@ class NodeJSGenerator(BaseGenerator):
 
     
 
+    def _get_dynamic_version(self, version: Optional[str], cli_config: Optional[ConfigSchema]) -> str:
+        """Get version dynamically from package.json or fall back to config/default."""
+        # First try the provided version
+        if version:
+            return version
+        
+        # Try CLI config version
+        if cli_config and hasattr(cli_config, 'version') and cli_config.version:
+            return cli_config.version
+            
+        # Default fallback - will be replaced by package.json version in generated CLI
+        return '1.0.0'
+
     def _validate_configuration(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 
                                cli_config: Optional[ConfigSchema]) -> None:
@@ -679,7 +692,7 @@ class NodeJSGenerator(BaseGenerator):
 
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
-            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            'version': self._get_dynamic_version(version, cli_config),
             
             'main_entry_file': main_entry_file,
 
@@ -1138,7 +1151,7 @@ export default cli;
 
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
-            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            'version': self._get_dynamic_version(version, cli_config),
             
             'main_entry_file': main_entry_file,
 

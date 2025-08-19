@@ -408,6 +408,19 @@ class RustGenerator(BaseGenerator):
 
     
 
+    def _get_dynamic_version(self, version: Optional[str], cli_config=None) -> str:
+        """Get version dynamically from Cargo.toml or fall back to config/default."""
+        # First try the provided version
+        if version:
+            return version
+        
+        # Try CLI config version (if available)
+        if cli_config and hasattr(cli_config, 'version') and cli_config.version:
+            return cli_config.version
+            
+        # Default fallback - will be replaced by Cargo.toml version in generated CLI
+        return '0.1.0'
+
     def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 
                                          config_filename: str, version: Optional[str] = None) -> str:
@@ -700,7 +713,7 @@ class RustGenerator(BaseGenerator):
 
             'hooks_path': metadata['hooks_path'],
 
-            'version': version or '0.1.0'
+            'version': self._get_dynamic_version(version)
 
         }
 

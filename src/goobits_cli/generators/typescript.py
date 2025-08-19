@@ -281,6 +281,19 @@ class TypeScriptGenerator(NodeJSGenerator):
 
     
 
+    def _get_dynamic_version(self, version: Optional[str], cli_config: Optional[ConfigSchema]) -> str:
+        """Get version dynamically from package.json or fall back to config/default."""
+        # First try the provided version
+        if version:
+            return version
+        
+        # Try CLI config version
+        if cli_config and hasattr(cli_config, 'version') and cli_config.version:
+            return cli_config.version
+            
+        # Default fallback - will be replaced by package.json version in generated CLI
+        return '1.0.0'
+
     def _generate_with_universal_templates(self, config, config_filename: str, version: Optional[str] = None) -> str:
 
         """
@@ -503,7 +516,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
-            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            'version': self._get_dynamic_version(version, cli_config),
 
             'installation': metadata['installation'],
 
@@ -1007,7 +1020,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
-            'version': version or (cli_config.version if cli_config and hasattr(cli_config, 'version') else '1.0.0'),
+            'version': self._get_dynamic_version(version, cli_config),
 
             'installation': metadata['installation'],
 
