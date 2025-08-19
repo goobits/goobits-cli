@@ -1297,83 +1297,83 @@ class UniversalTemplateEngine:
                     cmd_dict = _safe_to_dict(cmd)
                     cmd_name = cmd_dict.get('name', 'unknown')
 
-                command_data = {
+                    command_data = {
 
-                    "name": cmd_name,
+                        "name": cmd_name,
 
-                    "description": cmd_dict.get('description', cmd_dict.get('desc', '')),
+                        "description": cmd_dict.get('description', cmd_dict.get('desc', '')),
 
-                    "arguments": [],
+                        "arguments": [],
 
-                    "options": [],
+                        "options": [],
 
-                    "subcommands": [],
+                        "subcommands": [],
 
-                    "hook_name": f"on_{cmd_name.replace('-', '_')}",
+                        "hook_name": f"on_{cmd_name.replace('-', '_')}",
 
-                }
+                    }
 
-                
+                    
 
-                # Extract command arguments
+                    # Extract command arguments
 
-                if 'args' in cmd_dict and cmd_dict['args']:
+                    if 'args' in cmd_dict and cmd_dict['args']:
 
-                    for arg in cmd_dict['args']:
+                        for arg in cmd_dict['args']:
 
-                        command_data["arguments"].append({
+                            command_data["arguments"].append({
 
-                            "name": _safe_get_attr(arg, "name"),
+                                "name": _safe_get_attr(arg, "name"),
 
-                            "description": _safe_get_attr(arg, "desc"),  # Note: ArgumentSchema uses 'desc'
+                                "description": _safe_get_attr(arg, "desc"),  # Note: ArgumentSchema uses 'desc'
 
-                            "type": _safe_get_attr(arg, "type", "string"),
+                                "type": _safe_get_attr(arg, "type", "string"),
 
-                            "required": _safe_get_attr(arg, "required", True),
+                                "required": _safe_get_attr(arg, "required", True),
 
-                            "multiple": _safe_get_attr(arg, "nargs") == "*",
+                                "multiple": _safe_get_attr(arg, "nargs") == "*",
 
-                        })
+                            })
 
-                
+                    
 
-                # Extract command options
+                    # Extract command options
 
-                if 'options' in cmd_dict and cmd_dict['options']:
+                    if 'options' in cmd_dict and cmd_dict['options']:
 
-                    for opt in cmd_dict['options']:
+                        for opt in cmd_dict['options']:
 
-                        command_data["options"].append({
+                            command_data["options"].append({
 
-                            "name": _safe_get_attr(opt, "name"),
+                                "name": _safe_get_attr(opt, "name"),
 
-                            "short": _safe_get_attr(opt, "short"),
+                                "short": _safe_get_attr(opt, "short"),
 
-                            "description": _safe_get_attr(opt, "desc"),  # Note: OptionSchema uses 'desc'
+                                "description": _safe_get_attr(opt, "desc"),  # Note: OptionSchema uses 'desc'
 
-                            "type": _safe_get_attr(opt, "type", "str"),
+                                "type": _safe_get_attr(opt, "type", "str"),
 
-                            "default": _safe_get_attr(opt, "default"),
+                                "default": _safe_get_attr(opt, "default"),
 
-                            "required": False,  # Options are typically not required
+                                "required": False,  # Options are typically not required
 
-                            "multiple": _safe_get_attr(opt, "multiple", False),
+                                "multiple": _safe_get_attr(opt, "multiple", False),
 
-                        })
+                            })
 
-                
+                    
 
-                # Handle nested subcommands recursively
+                    # Handle nested subcommands recursively
 
-                if 'subcommands' in cmd_dict and cmd_dict['subcommands']:
+                    if 'subcommands' in cmd_dict and cmd_dict['subcommands']:
 
-                    command_data["subcommands"] = self._extract_subcommands_dict(cmd_dict['subcommands'])
+                        command_data["subcommands"] = self._extract_subcommands_dict(cmd_dict['subcommands'])
 
-                
+                    
 
-                schema["root_command"]["subcommands"].append(command_data)
+                    schema["root_command"]["subcommands"].append(command_data)
 
-                schema["commands"][cmd_name] = command_data
+                    schema["commands"][cmd_name] = command_data
 
         
 
