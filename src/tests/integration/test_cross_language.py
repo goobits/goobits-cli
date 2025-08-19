@@ -667,9 +667,13 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
             # Install dependencies if package.json exists
             package_json_path = Path(temp_dir) / "package.json"
             if package_json_path.exists():
-                npm_result = subprocess.run([
-                    "npm", "install"
-                ], capture_output=True, text=True, cwd=temp_dir, timeout=120)
+                try:
+                    npm_result = subprocess.run([
+                        "npm", "install"
+                    ], capture_output=True, text=True, cwd=temp_dir, timeout=300)
+                except subprocess.TimeoutExpired:
+                    result["error_message"] = "npm install timed out"
+                    return result
                 
                 if npm_result.returncode == 0:
                     result["installation_success"] = True
@@ -832,9 +836,13 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
             
             # Try to build the Rust project
             if (Path(temp_dir) / "Cargo.toml").exists():
-                build_result = subprocess.run([
-                    "cargo", "build", "--release"
-                ], capture_output=True, text=True, cwd=temp_dir, timeout=180)
+                try:
+                    build_result = subprocess.run([
+                        "cargo", "build", "--release"
+                    ], capture_output=True, text=True, cwd=temp_dir, timeout=300)
+                except subprocess.TimeoutExpired:
+                    result["error_message"] = "cargo build timed out"
+                    return result
                 
                 if build_result.returncode == 0:
                     result["installation_success"] = True

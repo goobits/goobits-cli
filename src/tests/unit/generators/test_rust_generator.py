@@ -18,11 +18,45 @@ from pathlib import Path
 import tempfile
 import shutil
 import json
+import signal
+import threading
+from functools import wraps
 
 from goobits_cli.generators.rust import (
     RustGenerator, RustGeneratorError, ConfigurationError, 
     TemplateError, DependencyError, ValidationError
 )
+
+
+# Timeout decorator for hanging tests
+def timeout(seconds=30):
+    """Decorator to add timeout to test methods to prevent hanging."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = [None]
+            exception = [None]
+            
+            def target():
+                try:
+                    result[0] = func(*args, **kwargs)
+                except Exception as e:
+                    exception[0] = e
+            
+            thread = threading.Thread(target=target)
+            thread.daemon = True
+            thread.start()
+            thread.join(timeout=seconds)
+            
+            if thread.is_alive():
+                pytest.fail(f"Test {func.__name__} timed out after {seconds} seconds")
+            
+            if exception[0]:
+                raise exception[0]
+            
+            return result[0]
+        return wrapper
+    return decorator
 from goobits_cli.schemas import (
     ConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema, 
     GoobitsConfigSchema, CommandGroupSchema
@@ -67,6 +101,7 @@ class TestRustGenerator:
         assert 'to_pascal_case' in generator.env.filters
         assert 'escape_rust_string' in generator.env.filters
         
+    @timeout(30)
     def test_generate_minimal_config(self):
         """Test generation with minimal configuration."""
         # Create a minimal GoobitsConfigSchema for testing
@@ -102,6 +137,7 @@ class TestRustGenerator:
         assert "clap" in cargo_content
         assert "anyhow" in cargo_content
         
+    @timeout(30)
     def test_generate_with_complex_commands(self):
         """Test generation with complex command structure."""
         cli_schema = CLISchema(
@@ -270,6 +306,47 @@ class TestRustGeneratorErrorConditions:
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
     
+    def test_hanging_prevention_with_large_configs(self):
+        """Test that generator handles large configs without hanging."""
+        generator = RustGenerator(use_universal_templates=False)
+        
+        # Create a config with many commands, args, and options
+        commands = {}
+        for i in range(100):  # Reasonable number for real-world scenario
+            args = [ArgumentSchema(name=f"arg_{j}", desc=f"Argument {j}") for j in range(10)]
+            options = [OptionSchema(name=f"opt_{k}", desc=f"Option {k}", type="str") for k in range(15)]
+            commands[f"cmd_{i}"] = CommandSchema(
+                desc=f"Command {i} with many args and options",
+                args=args,
+                options=options
+            )
+        
+        cli_schema = CLISchema(
+            name="large-cli",
+            tagline="Large CLI with many commands",
+            commands=commands
+        )
+        config = create_test_goobits_config("large-cli", cli_schema, language="rust")
+        
+        # Should complete in reasonable time without hanging
+        import time
+        start_time = time.time()
+        result = generator.generate_all_files(config, "large.yaml")
+        elapsed = time.time() - start_time
+        
+        # Should have generated files successfully
+        assert isinstance(result, dict)
+        assert 'src/main.rs' in result
+        assert 'Cargo.toml' in result
+        
+        # Should complete within reasonable time (not hang)
+        assert elapsed < 60  # Should complete within 60 seconds
+        
+        # Generated content should be valid
+        main_content = result['src/main.rs']
+        assert len(main_content) > 0
+        assert 'clap' in main_content  # Should contain clap usage
+    
     def test_generator_with_malformed_config_schema(self):
         """Test generator behavior with malformed configuration schema."""
         generator = RustGenerator(use_universal_templates=False)
@@ -290,6 +367,7 @@ class TestRustGeneratorErrorConditions:
         with pytest.raises((AttributeError, TypeError, KeyError, ConfigurationError, Exception)):
             generator.generate_all_files(malformed_config, "test.yaml")
     
+    @timeout(15)
     def test_generator_template_loading_failure(self):
         """Test generator when template files cannot be loaded."""
         generator = RustGenerator(use_universal_templates=False)
@@ -309,6 +387,7 @@ class TestRustGeneratorErrorConditions:
             with pytest.raises((Exception, TemplateError)):
                 generator.generate_all_files(config, "test.yaml")
     
+    @timeout(15)
     def test_generator_template_rendering_failure(self):
         """Test generator when template rendering fails."""
         generator = RustGenerator(use_universal_templates=False)
@@ -722,6 +801,7 @@ class TestRustGeneratorUniversalTemplates:
 class TestRustGeneratorIntegration:
     """Integration tests for RustGenerator."""
     
+    @timeout(45)
     def test_generate_complete_cli_project(self):
         """Test generation of a complete CLI project."""
         cli_schema = CLISchema(
@@ -888,6 +968,7 @@ cli:
         
         assert language == "rust"
     
+    @timeout(30)
     def test_rust_generator_selection(self):
         """Test that RustGenerator would be selected for Rust language."""
         config = load_goobits_config(self.test_yaml_path)

@@ -335,9 +335,11 @@ class PythonGenerator(BaseGenerator):
 
         # Check if config_filename looks like a directory path (E2E test compatibility)
         # E2E tests call generator.generate(config, str(tmp_path)) expecting files to be written
-        if (config_filename.startswith('/') or config_filename.startswith('./') or 
-            'tmp' in config_filename or 'pytest' in config_filename or
-            Path(config_filename).is_dir()):
+        # Be more specific about directory detection - check if it's actually a directory or doesn't have an extension
+        config_path = Path(config_filename)
+        if (config_path.is_dir() or 
+            (not config_path.suffix and config_path.exists()) or
+            (not config_path.suffix and ('pytest' in config_filename or config_filename.endswith('_test')))):
             
             # For E2E tests, use the simpler legacy approach which is more reliable
             # Generate CLI content using legacy fallback (which works correctly with test configs)

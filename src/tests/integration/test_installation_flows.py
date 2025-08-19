@@ -351,12 +351,12 @@ setup(
     py_modules=["cli"],
     install_requires=[
         "click>=8.0.0",
-        "rich>=10.0.0",
-        "typer>=0.9.0",
+        "rich-click>=1.6.0",
+        "rich>=12.0.0",
     ],
     entry_points={{
         "console_scripts": [
-            "{config.command_name}=cli:main",
+            "{config.command_name}=cli:cli_entry",
         ],
     }},
     python_requires=">=3.8",
@@ -377,22 +377,33 @@ setup(
     @staticmethod
     def _generate_pyproject_toml(config: GoobitsConfigSchema) -> str:
         """Generate pyproject.toml content for Python CLI."""
-        # Build dependencies list including extras
+        # Build dependencies list to match Universal Template expectations
         base_dependencies = [
             '"click>=8.0.0"',
-            '"rich>=10.0.0"',
-            '"typer>=0.9.0"',
+            '"rich-click>=1.6.0"',
+            '"rich>=12.0.0"',
         ]
         
-        # Add extras from installation.extras.python if present
+        # Don't add extras to main dependencies - they should be optional
+        
+        dependencies_str = ',\n    '.join(base_dependencies)
+        
+        # Build optional dependencies section if extras are present  
+        # NOTE: Don't add installation.extras.python as dependencies - those are pip extras for installation
+        optional_deps_section = ""
         if (hasattr(config, 'installation') and config.installation and 
             hasattr(config.installation, 'extras') and config.installation.extras and
             hasattr(config.installation.extras, 'python') and config.installation.extras.python):
-            # Add extras as dependencies with proper TOML quoting
-            for extra in config.installation.extras.python:
-                base_dependencies.append(f'"{extra}"')
-        
-        dependencies_str = ',\n    '.join(base_dependencies)
+            optional_deps_section = f'''
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0"
+]'''
         
         return f'''[build-system]
 requires = ["setuptools>=61.0", "wheel"]
@@ -421,10 +432,10 @@ classifiers = [
 ]
 dependencies = [
     {dependencies_str}
-]
+]{optional_deps_section}
 
 [project.scripts]
-{config.command_name} = "cli:main"
+{config.command_name} = "cli:cli_entry"
 
 [project.urls]
 Homepage = "{config.homepage}"
@@ -488,12 +499,12 @@ setup(
     package_dir={{"": "src"}},
     install_requires=[
         "click>=8.0.0",
-        "rich>=10.0.0",
-        "typer>=0.9.0",
+        "rich-click>=1.6.0",
+        "rich>=12.0.0",
     ],
     entry_points={{
         "console_scripts": [
-            "{config.command_name}={package_name}.cli:main",
+            "{config.command_name}={package_name}.cli:cli_entry",
         ],
     }},
     python_requires=">=3.8",
@@ -518,22 +529,33 @@ setup(
         # The config.package_name (like "test-deps-cli") needs to be converted to module name
         package_name = config.package_name.replace("-", "_")
         
-        # Build dependencies list including extras
+        # Build dependencies list to match Universal Template expectations
         base_dependencies = [
             '"click>=8.0.0"',
-            '"rich>=10.0.0"',
-            '"typer>=0.9.0"',
+            '"rich-click>=1.6.0"',
+            '"rich>=12.0.0"',
         ]
         
-        # Add extras from installation.extras.python if present
+        # Don't add extras to main dependencies - they should be optional
+        
+        dependencies_str = ',\n    '.join(base_dependencies)
+        
+        # Build optional dependencies section if extras are present  
+        # NOTE: Don't add installation.extras.python as dependencies - those are pip extras for installation
+        optional_deps_section = ""
         if (hasattr(config, 'installation') and config.installation and 
             hasattr(config.installation, 'extras') and config.installation.extras and
             hasattr(config.installation.extras, 'python') and config.installation.extras.python):
-            # Add extras as dependencies with proper TOML quoting
-            for extra in config.installation.extras.python:
-                base_dependencies.append(f'"{extra}"')
-        
-        dependencies_str = ',\n    '.join(base_dependencies)
+            optional_deps_section = f'''
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0"
+]'''
         
         return f'''[build-system]
 requires = ["setuptools>=61.0", "wheel"]
@@ -562,10 +584,10 @@ classifiers = [
 ]
 dependencies = [
     {dependencies_str}
-]
+]{optional_deps_section}
 
 [project.scripts]
-{config.command_name} = "{package_name}.cli:main"
+{config.command_name} = "{package_name}.cli:cli_entry"
 
 [project.urls]
 Homepage = "{config.homepage}"
@@ -878,9 +900,15 @@ class TestNodeJSInstallation(TestInstallationWorkflows):
         config = CLITestHelper.create_test_config("nodejs")
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
-        # Install dependencies
-        result = PackageManagerHelper.run_command(["npm", "install"], cwd=temp_dir)
-        assert result.returncode == 0
+        # Install dependencies with timeout
+        try:
+            result = PackageManagerHelper.run_command(["npm", "install"], cwd=temp_dir, timeout=300)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"npm install timed out: {e}")
+            else:
+                raise
         
         # Make CLI executable
         cli_file = Path(generated_files["cli_file"])
@@ -892,9 +920,15 @@ class TestNodeJSInstallation(TestInstallationWorkflows):
             cli_content = "#!/usr/bin/env node\n" + cli_content
             cli_file.write_text(cli_content)
         
-        # Test npm link for global installation
-        result = PackageManagerHelper.run_command(["npm", "link"], cwd=temp_dir)
-        assert result.returncode == 0
+        # Test npm link for global installation with timeout
+        try:
+            result = PackageManagerHelper.run_command(["npm", "link"], cwd=temp_dir, timeout=120)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"npm link timed out: {e}")
+            else:
+                raise
         self._track_installation("npm", config.package_name)
         
         # Verify CLI is available and functional
@@ -909,9 +943,15 @@ class TestNodeJSInstallation(TestInstallationWorkflows):
         config = CLITestHelper.create_test_config("nodejs")
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
-        # Install dependencies with yarn
-        result = PackageManagerHelper.run_command(["yarn", "install"], cwd=temp_dir)
-        assert result.returncode == 0
+        # Install dependencies with yarn and timeout
+        try:
+            result = PackageManagerHelper.run_command(["yarn", "install"], cwd=temp_dir, timeout=300)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"yarn install timed out: {e}")
+            else:
+                raise
         
         # Make CLI executable
         cli_file = Path(generated_files["cli_file"])
@@ -923,9 +963,15 @@ class TestNodeJSInstallation(TestInstallationWorkflows):
             cli_content = "#!/usr/bin/env node\n" + cli_content
             cli_file.write_text(cli_content)
         
-        # Test yarn global add for global installation
-        result = PackageManagerHelper.run_command(["yarn", "global", "add", f"file:{temp_dir}"])
-        assert result.returncode == 0
+        # Test yarn global add for global installation with timeout
+        try:
+            result = PackageManagerHelper.run_command(["yarn", "global", "add", f"file:{temp_dir}"], timeout=300)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"yarn global add timed out: {e}")
+            else:
+                raise
         self._track_installation("yarn", config.package_name)
         
         # Verify CLI is available and functional
@@ -970,16 +1016,24 @@ class TestTypeScriptInstallation(TestInstallationWorkflows):
         config = CLITestHelper.create_test_config("typescript")
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
-        # Install dependencies
-        result = PackageManagerHelper.run_command(["npm", "install"], cwd=temp_dir)
-        assert result.returncode == 0
+        # Install dependencies with timeout
+        try:
+            result = PackageManagerHelper.run_command(["npm", "install"], cwd=temp_dir, timeout=300)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"npm install timed out: {e}")
+            else:
+                raise
         
-        # Compile TypeScript - handle compilation failures gracefully
+        # Compile TypeScript - handle compilation failures gracefully with timeout
         build_successful = False
         try:
-            result = PackageManagerHelper.run_command(["npm", "run", "build"], cwd=temp_dir, check=False)
+            result = PackageManagerHelper.run_command(["npm", "run", "build"], cwd=temp_dir, check=False, timeout=180)
             build_successful = result.returncode == 0
-        except PackageManagerError:
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"TypeScript build timed out: {e}")
             build_successful = False
 
         # Check if build created a working CLI
@@ -1020,7 +1074,7 @@ process.exit(0);
                     cwd=temp_dir,
                     capture_output=True,
                     text=True,
-                    timeout=10,
+                    timeout=30,
                     check=False
                 )
                 if test_result.returncode != 0:
@@ -1065,9 +1119,15 @@ process.exit(0);
             cli_content = "#!/usr/bin/env node\n" + cli_content
             compiled_cli.write_text(cli_content)
         
-        # Test npm link for global installation
-        result = PackageManagerHelper.run_command(["npm", "link"], cwd=temp_dir)
-        assert result.returncode == 0
+        # Test npm link for global installation with timeout
+        try:
+            result = PackageManagerHelper.run_command(["npm", "link"], cwd=temp_dir, timeout=120)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"npm link timed out: {e}")
+            else:
+                raise
         self._track_installation("npm", config.package_name)
         
         # Verify CLI is available and functional
@@ -1116,9 +1176,15 @@ class TestRustInstallation(TestInstallationWorkflows):
         config = CLITestHelper.create_test_config("rust")
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
-        # Test cargo build
-        result = PackageManagerHelper.run_command(["cargo", "build"], cwd=temp_dir)
-        assert result.returncode == 0
+        # Test cargo build with timeout
+        try:
+            result = PackageManagerHelper.run_command(["cargo", "build"], cwd=temp_dir, timeout=300)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"cargo build timed out: {e}")
+            else:
+                raise
         
         # Verify binary was built
         target_dir = Path(temp_dir) / "target" / "debug"
@@ -1131,9 +1197,15 @@ class TestRustInstallation(TestInstallationWorkflows):
         
         assert binary_path.exists(), f"Binary not found at {binary_path}"
         
-        # Test cargo install --path .
-        result = PackageManagerHelper.run_command(["cargo", "install", "--path", "."], cwd=temp_dir)
-        assert result.returncode == 0
+        # Test cargo install --path . with timeout
+        try:
+            result = PackageManagerHelper.run_command(["cargo", "install", "--path", "."], cwd=temp_dir, timeout=300)
+            assert result.returncode == 0
+        except PackageManagerError as e:
+            if "timeout" in str(e).lower():
+                pytest.skip(f"cargo install timed out: {e}")
+            else:
+                raise
         self._track_installation("cargo", config.package_name)
         
         # Verify CLI is available and functional

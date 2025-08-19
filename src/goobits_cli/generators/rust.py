@@ -10,6 +10,12 @@ from pathlib import Path
 
 from typing import List, Optional, Union, Dict
 
+import signal
+
+import threading
+
+from functools import wraps
+
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 import typer
@@ -183,7 +189,45 @@ class ValidationError(RustGeneratorError):
         super().__init__(message, error_code, details)
 
 
+# Safety limits to prevent hanging
+MAX_COMMANDS = 500  # Maximum commands to process
+MAX_OPTIONS_PER_COMMAND = 100  # Maximum options per command
+MAX_ARGS_PER_COMMAND = 50  # Maximum arguments per command
+MAX_TEMPLATE_SIZE = 10 * 1024 * 1024  # 10MB template size limit
 
+
+# Timeout decorator to prevent hanging template operations
+def render_with_timeout(timeout=30):
+    """Decorator to add timeout to template rendering operations."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = [None]
+            exception = [None]
+            
+            def target():
+                try:
+                    result[0] = func(*args, **kwargs)
+                except Exception as e:
+                    exception[0] = e
+            
+            thread = threading.Thread(target=target)
+            thread.daemon = True
+            thread.start()
+            thread.join(timeout=timeout)
+            
+            if thread.is_alive():
+                raise TemplateError(
+                    f"Template rendering operation timed out after {timeout} seconds",
+                    template_name=getattr(func, '__name__', 'unknown')
+                )
+            
+            if exception[0]:
+                raise exception[0]
+            
+            return result[0]
+        return wrapper
+    return decorator
 
 
 class RustGenerator(BaseGenerator):
@@ -827,6 +871,7 @@ class RustGenerator(BaseGenerator):
 
     
 
+    @render_with_timeout(60)  # 60 second timeout for complex projects
     def generate_all_files(self, config, config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
 
         """
@@ -1227,7 +1272,11 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
 
         commands = []
 
+        command_count = 0
         for cmd_name, cmd_data in cli_config.commands.items():
+            command_count += 1
+            if command_count > MAX_COMMANDS:
+                break  # Prevent excessive iteration
 
             cmd_def = f'''app = app.subcommand(
 
@@ -1240,8 +1289,11 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
             # Add arguments
 
             if hasattr(cmd_data, 'args') and cmd_data.args:
-
+                arg_count = 0
                 for arg in cmd_data.args:
+                    arg_count += 1
+                    if arg_count > MAX_ARGS_PER_COMMAND:
+                        break  # Prevent excessive iteration
 
                     if arg.required:
 
@@ -1272,8 +1324,11 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
             # Add options
 
             if hasattr(cmd_data, 'options') and cmd_data.options:
-
+                opt_count = 0
                 for opt in cmd_data.options:
+                    opt_count += 1
+                    if opt_count > MAX_OPTIONS_PER_COMMAND:
+                        break  # Prevent excessive iteration
 
                     short_flag = f'-{opt.short}' if hasattr(opt, 'short') and opt.short else ''
 
@@ -1321,8 +1376,11 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
         
 
         handlers = []
-
+        handler_count = 0
         for cmd_name, cmd_data in cli_config.commands.items():
+            handler_count += 1
+            if handler_count > MAX_COMMANDS:
+                break  # Prevent excessive iteration
 
             safe_cmd_name = self._to_snake_case(cmd_name)
 
@@ -1437,8 +1495,11 @@ use anyhow::Result;
         # Generate hook functions for each command
 
         if cli_config and hasattr(cli_config, 'commands'):
-
+            hook_count = 0
             for cmd_name, cmd_data in cli_config.commands.items():
+                hook_count += 1
+                if hook_count > MAX_COMMANDS:
+                    break  # Prevent excessive iteration
 
                 safe_cmd_name = self._to_snake_case(cmd_name)
 
@@ -1727,8 +1788,11 @@ MIT
         
 
         commands_doc = []
-
+        readme_count = 0
         for cmd_name, cmd_data in cli_config.commands.items():
+            readme_count += 1
+            if readme_count > MAX_COMMANDS:
+                break  # Prevent excessive iteration
 
             cmd_desc = cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'
 

@@ -83,10 +83,11 @@ class PipManager:
                 [sys.executable, "-m", "pip", "--version"],
                 capture_output=True,
                 text=True,
+                timeout=30,
                 check=True
             )
             return True
-        except (subprocess.CalledProcessError, FileNotFoundError):
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
             return False
     
     @staticmethod
@@ -114,7 +115,7 @@ class PipManager:
         # Create virtual environment if it doesn't exist
         if not venv_path.exists():
             result = subprocess.run([sys.executable, "-m", "venv", str(venv_path)], 
-                                  capture_output=True, text=True, check=False)
+                                  capture_output=True, text=True, timeout=60, check=False)
             if result.returncode != 0:
                 raise RuntimeError(f"Failed to create venv: {result.stderr}")
         
@@ -125,7 +126,7 @@ class PipManager:
         
         return subprocess.run([
             str(pip_exe), "install", "-e", "."
-        ], cwd=str(project_path), capture_output=True, text=True, check=False)
+        ], cwd=str(project_path), capture_output=True, text=True, timeout=120, check=False)
     
     @staticmethod
     def install_from_path(package_path: str, timeout: int = 120) -> subprocess.CompletedProcess:
@@ -160,6 +161,7 @@ class PipManager:
                 [sys.executable, "-m", "pip", "list", "--format=json"], 
                 capture_output=True, 
                 text=True, 
+                timeout=30,
                 check=True
             )
             packages = json.loads(result.stdout)
@@ -266,7 +268,7 @@ class NpmManager:
         # Install dependencies first in the project directory
         install_result = subprocess.run([
             "npm", "install"
-        ], cwd=str(project_path), capture_output=True, text=True, check=True)
+        ], cwd=str(project_path), capture_output=True, text=True, timeout=120, check=True)
         
         # Then install the package itself to the prefix
         env = os.environ.copy()
@@ -274,7 +276,7 @@ class NpmManager:
         
         return subprocess.run([
             "npm", "install", "-g", str(project_path)
-        ], capture_output=True, text=True, env=env, check=True)
+        ], capture_output=True, text=True, timeout=120, env=env, check=True)
 
     @staticmethod  
     def link_with_prefix(project_dir: str, prefix_path: str = None) -> subprocess.CompletedProcess:
@@ -291,7 +293,7 @@ class NpmManager:
         
         return subprocess.run([
             "npm", "link", "--prefix", str(prefix_path)
-        ], cwd=str(project_path), capture_output=True, text=True, env=env, check=True)
+        ], cwd=str(project_path), capture_output=True, text=True, timeout=60, env=env, check=True)
     
     @staticmethod
     def unlink_global(package_name: str, timeout: int = 60) -> subprocess.CompletedProcess:
@@ -338,6 +340,7 @@ class NpmManager:
                 ["npm", "list", "-g", "--depth=0", "--json"], 
                 capture_output=True, 
                 text=True, 
+                timeout=30,
                 check=True
             )
             data = json.loads(result.stdout)
@@ -562,6 +565,7 @@ class CargoManager:
                 ["cargo", "install", "--list"], 
                 capture_output=True, 
                 text=True, 
+                timeout=30,
                 check=True
             )
             packages = []

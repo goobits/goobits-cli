@@ -474,6 +474,16 @@ class ComponentRegistry:
 
         """
 
+        # If metadata is missing but component exists, regenerate it
+        if name not in self._metadata and name in self._components:
+            # Find the component file to recreate metadata
+            component_file = self.components_dir / f"{name}.j2"
+            if component_file.exists():
+                content = self._components[name]
+                dependencies = self._extract_template_dependencies(content)
+                self._metadata[name] = ComponentMetadata(name, component_file, dependencies)
+                self._dependencies[name] = dependencies
+
         return self._metadata.get(name)
 
     

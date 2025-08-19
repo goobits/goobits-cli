@@ -287,7 +287,7 @@ if __name__ == "__main__":
             # Test 1: From project root directory
             os.chdir(test_dir)
             result = subprocess.run([sys.executable, str(cli_file)], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert "SUCCESS: Hook found from test-service on port 9000" in result.stdout
             assert "HOOK_DISCOVERY_SUCCESS" in result.stdout
             
@@ -297,7 +297,7 @@ if __name__ == "__main__":
             os.chdir(sub_dir)
             
             result = subprocess.run([sys.executable, str(cli_file)], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert "SUCCESS: Hook found from test-service on port 9000" in result.stdout
             assert "HOOK_DISCOVERY_SUCCESS" in result.stdout
             
@@ -308,7 +308,7 @@ if __name__ == "__main__":
             
             # This should still work due to relative path resolution
             result = subprocess.run([sys.executable, str(cli_file)], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             # This might fail from a random directory, which is expected behavior
             # The important thing is it doesn't crash
             assert result.returncode in [0, 1]  # Either success or graceful failure
@@ -404,7 +404,7 @@ if __name__ == "__main__":
             
             # Test from project root directory
             result = subprocess.run([sys.executable, str(cli_file)], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert "DEFAULT_HOOK: Hello World!" in result.stdout
             assert "DEFAULT_HOOK_DISCOVERY_SUCCESS" in result.stdout
             
@@ -604,27 +604,27 @@ if __name__ == "__main__":
             
             # Test 1: Successful deployment to staging
             result = subprocess.run([sys.executable, str(cli_file), "deploy", "staging"], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert result.returncode == 0
             assert "E2E_TEST: Deploying to staging (force=False)" in result.stdout
             assert "E2E_TEST: Deployment successful!" in result.stdout
             
             # Test 2: Production deployment without force flag (should fail)
             result = subprocess.run([sys.executable, str(cli_file), "deploy", "production"], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert result.returncode == 1
             assert "E2E_TEST: Production deployment requires --force flag" in result.stdout
             
             # Test 3: Production deployment with force flag (should succeed)
             result = subprocess.run([sys.executable, str(cli_file), "deploy", "production", "--force"], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert result.returncode == 0
             assert "E2E_TEST: Deploying to production (force=True)" in result.stdout
             assert "E2E_TEST: Deployment successful!" in result.stdout
             
             # Test 4: Status check
             result = subprocess.run([sys.executable, str(cli_file), "status"], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert result.returncode == 0
             assert "E2E_TEST: Application status: RUNNING" in result.stdout
             
@@ -634,7 +634,7 @@ if __name__ == "__main__":
             os.chdir(sub_dir)
             
             result = subprocess.run([sys.executable, str(cli_file), "status"], 
-                                 capture_output=True, text=True)
+                                 capture_output=True, text=True, timeout=30)
             assert result.returncode == 0
             assert "E2E_TEST: Application status: RUNNING" in result.stdout
             

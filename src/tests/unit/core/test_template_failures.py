@@ -587,16 +587,14 @@ Content B
     
     def test_jinja_environment_initialization_failure(self):
         """Test handling of Jinja2 environment initialization failures"""
-        registry = ComponentRegistry(self.components_dir)
-        
-        # Mock Jinja2 Environment to fail
+        # Mock Jinja2 Environment to fail during ComponentRegistry init
         with patch('jinja2.Environment') as mock_env:
             mock_env.side_effect = Exception("Jinja2 initialization failed")
             
-            # Should handle Jinja initialization failures
+            # Should handle Jinja initialization failures during registry creation
             try:
-                registry._get_env()
-                assert False, "Expected exception"
+                registry = ComponentRegistry(self.components_dir)
+                assert False, "Expected exception during registry initialization"
             except Exception as e:
                 assert "initialization" in str(e).lower() or "jinja" in str(e).lower()
     

@@ -113,8 +113,15 @@ class DependencyValidator:
                     "dylib" not in result.stderr.lower()
                 )
                 results[cmd] = success
-            except (FileNotFoundError, subprocess.TimeoutExpired):
+                # Debug info when test fails
+                if not success:
+                    print(f"Debug: Command '{command_name} {cmd}' failed")
+                    print(f"Return code: {result.returncode}")
+                    print(f"Stdout: {result.stdout[:200]}")
+                    print(f"Stderr: {result.stderr[:200]}")
+            except (FileNotFoundError, subprocess.TimeoutExpired) as e:
                 results[cmd] = False
+                print(f"Debug: Command '{command_name} {cmd}' exception: {e}")
         
         return results
     
@@ -267,7 +274,7 @@ class TestDependencyResolution:
     
     def _generate_and_install_cli(self, config: GoobitsConfigSchema, temp_dir: str) -> str:
         """Generate CLI and install it, returning the command name."""
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         
         # Create unique package name to prevent conflicts
         timestamp = int(time.time() * 1000)
@@ -432,7 +439,7 @@ process.exit(0);
         config = TestConfigTemplates.minimal_config(language)
         
         # Generate CLI
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         # Validate dependency declarations
@@ -461,7 +468,21 @@ process.exit(0);
         command_name = self._generate_and_install_cli(config, temp_dir)
         
         # Test that CLI runs without dependency errors
+        print(f"Testing CLI command: {command_name}")
         runtime_results = DependencyValidator.check_runtime_dependencies(command_name)
+        print(f"Runtime results: {runtime_results}")
+        
+        # If tests fail, try checking what the command actually is
+        if not all(runtime_results.values()):
+            print(f"Debug: CLI command '{command_name}' failed runtime tests")
+            try:
+                result = subprocess.run([command_name, "--help"], capture_output=True, text=True, timeout=10)
+                print(f"Debug direct call - Return code: {result.returncode}")
+                print(f"Debug direct call - Stdout: {result.stdout[:200]}")
+                print(f"Debug direct call - Stderr: {result.stderr[:200]}")
+            except Exception as e:
+                print(f"Debug direct call - Exception: {e}")
+        
         assert all(runtime_results.values()), f"Runtime dependency errors: {runtime_results}"
     
     def test_python_extras_installation(self):
@@ -481,7 +502,7 @@ process.exit(0);
         )
         
         # Generate CLI
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         # Check that extras are declared in installation files
@@ -499,7 +520,7 @@ process.exit(0);
         config = TestConfigTemplates.complex_config("typescript")  # TypeScript has dev deps
         
         # Generate CLI
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         # Check package.json for dev dependencies
@@ -522,7 +543,7 @@ process.exit(0);
         config = TestConfigTemplates.dependency_heavy_config("rust")
         
         # Generate CLI
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         # Check Cargo.toml for dependencies
@@ -570,7 +591,7 @@ process.exit(0);
             config = TestConfigTemplates.complex_config(language)
             
             # Generate CLI
-            from .test_installation_workflows import CLITestHelper
+            from .test_installation_flows import CLITestHelper
             generated_files = CLITestHelper.generate_cli(config, temp_dir)
             
             # Check for version constraints
@@ -617,7 +638,7 @@ process.exit(0);
         config = TestConfigTemplates.minimal_config(language)
         
         # Generate CLI without installing dependencies
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         cli_file = Path(generated_files["cli_file"])
@@ -630,7 +651,7 @@ process.exit(0);
                     cwd=temp_dir,
                     capture_output=True,
                     text=True,
-                    timeout=10,
+                    timeout=30,
                     check=False
                 )
                 # Should either work (if deps already installed) or fail gracefully
@@ -647,7 +668,7 @@ process.exit(0);
                     cwd=temp_dir,
                     capture_output=True,
                     text=True,
-                    timeout=10,
+                    timeout=30,
                     check=False
                 )
                 # Should either work or fail with module not found
@@ -687,7 +708,7 @@ process.exit(0);
             config = TestConfigTemplates.minimal_config(language)
             
             try:
-                from .test_installation_workflows import CLITestHelper
+                from .test_installation_flows import CLITestHelper
                 generated_files = CLITestHelper.generate_cli(config, temp_dir)
                 
                 # Verify files were generated correctly
@@ -720,7 +741,7 @@ process.exit(0);
         config = TestConfigTemplates.minimal_config("rust")  # Use minimal config to reduce network dependencies
         
         # Generate CLI
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         # Test network connectivity and build strategy
@@ -763,7 +784,7 @@ process.exit(0);
         )
         
         # Generate and try to install
-        from .test_installation_workflows import CLITestHelper
+        from .test_installation_flows import CLITestHelper
         generated_files = CLITestHelper.generate_cli(config, temp_dir)
         
         try:

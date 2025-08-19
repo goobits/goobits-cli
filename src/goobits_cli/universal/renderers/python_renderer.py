@@ -544,7 +544,10 @@ setup(
         """
         Define output file structure for Python CLIs.
         
-        Returns 2-file output: cli.py (consolidated) + setup.sh
+        Returns proper Python package structure with:
+        - pyproject.toml (package metadata and dependencies)
+        - src/package_name/__init__.py (package marker)
+        - src/package_name/cli.py (main CLI module)
         
         Args:
             ir: Intermediate representation
@@ -552,21 +555,21 @@ setup(
         Returns:
             Dictionary mapping component names to output file paths
         """
-        # Return only the main CLI file (consolidated)
-        # The setup.sh is handled separately by the build system
+        package_name = ir["project"]["package_name"].replace("-", "_")
         
         # Use cli_output_path if specified in the config
         if "cli_output_path" in ir["project"] and ir["project"]["cli_output_path"]:
             cli_path = ir["project"]["cli_output_path"]
             # Handle any template variables in the path
-            package_name = ir["project"]["package_name"]
-            cli_path = cli_path.format(package_name=package_name.replace("-", "_"))
+            cli_path = cli_path.format(package_name=package_name)
         else:
-            # Default fallback
-            cli_path = "cli.py"
+            # Default Python package structure
+            cli_path = f"src/{package_name}/cli.py"
         
         return {
             "command_handler": cli_path,
+            "pyproject_toml": "pyproject.toml",
+            "package_init": f"src/{package_name}/__init__.py",
             # setup.sh is handled by the main build system
         }
 

@@ -1669,8 +1669,10 @@ class UniversalTemplateEngine:
 
             if isinstance(extras, dict):
 
-                dependencies["python"].extend(extras.get("python", []))
-
+                # NOTE: extras.python contains pip extras (like "dev", "test") not actual packages
+                # These are used for installation (pip install package[dev]) not as dependencies
+                # Only add system packages and specific package managers that are actual packages
+                
                 dependencies["system"].extend(extras.get("apt", []))
 
                 dependencies["npm"].extend(extras.get("npm", []))

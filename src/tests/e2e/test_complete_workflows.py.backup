@@ -94,7 +94,7 @@ class TestCLIE2E:
                 [sys.executable, str(cli_file), "--help"],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=10
             )
             
             # Should either succeed or fail gracefully
@@ -120,8 +120,9 @@ class TestNodeJSGeneratorE2E:
             "name": "test-nodejs-cli",
             "tagline": "Test Node.js CLI for E2E testing",
             "version": "1.0.0",
-            "commands": {
-                "hello": {
+            "commands": [
+                {
+                    "name": "hello",
                     "desc": "Say hello",
                     "handler": "hello_handler",
                     "args": [
@@ -133,11 +134,12 @@ class TestNodeJSGeneratorE2E:
                         }
                     ]
                 },
-                "test": {
+                {
+                    "name": "test",
                     "desc": "Run tests",
                     "handler": "test_handler"
                 }
-            }
+            ]
         })
 
     def test_nodejs_generator_e2e(self, sample_nodejs_config, tmp_path):
@@ -207,7 +209,7 @@ class TestNodeJSGeneratorE2E:
                 ["node", "--check", str(cli_file)],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=10
             )
             
             # Should pass syntax check
@@ -229,12 +231,13 @@ class TestCompleteWorkflowValidation:
             "name": "minimal-cli",
             "tagline": "Minimal test CLI",
             "version": "1.0.0",
-            "commands": {
-                "status": {
+            "commands": [
+                {
+                    "name": "status",
                     "desc": "Show status",
                     "handler": "status_handler"
                 }
-            }
+            ]
         })
         
         # Generate CLI
@@ -258,12 +261,13 @@ class TestCompleteWorkflowValidation:
             "name": "minimal-cli",
             "tagline": "Minimal test CLI",
             "version": "1.0.0",
-            "commands": {
-                "status": {
+            "commands": [
+                {
+                    "name": "status",
                     "desc": "Show status",
                     "handler": "status_handler"
                 }
-            }
+            ]
         })
         
         # Generate CLI
@@ -290,12 +294,13 @@ class TestCompleteWorkflowValidation:
             "name": "minimal-cli",
             "tagline": "Minimal test CLI",
             "version": "1.0.0",
-            "commands": {
-                "status": {
+            "commands": [
+                {
+                    "name": "status",
                     "desc": "Show status",
                     "handler": "status_handler"
                 }
-            }
+            ]
         })
         
         # Generate CLI
