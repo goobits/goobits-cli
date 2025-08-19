@@ -247,19 +247,21 @@ class TypeScriptGenerator(NodeJSGenerator):
             Path(config_filename).is_dir()):
             
             # For E2E tests, use the legacy approach which is more reliable
-            # Generate CLI content using legacy method (which works correctly with test configs)
-            cli_content = self._generate_legacy_typescript(config, "test.yaml", version)
-            
-            # Also generate additional TypeScript files
-            all_files = self.generate_all_files(config, "test.yaml", version)
-            
             # Write files directly to the output directory (test compatibility)
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
             
+            # Generate CLI content using legacy method (which works correctly with test configs)
+            cli_content = self._generate_legacy_typescript(config, "test.yaml", version)
+            
+            # Also generate additional TypeScript files
+            all_files = self.generate_all_files(config, "test.yaml", version, str(output_path))
+            
             try:
                 for file_name, content in all_files.items():
                     file_path = output_path / file_name
+                    # Create parent directories if they don't exist
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(content)
             except OSError:
@@ -778,7 +780,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
     
 
-    def _check_file_conflicts(self, target_files: dict) -> dict:
+    def _check_file_conflicts(self, target_files: dict, target_directory: Optional[str] = None) -> dict:
 
         """Check for file conflicts and adjust paths if needed."""
 
@@ -792,9 +794,27 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         
 
+        # Determine the directory to check for conflicts
+
+        check_dir = target_directory if target_directory else "."
+
+        
+
         for filepath, content in target_files.items():
 
-            if filepath == "index.ts" and os.path.exists(filepath):
+            # Construct the full path for conflict checking
+
+            if target_directory:
+
+                check_path = os.path.join(target_directory, filepath)
+
+            else:
+
+                check_path = filepath
+
+            
+
+            if filepath == "index.ts" and os.path.exists(check_path):
 
                 # index.ts exists, generate cli.ts instead
 
@@ -806,13 +826,13 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                 warnings.append(f"   Import cli.ts in your index.ts with: import {{ cli }} from './cli.js'; cli();")
 
-            elif filepath == "package.json" and os.path.exists(filepath):
+            elif filepath == "package.json" and os.path.exists(check_path):
 
                 warnings.append(f"⚠️  Existing package.json detected. Review and merge dependencies manually.")
 
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
-            elif filepath == "tsconfig.json" and os.path.exists(filepath):
+            elif filepath == "tsconfig.json" and os.path.exists(check_path):
 
                 warnings.append(f"⚠️  Existing tsconfig.json detected. Review and merge settings manually.")
 
@@ -868,6 +888,8 @@ class TypeScriptGenerator(NodeJSGenerator):
         for file_name, content in all_files.items():
             file_path = output_path / file_name
             try:
+                # Create parent directories if they don't exist
+                file_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
                 written_files[file_name] = content
@@ -950,7 +972,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
     
 
-    def generate_all_files(self, config, config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
+    def generate_all_files(self, config, config_filename: str, version: Optional[str] = None, target_directory: Optional[str] = None) -> Dict[str, str]:
 
         """Generate all files for a TypeScript CLI project."""
 
@@ -1323,7 +1345,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         # Check for file conflicts and adjust if needed
 
-        files = self._check_file_conflicts(files)
+        files = self._check_file_conflicts(files, target_directory)
 
         
 

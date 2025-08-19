@@ -211,7 +211,7 @@ class NodeJSGenerator(BaseGenerator):
 
     
 
-    def _check_file_conflicts(self, target_files: dict) -> dict:
+    def _check_file_conflicts(self, target_files: dict, target_directory: Optional[str] = None) -> dict:
 
         """Check for file conflicts and adjust paths if needed."""
 
@@ -225,9 +225,27 @@ class NodeJSGenerator(BaseGenerator):
 
         
 
+        # Determine the directory to check for conflicts
+
+        check_dir = target_directory if target_directory else "."
+
+        
+
         for filepath, content in target_files.items():
 
-            if filepath == "index.js" and os.path.exists(filepath):
+            # Construct the full path for conflict checking
+
+            if target_directory:
+
+                check_path = os.path.join(target_directory, filepath)
+
+            else:
+
+                check_path = filepath
+
+            
+
+            if filepath == "index.js" and os.path.exists(check_path):
 
                 # index.js exists, generate cli.js instead
 
@@ -239,7 +257,7 @@ class NodeJSGenerator(BaseGenerator):
 
                 warnings.append(f"   Import cli.js in your index.js with: import {{ cli }} from './cli.js'; cli();")
 
-            elif filepath == "package.json" and os.path.exists(filepath):
+            elif filepath == "package.json" and os.path.exists(check_path):
 
                 warnings.append(f"⚠️  Existing package.json detected. Review and merge dependencies manually.")
 
@@ -409,19 +427,21 @@ class NodeJSGenerator(BaseGenerator):
             Path(config_filename).is_dir()):
             
             # For E2E tests, use the legacy approach which is more reliable
-            # Generate CLI content using legacy method (which works correctly with test configs)
-            cli_content = self._generate_legacy(config, "test.yaml", version)
-            
-            # Also generate package.json for Node.js
-            all_files = self.generate_all_files(config, "test.yaml", version)
-            
             # Write files directly to the output directory (test compatibility)
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
             
+            # Generate CLI content using legacy method (which works correctly with test configs)
+            cli_content = self._generate_legacy(config, "test.yaml", version)
+            
+            # Also generate package.json for Node.js
+            all_files = self.generate_all_files(config, "test.yaml", version, str(output_path))
+            
             try:
                 for file_name, content in all_files.items():
                     file_path = output_path / file_name
+                    # Create parent directories if they don't exist
+                    file_path.parent.mkdir(parents=True, exist_ok=True)
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(content)
             except OSError:
@@ -673,8 +693,13 @@ class NodeJSGenerator(BaseGenerator):
         # Determine main entry file name based on conflict detection
         import os
         main_entry_file = "index.js"
-        if os.path.exists("index.js"):
-            main_entry_file = "cli.js"
+        # For now, skip conflict detection in legacy method since file generation handles it
+        # if target_directory:
+        #     check_path = os.path.join(target_directory, "index.js")
+        # else:
+        #     check_path = "index.js"
+        # if os.path.exists(check_path):
+        #     main_entry_file = "cli.js"
 
         # Prepare context for template rendering
 
@@ -759,13 +784,15 @@ class NodeJSGenerator(BaseGenerator):
         output_path.mkdir(parents=True, exist_ok=True)
         
         # Generate all files
-        all_files = self.generate_all_files(config, config_filename, version)
+        all_files = self.generate_all_files(config, config_filename, version, output_directory)
         
         # Write files to directory
         written_files = {}
         for file_name, content in all_files.items():
             file_path = output_path / file_name
             try:
+                # Create parent directories if they don't exist
+                file_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(file_path, 'w', encoding='utf-8') as f:
                     f.write(content)
                 written_files[file_name] = content
@@ -1008,7 +1035,9 @@ export default cli;
 
     def generate_all_files(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 
-                          config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
+                          config_filename: str, version: Optional[str] = None,
+
+                          target_directory: Optional[str] = None) -> Dict[str, str]:
 
         """
 
@@ -1046,13 +1075,15 @@ export default cli;
 
         # Legacy implementation - generate all files using legacy system
 
-        return self._generate_all_files_legacy(config, config_filename, version)
+        return self._generate_all_files_legacy(config, config_filename, version, target_directory)
 
     
 
     def _generate_all_files_legacy(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 
-                                  config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
+                                  config_filename: str, version: Optional[str] = None, 
+
+                                  target_directory: Optional[str] = None) -> Dict[str, str]:
 
         """
 
@@ -1132,8 +1163,13 @@ export default cli;
         # Determine main entry file name based on conflict detection
         import os
         main_entry_file = "index.js"
-        if os.path.exists("index.js"):
-            main_entry_file = "cli.js"
+        # For now, skip conflict detection in legacy method since file generation handles it
+        # if target_directory:
+        #     check_path = os.path.join(target_directory, "index.js")
+        # else:
+        #     check_path = "index.js"
+        # if os.path.exists(check_path):
+        #     main_entry_file = "cli.js"
 
         # Prepare context for template rendering
 
@@ -1339,7 +1375,7 @@ export default cli;
 
         # Check for file conflicts and adjust if needed
 
-        files = self._check_file_conflicts(files)
+        files = self._check_file_conflicts(files, target_directory)
 
         
 
