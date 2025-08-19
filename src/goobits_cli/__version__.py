@@ -26,7 +26,7 @@ def _get_version() -> str:
 
         # Fallback version if pyproject.toml can't be read
 
-        return "1.3.0"
+        return "2.0.0-rc1"
 
 
 
