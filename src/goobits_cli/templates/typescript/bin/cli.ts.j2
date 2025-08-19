@@ -16,7 +16,7 @@ import type {
   CLIError, 
   SystemError, 
   Result 
-} from '../types/errors.js';
+} from '../lib/errors.js';
 import { 
   CLIErrorCode, 
   ExitCode, 
@@ -127,18 +127,28 @@ process.on('SIGINT', () => {
  */
 async function runCLI(): Promise<void> {
   try {
-    const mainPath: string = join(__dirname, '..', 'index.js');
-    
-    // Check if main file exists
+    // Try to find the main CLI file - could be index.js or cli.js
     const { existsSync } = await import('fs');
-    if (!existsSync(mainPath)) {
+    const possiblePaths = [
+      join(__dirname, '..', 'index.js'),
+      join(__dirname, '..', 'cli.js')
+    ];
+    
+    let mainPath: string | null = null;
+    for (const path of possiblePaths) {
+      if (existsSync(path)) {
+        mainPath = path;
+        break;
+      }
+    }
+    
+    if (!mainPath) {
       const error = createSystemError(
-        `Main CLI file not found: ${mainPath}`,
+        `Main CLI file not found. Searched: ${possiblePaths.join(', ')}`,
         {
-          filePath: mainPath,
           metadata: {
             operation: 'load',
-            expectedPath: mainPath,
+            searchPaths: possiblePaths,
           },
         }
       );

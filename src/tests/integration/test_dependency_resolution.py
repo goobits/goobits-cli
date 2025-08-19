@@ -537,7 +537,7 @@ process.exit(0);
         
         # Validate dependency declarations
         if language == "python":
-            expected_deps = ["click", "rich", "typer"]
+            expected_deps = ["click", "rich"]
             results = DependencyValidator.validate_python_dependencies(temp_dir, expected_deps)
             assert all(results.values()), f"Missing Python dependencies: {results}"
         

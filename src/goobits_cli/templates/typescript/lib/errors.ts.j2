@@ -4,14 +4,10 @@
  */
 
 import chalk from 'chalk';
-import { 
-  CLIError, 
-  CLIErrorCode, 
-  ExitCode, 
-  ErrorSeverity,
-  Result, 
-  Success, 
-  Failure,
+
+// Re-export types and enums from types/errors (these will be available at runtime)
+export type {
+  CLIError,
   CommandError,
   ValidationError,
   ConfigError,
@@ -26,8 +22,74 @@ import {
   ErrorRecovery,
   ErrorFormatter,
   ErrorManager,
+  Result,
+  Success,
+  Failure,
   BaseCLIError,
-} from '../types/errors';
+} from '../types/errors.js';
+
+// Define enums and runtime values here (since they can't be imported from .d.ts files)
+export enum ExitCode {
+  SUCCESS = 0,
+  GENERAL_ERROR = 1,
+  MISUSE_OF_SHELL_BUILTIN = 2,
+  CONFIG_ERROR = 3,
+  COMMAND_NOT_FOUND = 127,
+  OS_FILE_MISSING = 66,
+  PERMISSION_ERROR = 77,
+  SERVICE_UNAVAILABLE = 69,
+  SOFTWARE_ERROR = 70,
+  SCRIPT_TERMINATED_BY_CTRL_C = 130,
+  FATAL_ERROR_SIGNAL_N = 128,
+}
+
+export enum ErrorSeverity {
+  INFO = 'info',
+  WARNING = 'warning', 
+  ERROR = 'error',
+  FATAL = 'fatal',
+}
+
+export enum CLIErrorCode {
+  // General errors
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+  
+  // Command errors  
+  COMMAND_NOT_FOUND = 'COMMAND_NOT_FOUND',
+  COMMAND_FAILED = 'COMMAND_FAILED',
+  COMMAND_TIMEOUT = 'COMMAND_TIMEOUT',
+  
+  // Validation errors
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  INVALID_ARGUMENT = 'INVALID_ARGUMENT', 
+  INVALID_OPTION = 'INVALID_OPTION',
+  MISSING_REQUIRED = 'MISSING_REQUIRED',
+  
+  // Configuration errors
+  CONFIG_NOT_FOUND = 'CONFIG_NOT_FOUND',
+  CONFIG_INVALID = 'CONFIG_INVALID',
+  CONFIG_LOAD_FAILED = 'CONFIG_LOAD_FAILED',
+  
+  // File system errors
+  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
+  FILE_ACCESS_DENIED = 'FILE_ACCESS_DENIED',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  
+  // Hook errors
+  HOOK_NOT_FOUND = 'HOOK_NOT_FOUND',
+  HOOK_FAILED = 'HOOK_FAILED',
+  
+  // Plugin errors
+  PLUGIN_LOAD_FAILED = 'PLUGIN_LOAD_FAILED',
+  PLUGIN_FAILED = 'PLUGIN_FAILED',
+  
+  // Network errors  
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  CONNECTION_FAILED = 'CONNECTION_FAILED',
+  REQUEST_TIMEOUT = 'REQUEST_TIMEOUT',
+  TEMPORARY_FAILURE = 'TEMPORARY_FAILURE',
+}
 
 // === Type Guards Implementation ===
 
@@ -477,22 +539,5 @@ export async function handleAsyncResult<T>(resultPromise: Promise<Result<T, CLIE
   return handleResult(result);
 }
 
-// === Export All ===
-
-export {
-  CLIError,
-  CLIErrorCode,
-  ExitCode,
-  ErrorSeverity,
-  Result,
-  Success,
-  Failure,
-  ErrorContext,
-  ErrorFactory,
-  ErrorHandler,
-  ErrorRecovery,
-  ErrorFormatter,
-  ErrorManager,
-} from '../types/errors';
-
-export * from '../types/errors';
+// Note: Types are already re-exported at the top of this file
+// Runtime enums and classes are defined inline above

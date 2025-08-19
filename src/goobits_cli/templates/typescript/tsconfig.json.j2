@@ -35,7 +35,7 @@
     "emitDecoratorMetadata": true
   },
   "include": [
-    "index.ts",
+    "{{ main_file_name | default('index.ts') }}",
     "bin/**/*.ts",
     "commands/**/*.ts",
     "lib/**/*.ts",

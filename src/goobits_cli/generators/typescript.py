@@ -881,7 +881,7 @@ class TypeScriptGenerator(NodeJSGenerator):
         output_path.mkdir(parents=True, exist_ok=True)
         
         # Generate all files
-        all_files = self.generate_all_files(config, config_filename, version)
+        all_files = self.generate_all_files(config, config_filename, version, output_directory)
         
         # Write files to directory
         written_files = {}
@@ -970,6 +970,22 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         return f"index.ts"
 
+    def _determine_main_file_name(self, target_directory: Optional[str] = None) -> str:
+        """Determine the main file name, checking for conflicts early."""
+        import os
+        
+        # Default main file name
+        main_file_name = "index.ts"
+        
+        # Check if index.ts exists in the target directory
+        if target_directory:
+            index_path = os.path.join(target_directory, "index.ts")
+            if os.path.exists(index_path):
+                # Conflict detected, use cli.ts instead
+                main_file_name = "cli.ts"
+        
+        return main_file_name
+
     
 
     def generate_all_files(self, config, config_filename: str, version: Optional[str] = None, target_directory: Optional[str] = None) -> Dict[str, str]:
@@ -1025,6 +1041,8 @@ class TypeScriptGenerator(NodeJSGenerator):
             typer.echo(f"⚠️  {warning}", err=True)
 
         
+        # Determine main file name (check for conflicts early)
+        main_file_name = self._determine_main_file_name(target_directory)
 
         # Prepare context for template rendering
 
@@ -1063,6 +1081,9 @@ class TypeScriptGenerator(NodeJSGenerator):
             'bugs_url': metadata.get('repository', '').replace('.git', '/issues') if metadata.get('repository', '') else '',
 
             'keywords': metadata.get('keywords', []),
+            
+            # Main file name for tsconfig.json
+            'main_file_name': main_file_name,
 
         }
 

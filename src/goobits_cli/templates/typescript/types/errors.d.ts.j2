@@ -3,12 +3,22 @@
  * Provides strongly-typed error handling
  */
 
-// Exit codes enum
+// Exit codes enum - Extended with comprehensive codes
 export enum ExitCode {
   SUCCESS = 0,
   GENERAL_ERROR = 1,
-  MISUSE = 2,
+  MISUSE_OF_SHELL_BUILTIN = 2,
   CONFIG_ERROR = 3,
+  COMMAND_NOT_FOUND = 127,
+  OS_FILE_MISSING = 66,
+  PERMISSION_ERROR = 77,
+  SERVICE_UNAVAILABLE = 69,
+  SOFTWARE_ERROR = 70,
+  SCRIPT_TERMINATED_BY_CTRL_C = 130,
+  FATAL_ERROR_SIGNAL_N = 128,
+  
+  // Legacy aliases
+  MISUSE = 2,
   HOOK_ERROR = 4,
   PLUGIN_ERROR = 5,
   DEPENDENCY_ERROR = 6,
@@ -16,12 +26,18 @@ export enum ExitCode {
   CANCELLED = 130
 }
 
-// Error severity levels
+// Error severity levels - Extended with comprehensive levels
 export enum ErrorSeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical'
+  INFO = 'info',
+  WARNING = 'warning', 
+  ERROR = 'error',
+  FATAL = 'fatal',
+  
+  // Legacy aliases
+  LOW = 'info',
+  MEDIUM = 'warning',
+  HIGH = 'error',
+  CRITICAL = 'fatal'
 }
 
 // Base error interface
@@ -63,7 +79,7 @@ export interface GlobalErrorHandlerOptions {
   logLevel?: 'debug' | 'info' | 'warn' | 'error';
 }
 
-// Error context for debugging
+// Comprehensive error context for debugging and error handling
 export interface ErrorContext {
   command?: string;
   subcommand?: string;
@@ -71,6 +87,13 @@ export interface ErrorContext {
   options?: Record<string, unknown>;
   workingDirectory?: string;
   environment?: Record<string, string>;
+  
+  // Additional context fields expected by lib/errors.ts
+  commandName?: string;
+  parameterName?: string;
+  filePath?: string;
+  metadata?: Record<string, unknown>;
+  cause?: Error;
 }
 
 // Validation error details
@@ -111,8 +134,11 @@ export declare class CLIError extends Error {
 }
 
 export declare class ConfigError extends CLIError {
+  readonly code: CLIErrorCode.CONFIG_INVALID;
   readonly configPath?: string;
+  readonly configKey?: string;
   readonly configSection?: string;
+  readonly validationErrors?: readonly ValidationError[];
 
   constructor(
     message: string,
@@ -123,8 +149,11 @@ export declare class ConfigError extends CLIError {
 }
 
 export declare class HookError extends CLIError {
+  readonly code: CLIErrorCode.HOOK_FAILED;
   readonly hookName: string;
+  readonly commandName: string;
   readonly hookPhase?: string;
+  readonly executionTime?: number;
 
   constructor(
     hookName: string,
@@ -135,8 +164,11 @@ export declare class HookError extends CLIError {
 }
 
 export declare class PluginError extends CLIError {
+  readonly code: CLIErrorCode.PLUGIN_LOAD_FAILED;
   readonly pluginName: string;
+  readonly pluginPath?: string;
   readonly pluginVersion?: string;
+  readonly version?: string;
 
   constructor(
     pluginName: string,
@@ -147,7 +179,13 @@ export declare class PluginError extends CLIError {
 }
 
 export declare class ValidationError extends CLIError {
-  readonly errors: ValidationErrorDetail[];
+  readonly code: CLIErrorCode.VALIDATION_FAILED;
+  readonly parameterName: string;
+  readonly parameterValue?: unknown;
+  readonly validationRule: string;
+  readonly expectedType?: string;
+  readonly allowedValues?: readonly unknown[];
+  readonly errors?: ValidationErrorDetail[];
 
   constructor(errors: ValidationErrorDetail[], cause?: Error);
   constructor(field: string, value: unknown, message: string, cause?: Error);
@@ -161,8 +199,11 @@ export declare class DependencyError extends CLIError {
 }
 
 export declare class NetworkError extends CLIError {
+  readonly code: CLIErrorCode.NETWORK_ERROR;
   readonly url?: string;
+  readonly method?: string;
   readonly statusCode?: number;
+  readonly responseTime?: number;
 
   constructor(
     message: string,
@@ -177,6 +218,10 @@ export declare class CancelledError extends CLIError {
 }
 
 export declare class SystemError extends CLIError {
+  readonly code: CLIErrorCode.INTERNAL_ERROR;
+  readonly systemCode?: string;
+  readonly signal?: string; 
+  readonly resource?: string;
   readonly system?: string;
   readonly command?: string;
 
@@ -189,6 +234,7 @@ export declare class SystemError extends CLIError {
 }
 
 export declare class CommandError extends CLIError {
+  readonly code: CLIErrorCode.COMMAND_FAILED;
   readonly commandName: string;
   readonly exitCode?: number;
 
@@ -201,8 +247,10 @@ export declare class CommandError extends CLIError {
 }
 
 export declare class FileSystemError extends CLIError {
+  readonly code: CLIErrorCode.FILE_NOT_FOUND;
   readonly filePath: string;
   readonly operation: 'read' | 'write' | 'delete' | 'create' | 'access' | 'stat';
+  readonly permissions?: string;
 
   constructor(
     filePath: string,
@@ -223,72 +271,100 @@ export type Failure<E> = {
   error: E;
 };
 
-// Error code enum
+// Comprehensive error code enum
 export enum CLIErrorCode {
   // General errors
-  UNKNOWN = 'UNKNOWN',
-  INVALID_INPUT = 'INVALID_INPUT',
-  MISSING_DEPENDENCY = 'MISSING_DEPENDENCY',
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
   
-  // Command errors
+  // Command errors  
   COMMAND_NOT_FOUND = 'COMMAND_NOT_FOUND',
   COMMAND_FAILED = 'COMMAND_FAILED',
-  INVALID_COMMAND = 'INVALID_COMMAND',
+  COMMAND_TIMEOUT = 'COMMAND_TIMEOUT',
   
-  // File system errors
-  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
-  FILE_ACCESS_DENIED = 'FILE_ACCESS_DENIED',
-  FILE_WRITE_ERROR = 'FILE_WRITE_ERROR',
-  
-  // System errors
-  SYSTEM_ERROR = 'SYSTEM_ERROR',
-  PERMISSION_DENIED = 'PERMISSION_DENIED',
-  NETWORK_ERROR = 'NETWORK_ERROR',
+  // Validation errors
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  INVALID_ARGUMENT = 'INVALID_ARGUMENT', 
+  INVALID_OPTION = 'INVALID_OPTION',
+  MISSING_REQUIRED = 'MISSING_REQUIRED',
   
   // Configuration errors
   CONFIG_NOT_FOUND = 'CONFIG_NOT_FOUND',
   CONFIG_INVALID = 'CONFIG_INVALID',
-  CONFIG_PARSE_ERROR = 'CONFIG_PARSE_ERROR',
+  CONFIG_LOAD_FAILED = 'CONFIG_LOAD_FAILED',
+  
+  // File system errors
+  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
+  FILE_ACCESS_DENIED = 'FILE_ACCESS_DENIED',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
   
   // Hook errors
   HOOK_NOT_FOUND = 'HOOK_NOT_FOUND',
-  HOOK_EXECUTION_ERROR = 'HOOK_EXECUTION_ERROR',
+  HOOK_FAILED = 'HOOK_FAILED',
   
   // Plugin errors
-  PLUGIN_NOT_FOUND = 'PLUGIN_NOT_FOUND',
-  PLUGIN_LOAD_ERROR = 'PLUGIN_LOAD_ERROR',
-  PLUGIN_EXECUTION_ERROR = 'PLUGIN_EXECUTION_ERROR',
+  PLUGIN_LOAD_FAILED = 'PLUGIN_LOAD_FAILED',
+  PLUGIN_FAILED = 'PLUGIN_FAILED',
   
-  // Validation errors
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  TYPE_ERROR = 'TYPE_ERROR'
+  // Network errors  
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  CONNECTION_FAILED = 'CONNECTION_FAILED',
+  REQUEST_TIMEOUT = 'REQUEST_TIMEOUT',
+  TEMPORARY_FAILURE = 'TEMPORARY_FAILURE',
+  
+  // Legacy aliases for compatibility
+  UNKNOWN = 'UNKNOWN_ERROR',
+  INVALID_INPUT = 'INVALID_ARGUMENT',
+  MISSING_DEPENDENCY = 'CONFIG_LOAD_FAILED',
+  INVALID_COMMAND = 'COMMAND_FAILED',
+  FILE_WRITE_ERROR = 'FILE_ACCESS_DENIED',
+  SYSTEM_ERROR = 'INTERNAL_ERROR',
+  CONFIG_PARSE_ERROR = 'CONFIG_INVALID',
+  HOOK_EXECUTION_ERROR = 'HOOK_FAILED',
+  PLUGIN_NOT_FOUND = 'PLUGIN_LOAD_FAILED',
+  PLUGIN_LOAD_ERROR = 'PLUGIN_LOAD_FAILED',
+  PLUGIN_EXECUTION_ERROR = 'PLUGIN_FAILED',
+  VALIDATION_ERROR = 'VALIDATION_FAILED',
+  TYPE_ERROR = 'VALIDATION_FAILED'
 }
 
-// Error factory types
+// Error factory types - Enhanced for comprehensive error handling
 export type ErrorFactory<T extends CLIError> = (
   message: string,
-  context?: {
-    cause?: Error;
-    metadata?: Record<string, unknown>;
-  }
+  context?: ErrorContext
 ) => T;
 
-// Error management interfaces
+// Enhanced error management interfaces
 export interface ErrorManager {
-  handleError(error: CLIError, context?: ErrorContext): void;
-  formatError(error: CLIError): string;
-  shouldExit(error: CLIError): boolean;
+  create<T extends CLIError>(factory: ErrorFactory<T>, message: string, context?: ErrorContext): T;
+  handle<T extends CLIError>(error: T, context?: ErrorContext, verbose?: boolean): Promise<void>;
+  recover<T extends CLIError>(error: T, recovery: ErrorRecovery<T>, context?: ErrorContext): Promise<Result<unknown, CLIError>>;
+  format<T extends CLIError>(error: T, verbose?: boolean): {
+    userMessage: string;
+    developerMessage?: string;
+    suggestions: readonly string[];
+    exitCode: ExitCode;
+  };
+  registerHandler<T extends CLIError>(errorType: CLIErrorCode, handler: ErrorHandler<T>): void;
+  registerRecovery<T extends CLIError>(errorType: CLIErrorCode, recovery: ErrorRecovery<T>): void;
+  registerFormatter<T extends CLIError>(errorType: CLIErrorCode, formatter: ErrorFormatter<T>): void;
 }
 
-export interface ErrorFormatter {
-  format(error: CLIError): string;
-  formatStack(error: CLIError): string;
-  formatSuggestions(error: CLIError): string[];
+export interface ErrorFormatter<T extends CLIError = CLIError> {
+  (error: T, verbose?: boolean): {
+    userMessage: string;
+    developerMessage?: string; 
+    suggestions: readonly string[];
+    exitCode: ExitCode;
+  };
 }
 
-export interface ErrorRecovery<T = unknown> {
-  canRecover(error: CLIError): boolean;
-  recover(error: CLIError): Promise<T>;
+export interface ErrorHandler<T extends CLIError = CLIError> {
+  (error: T, context: ErrorContext): Promise<void> | void;
+}
+
+export interface ErrorRecovery<T extends CLIError = CLIError> {
+  (error: T, context: ErrorContext): Promise<Result<unknown, CLIError>>;
 }
 
 // Base error class alias
