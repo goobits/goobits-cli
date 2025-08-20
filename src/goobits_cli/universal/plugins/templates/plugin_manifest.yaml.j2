@@ -1,0 +1,107 @@
+# Plugin Manifest for {{ plugin_name }}
+# Generated from: {{ source_config }}
+
+# Basic plugin information
+name: "{{ plugin_name }}"
+version: "{{ plugin_version }}"
+description: "{{ plugin_description }}"
+author: "{{ plugin_author }}"
+license: "{{ plugin_license | default('MIT') }}"
+
+# Plugin classification
+plugin_type: "{{ plugin_type }}"  # command, completion, hook, formatter, validator, integration
+language: "{{ plugin_language }}"  # python, nodejs, typescript, rust
+
+# Installation details
+source_url: "{{ plugin_source_url | default('') }}"
+checksum: "{{ plugin_checksum | default('') }}"
+
+# Dependencies and requirements
+dependencies:
+{% for dep in plugin_dependencies %}
+  - "{{ dep }}"
+{% endfor %}
+
+{% if plugin_language == 'python' %}
+python_requirements:
+{% for req in plugin_python_requirements %}
+  - "{{ req }}"
+{% endfor %}
+{% elif plugin_language == 'nodejs' or plugin_language == 'typescript' %}
+npm_requirements:
+{% for req in plugin_npm_requirements %}
+  - "{{ req }}"
+{% endfor %}
+{% elif plugin_language == 'rust' %}
+rust_dependencies:
+{% for dep in plugin_rust_dependencies %}
+  - "{{ dep }}"
+{% endfor %}
+{% endif %}
+
+system_requirements:
+{% for req in plugin_system_requirements %}
+  - "{{ req }}"
+{% endfor %}
+
+# Compatibility
+min_goobits_version: "{{ plugin_min_goobits_version | default('1.4.0') }}"
+supported_languages:
+{% for lang in plugin_supported_languages %}
+  - "{{ lang }}"
+{% endfor %}
+
+supported_platforms:
+{% for platform in plugin_supported_platforms %}
+  - "{{ platform }}"
+{% endfor %}
+
+# Plugin capabilities
+{% if plugin_type == 'command' %}
+provides_commands:
+{% for cmd in plugin_provides_commands %}
+  - "{{ cmd }}"
+{% endfor %}
+{% elif plugin_type == 'completion' %}
+provides_completions:
+{% for comp in plugin_provides_completions %}
+  - "{{ comp }}"
+{% endfor %}
+{% elif plugin_type == 'hook' %}
+provides_hooks:
+{% for hook in plugin_provides_hooks %}
+  - "{{ hook }}"
+{% endfor %}
+{% endif %}
+
+# Metadata
+tags:
+{% for tag in plugin_tags %}
+  - "{{ tag }}"
+{% endfor %}
+
+homepage: "{{ plugin_homepage | default('') }}"
+repository: "{{ plugin_repository | default('') }}"
+
+# Plugin configuration
+config:
+  enabled: {{ plugin_config_enabled | default(true) }}
+  priority: {{ plugin_config_priority | default(50) }}
+  settings:
+{% for key, value in plugin_config_settings.items() %}
+    {{ key }}: {{ value }}
+{% endfor %}
+
+# Security settings
+security:
+  sandbox_enabled: {{ plugin_security_sandbox | default(true) }}
+  max_execution_time: {{ plugin_security_max_time | default(30) }}  # seconds
+  max_memory_usage: {{ plugin_security_max_memory | default(104857600) }}  # bytes (100MB)
+  trusted_source: {{ plugin_security_trusted | default(false) }}
+
+# Installation hooks
+hooks:
+  pre_install: "{{ plugin_hook_pre_install | default('') }}"
+  post_install: "{{ plugin_hook_post_install | default('') }}"
+  pre_uninstall: "{{ plugin_hook_pre_uninstall | default('') }}"
+  post_uninstall: "{{ plugin_hook_post_uninstall | default('') }}"

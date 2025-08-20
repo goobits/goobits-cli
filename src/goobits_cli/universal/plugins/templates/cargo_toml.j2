@@ -1,0 +1,50 @@
+[package]
+name = "{{ plugin_name | lower | replace('_', '-') }}"
+version = "{{ plugin_version }}"
+description = "{{ plugin_description }}"
+authors = ["{{ plugin_author }}"]
+license = "{{ plugin_license | default('MIT') }}"
+repository = "{{ plugin_repository }}"
+homepage = "{{ plugin_homepage }}"
+edition = "2021"
+rust-version = "1.70"
+
+[lib]
+name = "{{ plugin_name | lower | replace('-', '_') }}"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "{{ plugin_name | lower | replace('_', '-') }}"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive", "env"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+log = "0.4"
+env_logger = "0.10"
+anyhow = "1.0"
+thiserror = "1.0"
+
+{% for dep in plugin_rust_dependencies %}
+{{ dep }}
+{% endfor %}
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[features]
+default = []
+
+[package.metadata.goobits]
+plugin_type = "{{ plugin_type }}"
+language = "rust"
+entry = "target/release/{{ plugin_name | lower | replace('_', '-') }}"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

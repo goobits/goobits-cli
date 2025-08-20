@@ -1,0 +1,842 @@
+{# Universal Shell Completion Engine Template
+   
+   This template generates shell completion code for bash, zsh, and fish.
+   It provides dynamic completion based on the CLI structure.
+   
+   Variables expected:
+   - language: Target language
+   - project: Project metadata  
+   - cli: CLI schema with commands and options
+#}
+
+{%- if language == 'python' -%}
+"""
+Shell completion engine for {{ project.name }}
+"""
+
+import os
+import sys
+from typing import List, Dict, Any
+
+class CompletionEngine:
+    """Handles shell completion for CLI commands."""
+    
+    def __init__(self, cli_schema: Dict[str, Any]):
+        self.cli_schema = cli_schema
+    
+    def generate_bash_completion(self) -> str:
+        """Generate bash completion script."""
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode"
+{%- else %}
+        script = '''#!/bin/bash
+# Bash completion for {{ cli.root_command.name }}
+
+_{{ cli.root_command.name.replace("-", "_") }}_completions()
+{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    # Global options
+    local global_opts="--help -h --version"
+    
+    # Subcommands
+    local subcommands="{%- for cmd in cli.root_command.subcommands %} {{ cmd.name }}{%- endfor %}"
+    
+    case $COMP_CWORD in
+        1)
+            COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
+            ;;
+        *)
+            case "${words[1]}" in
+{%- for command in cli.root_command.subcommands %}
+                {{ command.name }})
+                    local {{ command.name.replace("-", "_") }}_opts="--help -h{%- for opt in command.options %} --{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}{%- endfor %}"
+                    COMPREPLY=($(compgen -W "${{ command.name.replace("-", "_") }}_opts" -- "$cur"))
+                    ;;
+{%- endfor %}
+            esac
+            ;;
+    esac
+}
+
+complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
+'''
+        return script
+{%- endif %}
+    
+    def generate_zsh_completion(self) -> str:
+        """Generate zsh completion script."""
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode"
+{%- else %}
+        script = f'''#compdef {{ cli.root_command.name }}
+# Zsh completion for {{ cli.root_command.name }}
+
+_{{ cli.root_command.name.replace("-", "_") }}() {
+    local context state line
+    
+    _arguments -C \\
+        '(--help -h){--help,-h}[Show help information]' \\
+        '(--version)--version[Show version information]' \\
+        '1: :_{{ cli.root_command.name.replace("-", "_") }}_commands' \\
+        '*::arg:->args'
+    
+    case $state in
+        args)
+            case $words[1] in
+{%- for command in cli.root_command.subcommands %}
+                {{ command.name }})
+                    _arguments \\
+                        '(--help -h){--help,-h}[Show help information]' \\
+{%- for opt in command.options %}
+                        '(--{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}){--{{ opt.name }}{% if opt.short %},-{{ opt.short }}{% endif %}}[{{ opt.description }}]' \\
+{%- endfor %}
+{%- for arg in command.arguments %}
+                        '{{ loop.index }}:{{ arg.name }}:_files'{% if not loop.last %} \\{% endif %}
+{%- endfor %}
+                    ;;
+{%- endfor %}
+            esac
+            ;;
+    esac
+}
+
+_{{ cli.root_command.name.replace("-", "_") }}_commands() {
+    local commands
+    commands=(
+{%- for command in cli.root_command.subcommands %}
+        '{{ command.name }}:{{ command.description }}'
+{%- endfor %}
+    )
+    _describe 'commands' commands
+}
+
+_{{ cli.root_command.name.replace("-", "_") }} "$@"
+'''
+        return script
+{%- endif %}
+    
+    def generate_fish_completion(self) -> str:
+        """Generate fish completion script."""
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode"
+{%- else %}
+        script = f'''# Fish completion for {{ cli.root_command.name }}
+
+# Global options
+complete -c {{ cli.root_command.name }} -f
+complete -c {{ cli.root_command.name }} -s h -l help -d "Show help information"
+complete -c {{ cli.root_command.name }} -l version -d "Show version information"
+
+# Subcommands
+{%- for command in cli.root_command.subcommands %}
+complete -c {{ cli.root_command.name }} -n "__fish_use_subcommand" -a "{{ command.name }}" -d "{{ command.description }}"
+{%- for opt in command.options %}
+complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ command.name }}" -l {{ opt.name }}{% if opt.short %} -s {{ opt.short }}{% endif %} -d "{{ opt.description }}"
+{%- endfor %}
+{%- endfor %}
+'''
+        return script
+{%- endif %}
+    
+    def install_completion(self, shell: str = None) -> bool:
+        """Install completion script for the specified shell."""
+        if shell is None:
+            shell = os.environ.get('SHELL', '').split('/')[-1]
+        
+        if shell == 'bash':
+            script = self.generate_bash_completion()
+            completion_dir = os.path.expanduser('~/.bash_completion.d')
+        elif shell == 'zsh':
+            script = self.generate_zsh_completion()
+            completion_dir = os.path.expanduser('~/.zsh/completions')
+        elif shell == 'fish':
+            script = self.generate_fish_completion()
+            completion_dir = os.path.expanduser('~/.config/fish/completions')
+        else:
+            print(f"Unsupported shell: {shell}")
+            return False
+        
+        try:
+            os.makedirs(completion_dir, exist_ok=True)
+            filename = f'{{ cli.root_command.name }}.{shell}'
+            if shell == 'bash':
+                filename = f'{{ cli.root_command.name }}'
+            
+            filepath = os.path.join(completion_dir, filename)
+            with open(filepath, 'w') as f:
+                f.write(script)
+            
+            print(f"Completion script installed: {filepath}")
+            if shell == 'bash':
+                print("Please restart your terminal or run: source ~/.bashrc")
+            elif shell == 'zsh':
+                print("Please restart your terminal or add to ~/.zshrc: fpath=(~/.zsh/completions $fpath)")
+            
+            return True
+        except Exception as e:
+            print(f"Failed to install completion: {e}")
+            return False
+
+{%- elif language == 'nodejs' -%}
+/**
+ * Shell completion engine for {{ project.name }}
+ */
+
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+class CompletionEngine {
+    constructor(cliSchema) {
+        this.cliSchema = cliSchema;
+    }
+
+    generateBashCompletion() {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
+        return `#!/bin/bash
+# Bash completion for {{ cli.root_command.name }}
+
+_{{ cli.root_command.name.replace("-", "_") }}_completions()
+{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="\${COMP_WORDS[COMP_CWORD]}"
+    prev="\${COMP_WORDS[COMP_CWORD-1]}"
+    
+    # Global options
+    local global_opts="--help -h --version"
+    
+    # Subcommands
+    local subcommands="{%- for cmd in cli.root_command.subcommands %} {{ cmd.name }}{%- endfor %}"
+    
+    case \${COMP_CWORD} in
+        1)
+            COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
+            ;;
+        *)
+            case "\${words[1]}" in
+{%- for command in cli.root_command.subcommands %}
+                {{ command.name }})
+                    local {{ command.name.replace("-", "_") }}_opts="--help -h{%- for opt in command.options %} --{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}{%- endfor %}"
+                    COMPREPLY=($(compgen -W "${{ command.name.replace("-", "_") }}_opts" -- "$cur"))
+                    ;;
+{%- endfor %}
+            esac
+            ;;
+    esac
+}
+
+complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
+`;
+{%- endif %}
+    }
+
+    generateZshCompletion() {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
+        return `#compdef {{ cli.root_command.name }}
+# Zsh completion for {{ cli.root_command.name }}
+
+_{{ cli.root_command.name.replace("-", "_") }}() {
+    local context state line
+    
+    _arguments -C \\
+        '(--help -h){--help,-h}[Show help information]' \\
+        '(--version)--version[Show version information]' \\
+        '1: :_{{ cli.root_command.name.replace("-", "_") }}_commands' \\
+        '*::arg:->args'
+    
+    case $state in
+        args)
+            case $words[1] in
+{%- for command in cli.root_command.subcommands %}
+                {{ command.name }})
+                    _arguments \\
+                        '(--help -h){--help,-h}[Show help information]' \\
+{%- for opt in command.options %}
+                        '(--{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}){--{{ opt.name }}{% if opt.short %},-{{ opt.short }}{% endif %}}[{{ opt.description }}]' \\
+{%- endfor %}
+{%- for arg in command.arguments %}
+                        '{{ loop.index }}:{{ arg.name }}:_files'{% if not loop.last %} \\{% endif %}
+{%- endfor %}
+                    ;;
+{%- endfor %}
+            esac
+            ;;
+    esac
+}
+
+_{{ cli.root_command.name.replace("-", "_") }}_commands() {
+    local commands
+    commands=(
+{%- for command in cli.root_command.subcommands %}
+        '{{ command.name }}:{{ command.description }}'
+{%- endfor %}
+    )
+    _describe 'commands' commands
+}
+
+_{{ cli.root_command.name.replace("-", "_") }} "$@"
+`;
+{%- endif %}
+    }
+
+    generateFishCompletion() {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
+        return `# Fish completion for {{ cli.root_command.name }}
+
+# Global options
+complete -c {{ cli.root_command.name }} -f
+complete -c {{ cli.root_command.name }} -s h -l help -d "Show help information"
+complete -c {{ cli.root_command.name }} -l version -d "Show version information"
+
+# Subcommands
+{%- for command in cli.root_command.subcommands %}
+complete -c {{ cli.root_command.name }} -n "__fish_use_subcommand" -a "{{ command.name }}" -d "{{ command.description }}"
+{%- for opt in command.options %}
+complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ command.name }}" -l {{ opt.name }}{% if opt.short %} -s {{ opt.short }}{% endif %} -d "{{ opt.description }}"
+{%- endfor %}
+{%- endfor %}
+`;
+{%- endif %}
+    }
+
+    async installCompletion(shell = null) {
+        shell = shell || path.basename(process.env.SHELL || 'bash');
+        
+        let script, completionDir, filename;
+        
+        switch (shell) {
+            case 'bash':
+                script = this.generateBashCompletion();
+                completionDir = path.join(os.homedir(), '.bash_completion.d');
+                filename = '{{ cli.root_command.name }}';
+                break;
+            case 'zsh':
+                script = this.generateZshCompletion();
+                completionDir = path.join(os.homedir(), '.zsh', 'completions');
+                filename = '{{ cli.root_command.name }}.zsh';
+                break;
+            case 'fish':
+                script = this.generateFishCompletion();
+                completionDir = path.join(os.homedir(), '.config', 'fish', 'completions');
+                filename = '{{ cli.root_command.name }}.fish';
+                break;
+            default:
+                console.error(`Unsupported shell: ${shell}`);
+                return false;
+        }
+        
+        try {
+            if (!fs.existsSync(completionDir)) {
+                fs.mkdirSync(completionDir, { recursive: true });
+            }
+            
+            const filepath = path.join(completionDir, filename);
+            fs.writeFileSync(filepath, script);
+            
+            console.log(`Completion script installed: ${filepath}`);
+            
+            if (shell === 'bash') {
+                console.log('Please restart your terminal or run: source ~/.bashrc');
+            } else if (shell === 'zsh') {
+                console.log('Please restart your terminal or add to ~/.zshrc: fpath=(~/.zsh/completions $fpath)');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error(`Failed to install completion: ${error.message}`);
+            return false;
+        }
+    }
+}
+
+module.exports = { CompletionEngine };
+
+{%- elif language == 'typescript' -%}
+/**
+ * Shell completion engine for {{ project.name }}
+ */
+
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+
+interface CliSchema {
+    root_command: {
+        name: string;
+        subcommands: Array<{
+            name: string;
+            description: string;
+            options: Array<{
+                name: string;
+                short?: string;
+                description: string;
+            }>;
+            arguments: Array<{
+                name: string;
+                description: string;
+            }>;
+        }>;
+    };
+}
+
+export class CompletionEngine {
+    constructor(private cliSchema: CliSchema) {}
+
+    public generateBashCompletion(): string {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
+        return `#!/bin/bash
+# Bash completion for {{ cli.root_command.name }}
+
+_{{ cli.root_command.name.replace("-", "_") }}_completions()
+{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="\${COMP_WORDS[COMP_CWORD]}"
+    prev="\${COMP_WORDS[COMP_CWORD-1]}"
+    
+    # Global options
+    local global_opts="--help -h --version"
+    
+    # Subcommands
+    local subcommands="{%- for cmd in cli.root_command.subcommands %} {{ cmd.name }}{%- endfor %}"
+    
+    case \${COMP_CWORD} in
+        1)
+            COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
+            ;;
+        *)
+            case "\${words[1]}" in
+{%- for command in cli.root_command.subcommands %}
+                {{ command.name }})
+                    local {{ command.name.replace("-", "_") }}_opts="--help -h{%- for opt in command.options %} --{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}{%- endfor %}"
+                    COMPREPLY=($(compgen -W "${{ command.name.replace("-", "_") }}_opts" -- "$cur"))
+                    ;;
+{%- endfor %}
+            esac
+            ;;
+    esac
+}
+
+complete -F _{{ cli.root_command.name.replace("-", "_") }}_completions {{ cli.root_command.name }}
+`;
+{%- endif %}
+    }
+
+    public generateZshCompletion(): string {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
+        return `#compdef {{ cli.root_command.name }}
+# Zsh completion for {{ cli.root_command.name }}
+
+_{{ cli.root_command.name.replace("-", "_") }}() {
+    local context state line
+    
+    _arguments -C \\
+        '(--help -h){--help,-h}[Show help information]' \\
+        '(--version)--version[Show version information]' \\
+        '1: :_{{ cli.root_command.name.replace("-", "_") }}_commands' \\
+        '*::arg:->args'
+    
+    case $state in
+        args)
+            case $words[1] in
+{%- for command in cli.root_command.subcommands %}
+                {{ command.name }})
+                    _arguments \\
+                        '(--help -h){--help,-h}[Show help information]' \\
+{%- for opt in command.options %}
+                        '(--{{ opt.name }}{% if opt.short %} -{{ opt.short }}{% endif %}){--{{ opt.name }}{% if opt.short %},-{{ opt.short }}{% endif %}}[{{ opt.description }}]' \\
+{%- endfor %}
+{%- for arg in command.arguments %}
+                        '{{ loop.index }}:{{ arg.name }}:_files'{% if not loop.last %} \\{% endif %}
+{%- endfor %}
+                    ;;
+{%- endfor %}
+            esac
+            ;;
+    esac
+}
+
+_{{ cli.root_command.name.replace("-", "_") }}_commands() {
+    local commands
+    commands=(
+{%- for command in cli.root_command.subcommands %}
+        '{{ command.name }}:{{ command.description }}'
+{%- endfor %}
+    )
+    _describe 'commands' commands
+}
+
+_{{ cli.root_command.name.replace("-", "_") }} "$@"
+`;
+{%- endif %}
+    }
+
+    public generateFishCompletion(): string {
+{%- if consolidation_mode %}
+        return "# Shell completion not available in consolidated mode";
+{%- else %}
+        return `# Fish completion for {{ cli.root_command.name }}
+
+# Global options
+complete -c {{ cli.root_command.name }} -f
+complete -c {{ cli.root_command.name }} -s h -l help -d "Show help information"
+complete -c {{ cli.root_command.name }} -l version -d "Show version information"
+
+# Subcommands
+{%- for command in cli.root_command.subcommands %}
+complete -c {{ cli.root_command.name }} -n "__fish_use_subcommand" -a "{{ command.name }}" -d "{{ command.description }}"
+{%- for opt in command.options %}
+complete -c {{ cli.root_command.name }} -n "__fish_seen_subcommand_from {{ command.name }}" -l {{ opt.name }}{% if opt.short %} -s {{ opt.short }}{% endif %} -d "{{ opt.description }}"
+{%- endfor %}
+{%- endfor %}
+`;
+{%- endif %}
+    }
+
+    public async installCompletion(shell: string | null = null): Promise<boolean> {
+        shell = shell || path.basename(process.env.SHELL || 'bash');
+        
+        let script: string;
+        let completionDir: string;
+        let filename: string;
+        
+        switch (shell) {
+            case 'bash':
+                script = this.generateBashCompletion();
+                completionDir = path.join(os.homedir(), '.bash_completion.d');
+                filename = '{{ cli.root_command.name }}';
+                break;
+            case 'zsh':
+                script = this.generateZshCompletion();
+                completionDir = path.join(os.homedir(), '.zsh', 'completions');
+                filename = '{{ cli.root_command.name }}.zsh';
+                break;
+            case 'fish':
+                script = this.generateFishCompletion();
+                completionDir = path.join(os.homedir(), '.config', 'fish', 'completions');
+                filename = '{{ cli.root_command.name }}.fish';
+                break;
+            default:
+                console.error(`Unsupported shell: ${shell}`);
+                return false;
+        }
+        
+        try {
+            if (!fs.existsSync(completionDir)) {
+                fs.mkdirSync(completionDir, { recursive: true });
+            }
+            
+            const filepath = path.join(completionDir, filename);
+            fs.writeFileSync(filepath, script);
+            
+            console.log(`Completion script installed: ${filepath}`);
+            
+            if (shell === 'bash') {
+                console.log('Please restart your terminal or run: source ~/.bashrc');
+            } else if (shell === 'zsh') {
+                console.log('Please restart your terminal or add to ~/.zshrc: fpath=(~/.zsh/completions $fpath)');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error(`Failed to install completion: ${(error as Error).message}`);
+            return false;
+        }
+    }
+}
+
+{%- elif language == 'rust' -%}
+{% raw %}use std::fs;
+use std::path::PathBuf;
+use std::env;
+
+pub struct CompletionEngine {
+    cli_name: String,
+    commands: Vec<CompletionCommand>,
+}
+
+#[derive(Clone)]
+struct CompletionCommand {
+    name: String,
+    description: String,
+    options: Vec<CompletionOption>,
+    arguments: Vec<CompletionArgument>,
+}
+
+#[derive(Clone)]
+struct CompletionOption {
+    name: String,
+    short: Option<String>,
+    description: String,
+}
+
+#[derive(Clone)]
+struct CompletionArgument {
+    name: String,
+    description: String,
+}
+
+impl CompletionEngine {
+    pub fn new() -> Self {
+        Self {
+            cli_name: "{% endraw %}{{ cli.root_command.name }}{% raw %}".to_string(),
+            commands: vec![{% endraw %}
+{%- for command in cli.root_command.subcommands %}
+{% raw %}                CompletionCommand {
+                    name: "{% endraw %}{{ command.name }}{% raw %}".to_string(),
+                    description: "{% endraw %}{{ command.description }}{% raw %}".to_string(),
+                    options: vec![{% endraw %}
+{%- for opt in command.options %}
+{% raw %}                        CompletionOption {
+                            name: "{% endraw %}{{ opt.name }}{% raw %}".to_string(),
+                            short: {% endraw %}{% if opt.short %}{% raw %}Some("{% endraw %}{{ opt.short }}{% raw %}".to_string()){% endraw %}{% else %}{% raw %}None{% endraw %}{% endif %}{% raw %},
+                            description: "{% endraw %}{{ opt.description }}{% raw %}".to_string(),
+                        },{% endraw %}
+{%- endfor %}
+{% raw %}                    ],
+                    arguments: vec![{% endraw %}
+{%- for arg in command.arguments %}
+{% raw %}                        CompletionArgument {
+                            name: "{% endraw %}{{ arg.name }}{% raw %}".to_string(),
+                            description: "{% endraw %}{{ arg.description }}{% raw %}".to_string(),
+                        },{% endraw %}
+{%- endfor %}
+{% raw %}                    ],
+                },{% endraw %}
+{%- endfor %}
+{% raw %}            ],
+        }
+    }{% endraw %}
+
+{% raw %}    pub fn generate_bash_completion(&self) -> String {{% endraw %}
+{%- if consolidation_mode %}
+{% raw %}        "# Shell completion not available in consolidated mode".to_string(){% endraw %}
+{%- else %}
+{% raw %}        let mut script = format!(r#"#!/bin/bash
+# Bash completion for {}
+
+_{}_completions()
+{{
+    local cur prev words cword
+    COMPREPLY=()
+    cur="${{COMP_WORDS[COMP_CWORD]}}"
+    prev="${{COMP_WORDS[COMP_CWORD-1]}}"
+    
+    # Global options
+    local global_opts="--help -h --version"
+    
+    # Subcommands
+    local subcommands=""#, self.cli_name, self.cli_name.replace("-", "_"));
+
+        for cmd in &self.commands {
+            script.push_str(&format!(" {}", cmd.name));
+        }
+
+        script.push_str(r#""
+    
+    case ${{COMP_CWORD}} in
+        1)
+            COMPREPLY=($(compgen -W "$subcommands $global_opts" -- "$cur"))
+            ;;
+        *)
+            case "${{words[1]}}" in"#);
+
+        for cmd in &self.commands {
+            script.push_str(&format!("\n                {})\n                    local {}_opts=\"--help -h", 
+                cmd.name, cmd.name.replace("-", "_")));
+            
+            for opt in &cmd.options {
+                script.push_str(&format!(" --{}", opt.name));
+                if let Some(short) = &opt.short {
+                    script.push_str(&format!(" -{}", short));
+                }
+            }
+            
+            script.push_str(&format!("\"\n                    COMPREPLY=($(compgen -W \"${}_opts\" -- \"$cur\"))\n                    ;;", 
+                cmd.name.replace("-", "_")));
+        }
+
+        script.push_str(&format!(r#"
+            esac
+            ;;
+    esac
+}}
+
+complete -F _{}_completions {}
+"#, self.cli_name.replace("-", "_"), self.cli_name));
+
+        script{% endraw %}
+{%- endif %}
+{% raw %}    }{% endraw %}
+
+{% raw %}    pub fn generate_zsh_completion(&self) -> String {{% endraw %}
+{%- if consolidation_mode %}
+{% raw %}        "# Shell completion not available in consolidated mode".to_string(){% endraw %}
+{%- else %}
+{% raw %}        let mut script = format!(r#"#compdef {}
+# Zsh completion for {}
+
+_{}() {{
+    local context state line
+    
+    _arguments -C \
+        '(--help -h){{--help,-h}}[Show help information]' \
+        '(--version)--version[Show version information]' \
+        '1: :_{}_commands' \
+        '*::arg:->args'
+    
+    case $state in
+        args)
+            case $words[1] in"#, 
+            self.cli_name, self.cli_name, 
+            self.cli_name.replace("-", "_"), self.cli_name.replace("-", "_"));
+
+        for cmd in &self.commands {
+            script.push_str(&format!("\n                {})\n                    _arguments \\", cmd.name));
+            script.push_str("\n                        '(--help -h){{--help,-h}}[Show help information]' \\");
+            
+            for opt in &cmd.options {
+                if let Some(short) = &opt.short {
+                    script.push_str(&format!("\n                        '(--{} -{}){{--{},-{}}}[{}]' \\", 
+                        opt.name, short, opt.name, short, opt.description));
+                } else {
+                    script.push_str(&format!("\n                        '(--{})--{}[{}]' \\", 
+                        opt.name, opt.name, opt.description));
+                }
+            }
+            
+            for (i, arg) in cmd.arguments.iter().enumerate() {
+                script.push_str(&format!("\n                        '{}:{}:_files'", i + 1, arg.name));
+                if i < cmd.arguments.len() - 1 {
+                    script.push_str(" \\");
+                }
+            }
+            
+            script.push_str("\n                    ;;");
+        }
+
+        script.push_str(&format!(r#"
+            esac
+            ;;
+    esac
+}}
+
+_{}_commands() {{
+    local commands
+    commands=("#, self.cli_name.replace("-", "_")));
+
+        for cmd in &self.commands {
+            script.push_str(&format!("\n        '{}:{}'", cmd.name, cmd.description));
+        }
+
+        script.push_str(&format!(r#"
+    )
+    _describe 'commands' commands
+}}
+
+_{} "$@"
+"#, self.cli_name.replace("-", "_")));
+
+        script{% endraw %}
+{%- endif %}
+{% raw %}    }{% endraw %}
+
+{% raw %}    pub fn generate_fish_completion(&self) -> String {{% endraw %}
+{%- if consolidation_mode %}
+{% raw %}        "# Shell completion not available in consolidated mode".to_string(){% endraw %}
+{%- else %}
+{% raw %}        let mut script = format!(r#"# Fish completion for {}
+
+# Global options
+complete -c {} -f
+complete -c {} -s h -l help -d "Show help information"
+complete -c {} -l version -d "Show version information"
+
+# Subcommands"#, 
+            self.cli_name, self.cli_name, self.cli_name, self.cli_name);
+
+        for cmd in &self.commands {
+            script.push_str(&format!("\ncomplete -c {} -n \"__fish_use_subcommand\" -a \"{}\" -d \"{}\"", 
+                self.cli_name, cmd.name, cmd.description));
+            
+            for opt in &cmd.options {
+                script.push_str(&format!("\ncomplete -c {} -n \"__fish_seen_subcommand_from {}\" -l {}", 
+                    self.cli_name, cmd.name, opt.name));
+                
+                if let Some(short) = &opt.short {
+                    script.push_str(&format!(" -s {}", short));
+                }
+                
+                script.push_str(&format!(" -d \"{}\"", opt.description));
+            }
+        }
+
+        script.push('\n');
+        script{% endraw %}
+{%- endif %}
+{% raw %}    }{% endraw %}
+
+{% raw %}    pub fn install_completion(&self, shell: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+        let shell_name = match shell {
+            Some(s) => s.to_string(),
+            None => {
+                let shell_path = env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string());
+                shell_path.split('/').last().unwrap_or("bash").to_string()
+            }
+        };
+        let shell = shell_name.as_str();
+
+        let (script, completion_dir, filename) = match shell {
+            "bash" => {
+                let script = self.generate_bash_completion();
+                let completion_dir = PathBuf::from(env::var("HOME")?).join(".bash_completion.d");
+                let filename = self.cli_name.clone();
+                (script, completion_dir, filename)
+            }
+            "zsh" => {
+                let script = self.generate_zsh_completion();
+                let completion_dir = PathBuf::from(env::var("HOME")?).join(".zsh").join("completions");
+                let filename = format!("{}.zsh", self.cli_name);
+                (script, completion_dir, filename)
+            }
+            "fish" => {
+                let script = self.generate_fish_completion();
+                let completion_dir = PathBuf::from(env::var("HOME")?).join(".config").join("fish").join("completions");
+                let filename = format!("{}.fish", self.cli_name);
+                (script, completion_dir, filename)
+            }
+            _ => return Err(format!("Unsupported shell: {}", shell).into()),
+        };
+
+        fs::create_dir_all(&completion_dir)?;
+        let filepath = completion_dir.join(filename);
+        fs::write(&filepath, script)?;
+
+        println!("Completion script installed: {}", filepath.display());
+
+        match shell {
+            "bash" => println!("Please restart your terminal or run: source ~/.bashrc"),
+            "zsh" => println!("Please restart your terminal or add to ~/.zshrc: fpath=(~/.zsh/completions $fpath)"),
+            _ => {}
+        }
+
+        Ok(())
+    }
+}{% endraw %}
+
+{%- endif -%}

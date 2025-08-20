@@ -1,0 +1,285 @@
+# Command Structure Schema
+# Defines patterns for command definition across all 4 languages
+# Agent A - Code Structure Patterns
+
+schema_version: "1.0.0"
+description: "Universal command structure patterns found in all languages"
+
+# Command Definition Pattern
+# Common across all languages with syntax variations
+command_definition:
+  description: "How commands are defined and registered"
+  
+  common_properties:
+    - name: "string"             # Command name (required)
+    - description: "string"      # Help text (required)
+    - aliases: "string[]"        # Alternative names (optional)
+    - hidden: "boolean"          # Hide from help (optional)
+    - deprecated: "string"       # Deprecation message (optional)
+    
+  language_syntax:
+    python:
+      pattern: "@click.command()"
+      example: |
+        @click.command()
+        def build():
+            """Build the CLI from configuration"""
+            pass
+            
+    nodejs:
+      pattern: "program.command()"
+      example: |
+        program
+          .command('build')
+          .description('Build the CLI from configuration')
+          .action(handler);
+          
+    typescript:
+      pattern: "program.command() with types"
+      example: |
+        program
+          .command('build')
+          .description('Build the CLI from configuration')
+          .action(async (options: BuildOptions) => handler(options));
+          
+    rust:
+      pattern: "Command enum variant"
+      example: |
+        #[derive(Subcommand)]
+        enum Commands {
+            /// Build the CLI from configuration
+            Build { /* args */ },
+        }
+
+# Subcommand Structure Pattern
+subcommand_structure:
+  description: "Nested command hierarchies"
+  
+  common_properties:
+    - parent_command: "string"
+    - subcommands: "command[]"
+    - inherit_options: "boolean"  # Whether parent options are available
+    
+  nesting_patterns:
+    flat: "Single level of commands"
+    grouped: "Commands organized into groups"
+    nested: "Multi-level hierarchy"
+    
+  language_syntax:
+    python:
+      pattern: "@group.command()"
+      example: |
+        @main.group()
+        def config():
+            """Configuration management"""
+            pass
+            
+        @config.command()
+        def get():
+            """Get configuration value"""
+            pass
+            
+    nodejs:
+      pattern: "Nested .command() calls"
+      example: |
+        const config = program.command('config');
+        config.command('get')
+          .description('Get configuration value');
+          
+    typescript:
+      pattern: "Typed nested commands"
+      example: |
+        const config = program.command('config');
+        config.command('get')
+          .description('Get configuration value')
+          .action(async () => { /* ... */ });
+          
+    rust:
+      pattern: "Nested enum variants"
+      example: |
+        enum ConfigCommands {
+            Get { key: Option<String> },
+            Set { key: String, value: String },
+        }
+
+# Option Definition Pattern
+option_definition:
+  description: "Command-line options/flags with types and defaults"
+  
+  common_properties:
+    - name: "string"             # Long form (--option)
+    - short: "string"            # Short form (-o)
+    - description: "string"      # Help text
+    - type: "string"             # Data type
+    - default: "any"             # Default value
+    - required: "boolean"        # Is required
+    - multiple: "boolean"        # Accept multiple values
+    - choices: "any[]"           # Valid values
+    - env_var: "string"          # Environment variable fallback
+    
+  type_mapping:
+    # How types map across languages
+    string:
+      python: "str"
+      nodejs: "String"
+      typescript: "string"
+      rust: "String"
+      
+    number:
+      python: "int/float"
+      nodejs: "Number"
+      typescript: "number"
+      rust: "i32/f64"
+      
+    boolean:
+      python: "bool (is_flag=True)"
+      nodejs: "Boolean"
+      typescript: "boolean"
+      rust: "bool"
+      
+  language_syntax:
+    python:
+      pattern: "@click.option()"
+      example: |
+        @click.option('--name', '-n',
+                      type=str,
+                      default='world',
+                      help='Name to greet')
+                      
+    nodejs:
+      pattern: ".option()"
+      example: |
+        .option('-n, --name <value>',
+                'Name to greet',
+                'world')
+                
+    typescript:
+      pattern: ".option() with type inference"
+      example: |
+        .option<string>('-n, --name <value>',
+                        'Name to greet',
+                        'world')
+                        
+    rust:
+      pattern: "#[arg()] attribute"
+      example: |
+        #[arg(short = 'n', long = "name",
+              default_value = "world",
+              help = "Name to greet")]
+        name: String,
+
+# Argument Definition Pattern
+required_optional_args:
+  description: "Positional arguments with requirement specifications"
+  
+  common_properties:
+    - name: "string"
+    - description: "string"
+    - required: "boolean"
+    - variadic: "boolean"        # Accept multiple values
+    - choices: "any[]"           # Valid values
+    
+  variadic_patterns:
+    zero_or_more: "*"            # Any number of args
+    one_or_more: "+"             # At least one arg
+    zero_or_one: "?"             # Optional single arg
+    exact_count: "number"        # Exact number of args
+    
+  language_syntax:
+    python:
+      pattern: "@click.argument()"
+      example: |
+        @click.argument('files', nargs=-1, required=True)
+        @click.argument('output', required=False)
+        
+    nodejs:
+      pattern: ".argument()"
+      example: |
+        .argument('<files...>', 'Input files')
+        .argument('[output]', 'Output file')
+        
+    typescript:
+      pattern: ".argument() with types"
+      example: |
+        .argument<string[]>('<files...>', 'Input files')
+        .argument<string>('[output]', 'Output file')
+        
+    rust:
+      pattern: "Struct fields"
+      example: |
+        /// Input files
+        files: Vec<String>,
+        /// Output file
+        output: Option<String>,
+
+# Command Groups Pattern
+command_groups:
+  description: "Organizing commands into logical groups"
+  
+  common_properties:
+    - name: "string"
+    - description: "string"
+    - commands: "string[]"
+    
+  language_support:
+    python: "Built-in with rich-click"
+    nodejs: "Manual grouping in help"
+    typescript: "Manual grouping with types"
+    rust: "Through enum organization"
+
+# Default Command Pattern
+default_command:
+  description: "Command executed when none specified"
+  
+  common_properties:
+    - command_name: "string"
+    - trigger_on_stdin: "boolean"
+    
+  language_support:
+    python: "Custom Group class implementation"
+    nodejs: "Manual argv checking"
+    typescript: "Type-safe argv checking"
+    rust: "Option<Commands> with None handling"
+
+# Examples Section
+examples:
+  description: "Command usage examples"
+  
+  common_properties:
+    - command: "string"
+    - description: "string"
+    - output: "string"           # Expected output (optional)
+    
+  display_patterns:
+    inline: "Show in command help"
+    section: "Dedicated examples section"
+    file: "External examples file"
+
+# Notes on Language-Specific Idioms
+language_idioms:
+  python:
+    - "Decorators for clean command definition"
+    - "Context passing with @click.pass_context"
+    - "Rich terminal output with rich-click"
+    
+  nodejs:
+    - "Fluent API with method chaining"
+    - "Async/await for command handlers"
+    - "Dynamic command loading from files"
+    
+  typescript:
+    - "Type inference and safety"
+    - "Interface definitions for options"
+    - "Decorator support (optional)"
+    
+  rust:
+    - "Derive macros for zero boilerplate"
+    - "Strong typing with enums"
+    - "Pattern matching for command dispatch"
+
+# Integration Notes
+integration_notes:
+  - "Command names must be consistent across all patterns"
+  - "Description text is reused verbatim"
+  - "Type mappings preserve semantics across languages"
+  - "Optional features (like groups) gracefully degrade"
