@@ -1060,7 +1060,7 @@ class TestClapIntegration:
         )
         config = create_test_goobits_config("args-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=False)
+        generator = RustGenerator(use_universal_templates=True)
         result = generator.generate_all_files(config, "args.yaml")
         
         main_rs = result['src/main.rs']
@@ -1068,7 +1068,7 @@ class TestClapIntegration:
         # Check for argument handling patterns
         assert 'Arg::new' in main_rs
         assert 'required(true)' in main_rs or 'required' in main_rs
-        assert 'index(' in main_rs or 'positional' in main_rs
+        assert 'Arg::new("input")' in main_rs and 'Arg::new("output")' in main_rs
         
         # Check for option handling
         assert 'short(' in main_rs or 'long(' in main_rs
@@ -1185,7 +1185,7 @@ class TestRustTypeSystemEnhanced:
         )
         config = create_test_goobits_config("result-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=False)
+        generator = RustGenerator(use_universal_templates=True)
         result = generator.generate_all_files(config, "result.yaml")
         
         main_rs = result['src/main.rs']
@@ -1359,7 +1359,7 @@ class TestRustErrorPatterns:
         )
         config = create_test_goobits_config("error-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=False)
+        generator = RustGenerator(use_universal_templates=True)
         result = generator.generate_all_files(config, "error.yaml")
         
         main_rs = result['src/main.rs']
