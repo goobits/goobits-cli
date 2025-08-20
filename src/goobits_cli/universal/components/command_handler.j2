@@ -330,7 +330,7 @@ def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ opt
 {% if cli.header_sections %}{% for section in cli.header_sections %}
     [bold yellow]{{ section.title }}[/bold yellow]
     
-    {% for item in section.items %}
+    {% for item in section['items'] %}
     {% if item.style == "example" -%}
     [green]   {{ item.item.ljust(27) }}[/green]   [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
     

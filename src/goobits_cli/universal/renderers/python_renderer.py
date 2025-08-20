@@ -122,6 +122,28 @@ class PythonRenderer(LanguageRenderer):
 
         
 
+        # Ensure installation field has defensive defaults
+
+        if "installation" not in context:
+
+            context["installation"] = {}
+
+        
+
+        # Preserve extras while setting defensive defaults
+
+        original_installation = context["installation"]
+
+        context["installation"] = {
+
+            "pypi_name": original_installation.get("pypi_name", context.get("project", {}).get("package_name", "cli_app")),
+
+            **original_installation
+
+        }
+
+        
+
         # Ensure core fields have defensive defaults
 
         if "project" in context:
@@ -207,6 +229,36 @@ class PythonRenderer(LanguageRenderer):
             "consolidation_mode": self.consolidate
 
         })
+
+        
+
+        # Ensure CLI field has defensive defaults
+
+        if "cli" not in context:
+
+            context["cli"] = {}
+
+        
+
+        # Add defensive defaults for CLI options
+
+        if "options" not in context["cli"]:
+
+            context["cli"]["options"] = []
+
+        
+
+        # Ensure root_command structure exists with defensive defaults
+
+        if "root_command" not in context["cli"]:
+
+            context["cli"]["root_command"] = {}
+
+        
+
+        if "subcommands" not in context["cli"]["root_command"]:
+
+            context["cli"]["root_command"]["subcommands"] = []
 
         
 

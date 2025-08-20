@@ -4,7 +4,7 @@
  * {{ display_name }} CLI - Node.js Implementation
  */
 
-import { Command } from 'commander';
+import { Command, Argument } from 'commander';
 import path from 'path';
 import fs from 'fs';
 import { spawn, execSync } from 'child_process';
@@ -350,8 +350,11 @@ const {{ cmd_name }}Cmd = program
     .command('{{ cmd_name }}')
     .description('{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}')
     {% for arg in (cmd_data.args or []) %}
-    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}'
-    {%- if arg.choices %}, {{ arg.choices }}{% endif %})
+    {% if arg.choices %}
+    .addArgument(new Argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}').choices({{ arg.choices | tojson }}))
+    {% else %}
+    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}')
+    {% endif %}
     {% endfor %}
     {% for opt in (cmd_data.options or []) %}
     .option('{%- if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != 'flag' %} <value>{% endif %}', '{{ opt.desc }}'
@@ -441,8 +444,11 @@ const {{ cmd_name }}Cmd = program
     .command('{{ subcmd_name }}')
     .description('{% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}')
     {% for arg in (subcmd_data.args or []) %}
-    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}'
-    {%- if arg.choices %}, {{ arg.choices }}{% endif %})
+    {% if arg.choices %}
+    .addArgument(new Argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}').choices({{ arg.choices | tojson }}))
+    {% else %}
+    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}')
+    {% endif %}
     {% endfor %}
     {% for opt in (subcmd_data.options or []) %}
     .option('{%- if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != 'flag' %} <value>{% endif %}', '{{ opt.desc }}'

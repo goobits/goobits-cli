@@ -31,7 +31,9 @@
     "commander": "^11.1.0",
     "chalk": "^5.3.0"{% if installation and installation.extras and installation.extras.npm %},
     {% for package in installation.extras.npm %}
-    {% if '@' in package %}
+    {% if '@' in package and not package.startswith('@') %}
+    {% set parts = package.rsplit('@', 1) %}
+    "{{ parts[0] }}": "^{{ parts[1] }}"{% elif '@' in package and package.startswith('@') and package.count('@') > 1 %}
     {% set parts = package.rsplit('@', 1) %}
     "{{ parts[0] }}": "^{{ parts[1] }}"{% else %}"{{ package }}": "latest"{% endif %}{% if not loop.last %},{% endif %}
     {% endfor %}{% endif %}

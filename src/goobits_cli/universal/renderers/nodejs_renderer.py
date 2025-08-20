@@ -541,7 +541,15 @@ class NodeJSRenderer(LanguageRenderer):
 
         for dep in npm_deps:
 
-            if "@" in dep:
+            if "@" in dep and not dep.startswith("@"):
+
+                name, version = dep.rsplit("@", 1)
+
+                dependencies[name] = f"^{version}"
+
+            elif "@" in dep and dep.startswith("@") and dep.count("@") > 1:
+
+                # Handle scoped packages with version like @types/node@18.0.0
 
                 name, version = dep.rsplit("@", 1)
 

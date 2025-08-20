@@ -22,9 +22,7 @@ def test_universal_templates():
     
     # Load test configuration
     config_path = Path("test_universal_validation.yaml")
-    if not config_path.exists():
-        print(f"Error: {config_path} not found")
-        return False
+    assert config_path.exists(), f"Error: {config_path} not found"
         
     with open(config_path, 'r') as f:
         data = yaml.safe_load(f)
@@ -32,8 +30,7 @@ def test_universal_templates():
     try:
         config = GoobitsConfigSchema(**data)
     except ValidationError as e:
-        print(f"Config validation error: {e}")
-        return False
+        assert False, f"Config validation error: {e}"
     
     print(f"✅ Loaded configuration: {config.display_name}")
     
@@ -80,15 +77,16 @@ def test_universal_templates():
             import traceback
             traceback.print_exc()
             all_tests_passed = False
-            
-    return all_tests_passed
+    
+    assert all_tests_passed, "Some universal template tests failed"
 
 if __name__ == "__main__":
     print("🚀 Testing Universal Template System directly...\n")
     
-    if test_universal_templates():
+    try:
+        test_universal_templates()
         print("\n🎉 All universal template tests passed!")
         sys.exit(0)
-    else:
-        print("\n❌ Some universal template tests failed!")
+    except AssertionError as e:
+        print(f"\n❌ {e}")
         sys.exit(1)

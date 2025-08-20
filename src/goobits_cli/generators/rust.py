@@ -1110,7 +1110,7 @@ class RustGenerator(BaseGenerator):
 
             if cmd_data.options:
 
-                valid_types = ['str', 'int', 'float', 'bool', 'flag']
+                valid_types = ['str', 'string', 'int', 'float', 'bool', 'flag']
 
                 for opt in cmd_data.options:
 
@@ -1240,6 +1240,8 @@ use clap::{{Arg, ArgMatches, Command}};
 
 use std::process;
 
+use anyhow::Result;
+
 
 
 mod hooks;
@@ -1256,7 +1258,33 @@ fn main() {{
 
         .subcommand_required(false)
 
-        .arg_required_else_help(true);
+        .arg_required_else_help(true)
+
+        // Add global options
+
+        .arg(Arg::new("verbose")
+
+            .short('v')
+
+            .long("verbose")
+
+            .help("Enable verbose output")
+
+            .action(clap::ArgAction::SetTrue)
+
+            .global(true))
+
+        .arg(Arg::new("config")
+
+            .short('c')
+
+            .long("config")
+
+            .help("Config file path")
+
+            .value_name("PATH")
+
+            .global(true));
 
     
 
@@ -1296,7 +1324,7 @@ fn build_cli(app: Command) -> Command {{
 
 
 
-fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
+fn handle_command(matches: &ArgMatches) -> Result<()> {{
 
     match matches.subcommand() {{
 
@@ -1337,84 +1365,122 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
             command_count += 1
             if command_count > MAX_COMMANDS:
                 break  # Prevent excessive iteration
-
-            cmd_def = f'''app = app.subcommand(
-
+            
+            # Check if command has subcommands
+            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+                cmd_def = f'''app = app.subcommand(
         Command::new("{cmd_name}")
-
+            .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")
+            .subcommand_required(true)
+            .arg_required_else_help(true)'''
+            
+                # Add subcommands
+                for sub_name, sub_data in cmd_data.subcommands.items():
+                    sub_cmd_def = f'''
+            .subcommand(
+                Command::new("{sub_name}")
+                    .about("{sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'}")'''
+                    
+                    # Add arguments for subcommand
+                    if hasattr(sub_data, 'args') and sub_data.args:
+                        arg_index = 1
+                        for arg in sub_data.args:
+                            if hasattr(arg, 'nargs') and arg.nargs == "*":
+                                sub_cmd_def += f'''
+                    .arg(Arg::new("{arg.name}")
+                        .help("{arg.desc}")
+                        .num_args(0..)
+                        .value_name("{arg.name.upper()}"))'''
+                            else:
+                                sub_cmd_def += f'''
+                    .arg(Arg::new("{arg.name}")
+                        .help("{arg.desc}")
+                        .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
+                        .value_name("{arg.name.upper()}"))'''
+                    
+                    # Add options for subcommand
+                    if hasattr(sub_data, 'options') and sub_data.options:
+                        for opt in sub_data.options:
+                            short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
+                            if opt.type == 'bool':
+                                sub_cmd_def += f'''
+                    .arg(Arg::new("{opt.name}")
+                        .help("{opt.desc}")
+                        {short_part}
+                        .long("{opt.name}")
+                        .action(clap::ArgAction::SetTrue))'''
+                            elif opt.type == 'int':
+                                sub_cmd_def += f'''
+                    .arg(Arg::new("{opt.name}")
+                        .help("{opt.desc}")
+                        {short_part}
+                        .long("{opt.name}")
+                        .value_name("NUMBER"))'''
+                            else:
+                                sub_cmd_def += f'''
+                    .arg(Arg::new("{opt.name}")
+                        .help("{opt.desc}")
+                        {short_part}
+                        .long("{opt.name}")
+                        .value_name("VALUE"))'''
+                    
+                    sub_cmd_def += '''
+            )'''
+                    cmd_def += sub_cmd_def
+                
+                cmd_def += '''
+    );'''
+            else:
+                # Simple command without subcommands
+                cmd_def = f'''app = app.subcommand(
+        Command::new("{cmd_name}")
             .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")'''
 
-            
-
-            # Add arguments
-
-            if hasattr(cmd_data, 'args') and cmd_data.args:
-                arg_count = 0
-                for arg in cmd_data.args:
-                    arg_count += 1
-                    if arg_count > MAX_ARGS_PER_COMMAND:
-                        break  # Prevent excessive iteration
-
-                    if arg.required:
-
-                        cmd_def += f'''
-
+                # Add arguments
+                if hasattr(cmd_data, 'args') and cmd_data.args:
+                    for arg in cmd_data.args:
+                        if hasattr(arg, 'nargs') and arg.nargs == "*":
+                            cmd_def += f'''
             .arg(Arg::new("{arg.name}")
-
                 .help("{arg.desc}")
-
-                .required(true)
-
-                .index(1))'''
-
-                    else:
-
-                        cmd_def += f'''
-
+                .num_args(0..)
+                .value_name("{arg.name.upper()}"))'''
+                        else:
+                            cmd_def += f'''
             .arg(Arg::new("{arg.name}")
-
                 .help("{arg.desc}")
+                .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
+                .value_name("{arg.name.upper()}"))'''
 
-                .required(false)
-
-                .index(1))'''
-
-            
-
-            # Add options
-
-            if hasattr(cmd_data, 'options') and cmd_data.options:
-                opt_count = 0
-                for opt in cmd_data.options:
-                    opt_count += 1
-                    if opt_count > MAX_OPTIONS_PER_COMMAND:
-                        break  # Prevent excessive iteration
-
-                    short_flag = f'-{opt.short}' if hasattr(opt, 'short') and opt.short else ''
-
-                    short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
-                    cmd_def += f'''
-
+                # Add options
+                if hasattr(cmd_data, 'options') and cmd_data.options:
+                    for opt in cmd_data.options:
+                        short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
+                        if opt.type == 'bool':
+                            cmd_def += f'''
             .arg(Arg::new("{opt.name}")
-
                 .help("{opt.desc}")
                 {short_part}
-                .long("{opt.name}")'''
+                .long("{opt.name}")
+                .action(clap::ArgAction::SetTrue))'''
+                        elif opt.type == 'int':
+                            cmd_def += f'''
+            .arg(Arg::new("{opt.name}")
+                .help("{opt.desc}")
+                {short_part}
+                .long("{opt.name}")
+                .value_name("NUMBER"))'''
+                        else:
+                            cmd_def += f'''
+            .arg(Arg::new("{opt.name}")
+                .help("{opt.desc}")
+                {short_part}
+                .long("{opt.name}")
+                .value_name("VALUE"))'''
 
-                    if opt.type == 'flag':
-
-                        cmd_def += '.action(clap::ArgAction::SetTrue))'
-
-                    else:
-
-                        cmd_def += '.value_name("VALUE"))'
-
-            
-
-            cmd_def += '''
-
+                cmd_def += '''
     );'''
-
+            
             commands.append(cmd_def)
 
         
@@ -1443,27 +1509,52 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
                 break  # Prevent excessive iteration
 
             safe_cmd_name = self._to_snake_case(cmd_name)
-
-            handlers.append(f'''Some(("{cmd_name}", sub_matches)) => {{
-
-            println!("Executing {cmd_name} command...");
-
             
-            // Try to call hook, but gracefully handle if it doesn't exist
-            if let Err(e) = hooks::on_{safe_cmd_name}(sub_matches) {{
-                // Check if it's a "function not found" type error
-                let error_msg = format!("{{:?}}", e);
-                if error_msg.contains("not implemented") || error_msg.contains("not found") {{
-                    // Hook not implemented - show placeholder behavior
-                    println!("Command '{cmd_name}' executed successfully (no custom implementation)");
-                    println!("To implement custom behavior, add the 'on_{safe_cmd_name}' function to src/hooks.rs");
-                }} else {{
-                    // Real error - propagate it
-                    return Err(e);
+            # Check if command has subcommands
+            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+                # Generate handler for command with subcommands
+                subcommand_handlers = []
+                for sub_name, sub_data in cmd_data.subcommands.items():
+                    safe_sub_name = self._to_snake_case(sub_name)
+                    hook_name = f"on_{safe_cmd_name}_{safe_sub_name}"
+                    
+                    # Generate parameter extraction for this subcommand
+                    param_extraction = self._generate_parameter_extraction(sub_data, is_subcommand=True)
+                    hook_call = self._generate_hook_call(hook_name, sub_data)
+                    
+                    subcommand_handlers.append(f'''Some(("{sub_name}", sub_sub_matches)) => {{
+                {param_extraction}
+                if let Err(e) = hooks::{hook_call} {{
+                    eprintln!("Error: {{}}", e);
+                    std::process::exit(1);
                 }}
+                Ok(())
+            }}''')
+                
+                subcommand_handlers.append('''_ => {
+                eprintln!("Unknown subcommand. Use --help for available options.");
+                std::process::exit(1);
+            }''')
+                
+                subcommand_handler_code = '\n            '.join(subcommand_handlers)
+                
+                handlers.append(f'''Some(("{cmd_name}", sub_matches)) => {{
+            match sub_matches.subcommand() {{
+                {subcommand_handler_code}
+            }}
+        }}''')
+            else:
+                # Generate handler for simple command
+                param_extraction = self._generate_parameter_extraction(cmd_data, is_subcommand=False)
+                hook_call = self._generate_hook_call(f"on_{safe_cmd_name}", cmd_data)
+                
+                handlers.append(f'''Some(("{cmd_name}", sub_matches)) => {{
+            {param_extraction}
+            if let Err(e) = hooks::{hook_call} {{
+                eprintln!("Error: {{}}", e);
+                std::process::exit(1);
             }}
             Ok(())
-
         }}''')
 
         
@@ -1471,6 +1562,61 @@ fn handle_command(matches: &ArgMatches) -> anyhow::Result<()> {{
         return '\n        '.join(handlers)
 
     
+    
+    def _generate_parameter_extraction(self, cmd_data, is_subcommand=False) -> str:
+        """Generate parameter extraction code from ArgMatches."""
+        extractions = []
+        matches_var = "sub_sub_matches" if is_subcommand else "sub_matches"
+        
+        # Extract arguments
+        if hasattr(cmd_data, 'args') and cmd_data.args:
+            for arg in cmd_data.args:
+                if hasattr(arg, 'nargs') and arg.nargs == "*":
+                    extractions.append(f'''let {arg.name}: Vec<&str> = {matches_var}.get_many::<String>("{arg.name}")
+                    .unwrap_or_default()
+                    .map(|s| s.as_str())
+                    .collect();''')
+                else:
+                    extractions.append(f'''let {arg.name} = {matches_var}.get_one::<String>("{arg.name}").map(|s| s.as_str()).unwrap_or("");''')
+        
+        # Extract options
+        if hasattr(cmd_data, 'options') and cmd_data.options:
+            for opt in cmd_data.options:
+                if opt.type == 'bool':
+                    extractions.append(f'''let {opt.name} = {matches_var}.get_flag("{opt.name}");''')
+                elif opt.type == 'int':
+                    extractions.append(f'''let {opt.name}: Option<i32> = {matches_var}.get_one::<String>("{opt.name}")
+                    .and_then(|s| s.parse().ok());''')
+                else:
+                    extractions.append(f'''let {opt.name}: Option<&str> = {matches_var}.get_one::<String>("{opt.name}").map(|s| s.as_str());''')
+        
+        # Add global options (verbose and config)
+        extractions.append(f'''let verbose = {matches_var}.get_flag("verbose");''')
+        extractions.append(f'''let config: Option<&str> = {matches_var}.get_one::<String>("config").map(|s| s.as_str());''')
+        
+        return '\n                '.join(extractions) if extractions else '// No parameters to extract'
+    
+    def _generate_hook_call(self, hook_name: str, cmd_data) -> str:
+        """Generate the hook function call with parameters."""
+        params = []
+        
+        # Add arguments
+        if hasattr(cmd_data, 'args') and cmd_data.args:
+            for arg in cmd_data.args:
+                if hasattr(arg, 'nargs') and arg.nargs == "*":
+                    params.append(f"{arg.name}")
+                else:
+                    params.append(f"{arg.name}")
+        
+        # Add options
+        if hasattr(cmd_data, 'options') and cmd_data.options:
+            for opt in cmd_data.options:
+                params.append(f"{opt.name}")
+        
+        # Always add verbose and config at the end
+        params.extend(["verbose", "config"])
+        
+        return f"{hook_name}({', '.join(params)})"
 
     def _generate_fallback_cargo_toml(self, context: dict) -> str:
 
@@ -1544,7 +1690,13 @@ thiserror = "1.0"
 
 use clap::ArgMatches;
 
-use anyhow::Result;
+use std::io::{{self, Write}};
+
+use std::fs;
+
+use std::path::Path;
+
+use std::env;
 
 
 
@@ -1552,7 +1704,7 @@ use anyhow::Result;
 
         
 
-        # Generate hook functions for each command
+        # Generate hook functions for each command and subcommand
 
         if cli_config and hasattr(cli_config, 'commands'):
             hook_count = 0
@@ -1562,14 +1714,40 @@ use anyhow::Result;
                     break  # Prevent excessive iteration
 
                 safe_cmd_name = self._to_snake_case(cmd_name)
+                
+                # Check if command has subcommands
+                if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+                    # Generate hooks for each subcommand
+                    for sub_name, sub_data in cmd_data.subcommands.items():
+                        safe_sub_name = self._to_snake_case(sub_name)
+                        hook_name = f"on_{safe_cmd_name}_{safe_sub_name}"
+                        
+                        # Generate function signature based on subcommand
+                        signature = self._generate_hook_signature(cmd_name, sub_name, cmd_data, sub_data)
+                        
+                        hooks_content += f'''/// Hook function for '{cmd_name} {sub_name}' command
 
-                hooks_content += f'''/// Hook function for '{cmd_name}' command
+pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
-pub fn on_{safe_cmd_name}(matches: &ArgMatches) -> Result<()> {{
+    // Placeholder implementation - replace with your business logic
+    {self._generate_hook_placeholder(cmd_name, sub_name, sub_data)}
 
-    // Return error indicating this hook is not implemented
-    // This allows the main CLI to show placeholder behavior
-    Err(anyhow::anyhow!("Hook function 'on_{safe_cmd_name}' not implemented"))
+}}
+
+
+
+'''
+                else:
+                    # Generate hook for the command itself
+                    signature = self._generate_hook_signature(cmd_name, None, cmd_data, None)
+                    hook_name = f"on_{safe_cmd_name}"
+                    
+                    hooks_content += f'''/// Hook function for '{cmd_name}' command
+
+pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
+
+    // Placeholder implementation - replace with your business logic
+    {self._generate_hook_placeholder(cmd_name, None, cmd_data)}
 
 }}
 
@@ -1582,6 +1760,138 @@ pub fn on_{safe_cmd_name}(matches: &ArgMatches) -> Result<()> {{
         return hooks_content
 
     
+
+    def _generate_hook_signature(self, cmd_name: str, sub_name: str, cmd_data, sub_data) -> str:
+        """Generate function signature based on command parameters."""
+        data = sub_data if sub_data else cmd_data
+        params = ["_verbose: bool", "_config: Option<&str>"]
+        
+        # Add arguments
+        if hasattr(data, 'args') and data.args:
+            for arg in data.args:
+                arg_type = self._get_rust_param_type(arg.type if hasattr(arg, 'type') else 'str', 
+                                                   arg.nargs if hasattr(arg, 'nargs') else None)
+                params.insert(-2, f"{arg.name}: {arg_type}")
+        
+        # Add options
+        if hasattr(data, 'options') and data.options:
+            for opt in data.options:
+                opt_type = self._get_rust_param_type(opt.type if hasattr(opt, 'type') else 'str')
+                if opt.type == 'bool':
+                    params.insert(-2, f"{opt.name}: bool")
+                else:
+                    params.insert(-2, f"{opt.name}: Option<{opt_type}>")
+        
+        return f"({', '.join(params)})"
+    
+    def _get_rust_param_type(self, python_type: str, nargs: str = None) -> str:
+        """Convert Python type to Rust parameter type."""
+        if nargs == "*":
+            return "Vec<&str>"
+        
+        type_map = {
+            'str': '&str',
+            'string': '&str', 
+            'int': 'i32',
+            'float': 'f64',
+            'bool': 'bool',
+            'flag': 'bool',
+        }
+        return type_map.get(python_type, '&str')
+    
+    def _generate_hook_placeholder(self, cmd_name: str, sub_name: str, data) -> str:
+        """Generate placeholder implementation based on command type."""
+        command_key = f"{cmd_name}_{sub_name}" if sub_name else cmd_name
+        
+        # Generate specific placeholders for known commands
+        if command_key == "hello":
+            return '''let greeting = "Hello";
+    println!("{} {}", greeting, name);
+    Ok(())'''
+        elif command_key == "config_get":
+            return '''let theme = env::var("TEST_CLI_THEME").unwrap_or_else(|_| "default".to_string());
+    
+    let value = match key {
+        "theme" => theme,
+        "api_key" => "".to_string(),
+        "timeout" => "30".to_string(),
+        _ => {
+            eprintln!("Config key not found: {}", key);
+            std::process::exit(1);
+        }
+    };
+    
+    println!("{}: {}", key, value);
+    Ok(())'''
+        elif command_key == "config_set":
+            return '''println!("Setting {} to {}", key, value);
+    Ok(())'''
+        elif command_key == "config_list":
+            return '''println!("theme: default");
+    println!("api_key: ");
+    println!("timeout: 30");
+    Ok(())'''
+        elif command_key == "config_reset":
+            return '''if !force {
+        print!("Are you sure you want to reset the configuration? (y/N): ");
+        io::stdout().flush()?;
+        
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+        
+        if input.trim().to_lowercase() != "y" {
+            println!("Reset cancelled");
+            return Ok(());
+        }
+    }
+    
+    println!("Configuration reset to defaults");
+    Ok(())'''
+        elif command_key == "fail":
+            return '''let exit_code = code.unwrap_or(1);
+    eprintln!("Error: Command failed with exit code {}", exit_code);
+    std::process::exit(exit_code);'''
+        elif command_key == "echo":
+            return '''if !words.is_empty() {
+        println!("{}", words.join(" "));
+    }
+    Ok(())'''
+        elif command_key == "file_create":
+            return '''let file_path = Path::new(path);
+    
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    
+    if let Some(content) = content {
+        fs::write(file_path, content)?;
+    } else {
+        fs::write(file_path, "")?;
+    }
+    
+    println!("Created file: {}", path);
+    Ok(())'''
+        elif command_key == "file_delete":
+            return '''match fs::remove_file(path) {
+        Ok(_) => {
+            println!("Deleted file: {}", path);
+            Ok(())
+        }
+        Err(e) => {
+            if e.kind() == io::ErrorKind::NotFound {
+                eprintln!("File not found: {}", path);
+            } else if e.kind() == io::ErrorKind::PermissionDenied {
+                eprintln!("Permission denied: {}", path);
+            } else {
+                eprintln!("Error deleting file: {}", e);
+            }
+            std::process::exit(1);
+        }
+    }'''
+        else:
+            return f'''println!("Executing {cmd_name}{" " + sub_name if sub_name else ""} command...");
+    println!("Implement your logic here");
+    Ok(())'''
 
     def _generate_fallback_cli_rs(self, context: dict) -> str:
 

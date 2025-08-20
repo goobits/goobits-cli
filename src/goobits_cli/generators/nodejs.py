@@ -1657,7 +1657,15 @@ fi
 
                 for package in context['installation'].extras.npm:
 
-                    if '@' in package:
+                    if '@' in package and not package.startswith('@'):
+
+                        name, version = package.rsplit('@', 1)
+
+                        package_data["dependencies"][name] = f"^{version}"
+
+                    elif '@' in package and package.startswith('@') and package.count('@') > 1:
+
+                        # Handle scoped packages with version like @types/node@18.0.0
 
                         name, version = package.rsplit('@', 1)
 

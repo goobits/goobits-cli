@@ -15,7 +15,7 @@ const fs = require('fs');
     {%- if arg.required is defined and not arg.required %}'[{{ arg.name }}{% if arg.nargs == "*" %}...{% endif %}]'
     {%- else %}'<{{ arg.name }}{% if arg.nargs == "*" %}...{% endif %}>'{% endif %}
     {%- if arg.desc %}, '{{ arg.desc }}'{% endif %}
-    {%- if arg.default is not none %}, {{ arg.default | tojson }}{% endif %}
+    {%- if arg.default is defined and arg.default is not none and not arg.required %}, {{ arg.default | tojson }}{% endif %}
   )
 {%- endmacro %}
 
