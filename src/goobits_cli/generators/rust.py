@@ -429,18 +429,10 @@ class RustGenerator(BaseGenerator):
 
     
 
-    def _get_dynamic_version(self, version: Optional[str], cli_config=None) -> str:
+    def _get_dynamic_version(self, version: Optional[str], cli_config=None, project_dir: str = ".") -> str:
         """Get version dynamically from Cargo.toml or fall back to config/default."""
-        # First try the provided version
-        if version:
-            return version
-        
-        # Try CLI config version (if available)
-        if cli_config and hasattr(cli_config, 'version') and cli_config.version:
-            return cli_config.version
-            
-        # Default fallback - will be replaced by Cargo.toml version in generated CLI
-        return '0.1.0'
+        from . import BaseGenerator
+        return BaseGenerator._get_dynamic_version(self, version, cli_config, "rust", project_dir)
 
     def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 

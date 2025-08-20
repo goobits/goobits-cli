@@ -1,14 +1,12 @@
 """Generator infrastructure for multi-language CLI code generation."""
 
-
-
+import json
+import tomllib
 from abc import ABC, abstractmethod
-
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Union
 
 from ..schemas import GoobitsConfigSchema, ConfigSchema, CLISchema
-
-from typing import Union
 
 
 
@@ -195,7 +193,85 @@ class BaseGenerator(ABC):
 
             }
 
+    def _read_version_from_project_file(self, project_dir: Union[str, Path], language: str = "python") -> Optional[str]:
+        """
+        Read version from language-specific project files.
+        
+        Args:
+            project_dir: Directory containing the project files
+            language: Target language ("python", "nodejs", "typescript", "rust")
+            
+        Returns:
+            Version string if found, None otherwise
+        """
+        project_path = Path(project_dir)
+        
+        try:
+            if language == "python":
+                # Try pyproject.toml first
+                pyproject_path = project_path / "pyproject.toml"
+                if pyproject_path.exists():
+                    with open(pyproject_path, "rb") as f:
+                        data = tomllib.load(f)
+                        return data.get("project", {}).get("version")
+                
+                # Fallback to setup.py (less common)
+                setup_py = project_path / "setup.py"
+                if setup_py.exists():
+                    # This is complex to parse, skip for now
+                    pass
+                    
+            elif language in ["nodejs", "typescript"]:
+                # Read from package.json
+                package_json = project_path / "package.json"
+                if package_json.exists():
+                    with open(package_json, "r") as f:
+                        data = json.load(f)
+                        return data.get("version")
+                        
+            elif language == "rust":
+                # Read from Cargo.toml
+                cargo_toml = project_path / "Cargo.toml"
+                if cargo_toml.exists():
+                    with open(cargo_toml, "rb") as f:
+                        data = tomllib.load(f)
+                        return data.get("package", {}).get("version")
+                        
+        except Exception:
+            # If file reading fails, return None
+            pass
+            
+        return None
 
+    def _get_dynamic_version(self, version: Optional[str], cli_config: Optional[ConfigSchema], 
+                            language: str = "python", project_dir: str = ".") -> str:
+        """
+        Get version dynamically from multiple sources in order of preference.
+        
+        Args:
+            version: Explicitly provided version
+            cli_config: CLI configuration that might contain version
+            language: Target language for project file detection
+            project_dir: Directory to search for project files
+            
+        Returns:
+            Version string (never None, falls back to '1.0.0')
+        """
+        # 1. Use explicitly provided version
+        if version:
+            return version
+            
+        # 2. Use CLI config version if available
+        if cli_config and hasattr(cli_config, 'version') and cli_config.version:
+            return cli_config.version
+            
+        # 3. Try to read from project file
+        project_version = self._read_version_from_project_file(project_dir, language)
+        if project_version:
+            return project_version
+            
+        # 4. Final fallback
+        return '1.0.0'
 
 
 

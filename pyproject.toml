@@ -1,31 +1,64 @@
-[project]
-name = "goobits-cli"
-version = "2.0.0-rc1"
-description = "Universal CLI generation platform supporting Python, Node.js, TypeScript, and Rust with advanced features."
-dependencies = [ "pyyaml", "jinja2", "pydantic", "typer", "toml", "rich-click", "pinliner", "shiv", "psutil",]
-
 [build-system]
 requires = [ "setuptools>=61.0", "wheel",]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "goobits-cli"
+version = "2.0.0-rc2"
+description = "Build professional command-line tools with YAML configuration"
+readme = "README.md"
+keywords = []
+classifiers = [ "Development Status :: 4 - Beta", "Intended Audience :: Developers", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Topic :: Software Development :: Libraries :: Python Modules", "Topic :: System :: Systems Administration", "Topic :: Utilities",]
+requires-python = ">=3.8"
+dependencies = [ "click>=8.0.0", "rich-click>=1.6.0", "rich>=12.0.0",]
+[[project.authors]]
+name = "Unknown Author"
+
+[project.license]
+text = "MIT"
+
 [project.optional-dependencies]
-test = [ "pytest", "pytest-cov", "pytest-asyncio",]
-dev = [ "mypy", "types-PyYAML", "types-toml", "ruff",]
+dev = [ "pytest>=7.0.0", "pytest-cov>=4.0.0", "black>=22.0.0", "flake8>=6.0.0", "mypy>=1.0.0",]
+test = [ "pytest>=7.0.0", "pytest-cov>=4.0.0",]
+
+[project.urls]
 
 [project.scripts]
 goobits = "goobits_cli.generated_cli:cli_entry"
-testcli = "testcli.cli:cli_entry"
+
+[tool.black]
+line-length = 88
+target-version = [ "py38",]
+include = "\\.pyi?$"
+extend-exclude = "/(\n  # directories\n  \\.eggs\n  | \\.git\n  | \\.hg\n  | \\.mypy_cache\n  | \\.tox\n  | \\.venv\n  | build\n  | dist\n)/\n"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
 
 [tool.setuptools.package-data]
-goobits_cli = [ "templates/*.j2", "templates/**/*.j2", "setup.sh",]
-testcli = [ "setup.sh",]
+goobits_cli = [ "setup.sh",]
 
 [tool.pytest.ini_options]
-pythonpath = [ "src",]
-testpaths = [ "src/tests",]
-addopts = [ "-p", "pytest_asyncio",]
-asyncio_mode = "auto"
-markers = [ "unit: Unit tests (fast, <5s) - Test individual components in isolation", "integration: Integration tests (medium, <60s) - Test component interactions and real CLI generation", "e2e: End-to-end tests (slow, <300s) - Test complete workflows with subprocess execution", "performance: Performance benchmarks (very slow) - Measure startup times, memory usage", "user_accessible: Tests for features available in generated CLIs", "framework_only: Tests for framework features not yet integrated into generated CLIs", "integration_pending: Tests for features with framework-integration gap", "real_generation: Tests that generate real CLI files", "execution: Tests that execute generated CLI commands", "configuration: Tests for configuration file handling", "regression: Tests for regression prevention",]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [ "tests",]
 
 [tool.setuptools.packages.find]
 where = [ "src",]

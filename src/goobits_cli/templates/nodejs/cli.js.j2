@@ -179,11 +179,7 @@ function getVersion() {
     }
     
     // Fallback to configured version
-    {% if cli.version %}
-    return '{{ cli.version }}';
-    {% else %}
-    return '1.0.0';
-    {% endif %}
+    return '{{ version | default("1.0.0") }}';
 }
 
 // Built-in upgrade command
