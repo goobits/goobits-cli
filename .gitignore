@@ -174,3 +174,21 @@ completions/
 
 # Setup scripts
 setup.sh
+
+# Demo examples and generated output
+demo-examples/
+
+# Root-level generated Rust files
+/Cargo.toml
+/Cargo.lock
+
+# Performance test results
+performance/performance_validation_results/
+performance/template_benchmark_results/
+performance/__pycache__/
+
+# All virtual environments
+venv/
+test_env/
+.venv/
+env/
