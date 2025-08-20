@@ -1,0 +1,214 @@
+# {{ display_name }}
+
+{{ description }}
+
+## Installation
+
+### From Crates.io (Recommended)
+
+```bash
+cargo install {{ package_name }}
+```
+
+### From Source
+
+Clone this repository and build from source:
+
+```bash
+git clone {{ repository }}
+cd {{ package_name }}
+./setup.sh --dev
+```
+
+### Development Installation
+
+For development with live updates:
+
+```bash
+./setup.sh --dev
+```
+
+## Usage
+
+### Basic Commands
+
+{% for cmd_name, cmd_data in cli.commands.items() %}
+{% if not cmd_data.subcommands %}
+#### `{{ command_name }} {{ cmd_name }}`
+
+{{ cmd_data.desc }}
+
+```bash
+{{ command_name }} {{ cmd_name }}{% if cmd_data.args %}{% for arg in cmd_data.args %}{% if arg.required %} <{{ arg.name }}>{% else %} [{{ arg.name }}]{% endif %}{% endfor %}{% endif %}{% if cmd_data.options %} [OPTIONS]{% endif %}
+```
+
+{% if cmd_data.args %}
+**Arguments:**
+{% for arg in cmd_data.args %}
+- `{{ arg.name }}`: {{ arg.desc }}{% if arg.choices %} (choices: {{ arg.choices | join(', ') }}){% endif %}
+{% endfor %}
+{% endif %}
+
+{% if cmd_data.options %}
+**Options:**
+{% for opt in cmd_data.options %}
+- `{% if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <{{ opt.type }}>{% endif %}`: {{ opt.desc }}{% if opt.default %} (default: {{ opt.default }}){% endif %}
+{% endfor %}
+{% endif %}
+
+{% else %}
+#### `{{ command_name }} {{ cmd_name }}`
+
+{{ cmd_data.desc }}
+
+**Subcommands:**
+{% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+- `{{ subcmd_name }}`: {{ subcmd_data.desc }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+### Global Options
+
+{% if cli.options %}
+{% for option in cli.options %}
+- `{% if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <{{ option.type }}>{% endif %}`: {{ option.desc }}{% if option.default %} (default: {{ option.default }}){% endif %}
+{% endfor %}
+{% endif %}
+
+### Examples
+
+```bash
+# Show help
+{{ command_name }} --help
+
+# Show version
+{{ command_name }} --version
+
+{% for cmd_name, cmd_data in cli.commands.items() %}
+{% if not cmd_data.subcommands and cmd_data.args %}
+# Example {{ cmd_name }} command
+{{ command_name }} {{ cmd_name }}{% for arg in cmd_data.args %}{% if arg.required %} "example_{{ arg.name }}"{% endif %}{% endfor %}
+
+{% endif %}
+{% endfor %}
+```
+
+## Configuration
+
+The CLI stores configuration in `~/.config/{{ package_name }}/config.yaml`. You can edit this file directly or use the CLI to manage settings.
+
+### Configuration Options
+
+- `settings.auto_update`: Enable automatic updates (default: false)
+- `settings.log_level`: Set logging level (debug, info, warn, error)
+- `features.colored_output`: Enable colored terminal output (default: true)
+- `features.progress_bars`: Show progress bars for long operations (default: true)
+
+## Development
+
+### Building
+
+```bash
+# Debug build
+cargo build
+
+# Release build
+cargo build --release
+```
+
+### Testing
+
+```bash
+# Run all tests
+cargo test
+
+# Run tests with output
+cargo test -- --nocapture
+```
+
+### Running
+
+```bash
+# Run from source (debug)
+cargo run -- --help
+
+# Run specific command
+cargo run -- {{ cli.commands.keys() | list | first }} --help
+```
+
+## Shell Completions
+
+Generate shell completions for better command-line experience:
+
+```bash
+./setup.sh --completions
+```
+
+This creates completion files in the `completions/` directory for:
+- Bash
+- Zsh  
+- Fish
+
+### Installing Completions
+
+**Bash:**
+```bash
+source completions/{{ command_name }}.bash
+```
+
+**Zsh:**
+```bash
+# Add to your ~/.zshrc
+fpath=(./completions $fpath)
+autoload -U compinit && compinit
+```
+
+**Fish:**
+```bash
+cp completions/{{ command_name }}.fish ~/.config/fish/completions/
+```
+
+## Architecture
+
+This CLI is built using:
+
+- **[Clap](https://docs.rs/clap/)**: Command-line argument parsing with derive macros
+- **[Anyhow](https://docs.rs/anyhow/)**: Flexible error handling
+- **[Serde](https://docs.rs/serde/)**: Serialization/deserialization for configuration
+- **[Tokio](https://docs.rs/tokio/)**: Async runtime (optional feature)
+
+### Project Structure
+
+```
+src/
+├── main.rs          # CLI entry point and command definitions
+├── lib.rs           # Library exports and core functionality  
+├── config.rs        # Configuration management
+├── commands.rs      # Command implementations
+└── utils.rs         # Utility functions
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Run tests (`cargo test`)
+6. Commit your changes (`git commit -am 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+## License
+
+This project is licensed under the {{ license | default('MIT') }} License - see the [LICENSE](LICENSE) file for details.
+
+## Changelog
+
+### {{ version | default('1.0.0') }}
+- Initial release
+- Core CLI functionality implemented
+{% for cmd_name, cmd_data in cli.commands.items() %}
+- `{{ cmd_name }}` command: {{ cmd_data.desc }}
+{% endfor %}

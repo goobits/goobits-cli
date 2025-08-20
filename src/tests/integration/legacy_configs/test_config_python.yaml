@@ -1,0 +1,59 @@
+package_name: test-cli-python
+command_name: testpy
+display_name: "Test CLI Python"
+description: "Test CLI for Python validation"
+language: python
+
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+
+dependencies:
+  required: []
+  optional: []
+
+installation:
+  pypi_name: test-cli-python
+  development_path: "."
+
+shell_integration:
+  enabled: false
+  alias: testpy
+
+validation:
+  check_api_keys: false
+  check_disk_space: false
+
+messages:
+  install_success: "CLI installed successfully!"
+
+cli:
+  name: "Test CLI Python"
+  version: "1.0.0"
+  display_version: true
+  tagline: "Testing Python CLI generation"
+  description: "Test CLI for cross-language validation"
+  
+  options:
+    - name: "verbose"
+      short: "v"
+      type: "flag"
+      desc: "Enable verbose output"
+    - name: "interactive"
+      type: "flag"
+      desc: "Enable interactive mode"
+
+  commands:
+    hello:
+      desc: "Say hello"
+      icon: "👋"
+      args:
+        - name: "name"
+          desc: "Name to greet"
+          required: false
+      options:
+        - name: "count"
+          short: "c"
+          type: "int"
+          desc: "Number of greetings"
+          default: 1

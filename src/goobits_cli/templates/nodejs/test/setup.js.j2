@@ -1,0 +1,87 @@
+/**
+ * Test setup for {{ display_name }}
+ * This file runs before all tests
+ */
+
+import { jest } from '@jest/globals';
+import chalk from 'chalk';
+
+// Disable chalk colors in tests for consistent output
+chalk.level = 0;
+
+// Mock console methods for cleaner test output
+const originalConsole = { ...console };
+
+beforeEach(() => {
+  // Mock console.log, console.error, etc. to avoid noise in tests
+  jest.spyOn(console, 'log').mockImplementation(() => {});
+  jest.spyOn(console, 'error').mockImplementation(() => {});
+  jest.spyOn(console, 'warn').mockImplementation(() => {});
+  jest.spyOn(console, 'info').mockImplementation(() => {});
+  jest.spyOn(console, 'debug').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  // Restore console methods
+  jest.restoreAllMocks();
+});
+
+// Global test utilities
+global.testUtils = {
+  // Capture console output
+  captureOutput: (fn) => {
+    const output = {
+      log: [],
+      error: [],
+      warn: [],
+      info: [],
+      debug: []
+    };
+    
+    const originalMethods = {
+      log: console.log,
+      error: console.error,
+      warn: console.warn,
+      info: console.info,
+      debug: console.debug
+    };
+    
+    // Replace console methods with capturing versions
+    console.log = (...args) => output.log.push(args.join(' '));
+    console.error = (...args) => output.error.push(args.join(' '));
+    console.warn = (...args) => output.warn.push(args.join(' '));
+    console.info = (...args) => output.info.push(args.join(' '));
+    console.debug = (...args) => output.debug.push(args.join(' '));
+    
+    try {
+      fn();
+      return output;
+    } finally {
+      // Restore original methods
+      Object.assign(console, originalMethods);
+    }
+  },
+  
+  // Mock CLI arguments
+  mockArgs: (args) => {
+    const originalArgv = process.argv;
+    process.argv = ['node', '{{ command_name }}', ...args];
+    
+    return () => {
+      process.argv = originalArgv;
+    };
+  },
+  
+  // Mock environment variables
+  mockEnv: (vars) => {
+    const originalEnv = { ...process.env };
+    Object.assign(process.env, vars);
+    
+    return () => {
+      process.env = originalEnv;
+    };
+  }
+};
+
+// Increase timeout for integration testing
+jest.setTimeout(30000);

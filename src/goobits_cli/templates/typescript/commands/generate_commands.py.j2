@@ -1,0 +1,74 @@
+"""
+Helper script to generate command files for Node.js CLI.
+This demonstrates how the NodeJSGenerator could generate individual command files.
+"""
+
+def generate_command_files(cli_config, context):
+    """
+    Generate individual command files for the commands directory.
+    
+    Returns a dict mapping file paths to their contents.
+    """
+    command_files = {}
+    
+    {% if cli.commands %}
+    # Generate command files
+    {% for cmd_name, cmd_data in cli.commands.items() %}
+    {% if not cmd_data.subcommands %}
+    # Single command: {{ cmd_name }}
+    command_context = {
+        'cmd_name': '{{ cmd_name }}',
+        'cmd_data': {{ cmd_data | tojson }},
+        **context
+    }
+    
+    try:
+        template = env.get_template('commands/dynamic-command.js.j2')
+        command_files['commands/{{ cmd_name }}.js'] = template.render(**command_context)
+    except TemplateNotFound:
+        # Fallback to basic command
+        pass
+    {% else %}
+    # Command group: {{ cmd_name }}
+    group_context = {
+        'cmd_name': '{{ cmd_name }}',
+        'cmd_data': {{ cmd_data | tojson }},
+        **context
+    }
+    
+    try:
+        template = env.get_template('commands/group.js.j2')
+        command_files['commands/{{ cmd_name }}.js'] = template.render(**group_context)
+    except TemplateNotFound:
+        # Fallback to basic group
+        pass
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    
+    # Generate built-in commands if needed
+    {% if cli and (cli.enable_upgrade_command is not defined or cli.enable_upgrade_command) %}
+    try:
+        template = env.get_template('commands/builtin/upgrade.js.j2')
+        command_files['commands/upgrade.js'] = template.render(**context)
+    except TemplateNotFound:
+        pass
+    {% endif %}
+    
+    # Generate daemon commands if any managed commands exist
+    {% set ns = namespace(has_managed=false) %}
+    {% for cmd_name, cmd_data in cli.commands.items() %}
+    {% if cmd_data.lifecycle == "managed" %}
+    {% set ns.has_managed = true %}
+    {% endif %}
+    {% endfor %}
+    
+    {% if ns.has_managed %}
+    try:
+        template = env.get_template('commands/builtin/daemon.js.j2')
+        command_files['commands/daemon.js'] = template.render(**context)
+    except TemplateNotFound:
+        pass
+    {% endif %}
+    
+    return command_files

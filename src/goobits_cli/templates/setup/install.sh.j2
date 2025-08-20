@@ -1,0 +1,320 @@
+validate_pipx() {
+    if [[ "$PIPX_AVAILABLE" != "true" ]]; then
+        log_warning "pipx is not installed. Installing pipx is recommended for isolated Python applications."
+        log_info "You can install pipx with: python3 -m pip install --user pipx"
+        log_info "Or on macOS with Homebrew: brew install pipx"
+        return 1
+    fi
+    
+    log_success "pipx is available at $PIPX_PATH"
+    return 0
+}
+
+# Installation functions
+install_package() {
+    local install_dev="$1"
+    
+    if [[ "$PIPX_AVAILABLE" == "true" ]]; then
+        install_with_pipx "$install_dev"
+    else
+        install_with_pip "$install_dev"
+    fi
+}
+
+install_with_pipx() {
+    local install_dev="$1"
+
+    if [[ "$install_dev" == "true" ]]; then
+        tree_node "info" "Installing in development mode" "$(update_progress)"
+        tree_sub_node "info" "Using pipx for isolated environment"
+
+        {% if installation.extras and installation.extras.apt %}
+        # Install system dependencies BEFORE Python packages
+        install_system_dependencies
+        {% endif %}
+
+        {% if installation.extras and installation.extras.python %}
+        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[{{ installation.extras.python|join(',') }}]" --force) &
+        {% else %}
+        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH" --force) &
+        {% endif %}
+        local install_pid=$!
+
+        tree_sub_node "progress" "Creating development environment..."
+        show_spinner $install_pid
+        wait $install_pid
+        local exit_code=$?
+
+        if [[ $exit_code -eq 0 ]]; then
+            tree_sub_node "success" "Development installation completed" "" "true"
+            {% if installation.extras and installation.extras.npm %}
+            install_npm_extras
+            {% endif %}
+            show_dev_success_message
+        else
+            tree_sub_node "error" "Development installation failed" "" "true"
+            return 1
+        fi
+    else
+        tree_node "info" "Installing from PyPI" "$(update_progress)"
+        tree_sub_node "info" "Using pipx for isolated environment"
+
+        {% if installation.extras and installation.extras.apt %}
+        # Install system dependencies BEFORE Python packages
+        install_system_dependencies
+        {% endif %}
+
+        {% if installation.extras and installation.extras.python %}
+        pipx install "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --force &
+        {% else %}
+        pipx install "$PYPI_NAME" --force &
+        {% endif %}
+        local install_pid=$!
+
+        tree_sub_node "progress" "Downloading and installing package..."
+        show_spinner $install_pid
+        wait $install_pid
+        local exit_code=$?
+
+        if [[ $exit_code -eq 0 ]]; then
+            tree_sub_node "success" "Installation completed" "" "true"
+            {% if installation.extras and installation.extras.npm %}
+            install_npm_extras
+            {% endif %}
+            show_install_success_message
+        else
+            tree_sub_node "error" "Installation failed" "" "true"
+            return 1
+        fi
+    fi
+}
+
+install_with_pip() {
+    local install_dev="$1"
+
+    tree_sub_node "warning" "Using pip instead of pipx (not recommended)"
+
+    {% if installation.extras and installation.extras.apt %}
+    # Install system dependencies BEFORE Python packages
+    install_system_dependencies
+    {% endif %}
+
+    if [[ "$install_dev" == "true" ]]; then
+        tree_sub_node "progress" "Installing in development mode with pip..."
+        {% if installation.extras and installation.extras.python %}
+        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[{{ installation.extras.python|join(',') }}]" --user) &
+        {% else %}
+        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
+        {% endif %}
+        show_spinner $!
+        wait $!
+        local exit_code=$?
+
+        if [[ $exit_code -eq 0 ]]; then
+            tree_sub_node "success" "Development installation completed" "true"
+            {% if installation.extras and installation.extras.npm %}
+            install_npm_extras
+            {% endif %}
+            show_dev_success_message
+        else
+            tree_sub_node "error" "Development installation failed" "true"
+            return 1
+        fi
+    else
+        tree_sub_node "progress" "Installing from PyPI with pip..."
+        {% if installation.extras and installation.extras.python %}
+        python3 -m pip install "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --user &
+        {% else %}
+        python3 -m pip install "$PYPI_NAME" --user &
+        {% endif %}
+        show_spinner $!
+        wait $!
+        local exit_code=$?
+
+        if [[ $exit_code -eq 0 ]]; then
+            tree_sub_node "success" "Installation completed" "true"
+            {% if installation.extras and installation.extras.npm %}
+            install_npm_extras
+            {% endif %}
+            show_install_success_message
+        else
+            tree_sub_node "error" "Installation failed" "true"
+            return 1
+        fi
+    fi
+}
+
+upgrade_package() {
+    # Don't add another tree node - we're under the main "Upgrade Process" from tree_start
+
+    if [[ "$PIPX_AVAILABLE" == "true" ]]; then
+        if pipx list | grep -q "$PACKAGE_NAME"; then
+            tree_sub_node "info" "Using pipx for upgrade"
+            tree_sub_node "progress" "Upgrading with pipx..."
+
+            # Use script to fully capture all pipx output including TTY writes
+            if command -v script >/dev/null 2>&1; then
+                script -q -c "pipx upgrade $PACKAGE_NAME" /dev/null >/dev/null 2>&1 &
+            else
+                # Fallback: direct capture
+                pipx upgrade "$PACKAGE_NAME" >/dev/null 2>&1 </dev/null &
+            fi
+            show_spinner $!
+            wait $!
+            local exit_code=$?
+        else
+            tree_sub_node "error" "Package not found in pipx" "true"
+            return 1
+        fi
+    else
+        tree_sub_node "info" "Using pip for upgrade"
+        tree_sub_node "progress" "Upgrading with pip..."
+
+        # Capture pip output to prevent it from breaking tree structure
+        {% if installation.extras and installation.extras.python %}
+        python3 -m pip install --upgrade "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --user >/dev/null 2>&1 &
+        {% else %}
+        python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
+        {% endif %}
+        show_spinner $!
+        wait $!
+        local exit_code=$?
+    fi
+
+    if [[ $exit_code -eq 0 ]]; then
+        tree_sub_node "success" "Upgrade completed" "true"
+        # Success message suppressed - tree already shows completion
+    else
+        tree_sub_node "error" "Upgrade failed" "true"
+        return 1
+    fi
+}
+
+uninstall_package() {
+    if [[ "$PIPX_AVAILABLE" == "true" ]]; then
+        log_info "Uninstalling $DISPLAY_NAME with pipx..."
+        pipx uninstall "$PYPI_NAME" &
+        show_spinner $!
+        wait $!
+    else
+        log_info "Uninstalling $DISPLAY_NAME with pip..."
+        python3 -m pip uninstall "$PYPI_NAME" -y &
+        show_spinner $!
+        wait $!
+    fi
+    
+    if [[ $? -eq 0 ]]; then
+        log_success "Uninstall completed!"
+        show_uninstall_success_message
+    else
+        log_error "Uninstall failed"
+        return 1
+    fi
+}
+
+# Message display functions
+show_install_success_message() {
+    echo
+    echo "{{ messages.install_success | default('Installation completed successfully!') }}"
+    echo
+}
+
+show_dev_success_message() {
+    echo
+    echo "{{ messages.install_dev_success | default('Development installation completed successfully!') }}"
+    echo
+}
+
+show_upgrade_success_message() {
+    echo
+    echo "{{ messages.upgrade_success | default('Upgrade completed successfully!') }}"
+    echo
+}
+
+show_uninstall_success_message() {
+    echo
+    echo "{{ messages.uninstall_success | default('Uninstall completed successfully!') }}"
+    echo
+}
+
+{% if installation.extras and installation.extras.apt %}
+# System dependencies installation (before Python packages)
+install_system_dependencies() {
+    if command -v apt-get >/dev/null 2>&1; then
+        # Check which packages are missing
+        local missing_packages=()
+        
+        {% for pkg in installation.extras.apt %}
+        if ! dpkg -l | grep -q "^ii.*{{ pkg }}" 2>/dev/null; then
+            missing_packages+=("{{ pkg }}")
+        else
+            tree_sub_node "success" "✓ Already installed: {{ pkg }}"
+        fi
+        {% endfor %}
+        
+        # Only prompt for sudo if there are missing packages
+        if [[ ${{ '{#missing_packages[@]}' }} -gt 0 ]]; then
+            tree_sub_node "info" "Installing system packages: ${missing_packages[*]} (requires sudo)..."
+            
+            # Update package list first if we're installing anything
+            if ! sudo apt-get update >/dev/null 2>&1; then
+                tree_sub_node "warning" "Failed to update package list"
+            fi
+            
+            # Install each missing package
+            for pkg in "${missing_packages[@]}"; do
+                if sudo apt-get install -y "$pkg" >/dev/null 2>&1; then
+                    tree_sub_node "success" "Installed apt package: $pkg"
+                else
+                    tree_sub_node "warning" "Failed to install apt package: $pkg"
+                fi
+            done
+        else
+            tree_sub_node "success" "All system packages already installed"
+        fi
+    else
+        tree_sub_node "info" "apt-get not found - manual installation required for: {{ installation.extras.apt|join(', ') }}"
+    fi
+}
+{% endif %}
+
+{% if installation.extras and installation.extras.npm %}
+# NPM packages installation (after Python packages)
+install_npm_extras() {
+    if command -v npm >/dev/null 2>&1; then
+        tree_sub_node "info" "Installing npm packages..."
+        {% for pkg in installation.extras.npm %}
+        npm install -g {{ pkg }} >/dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+            tree_sub_node "success" "Installed npm package: {{ pkg }}"
+        else
+            tree_sub_node "warning" "Failed to install npm package: {{ pkg }}"
+        fi
+        {% endfor %}
+    else
+        tree_sub_node "warning" "npm not found - skipping npm extras"
+    fi
+}
+{% endif %}
+
+# Shell integration
+setup_shell_integration() {
+    if [[ "$SHELL_INTEGRATION" != "true" ]]; then
+        return 0
+    fi
+    
+    log_info "Setting up shell integration..."
+    
+    # Add alias to shell configuration files
+    local shell_configs=("$HOME/.bashrc" "$HOME/.zshrc" "$HOME/.bash_profile" "$HOME/.profile")
+    local alias_line="alias $SHELL_ALIAS='$COMMAND_NAME'"
+    
+    for config in "${shell_configs[@]}"; do
+        if [[ -f "$config" ]] && ! grep -q "alias $SHELL_ALIAS=" "$config"; then
+            echo "$alias_line" >> "$config"
+            log_info "Added alias to $config"
+        fi
+    done
+    
+    log_success "Shell integration configured"
+}

@@ -1,0 +1,101 @@
+/**
+ * Dynamically loaded command module for {{ cmd_name }}
+ * This file can be placed in the commands/ directory to add custom commands
+ */
+
+export default function(program) {
+  // Get hooks if available
+  let appHooks = null;
+  try {
+    // Try to import hooks from parent directory
+    const hooksModule = await import('../app_hooks.js');
+    appHooks = hooksModule;
+  } catch (error) {
+    // No hooks module found
+  }
+  
+  const command = program
+    .command('{{ cmd_name }}')
+    .description('{{ cmd_data.desc }}')
+    {% if cmd_data.alias %}
+    .alias('{{ cmd_data.alias }}')
+    {% endif %}
+    {% for arg in (cmd_data.args or []) %}
+    .argument(
+      '{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}',
+      '{{ arg.desc }}'
+      {%- if arg.choices %}, { choices: {{ arg.choices | tojson }} }{% endif %}
+    )
+    {% endfor %}
+    {% for opt in (cmd_data.options or []) %}
+    .option(
+      '{%- if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <value>{% endif %}',
+      '{{ opt.desc }}'
+      {%- if opt.default is not none and opt.type != "flag" %}, {{ opt.default | tojson }}{% endif %}
+    )
+    {% endfor %}
+    .action(async function({% if cmd_data.args %}{{ cmd_data.args|map(attribute='name')|join(', ') }}{% if cmd_data.options %}, {% endif %}{% endif %}options, cmd) {
+      try {
+        {% if cmd_data.lifecycle == "managed" %}
+        // Managed command pattern
+        const commandInstanceName = '{{ cmd_name }}Command';
+        
+        if (appHooks && appHooks[commandInstanceName]) {
+          const commandInstance = appHooks[commandInstanceName];
+          
+          const kwargs = {
+            commandName: '{{ cmd_name }}',
+            {% for arg in (cmd_data.args or []) %}
+            {{ arg.name }}: {{ arg.name }},
+            {% endfor %}
+            ...options,
+            // Include global options from parent
+            ...(cmd.parent?.opts() || {})
+          };
+          
+          if (typeof commandInstance.execute === 'function') {
+            return await commandInstance.execute(kwargs);
+          } else {
+            throw new Error(`Managed command '{{ cmd_name }}' instance must have an execute() method`);
+          }
+        } else {
+          throw new Error(`Managed command '{{ cmd_name }}' requires '${commandInstanceName}' export in app_hooks.js`);
+        }
+        {% else %}
+        // Standard command with hook pattern
+        const hookName = 'on{{ cmd_name | title | replace('-', '') }}';
+        
+        if (appHooks && typeof appHooks[hookName] === 'function') {
+          const hookFunc = appHooks[hookName];
+          
+          const kwargs = {
+            commandName: '{{ cmd_name }}',
+            {% for arg in (cmd_data.args or []) %}
+            {{ arg.name }}: {{ arg.name }},
+            {% endfor %}
+            ...options,
+            // Include global options from parent
+            ...(cmd.parent?.opts() || {})
+          };
+          
+          return await hookFunc(kwargs);
+        } else {
+          // Default implementation
+          console.log(`Executing {{ cmd_name }} command...`);
+          {% for arg in (cmd_data.args or []) %}
+          console.log(`  {{ arg.name }}: ${{{ arg.name }}}`);
+          {% endfor %}
+          {% for opt in (cmd_data.options or []) %}
+          console.log(`  {{ opt.name }}: ${options.{{ opt.name|replace('-', '_') }}}`);
+          {% endfor %}
+          console.log('\nNote: No hook function found. Define {{ hookName }}() in app_hooks.js to implement this command.');
+        }
+        {% endif %}
+      } catch (error) {
+        console.error(`Error in {{ cmd_name }} command:`, error.message);
+        process.exit(1);
+      }
+    });
+
+  return command;
+};

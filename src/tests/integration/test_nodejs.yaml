@@ -1,0 +1,155 @@
+package_name: "nodejs-test-cli"
+command_name: "nodejstestcli"
+display_name: "NodeJSTestCLI"
+description: "A comprehensive Node.js CLI for testing all features."
+language: nodejs
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  core: []
+
+installation:
+  pypi_name: "nodejs-test-cli"
+  github_repo: "example/nodejs-test-cli"
+
+shell_integration:
+  alias: "njt"
+
+validation:
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: "NodeJSTestCLI installed successfully!"
+
+cli:
+  name: "NodeJSTestCLI"
+  tagline: "A comprehensive Node.js CLI for testing all features."
+  version: "1.2.3"
+  options:
+    - name: verbose
+      short: v
+      type: flag
+      desc: "Enable verbose logging"
+    - name: config
+      short: c
+      type: str
+      desc: "Path to configuration file"
+  commands:
+    init:
+      desc: "Initialize a new project"
+      args:
+        - name: name
+          desc: "Project name"
+          required: true
+      options:
+        - name: template
+          short: t
+          type: str
+          desc: "Project template to use"
+          default: "default"
+        - name: skip-install
+          type: flag
+          desc: "Skip npm install"
+    deploy:
+      desc: "Deploy the application"
+      lifecycle: managed
+      args:
+        - name: environment
+          desc: "Target environment (dev, staging, prod)"
+          required: true
+      options:
+        - name: force
+          short: f
+          type: flag
+          desc: "Force deployment without confirmation"
+        - name: dry-run
+          type: flag
+          desc: "Simulate deployment without making changes"
+      hooks:
+        before: "validateDeployment"
+        after: "notifyDeploymentComplete"
+    server:
+      desc: "Server management commands"
+      subcommands:
+        start:
+          desc: "Start the server"
+          options:
+            - name: port
+              short: p
+              type: int
+              desc: "Port to listen on"
+              default: 8080
+            - name: daemon
+              short: d
+              type: flag
+              desc: "Run as daemon"
+        stop:
+          desc: "Stop the server"
+          options:
+            - name: graceful
+              type: flag
+              desc: "Graceful shutdown"
+        restart:
+          desc: "Restart the server"
+          args:
+            - name: service
+              desc: "Service name to restart"
+              required: false
+    database:
+      desc: "Database operations"
+      subcommands:
+        migrate:
+          desc: "Run database migrations"
+          options:
+            - name: direction
+              type: str
+              desc: "Migration direction (up/down)"
+              default: "up"
+            - name: steps
+              type: int
+              desc: "Number of migrations to run"
+        seed:
+          desc: "Seed the database"
+          args:
+            - name: dataset
+              desc: "Dataset to seed"
+              required: false
+          options:
+            - name: truncate
+              type: flag
+              desc: "Truncate tables before seeding"
+        backup:
+          desc: "Backup the database"
+          options:
+            - name: output
+              short: o
+              type: str
+              desc: "Output file path"
+              default: "./backup.sql"
+            - name: compress
+              type: flag
+              desc: "Compress the backup"
+    test:
+      desc: "Run tests"
+      args:
+        - name: pattern
+          desc: "Test file pattern"
+          required: false
+      options:
+        - name: coverage
+          type: flag
+          desc: "Generate coverage report"
+        - name: watch
+          short: w
+          type: flag
+          desc: "Watch files for changes"
+        - name: bail
+          type: flag
+          desc: "Stop on first test failure"
+      examples:
+        - "test"
+        - "test unit"
+        - "test --coverage"
+        - "test integration --watch"

@@ -1,0 +1,121 @@
+// Auto-generated command group module for {{ cmd_name }}
+const path = require('path');
+const fs = require('fs');
+
+{% macro render_option(opt) -%}
+  .option(
+    '{%- if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <value>{% endif %}'
+    {%- if opt.desc %}, '{{ opt.desc }}'{% endif %}
+    {%- if opt.default is not none and opt.type != "flag" %}, {{ opt.default | tojson }}{% endif %}
+  )
+{%- endmacro %}
+
+{% macro render_argument(arg) -%}
+  .argument(
+    {%- if arg.required is defined and not arg.required %}'[{{ arg.name }}{% if arg.nargs == "*" %}...{% endif %}]'
+    {%- else %}'<{{ arg.name }}{% if arg.nargs == "*" %}...{% endif %}>'{% endif %}
+    {%- if arg.desc %}, '{{ arg.desc }}'{% endif %}
+    {%- if arg.default is not none %}, {{ arg.default | tojson }}{% endif %}
+  )
+{%- endmacro %}
+
+module.exports = function(program, appHooks) {
+  const group = program
+    .command('{{ cmd_name }}')
+    .description('{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}');
+
+  {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
+  // Subcommand: {{ subcmd_name }}
+  group
+    .command('{{ subcmd_name }}')
+    .description('{% if subcmd_data.icon %}{{ subcmd_data.icon }} {% endif %}{{ subcmd_data.desc }}')
+    {% for arg in (subcmd_data.args or []) %}
+    {{ render_argument(arg) }}
+    {% endfor %}
+    {% for opt in (subcmd_data.options or []) %}
+    {{ render_option(opt) }}
+    {% endfor %}
+    .action(async function({% if subcmd_data.args %}{{ subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|join(', ') }}{% if subcmd_data.options %}, {% endif %}{% endif %}options, cmd) {
+      try {
+        {% if subcmd_data.lifecycle == "managed" %}
+        // Managed subcommand - expect an instance of ManagedCommand
+        const commandInstanceName = '{{ cmd_name }}{{ subcmd_name | title }}Command';
+        
+        if (appHooks && appHooks[commandInstanceName]) {
+          // Get the command instance
+          const commandInstance = appHooks[commandInstanceName];
+          
+          // Prepare arguments including global options
+          const kwargs = {
+            commandName: '{{ subcmd_name }}',
+            {% if subcmd_data.args %}
+            {% for arg in subcmd_data.args %}
+            {{ arg.name|lower|replace('-', '_') }}: {{ arg.name|lower|replace('-', '_') }},
+            {% endfor %}
+            {% endif %}
+            ...options,
+            // Add global options from parent commands
+            ...(cmd.parent?.parent?.opts() || {}),
+            ...(cmd.parent?.opts() || {})
+          };
+          
+          // Call execute() method on the ManagedCommand instance
+          if (typeof commandInstance.execute === 'function') {
+            const result = await commandInstance.execute(kwargs);
+            return result;
+          } else {
+            console.error(`Error: Managed command '{{ cmd_name }} {{ subcmd_name }}' instance must have an execute() method`);
+            process.exit(1);
+          }
+        } else {
+          console.error(`Error: Managed command '{{ cmd_name }} {{ subcmd_name }}' requires '${commandInstanceName}' instance in appHooks`);
+          process.exit(1);
+        }
+        {% else %}
+        // Check if hook function exists
+        const hookName = 'on{{ cmd_name | title | replace('-', '') }}{{ subcmd_name | title | replace('-', '') }}';
+        
+        if (appHooks && typeof appHooks[hookName] === 'function') {
+          // Call the hook with all parameters
+          const hookFunc = appHooks[hookName];
+          
+          // Prepare arguments including global options
+          const kwargs = {
+            commandName: '{{ subcmd_name }}',
+            {% if subcmd_data.args %}
+            {% for arg in subcmd_data.args %}
+            {{ arg.name|lower|replace('-', '_') }}: {{ arg.name|lower|replace('-', '_') }},
+            {% endfor %}
+            {% endif %}
+            ...options,
+            // Add global options from parent commands
+            ...(cmd.parent?.parent?.opts() || {}),
+            ...(cmd.parent?.opts() || {})
+          };
+          
+          const result = await hookFunc(kwargs);
+          return result;
+        } else {
+          // Default placeholder behavior
+          console.log(`Executing {{ subcmd_name }} command...`);
+          {% if subcmd_data.args %}
+          {% for arg in subcmd_data.args %}
+          console.log(`  {{ arg.name }}: ${{{ arg.name|lower|replace('-', '_') }}}`);
+          {% endfor %}
+          {% endif %}
+          {% if subcmd_data.options %}
+          {% for opt in subcmd_data.options %}
+          console.log(`  {{ opt.name }}: ${options.{{ opt.name|replace('-', '_') }}}`);
+          {% endfor %}
+          {% endif %}
+        }
+        {% endif %}
+      } catch (error) {
+        console.error(`Error in {{ cmd_name }} {{ subcmd_name }} command:`, error.message);
+        process.exit(1);
+      }
+    });
+  {% endfor %}
+
+  return group;
+};
