@@ -8,7 +8,6 @@ Provides secure plugin discovery, installation, and management
 
 
 
-import asyncio
 
 import hashlib
 
@@ -22,7 +21,7 @@ from enum import Enum
 
 from pathlib import Path
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 
 import aiohttp
 
@@ -570,7 +569,6 @@ class PluginSecurityScanner:
 
         """Scan a plugin for security issues"""
 
-        import re
 
         import tarfile
 

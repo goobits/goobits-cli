@@ -18,8 +18,7 @@ from goobits_cli.schemas import (
     InstallationSchema, 
     ShellIntegrationSchema, 
     ValidationSchema, 
-    MessagesSchema,
-    ConfigSchema
+    MessagesSchema
 )
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.generators.python import PythonGenerator

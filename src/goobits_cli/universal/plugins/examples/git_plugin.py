@@ -10,11 +10,9 @@ Provides Git repository management capabilities for CLI applications
 
 import asyncio
 
-import json
 
 import subprocess
 
-import sys
 
 from pathlib import Path
 
@@ -412,7 +410,7 @@ class GitPlugin:
 
                     i += 1
 
-                    while i < len(output_lines) and output_lines[i] and not '|' in output_lines[i]:
+                    while i < len(output_lines) and output_lines[i] and '|' not in output_lines[i]:
 
                         if output_lines[i].strip():
 

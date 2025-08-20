@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Optional, Union
 
-from ..schemas import GoobitsConfigSchema, ConfigSchema, CLISchema
+from ..schemas import GoobitsConfigSchema, ConfigSchema
 
 
 

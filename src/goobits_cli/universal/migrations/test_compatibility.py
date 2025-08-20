@@ -20,11 +20,11 @@ import yaml
 
 from pathlib import Path
 
-from typing import Dict, List, Any
+from typing import List
 
 
 
-from ...schemas import ConfigSchema, GoobitsConfigSchema
+from ...schemas import GoobitsConfigSchema
 
 from ...generators.python import PythonGenerator
 
@@ -34,7 +34,7 @@ from ...generators.typescript import TypeScriptGenerator
 
 from ...generators.rust import RustGenerator
 
-from .compatibility_checker import CompatibilityChecker, ComparisonResult
+from .compatibility_checker import CompatibilityChecker
 
 
 

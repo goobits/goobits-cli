@@ -6,11 +6,6 @@ and language-specific code generation for Node.js and TypeScript renderers.
 """
 
 import pytest
-import tempfile
-import shutil
-from pathlib import Path
-from typing import Dict, Any
-import json
 
 from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
 from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
@@ -757,17 +752,17 @@ export default program;
             # Check array option
             if "arrayOption" in properties:
                 assert properties["arrayOption"]["type"] == "any[]"
-                assert properties["arrayOption"]["optional"] == True
+                assert properties["arrayOption"]["optional"]
             
             # Check boolean flag
             if "booleanFlag" in properties:
                 assert properties["booleanFlag"]["type"] == "boolean"
-                assert properties["booleanFlag"]["optional"] == True
+                assert properties["booleanFlag"]["optional"]
             
             # Check required string
             if "requiredString" in properties:
                 assert properties["requiredString"]["type"] == "string"
-                assert properties["requiredString"]["optional"] == False
+                assert not properties["requiredString"]["optional"]
     
     def test_typescript_reserved_keywords(self):
         """Test handling of TypeScript reserved keywords"""

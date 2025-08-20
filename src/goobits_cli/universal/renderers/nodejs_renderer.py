@@ -14,13 +14,11 @@ Node.js/JavaScript code with proper ES module support.
 
 
 
-import json
 
 import re
 
-from pathlib import Path
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 from datetime import datetime
 

@@ -20,7 +20,7 @@ def _get_version() -> str:
 
             data = tomllib.load(f)
 
-        return data["project"]["version"]
+        return str(data["project"]["version"])
 
     except Exception:
 

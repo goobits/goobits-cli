@@ -8,7 +8,6 @@ Provides real-time performance monitoring and analysis for CLI applications
 
 
 
-import asyncio
 
 import json
 
@@ -22,25 +21,22 @@ from collections import defaultdict, deque
 
 from dataclasses import dataclass, field
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pathlib import Path
 
-from typing import Dict, List, Optional, Any, Callable, Union
+from typing import Dict, List, Optional, Any, Callable
 
 import subprocess
 
 import platform
 
-import sys
 
 
 
 try:
 
     import matplotlib.pyplot as plt
-
-    import matplotlib.animation as animation
 
     from matplotlib.dates import DateFormatter
 
@@ -54,15 +50,11 @@ except ImportError:
 
 try:
 
-    import rich
-
     from rich.console import Console
 
     from rich.table import Table
 
     from rich.panel import Panel
-
-    from rich.progress import Progress
 
     from rich.live import Live
 

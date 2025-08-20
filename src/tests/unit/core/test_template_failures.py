@@ -8,9 +8,8 @@ proper cleanup when template generation fails partially through the process.
 import pytest
 import tempfile
 import shutil
-import time
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from typing import Dict, Any
 
 import jinja2
@@ -420,8 +419,8 @@ Main content here
         assert isinstance(result, dict)
         
         # Some files should succeed, others should fail
-        cli_path = str(self.output_dir / "cli.py")
-        hooks_path = str(self.output_dir / "hooks.py")
+        str(self.output_dir / "cli.py")
+        str(self.output_dir / "hooks.py")
         
         # At least some components should succeed before the failure
         assert len(result) >= 1
@@ -593,7 +592,7 @@ Content B
             
             # Should handle Jinja initialization failures during registry creation
             try:
-                registry = ComponentRegistry(self.components_dir)
+                ComponentRegistry(self.components_dir)
                 assert False, "Expected exception during registry initialization"
             except Exception as e:
                 assert "initialization" in str(e).lower() or "jinja" in str(e).lower()
@@ -665,7 +664,7 @@ class TestTemplateEngineCleanup:
         engine.register_renderer("python", renderer)
         
         # Cause failure
-        result = engine.generate_cli(
+        engine.generate_cli(
             config=self.test_config,
             language="python", 
             output_dir=self.output_dir

@@ -14,17 +14,14 @@ to the Universal Template System format.
 
 import re
 
-import shutil
 
 from pathlib import Path
 
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, Optional, Set
 
 import typer
 
-import jinja2
 
-from jinja2.exceptions import TemplateError
 
 
 

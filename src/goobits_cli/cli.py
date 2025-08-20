@@ -14,9 +14,9 @@ from pathlib import Path
 
 import rich_click as click
 
-from rich_click import RichGroup, RichCommand
+from rich_click import RichGroup
 
-from typing import Optional, Dict, Any
+from typing import Optional
 
 
 
@@ -182,15 +182,7 @@ except ImportError as e:
 
 try:
 
-    from .progress_helper import (
-
-        get_progress_helper, spinner, progress_bar, simple_progress,
-
-        print_success, print_error, print_warning, print_info,
-
-        with_spinner, with_progress
-
-    )
+    from .progress_helper import get_progress_helper
 
     HAS_PROGRESS_HELPER = True
 
@@ -206,13 +198,7 @@ except ImportError as e:
 
 try:
 
-    from .prompts_helper import (
-
-        get_prompts_helper, text, password, confirm, select, multiselect,
-
-        integer, float_input, path
-
-    )
+    from .prompts_helper import get_prompts_helper, confirm, path
 
     HAS_PROMPTS_HELPER = True
 
@@ -486,7 +472,7 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
 
     if check_only:
 
-        print(f"Checking for updates to Goobits CLI Framework...")
+        print("Checking for updates to Goobits CLI Framework...")
 
         print("Update check not yet implemented. Run without --check to upgrade.")
 
@@ -534,7 +520,7 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
 
         # Fallback to basic upgrade if setup.sh not found
 
-        print(f"Enhanced setup script not found. Using basic upgrade for Goobits CLI Framework...")
+        print("Enhanced setup script not found. Using basic upgrade for Goobits CLI Framework...")
 
         import shutil
 
@@ -568,9 +554,9 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
 
         if result.returncode == 0:
 
-            print(f"✅ Goobits CLI Framework upgraded successfully!")
+            print("✅ Goobits CLI Framework upgraded successfully!")
 
-            print(f"Run 'goobits --version' to verify the new version.")
+            print("Run 'goobits --version' to verify the new version.")
 
         else:
 
@@ -782,7 +768,6 @@ def start_interactive_mode(ctx, param, value):
 
         import importlib.util
 
-        import os
 
         
 
@@ -954,7 +939,7 @@ class DefaultGroup(RichGroup):
 
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
 
-            except Exception as e:
+            except Exception:
 
                 # Fallback to isatty check
 
@@ -1552,7 +1537,7 @@ def serve(ctx, directory, host, port):
 
     # Standard command - use the existing hook pattern
 
-    hook_name = f"on_serve"
+    hook_name = "on_serve"
 
     if app_hooks and hasattr(app_hooks, hook_name):
 
@@ -1620,7 +1605,7 @@ def serve(ctx, directory, host, port):
 
         # Default placeholder behavior
 
-        click.echo(f"Executing serve command...")
+        click.echo("Executing serve command...")
 
         
 
@@ -1712,9 +1697,7 @@ def _completion(shell, current_line, cursor_pos, debug):
 
         # Import completion engine
 
-        import os
 
-        import sys
 
         from pathlib import Path
 
@@ -2032,7 +2015,7 @@ def set(key, value):
 
         else:
 
-            click.echo(f"❌ Failed to set configuration value")
+            click.echo("❌ Failed to set configuration value")
 
     except Exception as e:
 

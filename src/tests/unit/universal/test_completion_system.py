@@ -16,10 +16,9 @@ Tests the DynamicCompletionRegistry, providers, and integration components.
 """
 
 import pytest
-import asyncio
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import patch, AsyncMock
 
 from goobits_cli.universal.completion.registry import (
     DynamicCompletionRegistry, 

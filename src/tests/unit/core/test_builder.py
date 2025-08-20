@@ -1,10 +1,10 @@
 """Unit tests for builder.py module."""
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import patch, mock_open
 from click.exceptions import Exit
 
-from goobits_cli.builder import load_yaml_config, generate_cli_code, Builder
+from goobits_cli.builder import load_yaml_config, Builder
 from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema
 
 
@@ -122,7 +122,7 @@ class TestBuilder:
         ))
         
         builder = Builder()
-        result = builder.build(config, "test.yaml")
+        builder.build(config, "test.yaml")
         
         # Verify managed command functionality
         # Legacy template doesn't include managed command comments
@@ -420,14 +420,14 @@ class TestFileSystemErrorConditions:
             mock_gen.side_effect = failing_generator
             
             # Count files before
-            files_before = list(self.temp_dir.glob("*.py"))
+            list(self.temp_dir.glob("*.py"))
             
             # Should fail but ideally clean up temp files
             with pytest.raises(RuntimeError):
                 builder.build(config, "test.yaml")
             
             # Check if temp files were cleaned up (implementation dependent)
-            files_after = list(self.temp_dir.glob("*.py"))
+            list(self.temp_dir.glob("*.py"))
             # Note: This test documents expected behavior but cleanup may be implementation-specific
     
     def test_builder_file_corruption_during_write(self):

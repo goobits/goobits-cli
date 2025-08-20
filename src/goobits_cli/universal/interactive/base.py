@@ -36,11 +36,11 @@ class InteractiveCommand:
 
     handler: Callable
 
-    arguments: List[Dict[str, Any]] = None
+    arguments: Optional[List[Dict[str, Any]]] = None
 
-    options: List[Dict[str, Any]] = None
+    options: Optional[List[Dict[str, Any]]] = None
 
-    aliases: List[str] = None
+    aliases: Optional[List[str]] = None
 
 
 
@@ -236,7 +236,7 @@ class InteractiveEngine(ABC):
 
             parts = shlex.split(line)
 
-        except ValueError as e:
+        except ValueError:
 
             # Handle unclosed quotes or other parsing errors
 

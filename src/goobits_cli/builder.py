@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
 
 import yaml
 
-from pathlib import Path
 
 from typing import Union, Optional
 
@@ -14,7 +12,7 @@ import typer
 
 
 
-from .schemas import ConfigSchema
+from .schemas import ConfigSchema, GoobitsConfigSchema
 
 from .generators.python import PythonGenerator
 
@@ -22,7 +20,7 @@ from .generators.python import PythonGenerator
 
 
 
-def load_yaml_config(file_path: str) -> Union[ConfigSchema, 'GoobitsConfigSchema']:
+def load_yaml_config(file_path: str) -> Union[ConfigSchema, GoobitsConfigSchema]:
 
     """Load and validate YAML configuration file."""
 
@@ -38,7 +36,6 @@ def load_yaml_config(file_path: str) -> Union[ConfigSchema, 'GoobitsConfigSchema
         # If it has top-level fields like package_name, language, etc., it's GoobitsConfigSchema
         # If it only has 'cli' field, it's ConfigSchema
         if any(key in data for key in ['package_name', 'command_name', 'language', 'hooks_path', 'installation']):
-            from .schemas import GoobitsConfigSchema
             config = GoobitsConfigSchema(**data)
         else:
             config = ConfigSchema(**data)
@@ -118,7 +115,7 @@ class Builder:
             from .generators.python import PythonGenerator
             self.generator = PythonGenerator()
 
-    def build(self, config: Union[ConfigSchema, 'GoobitsConfigSchema', None] = None, file_name: str = "config.yaml", version: Optional[str] = None) -> str:
+    def build(self, config: Union[ConfigSchema, GoobitsConfigSchema, None] = None, file_name: str = "config.yaml", version: Optional[str] = None) -> str:
 
         """Build CLI code from configuration and return the rendered template string."""
 
@@ -158,7 +155,7 @@ class Builder:
 
 
 
-def generate_cli_code(config: Union[ConfigSchema, 'GoobitsConfigSchema'], file_name: str, version: Optional[str] = None) -> str:
+def generate_cli_code(config: Union[ConfigSchema, GoobitsConfigSchema], file_name: str, version: Optional[str] = None) -> str:
 
     """Generate CLI Python code from configuration.
 

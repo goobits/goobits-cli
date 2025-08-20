@@ -15,12 +15,8 @@ tab completion, NPM package integration, and JavaScript expression evaluation.
 
 import unittest
 import tempfile
-import os
 import subprocess
-import json
-from pathlib import Path
-from typing import Dict, Any
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from goobits_cli.universal.interactive.nodejs_utils_simple import NodeJSInteractiveUtils, get_nodejs_interactive_dependencies
 

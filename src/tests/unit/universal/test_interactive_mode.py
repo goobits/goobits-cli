@@ -6,11 +6,9 @@ and functionality across all supported languages.
 """
 
 import pytest
-from pathlib import Path
 from typing import Dict, Any
 
 from goobits_cli.universal.template_engine import UniversalTemplateEngine
-from goobits_cli.universal.component_registry import ComponentRegistry
 from goobits_cli.universal.interactive import integrate_interactive_mode, is_interactive_supported
 from goobits_cli.universal.renderers.python_renderer import PythonRenderer
 from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
@@ -153,14 +151,14 @@ class TestInteractiveMode:
         renderer = PythonRenderer()
         
         # Check output structure (interactive mode framework exists but is not integrated)
-        output_structure = renderer.get_output_structure(sample_ir)
+        renderer.get_output_structure(sample_ir)
         # Interactive mode is not yet integrated into generated CLIs
         
         # Interactive mode template may not be integrated yet
         try:
             interactive_template = template_engine.component_registry.get_component("interactive_mode")
             # If it exists, continue with the test
-        except:
+        except Exception:
             # If it doesn't exist, that's expected since it's not integrated
             return
         

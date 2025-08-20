@@ -7,23 +7,18 @@ error codes, types, and more.
 """
 
 import re
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union
-from urllib.parse import urlparse
-from dataclasses import dataclass
+from typing import Any, Dict, List
 
 try:
     from .validation_framework import (
-        BaseValidator, ValidationContext, ValidationResult, ValidationMode,
-        ValidationSeverity
+        BaseValidator, ValidationContext, ValidationResult, ValidationMode
     )
 except ImportError:
     # Handle direct execution
     from validation_framework import (
-        BaseValidator, ValidationContext, ValidationResult, ValidationMode,
-        ValidationSeverity
+        BaseValidator, ValidationContext, ValidationResult, ValidationMode
     )
 
 # Import schemas for validation
@@ -825,7 +820,7 @@ class TypeValidator(BaseValidator):
         if not target_type:
             result.add_warning(
                 f"Type '{option_type}' may not be well supported in {context.language}",
-                suggestion=f"Consider using standard types like string, integer, boolean"
+                suggestion="Consider using standard types like string, integer, boolean"
             )
         
         # Validate constraints based on type

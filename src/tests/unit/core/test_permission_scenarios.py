@@ -10,10 +10,10 @@ import os
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open, MagicMock
+from unittest.mock import patch, MagicMock
 
 from goobits_cli.builder import Builder
-from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema, GoobitsConfigSchema
+from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema
 from goobits_cli.generators.python import PythonGenerator
 
 
@@ -228,7 +228,7 @@ class TestPermissionErrorScenarios:
                     # Verify error propagation is consistent across languages
                     if hasattr(error, 'errno'):
                         assert exc_info.value.errno == error.errno
-                    assert type(exc_info.value) == type(error)
+                    assert type(exc_info.value) is type(error)
 
     def test_permission_error_messages_provide_user_guidance(self):
         """Test that permission errors include helpful guidance for users."""
@@ -339,7 +339,6 @@ class TestUniversalTemplateEnginePermissions:
     def test_template_cache_permission_errors(self):
         """Test permission errors in template caching operations."""
         # Test through PythonGenerator to avoid complex template engine mocking
-        from goobits_cli.generators.python import PythonGenerator
         
         generator = PythonGenerator()
         

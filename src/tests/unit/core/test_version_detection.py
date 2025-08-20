@@ -13,11 +13,10 @@ The version detection follows this chain:
 6. Final fallback to "1.0.0"
 """
 import pytest
-import json
 import tempfile
 import os
 from pathlib import Path
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch
 from importlib.metadata import PackageNotFoundError
 
 # We'll import the generated CLI module to test its get_version function

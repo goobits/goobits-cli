@@ -9,13 +9,10 @@ import re
 import subprocess
 import tempfile
 import shutil
-import json
 import yaml
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
-from collections import defaultdict
-import sys
 
 
 @dataclass
@@ -73,9 +70,9 @@ class ParityTestRunner:
             
         # Basic validation
         required_fields = ["suite_name", "description", "tests"]
-        for field in required_fields:
-            if field not in suite:
-                raise ValueError(f"Test suite missing required field: {field}")
+        for field_name in required_fields:
+            if field_name not in suite:
+                raise ValueError(f"Test suite missing required field: {field_name}")
                 
         return suite
         

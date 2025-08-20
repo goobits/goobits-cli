@@ -20,14 +20,11 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
-import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional
 
 import pytest
-import yaml
 
 from goobits_cli.builder import Builder
 from goobits_cli.schemas import GoobitsConfigSchema
@@ -398,7 +395,7 @@ setup(
         if (hasattr(config, 'installation') and config.installation and 
             hasattr(config.installation, 'extras') and config.installation.extras and
             hasattr(config.installation.extras, 'python') and config.installation.extras.python):
-            optional_deps_section = f'''
+            optional_deps_section = '''
 
 [project.optional-dependencies]
 dev = [
@@ -550,7 +547,7 @@ setup(
         if (hasattr(config, 'installation') and config.installation and 
             hasattr(config.installation, 'extras') and config.installation.extras and
             hasattr(config.installation.extras, 'python') and config.installation.extras.python):
-            optional_deps_section = f'''
+            optional_deps_section = '''
 
 [project.optional-dependencies]
 dev = [
@@ -812,7 +809,7 @@ class TestPythonInstallation(TestInstallationWorkflows):
         
         # Generate Python CLI
         config = CLITestHelper.create_test_config("python")
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Test pip install in editable mode
         # Use --break-system-packages for managed environments in CI/testing
@@ -853,7 +850,7 @@ class TestPythonInstallation(TestInstallationWorkflows):
         
         # Generate Python CLI
         config = CLITestHelper.create_test_config("python")
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Test pipx install
         try:
@@ -1035,7 +1032,7 @@ class TestTypeScriptInstallation(TestInstallationWorkflows):
         
         # Generate TypeScript CLI
         config = CLITestHelper.create_test_config("typescript")
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Install dependencies with timeout
         try:
@@ -1195,7 +1192,7 @@ class TestRustInstallation(TestInstallationWorkflows):
         
         # Generate Rust CLI
         config = CLITestHelper.create_test_config("rust")
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Test cargo build with timeout
         try:

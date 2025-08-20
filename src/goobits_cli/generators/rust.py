@@ -4,13 +4,11 @@
 
 import json
 
-import sys
 
 from pathlib import Path
 
 from typing import List, Optional, Union, Dict
 
-import signal
 
 import threading
 
@@ -40,7 +38,7 @@ from ..formatter import (
 
 try:
 
-    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.template_engine import UniversalTemplateEngine
 
     from ..universal.renderers.rust_renderer import RustRenderer
 
@@ -844,7 +842,7 @@ class RustGenerator(BaseGenerator):
 
                 typer.echo(f"   Impact: The generated CLI will work but without {template_name.replace('.j2', '')} functionality", err=True)
 
-                typer.echo(f"   Solution: Check template syntax or report this issue", err=True)
+                typer.echo("   Solution: Check template syntax or report this issue", err=True)
 
         
 
@@ -1210,7 +1208,7 @@ class RustGenerator(BaseGenerator):
 
         """Generate a basic main.rs when templates are missing."""
 
-        cli_config = context['cli']
+        context['cli']
 
         package_name = context['package_name'] or 'my-cli'
 
@@ -1383,7 +1381,6 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                     
                     # Add arguments for subcommand
                     if hasattr(sub_data, 'args') and sub_data.args:
-                        arg_index = 1
                         for arg in sub_data.args:
                             if hasattr(arg, 'nargs') and arg.nargs == "*":
                                 sub_cmd_def += f'''
@@ -1624,7 +1621,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
 
         package_name = context['package_name'].replace('-', '_')
 
-        display_name = context['display_name']
+        context['display_name']
 
         description = context.get('description', 'A CLI tool')
 

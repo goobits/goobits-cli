@@ -12,15 +12,13 @@ generates output that is functionally equivalent to the legacy templates.
 
 
 
-import hashlib
 
 import difflib
 
-import tempfile
 
 from pathlib import Path
 
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional
 
 from dataclasses import dataclass
 
@@ -30,7 +28,7 @@ import yaml
 
 
 
-from ...schemas import ConfigSchema, GoobitsConfigSchema
+from ...schemas import GoobitsConfigSchema
 
 from ...generators.python import PythonGenerator
 
@@ -1144,7 +1142,7 @@ def compatibility_check_command(
 
     # Display summary
 
-    typer.echo(f"\n📊 Compatibility Check Results:")
+    typer.echo("\n📊 Compatibility Check Results:")
 
     typer.echo(f"Total comparisons: {overall_result.total_comparisons}")
 

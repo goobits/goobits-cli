@@ -17,7 +17,7 @@ from ..schemas import ConfigSchema, GoobitsConfigSchema
 
 from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
 
-from ..shared.components import DocumentationGenerator, create_documentation_generator
+from ..shared.components import create_documentation_generator
 
 from ..shared.test_utils.validation import ValidationResult, TestDataValidator
 
@@ -27,7 +27,7 @@ from ..shared.test_utils.validation import ValidationResult, TestDataValidator
 
 try:
 
-    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.template_engine import UniversalTemplateEngine
 
     from ..universal.renderers.typescript_renderer import TypeScriptRenderer as UniversalTypeScriptRenderer
 
@@ -123,7 +123,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         # Reinitialize environment with TypeScript templates
 
-        from jinja2 import Environment, FileSystemLoader
+        from jinja2 import FileSystemLoader
 
         
 
@@ -208,7 +208,6 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         # Initialize TypeScript interactive utilities
 
-        from ..universal.interactive.typescript_utils import TypeScriptInteractiveRenderer
 
         self.interactive_renderer = None
 
@@ -788,7 +787,6 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         # Determine the directory to check for conflicts
 
-        check_dir = target_directory if target_directory else "."
 
         
 
@@ -814,19 +812,19 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                 adjusted_files[new_filepath] = content
 
-                warnings.append(f"⚠️  Existing index.ts detected. Generated cli.ts instead.")
+                warnings.append("⚠️  Existing index.ts detected. Generated cli.ts instead.")
 
-                warnings.append(f"   Import cli.ts in your index.ts with: import {{ cli }} from './cli.js'; cli();")
+                warnings.append("   Import cli.ts in your index.ts with: import { cli } from './cli.js'; cli();")
 
             elif filepath == "package.json" and os.path.exists(check_path):
 
-                warnings.append(f"⚠️  Existing package.json detected. Review and merge dependencies manually.")
+                warnings.append("⚠️  Existing package.json detected. Review and merge dependencies manually.")
 
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
             elif filepath == "tsconfig.json" and os.path.exists(check_path):
 
-                warnings.append(f"⚠️  Existing tsconfig.json detected. Review and merge settings manually.")
+                warnings.append("⚠️  Existing tsconfig.json detected. Review and merge settings manually.")
 
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
@@ -960,7 +958,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         """Get the default output path for TypeScript projects."""
 
-        return f"index.ts"
+        return "index.ts"
 
     def _determine_main_file_name(self, target_directory: Optional[str] = None) -> str:
         """Determine the main file name, checking for conflicts early."""
@@ -998,9 +996,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         # Extract metadata using base class helper for legacy mode
 
-        from typing import Union
 
-        from ..schemas import ConfigSchema, GoobitsConfigSchema
 
         
 
@@ -1716,7 +1712,7 @@ program
 
                 
 
-                code += f'''
+                code += '''
 
   .action(async ('''
 

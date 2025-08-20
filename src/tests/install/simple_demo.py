@@ -77,7 +77,7 @@ def main():
     print(f"   Full test matrix: {len(full_matrix)} test cases")
     print(f"   Critical test matrix: {len(critical_matrix)} test cases")
     
-    print(f"\n   Sample critical test cases:")
+    print("\n   Sample critical test cases:")
     for i, test_case in enumerate(critical_matrix[:6]):
         print(f"     {i+1}. {test_case['language']}/{test_case['scenario']}")
     
@@ -106,7 +106,7 @@ def main():
             if len(features) > 2:
                 print(f"     - ... and {len(features)-2} more")
         else:
-            print(f"     - Not available (install with package manager)")
+            print("     - Not available (install with package manager)")
     
     print()
     

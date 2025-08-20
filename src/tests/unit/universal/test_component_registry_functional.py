@@ -980,7 +980,7 @@ Component without dependencies
         try:
             registry.load_components()
             # If it loads, should handle binary content
-            components = registry.list_components()
+            registry.list_components()
         except UnicodeDecodeError:
             # This is acceptable behavior for binary files
             pass

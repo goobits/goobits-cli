@@ -16,11 +16,10 @@ import sys
 
 import yaml
 
-import json
 
 from pathlib import Path
 
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 
 
 
@@ -222,7 +221,7 @@ class CompletionEngine:
 
             
 
-        context = {
+        context: Dict[str, Any] = {
 
             "type": "unknown",
 
@@ -260,7 +259,7 @@ class CompletionEngine:
 
         # Check if we're completing an option
 
-        if context["last_token"].startswith("-"):
+        if str(context["last_token"]).startswith("-"):
 
             context["type"] = "option"
 
@@ -270,7 +269,7 @@ class CompletionEngine:
 
         # Check if previous token was an option that expects a value
 
-        if context["previous_token"].startswith("-") and not context["last_token"].startswith("-"):
+        if str(context["previous_token"]).startswith("-") and not str(context["last_token"]).startswith("-"):
 
             context["type"] = "option_value"
 
@@ -536,7 +535,8 @@ class CompletionEngine:
 
         if option_type == "choice" and "choices" in option_config:
 
-            return option_config["choices"]
+            choices = option_config["choices"]
+            return list(choices) if isinstance(choices, list) else []
 
         elif option_type == "file" or option in ["config", "file", "input"]:
 
@@ -568,7 +568,7 @@ class CompletionEngine:
 
             if opt["name"] == option_name or opt.get("short") == option_name:
 
-                return opt
+                return dict(opt)
 
         
 
@@ -600,7 +600,7 @@ class CompletionEngine:
 
                 if opt["name"] == option_name or opt.get("short") == option_name:
 
-                    return opt
+                    return dict(opt)
 
         
 

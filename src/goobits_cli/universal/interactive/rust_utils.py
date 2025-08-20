@@ -15,6 +15,7 @@ Rust's ecosystem.
 
 
 import re
+import tempfile
 
 from typing import Dict, List, Optional, Any, Tuple
 
@@ -144,7 +145,7 @@ class RustCommandParser:
 
     
 
-    def parse_command(self, line: str, command_schema: Dict[str, Any]) -> Tuple[RustCommand, Optional[str]]:
+    def parse_command(self, line: str, command_schema: Dict[str, Any]) -> Tuple[Optional[RustCommand], Optional[str]]:
 
         """
 
@@ -382,7 +383,7 @@ class RustCommandParser:
 
             if option['name'] == option_name:
 
-                return option
+                return dict(option)
 
         return None
 
@@ -396,7 +397,7 @@ class RustCommandParser:
 
             if option.get('short') == short:
 
-                return option
+                return dict(option)
 
         return None
 
@@ -824,7 +825,8 @@ class RustCompletionProvider:
 
         """Find command schema by name."""
 
-        return self.cli_schema.get('commands', {}).get(command_name)
+        command = self.cli_schema.get('commands', {}).get(command_name)
+        return dict(command) if command is not None else None
 
     
 
@@ -1062,7 +1064,6 @@ class RustHistoryManager:
 
         """
 
-        import re
 
         
 
@@ -1626,7 +1627,7 @@ class RustDocumentationHelper:
 
         if item in self.std_docs_cache:
 
-            return self.std_docs_cache[item]
+            return str(self.std_docs_cache[item])
 
         
 
@@ -1982,9 +1983,9 @@ class RustInteractiveEngine(InteractiveEngine):
 
         
 
-        if error:
+        if error or rust_command is None:
 
-            print(f"Error: {error}")
+            print(f"Error: {error or 'Unknown error'}")
 
             return
 
@@ -2236,11 +2237,24 @@ fn main() {{
 
     
 
-    def get_completions(self, text: str, line: str) -> List[str]:
+    def get_completions(self, text: str, state: int) -> Optional[str]:
 
         """Get enhanced tab completions with Rust-specific features."""
 
-        return self.completion_provider.get_completions(text, line)
+        if state == 0:
+            # Generate completions - simplified for now
+            if not text:
+                self.completions = list(self.commands.keys())
+            else:
+                self.completions = [
+                    cmd for cmd in self.commands.keys()
+                    if cmd.startswith(text)
+                ]
+        
+        try:
+            return self.completions[state]
+        except (IndexError, AttributeError):
+            return None
 
     
 

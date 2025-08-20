@@ -14,17 +14,14 @@ command context, and available options across all supported languages.
 
 import os
 
-import sys
 
-import json
 
-import asyncio
 
 from abc import ABC, abstractmethod
 
 from dataclasses import dataclass, field
 
-from typing import List, Dict, Any, Optional, Set, Callable, Union
+from typing import List, Dict, Any, Set, Callable
 
 from pathlib import Path
 

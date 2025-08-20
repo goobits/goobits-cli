@@ -10,7 +10,7 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional
 
 import pytest
 
@@ -361,7 +361,7 @@ class TestDependencyResolution:
         
         try:
             # Generate CLI files
-            generated_files = CLITestHelper.generate_cli(config, temp_dir)
+            CLITestHelper.generate_cli(config, temp_dir)
             
             # Install based on language using scoped environments
             if config.language == "python":
@@ -533,7 +533,7 @@ process.exit(0);
         
         # Generate CLI
         from .test_installation_flows import CLITestHelper
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Validate dependency declarations
         if language == "python":
@@ -596,7 +596,7 @@ process.exit(0);
         
         # Generate CLI
         from .test_installation_flows import CLITestHelper
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Check that extras are declared in installation files
         pyproject_file = Path(temp_dir) / "pyproject.toml"
@@ -614,7 +614,7 @@ process.exit(0);
         
         # Generate CLI
         from .test_installation_flows import CLITestHelper
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Check package.json for dev dependencies
         package_json = Path(temp_dir) / "package.json"
@@ -637,7 +637,7 @@ process.exit(0);
         
         # Generate CLI
         from .test_installation_flows import CLITestHelper
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Check Cargo.toml for dependencies
         cargo_toml = Path(temp_dir) / "Cargo.toml"
@@ -685,7 +685,7 @@ process.exit(0);
             
             # Generate CLI
             from .test_installation_flows import CLITestHelper
-            generated_files = CLITestHelper.generate_cli(config, temp_dir)
+            CLITestHelper.generate_cli(config, temp_dir)
             
             # Check for version constraints
             if language == "python":
@@ -793,7 +793,7 @@ process.exit(0);
     def test_cross_platform_dependency_resolution(self):
         """Test that dependencies work across different platforms."""
         # This test validates that generated CLIs don't have platform-specific issues
-        env_info = validate_installation_environment()
+        validate_installation_environment()
         
         # Test basic CLI generation for all available package managers
         for language in ["python", "nodejs", "typescript", "rust"]:
@@ -835,7 +835,7 @@ process.exit(0);
         
         # Generate CLI
         from .test_installation_flows import CLITestHelper
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         # Test network connectivity and build strategy
         network_available = CargoManager.check_network_connectivity(timeout=2)
@@ -878,7 +878,7 @@ process.exit(0);
         
         # Generate and try to install
         from .test_installation_flows import CLITestHelper
-        generated_files = CLITestHelper.generate_cli(config, temp_dir)
+        CLITestHelper.generate_cli(config, temp_dir)
         
         try:
             # Use scoped installation to prevent global conflicts
@@ -941,7 +941,7 @@ process.exit(0);
     def test_environment_cleanup_effectiveness(self):
         """Test that environment cleanup properly removes all test artifacts."""
         temp_dir = self._create_temp_dir()
-        config = TestConfigTemplates.minimal_config("python")
+        TestConfigTemplates.minimal_config("python")
         
         if not PipManager.is_available():
             pytest.skip("pip not available")

@@ -2,9 +2,7 @@
 
 
 
-import json
 
-import sys
 
 from pathlib import Path
 
@@ -74,7 +72,7 @@ def _safe_to_dict(obj: Any) -> Dict[str, Any]:
 
 try:
 
-    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.template_engine import UniversalTemplateEngine
 
     from ..universal.renderers.python_renderer import PythonRenderer
 
@@ -406,7 +404,7 @@ class PythonGenerator(BaseGenerator):
             if isinstance(config, ConfigSchema):
 
                 # Create minimal GoobitsConfigSchema for universal system with defaults
-                from ..schemas import PythonConfigSchema, DependenciesSchema, InstallationSchema, ShellIntegrationSchema, ValidationSchema
+                from ..schemas import PythonConfigSchema, DependenciesSchema, InstallationSchema, ValidationSchema
 
                 # Get hooks_path from config if available
                 hooks_path = getattr(config, 'hooks_path', None)

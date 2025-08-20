@@ -14,7 +14,7 @@ including template validation, dependency tracking, and hot-reloading support.
 
 from pathlib import Path
 
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 
 import jinja2
 
@@ -890,7 +890,7 @@ class ComponentRegistry:
 
             # Parse template to check for syntax errors
 
-            template = self._env.from_string(content)
+            self._env.from_string(content)
 
             
 

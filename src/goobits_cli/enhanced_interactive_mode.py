@@ -6,15 +6,13 @@
 
 import os
 
-import sys
 
 import asyncio
 
-import readline
 
 import shlex
 
-from typing import List, Dict, Any, Optional, Callable
+from typing import List, Dict, Any, Optional
 
 from pathlib import Path
 
@@ -362,7 +360,7 @@ class EnhancedInteractive:
 
         """Run the enhanced interactive mode."""
 
-        print(f"🚀 Welcome to  Enhanced Interactive Mode!")
+        print("🚀 Welcome to  Enhanced Interactive Mode!")
 
         print("📝 Type 'help' for available commands, 'exit' to quit.")
 
@@ -432,7 +430,7 @@ class EnhancedInteractive:
 
         """Get enhanced prompt with context information."""
 
-        base_prompt = f"> "
+        base_prompt = "> "
 
         
 
@@ -516,7 +514,7 @@ class EnhancedInteractive:
 
             # In a real implementation, this would delegate to the plugin's command handler
 
-            print(f"⚠️  Plugin command execution not fully implemented")
+            print("⚠️  Plugin command execution not fully implemented")
 
             print(f"   Plugin: {plugin_info.name}")
 
@@ -710,7 +708,7 @@ class EnhancedInteractive:
 
                 if success:
 
-                    print(f"✅ Plugin installed successfully")
+                    print("✅ Plugin installed successfully")
 
                     # Reload plugin commands
 
@@ -718,7 +716,7 @@ class EnhancedInteractive:
 
                 else:
 
-                    print(f"❌ Plugin installation failed")
+                    print("❌ Plugin installation failed")
 
             except Exception as e:
 
@@ -744,13 +742,13 @@ class EnhancedInteractive:
 
                 if success:
 
-                    print(f"✅ Plugin enabled successfully")
+                    print("✅ Plugin enabled successfully")
 
                     await self._load_plugins()
 
                 else:
 
-                    print(f"❌ Plugin enable failed")
+                    print("❌ Plugin enable failed")
 
             except Exception as e:
 

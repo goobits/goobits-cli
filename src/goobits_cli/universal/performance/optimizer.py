@@ -8,9 +8,7 @@ Orchestrates all performance optimization components
 
 
 
-import asyncio
 
-import os
 
 import threading
 
@@ -26,9 +24,9 @@ from contextlib import asynccontextmanager
 
 from .lazy_loader import LazyLoader, LazyLoadingStrategy, PredictiveLoadingStrategy
 
-from .monitor import PerformanceMonitor, StartupBenchmark, MemoryTracker
+from .monitor import PerformanceMonitor
 
-from .cache import CacheManager, TemplateCache, ComponentCache
+from .cache import CacheManager
 
 
 
@@ -854,7 +852,7 @@ class CLIOptimizer:
 
         
 
-        print(f"\n📊 Benchmark Results:")
+        print("\n📊 Benchmark Results:")
 
         print(f"  Startup: {avg_startup*1000:.2f}ms (target: {self.startup_target_ms}ms)")
 

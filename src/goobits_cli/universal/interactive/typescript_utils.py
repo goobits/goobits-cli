@@ -18,11 +18,10 @@ This module provides enhanced TypeScript interactive features including:
 
 
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any, Optional
 
 from dataclasses import dataclass
 
-import json
 
 import re
 
@@ -40,15 +39,15 @@ class TypeScriptType:
 
     base_type: str
 
-    properties: Dict[str, 'TypeScriptType'] = None
+    properties: Optional[Dict[str, 'TypeScriptType']] = None
 
     is_array: bool = False
 
     is_optional: bool = False
 
-    union_types: List[str] = None
+    union_types: Optional[List[str]] = None
 
-    literal_values: List[str] = None
+    literal_values: Optional[List[str]] = None
 
 
 
@@ -208,7 +207,7 @@ class TypeScriptCompletionProvider:
 
                 is_optional=not arg.get('required', True),
 
-                literal_values=arg.get('choices')
+                literal_values=arg.get('choices') if isinstance(arg.get('choices'), list) else None
 
             )
 
@@ -254,7 +253,7 @@ class TypeScriptCompletionProvider:
 
                 is_optional=not option.get('required', False),
 
-                literal_values=option.get('choices')
+                literal_values=option.get('choices') if isinstance(option.get('choices'), list) else None
 
             )
 
@@ -466,7 +465,7 @@ class TypeScriptExpressionEvaluator:
 
         """
 
-        result = {
+        result: Dict[str, Any] = {
 
             'is_valid': True,
 

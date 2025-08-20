@@ -6,7 +6,7 @@ import json
 
 from pathlib import Path
 
-from typing import List, Optional, Union, Dict, Any
+from typing import List, Optional, Union, Dict
 
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
@@ -26,7 +26,7 @@ from ..formatter import align_header_items, format_icon_spacing, align_setup_ste
 
 try:
 
-    from ..universal.template_engine import UniversalTemplateEngine, LanguageRenderer
+    from ..universal.template_engine import UniversalTemplateEngine
 
     from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
 
@@ -233,7 +233,6 @@ class NodeJSGenerator(BaseGenerator):
 
         # Determine the directory to check for conflicts
 
-        check_dir = target_directory if target_directory else "."
 
         
 
@@ -261,13 +260,13 @@ class NodeJSGenerator(BaseGenerator):
                 
                 conflict_info['main_entry_file_renamed'] = {'from': 'index.js', 'to': 'cli.js'}
 
-                warnings.append(f"⚠️  Existing index.js detected. Generated cli.js instead.")
+                warnings.append("⚠️  Existing index.js detected. Generated cli.js instead.")
 
-                warnings.append(f"   Import cli.js in your index.js with: import {{ cli }} from './cli.js'; cli();")
+                warnings.append("   Import cli.js in your index.js with: import { cli } from './cli.js'; cli();")
 
             elif filepath == "package.json" and os.path.exists(check_path):
 
-                warnings.append(f"⚠️  Existing package.json detected. Review and merge dependencies manually.")
+                warnings.append("⚠️  Existing package.json detected. Review and merge dependencies manually.")
 
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
@@ -970,7 +969,7 @@ program
 
                 
 
-                code += f'''
+                code += '''
 
   .action(('''
 

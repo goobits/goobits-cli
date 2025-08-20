@@ -14,11 +14,10 @@ across different programming languages in the Goobits CLI framework.
 
 import json
 
-import difflib
 
 from pathlib import Path
 
-from typing import Dict, List, Tuple, Set, Optional, Any
+from typing import Dict, List, Set, Optional
 
 from dataclasses import dataclass, asdict
 

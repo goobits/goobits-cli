@@ -14,17 +14,12 @@ and tab completion for npm packages and Node.js modules.
 
 
 
-import json
 
-import os
 
-import subprocess
 
-import tempfile
 
-from pathlib import Path
 
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Any
 
 
 

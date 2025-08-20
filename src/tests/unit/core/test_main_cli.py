@@ -20,13 +20,11 @@ import pytest
 import tempfile
 import shutil
 import subprocess
-import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open, call
+from unittest.mock import patch, MagicMock, mock_open
 import yaml
 import typer
 from typer.testing import CliRunner
-from pydantic import ValidationError
 
 from goobits_cli.main import (
     app, load_goobits_config, normalize_dependencies_for_template,
@@ -725,7 +723,7 @@ class TestMainCLICommands(TestMainCLIBase):
     @patch('goobits_cli.generators.python.PythonGenerator.generate_all_files')
     def test_build_command_generator_exception(self, mock_generate):
         """Test build command when generator raises an exception."""
-        config_content = f"""
+        config_content = """
 package_name: test-cli
 command_name: testcli
 display_name: "Test CLI"
@@ -789,7 +787,7 @@ cli:
 
     def test_build_command_no_cli_section(self):
         """Test build command when CLI section is missing."""
-        config_content = f"""
+        config_content = """
 package_name: test-cli
 command_name: testcli
 display_name: "Test CLI"
@@ -828,7 +826,7 @@ messages:
     @patch('goobits_cli.main.update_pyproject_toml')
     def test_build_command_pyproject_update_failure(self, mock_update):
         """Test build command when pyproject.toml update fails."""
-        config_content = f"""
+        config_content = """
 package_name: test-cli
 command_name: testcli
 display_name: "Test CLI"
@@ -883,7 +881,7 @@ cli:
 
     def test_build_command_complex_package_structure(self):
         """Test build command with complex package structure."""
-        config_content = f"""
+        config_content = """
 package_name: complex-cli-tool
 command_name: complex_cli
 display_name: "Test CLI"

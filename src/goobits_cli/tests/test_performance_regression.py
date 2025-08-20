@@ -21,14 +21,6 @@ class TestPerformanceRegression:
         # Measure basic import time
         start = time.perf_counter()
         
-        import rich_click as click
-        from rich_click import RichGroup, RichCommand
-        from typing import Optional, Dict, Any
-        import os
-        import sys
-        import logging
-        import importlib.util
-        from pathlib import Path
         
         end = time.perf_counter()
         import_time = (end - start) * 1000
@@ -45,7 +37,6 @@ class TestPerformanceRegression:
             """Lazy loading callback - should be lightweight."""
             pass
         
-        callback = lazy_callback
         
         end = time.perf_counter()
         callback_time = (end - start) * 1000
@@ -113,7 +104,7 @@ if __name__ == "__main__":
                 # If already loaded, this test isn't meaningful
                 pytest.skip("Universal template engine already loaded")
             
-            from goobits_cli.universal import template_engine
+            import goobits_cli.universal.template_engine  # noqa: F401
             
             end = time.perf_counter()
             import_time = (end - start) * 1000
@@ -154,14 +145,12 @@ def test_performance_targets():
     
     # Measure basic imports
     start = time.perf_counter()
-    import rich_click
     end = time.perf_counter()
     basic_time = (end - start) * 1000
     
     # Measure lazy loading overhead
     start = time.perf_counter()
     def lazy_callback(): pass
-    callback = lazy_callback
     end = time.perf_counter()
     overhead_time = (end - start) * 1000
     

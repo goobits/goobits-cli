@@ -12,7 +12,7 @@ import subprocess
 import sys
 import urllib.request
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 
 class PackageManagerNotFoundError(Exception):
@@ -79,7 +79,7 @@ class PipManager:
     def is_available() -> bool:
         """Check if pip is available."""
         try:
-            result = subprocess.run(
+            subprocess.run(
                 [sys.executable, "-m", "pip", "--version"],
                 capture_output=True,
                 text=True,
@@ -266,7 +266,7 @@ class NpmManager:
         prefix_path.mkdir(exist_ok=True)
         
         # Install dependencies first in the project directory
-        install_result = subprocess.run([
+        subprocess.run([
             "npm", "install"
         ], cwd=str(project_path), capture_output=True, text=True, timeout=120, check=True)
         

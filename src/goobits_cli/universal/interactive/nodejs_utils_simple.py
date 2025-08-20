@@ -14,11 +14,9 @@ and tab completion for npm packages and Node.js modules.
 
 
 
-import json
 
-import os
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 
 
 

@@ -8,7 +8,6 @@ Implements deferred loading to optimize startup time
 
 
 
-import abc
 
 import asyncio
 
@@ -16,21 +15,18 @@ import functools
 
 import importlib
 
-import sys
 
 import threading
 
 import time
 
-import weakref
 
 from abc import ABC, abstractmethod
 
 from concurrent.futures import ThreadPoolExecutor
 
-from typing import Any, Callable, Dict, List, Optional, Set, TypeVar, Generic, Union
+from typing import Any, Callable, Dict, List, Optional, Set, TypeVar, Generic
 
-import inspect
 
 
 
@@ -382,7 +378,7 @@ class AsyncLazyProxy(Generic[T]):
 
         try:
 
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
 
             # We're in async context, but this is sync access
 

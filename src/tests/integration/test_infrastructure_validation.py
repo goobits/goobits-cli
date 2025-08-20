@@ -11,7 +11,7 @@ import pytest
 
 from .package_manager_utils import (
     PackageManagerRegistry, validate_installation_environment,
-    PipManager, NpmManager, CargoManager
+    PipManager, NpmManager
 )
 from .test_configs import TestConfigTemplates, TestScenarioRunner
 

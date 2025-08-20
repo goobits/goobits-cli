@@ -71,17 +71,9 @@ Unified CLI for Goobits projects
 
 import json
 
-import yaml
-
-import toml
-
 import shutil
 
 import subprocess
-
-import re
-
-from copy import deepcopy
 
 from pathlib import Path
 
@@ -89,19 +81,45 @@ from typing import Optional
 
 import typer
 
-from jinja2 import Environment, FileSystemLoader
+# Lazy imports for heavy dependencies
+yaml = None
+toml = None
+Environment = None
+FileSystemLoader = None
+ValidationError = None
+GoobitsConfigSchema = None
+serve_packages = None
+deepcopy = None
 
-from pydantic import ValidationError
+def _lazy_imports():
+    """Load heavy dependencies only when needed."""
+    global yaml, toml, Environment, FileSystemLoader, ValidationError
+    global GoobitsConfigSchema, serve_packages, deepcopy
+    
+    if yaml is None:
+        import yaml as _yaml
+        yaml = _yaml
+    if toml is None:
+        import toml as _toml
+        toml = _toml
+    if Environment is None:
+        from jinja2 import Environment as _Environment, FileSystemLoader as _FileSystemLoader
+        Environment = _Environment
+        FileSystemLoader = _FileSystemLoader
+    if ValidationError is None:
+        from pydantic import ValidationError as _ValidationError
+        ValidationError = _ValidationError
+    if GoobitsConfigSchema is None:
+        from .schemas import GoobitsConfigSchema as _GoobitsConfigSchema
+        GoobitsConfigSchema = _GoobitsConfigSchema
+    if serve_packages is None:
+        from .pypi_server import serve_packages as _serve_packages
+        serve_packages = _serve_packages
+    if deepcopy is None:
+        from copy import deepcopy as _deepcopy
+        deepcopy = _deepcopy
 
-
-
-from .schemas import ConfigSchema, GoobitsConfigSchema
-
-from .builder import generate_cli_code
-
-from .pypi_server import serve_packages
-
-from .__version__ import __version__
+from .__version__ import __version__  # noqa: E402
 
 
 
@@ -141,9 +159,10 @@ def main(
 
 
 
-def load_goobits_config(file_path: Path) -> GoobitsConfigSchema:
+def load_goobits_config(file_path: Path) -> 'GoobitsConfigSchema':
 
     """Load and validate goobits.yaml configuration file."""
+    _lazy_imports()
 
     try:
 
@@ -179,9 +198,10 @@ def load_goobits_config(file_path: Path) -> GoobitsConfigSchema:
 
 
 
-def normalize_dependencies_for_template(config: GoobitsConfigSchema) -> GoobitsConfigSchema:
+def normalize_dependencies_for_template(config: 'GoobitsConfigSchema') -> 'GoobitsConfigSchema':
 
     """Normalize dependencies for template rendering with enhanced data."""
+    _lazy_imports()
 
     # Create a copy to avoid modifying the original
 
@@ -238,6 +258,7 @@ def dependencies_to_json(deps):
 def extract_version_from_pyproject(project_dir: Path) -> str:
 
     """Extract version from pyproject.toml."""
+    _lazy_imports()
 
     pyproject_path = project_dir / "pyproject.toml"
 
@@ -281,9 +302,10 @@ def extract_version_from_pyproject(project_dir: Path) -> str:
 
 
 
-def generate_setup_script(config: GoobitsConfigSchema, project_dir: Path) -> str:
+def generate_setup_script(config: 'GoobitsConfigSchema', project_dir: Path) -> str:
 
     """Generate setup.sh script from goobits configuration."""
+    _lazy_imports()
 
     template_dir = Path(__file__).parent / "templates"
 
@@ -418,6 +440,7 @@ def backup_file(file_path: Path, create_backup: bool = False) -> Optional[Path]:
 def update_pyproject_toml(project_dir: Path, package_name: str, command_name: str, cli_filename: str = "generated_cli.py", create_backup: bool = False) -> bool:
 
     """Update pyproject.toml to use the generated CLI."""
+    _lazy_imports()
 
     pyproject_path = project_dir / "pyproject.toml"
 
@@ -670,6 +693,7 @@ def build(
     Use --output to specify a custom CLI filename (e.g., --output cli.py)
 
     """
+    _lazy_imports()
 
     # Determine config file path
 
@@ -1122,6 +1146,7 @@ def init(
         goobits init my-api-client --template api-client
 
     """
+    _lazy_imports()
 
     config_path = Path("./goobits.yaml")
 
@@ -1726,6 +1751,7 @@ def serve(
         goobits serve /path/to/packages --host 0.0.0.0 --port 9000
 
     """
+    _lazy_imports()
 
     directory = Path(directory).resolve()
 
@@ -1836,6 +1862,7 @@ def upgrade(
         goobits upgrade --dry-run          # See what would be upgraded
 
     """
+    _lazy_imports()
 
     # Check if pipx is available
 

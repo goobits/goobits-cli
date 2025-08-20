@@ -24,7 +24,6 @@ Usage:
 
 
 
-import os
 
 import yaml
 
@@ -32,7 +31,7 @@ from pathlib import Path
 
 from typing import Dict, Any, Optional, List
 
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 
 
 
@@ -330,7 +329,7 @@ class DocumentationGenerator:
 
         """
 
-        template = self.jinja_env.get_template('help_text_template.j2')
+        self.jinja_env.get_template('help_text_template.j2')
 
         context = self._get_template_context()
 

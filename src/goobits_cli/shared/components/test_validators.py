@@ -4,13 +4,10 @@ Comprehensive test suite for Goobits CLI validation framework.
 Tests all validators against real configurations, edge cases, and cross-language compatibility.
 """
 
-import os
 import sys
 import pytest
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
-from typing import Any, Dict, List
 
 # Add project paths for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -25,7 +22,6 @@ try:
         CommandValidator, ArgumentValidator, HookValidator, OptionValidator,
         ErrorCodeValidator, TypeValidator, ConfigValidator, CompletionValidator
     )
-    from goobits_cli.schemas import GoobitsConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema
 except ImportError as e:
     pytest.skip(f"Could not import required modules: {e}", allow_module_level=True)
 
@@ -622,7 +618,7 @@ class TestTypeValidator:
         # Test different languages
         for language in ['python', 'nodejs', 'typescript', 'rust']:
             context = ValidationContext(config=config, language=language)
-            result = validator.validate(context)
+            validator.validate(context)
             
             # Should have type mappings in shared data
             assert 'type_mappings' in context.shared_data
@@ -773,7 +769,7 @@ class TestErrorCodeValidator:
         """Test that standard error codes are available."""
         validator = ErrorCodeValidator()
         context = ValidationContext(config={}, language="python", mode=ValidationMode.DEV)
-        result = validator.validate(context)
+        validator.validate(context)
         
         # In dev mode, should provide standard exit codes
         assert 'standard_exit_codes' in context.shared_data

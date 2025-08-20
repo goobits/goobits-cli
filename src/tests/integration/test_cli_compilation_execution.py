@@ -8,14 +8,11 @@ validate actual compilation and runtime behavior.
 """
 
 import json
-import os
 import shutil
 import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path
-from typing import Dict, List, Optional
 
 import pytest
 
@@ -549,7 +546,7 @@ class TestRustCLICompilation:
                     # Check for network issues
                     error_text = build_result.stderr.lower()
                     if any(keyword in error_text for keyword in ['could not connect', 'network', 'index.crates.io']):
-                        pytest.skip(f"Rust build skipped due to network issues")
+                        pytest.skip("Rust build skipped due to network issues")
                     else:
                         pytest.fail(f"Rust build failed: {build_result.stderr}")
                 

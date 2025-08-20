@@ -12,17 +12,13 @@ configuration keys, and command history.
 
 
 
-import os
 
-import glob
 
-import json
 
-import yaml
 
 from pathlib import Path
 
-from typing import List, Dict, Set, Optional, Any
+from typing import List, Dict, Any
 
 import logging
 

@@ -8,9 +8,8 @@ all supported languages (Python, Node.js, TypeScript, Rust).
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union, Type
+from typing import Any, Dict, List, Optional, Set
 import re
-import sys
 from pathlib import Path
 
 
@@ -63,7 +62,7 @@ class ValidationResult:
     validator_name: str = ""
     execution_time_ms: float = 0.0
     
-    def add_info(self, message: str, field_path: str = "", suggestion: str = None, **kwargs):
+    def add_info(self, message: str, field_path: str = "", suggestion: Optional[str] = None, **kwargs):
         """Add an info message."""
         self.messages.append(ValidationMessage(
             severity=ValidationSeverity.INFO,
@@ -73,7 +72,7 @@ class ValidationResult:
             **kwargs
         ))
     
-    def add_warning(self, message: str, field_path: str = "", suggestion: str = None, **kwargs):
+    def add_warning(self, message: str, field_path: str = "", suggestion: Optional[str] = None, **kwargs):
         """Add a warning message."""
         self.messages.append(ValidationMessage(
             severity=ValidationSeverity.WARNING,
@@ -83,7 +82,7 @@ class ValidationResult:
             **kwargs
         ))
         
-    def add_error(self, message: str, field_path: str = "", suggestion: str = None, **kwargs):
+    def add_error(self, message: str, field_path: str = "", suggestion: Optional[str] = None, **kwargs):
         """Add an error message."""
         self.messages.append(ValidationMessage(
             severity=ValidationSeverity.ERROR,
@@ -94,7 +93,7 @@ class ValidationResult:
         ))
         self.is_valid = False
         
-    def add_critical(self, message: str, field_path: str = "", suggestion: str = None, **kwargs):
+    def add_critical(self, message: str, field_path: str = "", suggestion: Optional[str] = None, **kwargs):
         """Add a critical error message."""
         self.messages.append(ValidationMessage(
             severity=ValidationSeverity.CRITICAL,

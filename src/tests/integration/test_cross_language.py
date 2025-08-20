@@ -18,23 +18,19 @@ Mission: Create Automated End-to-End Integration Tests
 """
 
 import json
-import os
 import tempfile
 import time
 import subprocess
 import shutil
-import venv
 import sys
-import platform
 import threading
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any, Union
-from unittest.mock import Mock, patch
+from typing import Dict, List, Optional, Any
 # Import framework components
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
-    import pytest
+    import pytest  # noqa: F401
     PYTEST_AVAILABLE = True
 except ImportError:
     PYTEST_AVAILABLE = False
@@ -1359,7 +1355,7 @@ if __name__ == "__main__":
             print("🏁 END-TO-END CLI GENERATION INTEGRATION TEST REPORT")
             print("="*80)
             
-            print(f"\n📊 SUMMARY:")
+            print("\n📊 SUMMARY:")
             print(f"   Total Tests: {report['summary']['total_tests']}")
             print(f"   Passed: {report['summary']['passed_tests']}")
             print(f"   Failed: {report['summary']['failed_tests']}")
@@ -1369,7 +1365,7 @@ if __name__ == "__main__":
             print(f"   Integration Health Score: {report['summary']['integration_health_score']:.1f}/100")
             print(f"   Production Ready: {'✅' if report['summary']['production_ready'] else '❌'}")
             
-            print(f"\n🎯 LANGUAGE SUPPORT:")
+            print("\n🎯 LANGUAGE SUPPORT:")
             for language, support in report['integration_health']['language_support'].items():
                 status = "✅" if support['overall_working'] else "❌"
                 hooks = "🔗" if support.get('hook_integration', False) else "❌"
@@ -1377,11 +1373,11 @@ if __name__ == "__main__":
                 print(f"   {language}: {status} Overall | {hooks} Hooks | {install} Install")
             
             if not report['summary']['production_ready']:
-                print(f"\n🚫 CRITICAL ISSUES:")
+                print("\n🚫 CRITICAL ISSUES:")
                 for issue in report['integration_health']['critical_issues']:
                     print(f"   - {issue}")
             
-            print(f"\n💡 RECOMMENDATIONS:")
+            print("\n💡 RECOMMENDATIONS:")
             for rec in report['integration_health']['recommendations']:
                 print(f"   - {rec}")
             

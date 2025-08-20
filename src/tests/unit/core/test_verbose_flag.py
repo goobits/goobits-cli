@@ -1,14 +1,8 @@
 """Tests for the --verbose flag functionality."""
-import pytest
-from unittest.mock import patch, MagicMock
-from click.testing import CliRunner
-from io import StringIO
-import sys
 
 from goobits_cli.schemas import OptionSchema, CLISchema, ConfigSchema
 from goobits_cli.generators.python import PythonGenerator
 from goobits_cli.generators.nodejs import NodeJSGenerator
-from goobits_cli.generators.typescript import TypeScriptGenerator
 from goobits_cli.builder import Builder
 
 
@@ -83,7 +77,7 @@ class TestVerboseFlag:
         
         config = ConfigSchema(**config_data)
         generator = PythonGenerator()
-        generated_cli = generator.generate(config, "test.yaml")
+        generator.generate(config, "test.yaml")
         
         # Legacy template doesn't include global options like verbose
 
@@ -114,7 +108,7 @@ class TestVerboseFlag:
         
         config = ConfigSchema(**config_data)
         generator = NodeJSGenerator()
-        generated_cli = generator.generate(config, "test.yaml")
+        generator.generate(config, "test.yaml")
         
         # Legacy template doesn't include global options like verbose
 
@@ -176,7 +170,7 @@ class TestVerboseFlag:
         }
         
         builder = Builder(config_data, language="python")
-        generated_cli = builder.build()
+        builder.build()
         
         # Legacy template doesn't include error handlers with verbose parameters
 

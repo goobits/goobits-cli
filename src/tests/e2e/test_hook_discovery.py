@@ -9,12 +9,8 @@ Tests the bug fixes for:
 import os
 import sys
 import subprocess
-import tempfile
-import shutil
-from pathlib import Path
 import pytest
 
-from goobits_cli.main import build
 
 
 class TestHookDiscoveryE2E:
@@ -223,7 +219,7 @@ def on_start(service_name, port=8080, **kwargs):
             
             # Create a simplified CLI that tests hook discovery
             cli_file = cli_dir / "cli.py"
-            cli_file.write_text(f'''#!/usr/bin/env python3
+            cli_file.write_text('''#!/usr/bin/env python3
 import importlib
 import importlib.util
 from pathlib import Path
@@ -471,39 +467,13 @@ def on_status(**kwargs):
         
         try:
             # Create test configuration
-            config = {
-                "package_name": "myapp",
-                "command_name": "myapp",
-                "display_name": "My Application", 
-                "description": "Full E2E test application",
-                "language": "python",
-                "hooks_path": "myapp/cli/hooks.py",  # Custom path from bug report
-                "cli": {
-                    "name": "myapp",
-                    "tagline": "Full E2E testing",
-                    "commands": {
-                        "deploy": {
-                            "desc": "Deploy the application",
-                            "args": [{"name": "environment", "desc": "Target environment"}],
-                            "options": [{"name": "force", "type": "flag", "desc": "Force deployment"}]
-                        },
-                        "status": {
-                            "desc": "Check application status"
-                        }
-                    }
-                },
-                "installation": {
-                    "pypi_name": "myapp",
-                    "development_path": "."
-                }
-            }
             
             # Generate the CLI (simplified version for testing)
             cli_dir = project_dir / "src" / "myapp"
             cli_dir.mkdir(parents=True)
             
             cli_file = cli_dir / "cli.py"
-            cli_file.write_text(f'''#!/usr/bin/env python3
+            cli_file.write_text('''#!/usr/bin/env python3
 """Full E2E test CLI with proper hook discovery."""
 
 import sys
@@ -555,7 +525,7 @@ def _file_based_import(configured_path, module_name):
                 spec.loader.exec_module(hooks_module)
                 return hooks_module
     
-    raise ImportError(f"Could not find hooks file: {{configured_path}}")
+    raise ImportError(f"Could not find hooks file: {configured_path}")
 
 def main():
     if len(sys.argv) < 2:
@@ -592,7 +562,7 @@ def main():
             return 1
     
     else:
-        print(f"ERROR: Unknown command: {{command}}")
+        print(f"ERROR: Unknown command: {command}")
         return 1
 
 if __name__ == "__main__":

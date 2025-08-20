@@ -112,11 +112,11 @@ class ConfigManager:
 
     def __init__(self):
 
-        self.package_name = 'goobits-cli'
+        self.package_name: str = 'goobits-cli'
 
-        self.config_dir_name = 'goobits-cli'
+        self.config_dir_name: str = 'goobits-cli'
 
-        self.config_file_name = 'config.json'
+        self.config_file_name: str = 'config.json'
 
         self._config: Optional[Dict[str, Any]] = None
 
@@ -142,7 +142,7 @@ class ConfigManager:
 
             if app_data:
 
-                return Path(app_data) / self.config_dir_name
+                return Path(str(app_data)) / self.config_dir_name
 
             return home_dir / self.config_dir_name
 
@@ -160,7 +160,7 @@ class ConfigManager:
 
             if xdg_config:
 
-                return Path(xdg_config) / self.config_dir_name
+                return Path(str(xdg_config)) / self.config_dir_name
 
             return home_dir / '.config' / self.config_dir_name
 
@@ -194,7 +194,7 @@ class ConfigManager:
 
             raise ConfigFileError(
 
-                f"Permission denied creating configuration directory",
+                "Permission denied creating configuration directory",
 
                 config_dir,
 
@@ -252,7 +252,7 @@ class ConfigManager:
 
                     raise ConfigFileError(
 
-                        f"Permission denied reading configuration file",
+                        "Permission denied reading configuration file",
 
                         config_path,
 
@@ -490,6 +490,8 @@ class ConfigManager:
 
         keys = key.split('.')
 
+        if self._config is None:
+            raise RuntimeError("Configuration not loaded")
         current = self._config
 
         
@@ -552,6 +554,8 @@ class ConfigManager:
 
         keys = key.split('.')
 
+        if self._config is None:
+            raise RuntimeError("Configuration not loaded")
         current = self._config
 
         
@@ -726,7 +730,7 @@ class RCConfigLoader(ConfigManager):
 
             for file_name in self.rc_file_names:
 
-                file_path = directory / file_name
+                file_path: Path = directory / file_name
 
                 if file_path.exists() and file_path.is_file():
 
@@ -776,7 +780,8 @@ class RCConfigLoader(ConfigManager):
 
                     return None
 
-                return yaml.safe_load(content)
+                result = yaml.safe_load(content)
+                return dict(result) if isinstance(result, dict) else None
 
             elif suffix == '.toml':
 
@@ -792,13 +797,15 @@ class RCConfigLoader(ConfigManager):
 
                     return None
 
-                return tomllib.loads(content)
+                result = tomllib.loads(content)
+                return dict(result) if isinstance(result, dict) else None
 
             else:
 
                 # Default to JSON
 
-                return json.loads(content)
+                result = json.loads(content)
+                return dict(result) if isinstance(result, dict) else None
 
                 
 

@@ -15,12 +15,9 @@ Tests the PluginManager, PluginInfo, PluginRegistry, and integration components.
 """
 
 import pytest
-import asyncio
-import json
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from datetime import datetime
+from unittest.mock import Mock, patch, AsyncMock
 
 from goobits_cli.universal.plugins.manager import (
     PluginManager,

@@ -12,7 +12,6 @@ documentation system instead of maintaining separate templates.
 
 from typing import Dict, Any
 
-from pathlib import Path
 
 
 
@@ -130,7 +129,7 @@ class EnhancedNodeJSGenerator:
 
                 'build': self.doc_generator.get_language_config('build_command'),
 
-                'start': f"node cli.js"
+                'start': "node cli.js"
 
             },
 

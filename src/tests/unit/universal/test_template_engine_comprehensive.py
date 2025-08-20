@@ -35,7 +35,7 @@ from goobits_cli.universal.template_engine import (
     LanguageRenderer
 )
 from goobits_cli.universal.component_registry import ComponentRegistry, ComponentMetadata
-from goobits_cli.schemas import GoobitsConfigSchema, CLISchema, CommandSchema
+from goobits_cli.schemas import GoobitsConfigSchema
 
 
 class MockRenderer(LanguageRenderer):
@@ -469,7 +469,6 @@ ERROR: Project name is required
         
         # First render - should cache templates
         result1 = engine.render(config, "perf")
-        first_render_time = result1["metadata"]["render_time"]
         
         # Second render - should use cached templates
         result2 = engine.render(config, "perf")
@@ -1238,7 +1237,7 @@ if __name__ == "__main__":
         
         self.registry.load_components()
         
-        errors = self.registry.validate_all_components()
+        self.registry.validate_all_components()
         # Should have validation errors for invalid template
         # Note: depending on Jinja2 version, this might not fail during parsing
         # but would fail during rendering
@@ -1938,7 +1937,7 @@ Length: {{ project.name | length | upper }}  # chaining incompatible filters
             
             # Attempt to create engine with restricted directory
             try:
-                engine = UniversalTemplateEngine(restricted_dir)
+                UniversalTemplateEngine(restricted_dir)
                 # If no exception, the system allows access despite permissions
                 # This is system-dependent behavior
                 assert True

@@ -14,17 +14,15 @@ Universal Template System, generating Click-based CLI implementations.
 
 import re
 
-import json
 
 import tempfile
 
-import shutil
 
 from datetime import datetime
 
 from pathlib import Path
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 import jinja2
 
@@ -465,7 +463,6 @@ class PythonRenderer(LanguageRenderer):
                 try:
                     # Install dependencies for the consolidated package
                     import subprocess
-                    import json
                     
                     # Create setup.py for proper package structure
                     setup_py_content = f'''

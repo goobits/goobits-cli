@@ -9,10 +9,9 @@ and usage examples from CLI configurations.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 from pathlib import Path
 import textwrap
-import re
 
 
 class DocumentationType(Enum):
@@ -84,17 +83,17 @@ class DocumentationContext:
     def get_cli_name(self) -> str:
         """Get the CLI name from config."""
         if hasattr(self.config, 'cli') and hasattr(self.config.cli, 'name'):
-            return self.config.cli.name
+            return str(self.config.cli.name)
         elif isinstance(self.config, dict) and 'cli' in self.config:
-            return self.config['cli'].get('name', 'cli')
+            return str(self.config['cli'].get('name', 'cli'))
         return self.project_name or "cli"
     
     def get_version(self) -> str:
         """Get version from config or context."""
         if hasattr(self.config, 'cli') and hasattr(self.config.cli, 'version'):
-            return self.config.cli.version
+            return str(self.config.cli.version)
         elif isinstance(self.config, dict) and 'cli' in self.config:
-            return self.config['cli'].get('version', '0.1.0')
+            return str(self.config['cli'].get('version', '0.1.0'))
         return self.project_version or "0.1.0"
 
 
@@ -175,7 +174,7 @@ class PythonAdapter(LanguageAdapter):
                 "",
                 "Or install in development mode:",
                 "```bash",
-                f"pip install -e .",
+                "pip install -e .",
                 "```"
             ])
         else:
@@ -470,7 +469,7 @@ pub struct {struct_name} {{
                     if hasattr(opt, 'type'):
                         type_map = {'bool': 'bool', 'int': 'i32', 'float': 'f64'}
                         opt_type = type_map.get(opt.type, 'String')
-                    required = not getattr(opt, 'default', None) is None
+                    required = getattr(opt, 'default', None) is not None
                     if not required:
                         opt_type = f"Option<{opt_type}>"
                     example += f"    pub {opt.name}: {opt_type},\n"
@@ -726,9 +725,9 @@ verbose: true
     
     def _generate_development_section(self, context: DocumentationContext) -> DocumentationSection:
         """Generate development/API reference section."""
-        adapter = self.get_adapter(context.language)
+        self.get_adapter(context.language)
         
-        content = f"""### Hook System
+        content = """### Hook System
 
 The CLI uses a hook system for implementing command logic. Create hooks in:
 

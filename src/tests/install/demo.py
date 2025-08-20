@@ -63,7 +63,7 @@ def main():
     print(f"   Full test matrix: {len(full_matrix)} test cases")
     print(f"   Critical test matrix: {len(critical_matrix)} test cases")
     
-    print(f"\n   Sample test cases:")
+    print("\n   Sample test cases:")
     for i, test_case in enumerate(critical_matrix[:4]):
         print(f"     {i+1}. {test_case['language']}/{test_case['scenario']} ({test_case['test_id']})")
     
@@ -80,7 +80,7 @@ def main():
             config = TestConfigTemplates.minimal_config("python", "demo-python-cli")
             generated_files = CLITestHelper.generate_cli(config, temp_dir)
             
-            print(f"   ✅ Python CLI generated:")
+            print("   ✅ Python CLI generated:")
             for file_type, file_path in generated_files.items():
                 file_size = Path(file_path).stat().st_size
                 print(f"     - {file_type}: {file_size} bytes")
@@ -93,7 +93,7 @@ def main():
             config = TestConfigTemplates.minimal_config("nodejs", "demo-nodejs-cli")
             generated_files = CLITestHelper.generate_cli(config, temp_dir)
             
-            print(f"   ✅ Node.js CLI generated:")
+            print("   ✅ Node.js CLI generated:")
             for file_type, file_path in generated_files.items():
                 file_size = Path(file_path).stat().st_size
                 print(f"     - {file_type}: {file_size} bytes")
@@ -123,7 +123,7 @@ def main():
             for feature in features:
                 print(f"     - {feature}")
         else:
-            print(f"     - Not available on this system")
+            print("     - Not available on this system")
     
     print()
     

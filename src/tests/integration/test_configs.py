@@ -4,7 +4,7 @@ This module provides predefined test configurations for different installation
 scenarios and edge cases.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 from goobits_cli.schemas import GoobitsConfigSchema
 
 

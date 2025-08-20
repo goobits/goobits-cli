@@ -6,12 +6,9 @@ This module analyzes templates across Python, Node.js, TypeScript, and Rust
 to identify common patterns that can be extracted into shared components.
 """
 
-import os
-import re
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Any
+from typing import Dict, List, Set, Any
 from dataclasses import dataclass, field
-from collections import defaultdict
 import json
 
 
@@ -40,7 +37,7 @@ class PatternAnalyzer:
             'rust': self.base_path / 'rust'
         }
         self.patterns: Dict[str, Pattern] = {}
-        self.pattern_categories = {
+        self.pattern_categories: Dict[str, List['Pattern']] = {
             'code_structure': [],
             'operational': [],
             'documentation': [],
@@ -396,7 +393,7 @@ class PatternAnalyzer:
                 
     def _generate_report(self) -> Dict[str, Any]:
         """Generate comprehensive pattern inventory report"""
-        report = {
+        report: Dict[str, Any] = {
             'summary': {
                 'total_patterns': len(self.patterns),
                 'extractable_patterns': sum(1 for p in self.patterns.values() if p.extractable),
@@ -428,7 +425,7 @@ class PatternAnalyzer:
             
         return report
     
-    def _define_boundaries(self) -> Dict[str, List[str]]:
+    def _define_boundaries(self) -> Dict[str, Any]:
         """Define clear boundaries for parallel work"""
         return {
             'agent_a_code_structure': [

@@ -1,0 +1,16 @@
+config,language,iteration,command,time_ms,success,meets_target
+goobits_current,python,0,"/workspace/venv/bin/python -m goobits_cli.main --version",140.16464701853693,True,False
+goobits_current,python,1,"/workspace/venv/bin/python -m goobits_cli.main --version",142.4220220069401,True,False
+goobits_current,python,2,"/workspace/venv/bin/python -m goobits_cli.main --version",143.92809598939493,True,False
+goobits_current,python,3,"/workspace/venv/bin/python -m goobits_cli.main --version",138.84879602119327,True,False
+goobits_current,python,4,"/workspace/venv/bin/python -m goobits_cli.main --version",137.19573902199045,True,False
+goobits_current,python,0,"/workspace/venv/bin/python -m goobits_cli.main --help",136.24454697128385,True,False
+goobits_current,python,1,"/workspace/venv/bin/python -m goobits_cli.main --help",142.6269409712404,True,False
+goobits_current,python,2,"/workspace/venv/bin/python -m goobits_cli.main --help",136.38973800698295,True,False
+goobits_current,python,3,"/workspace/venv/bin/python -m goobits_cli.main --help",140.01540001481771,True,False
+goobits_current,python,4,"/workspace/venv/bin/python -m goobits_cli.main --help",137.7135260263458,True,False
+goobits_current,python,0,"/workspace/venv/bin/python -m goobits_cli.main help",279.34093202929944,False,False
+goobits_current,python,1,"/workspace/venv/bin/python -m goobits_cli.main help",290.38336500525475,False,False
+goobits_current,python,2,"/workspace/venv/bin/python -m goobits_cli.main help",280.42514802655205,False,False
+goobits_current,python,3,"/workspace/venv/bin/python -m goobits_cli.main help",285.13979201670736,False,False
+goobits_current,python,4,"/workspace/venv/bin/python -m goobits_cli.main help",288.57402299763635,False,False

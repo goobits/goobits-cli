@@ -4,13 +4,11 @@ This module tests complete installation workflows from CLI generation
 to successful deployment and functionality testing.
 """
 
-import json
-import os
 import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import pytest
 
@@ -167,7 +165,7 @@ class IntegrationTestRunner:
             from .package_manager_utils import PipManager
             
             if not PipManager.is_available():
-                print(f"❌ PipManager not available")
+                print("❌ PipManager not available")
                 return False
             
             # Check if setup.py or pyproject.toml exists
@@ -211,7 +209,7 @@ setup(
                 signal.alarm(0)  # Disable alarm
                 
         except TimeoutError:
-            print(f"❌ Python installation timed out")
+            print("❌ Python installation timed out")
             return False
         except Exception as e:
             print(f"❌ Python installation exception: {e}")
@@ -223,7 +221,7 @@ setup(
             from .package_manager_utils import NpmManager
             
             if not NpmManager.is_available():
-                print(f"❌ NpmManager not available")
+                print("❌ NpmManager not available")
                 return False
             
             # Check if package.json exists
@@ -276,7 +274,7 @@ setup(
                 signal.alarm(0)  # Disable alarm
                 
         except TimeoutError:
-            print(f"❌ Node.js installation timed out")
+            print("❌ Node.js installation timed out")
             return False
         except Exception as e:
             print(f"❌ Node.js installation exception: {e}")
@@ -288,7 +286,7 @@ setup(
             from .package_manager_utils import NpmManager
             
             if not NpmManager.is_available():
-                print(f"❌ NpmManager not available")
+                print("❌ NpmManager not available")
                 return False
             
             # Check if package.json exists
@@ -337,7 +335,7 @@ setup(
                 if cli_ts.exists():
                     build_result = NpmManager.run_script("build", temp_dir)
                     if build_result.returncode != 0:
-                        print(f"⚠️  TypeScript build failed, trying to use raw .ts file")
+                        print("⚠️  TypeScript build failed, trying to use raw .ts file")
                         # For testing, we can skip the build and just use the source file
                         if cli_js.exists():
                             # Copy to dist for linking
@@ -366,7 +364,7 @@ setup(
                 signal.alarm(0)  # Disable alarm
                 
         except TimeoutError:
-            print(f"❌ TypeScript installation timed out")
+            print("❌ TypeScript installation timed out")
             return False
         except Exception as e:
             print(f"❌ TypeScript installation exception: {e}")
@@ -378,7 +376,7 @@ setup(
             from .package_manager_utils import CargoManager
             
             if not CargoManager.is_available():
-                print(f"❌ CargoManager not available")
+                print("❌ CargoManager not available")
                 return False
             
             # Build and install
@@ -598,7 +596,7 @@ class TestIntegrationWorkflows:
                 )
                 
                 # Generate CLI
-                generated_files = CLITestHelper.generate_cli(config, temp_dir)
+                CLITestHelper.generate_cli(config, temp_dir)
                 
                 # Install CLI
                 primary_manager = self.runner._get_primary_package_manager(language)
@@ -666,7 +664,7 @@ class TestIntegrationWorkflows:
             temp_dir = self.runner.create_temp_dir()
             config = TestConfigTemplates.minimal_config(language)
             
-            generated_files = CLITestHelper.generate_cli(config, temp_dir)
+            CLITestHelper.generate_cli(config, temp_dir)
             
             # Install CLI
             if language == "python":
@@ -732,7 +730,7 @@ class TestIntegrationWorkflows:
             
             # Generation time
             gen_start = time.time()
-            generated_files = CLITestHelper.generate_cli(config, temp_dir)
+            CLITestHelper.generate_cli(config, temp_dir)
             gen_time = time.time() - gen_start
             
             # Installation time

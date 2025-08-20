@@ -12,9 +12,8 @@ with proper type safety, structs, and Rust-specific conventions using clap.
 
 
 
-from pathlib import Path
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 import re
 
@@ -261,7 +260,7 @@ class RustRenderer(LanguageRenderer):
 
         """
 
-        package_name = ir.get("project", {}).get("package_name", "cli").replace("-", "_")
+        ir.get("project", {}).get("package_name", "cli").replace("-", "_")
 
         
 

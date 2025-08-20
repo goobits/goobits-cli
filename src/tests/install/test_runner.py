@@ -9,9 +9,8 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import pytest
 
 from .package_manager_utils import validate_installation_environment, PackageManagerRegistry
 from .test_configs import TestScenarioRunner
@@ -88,7 +87,7 @@ class InstallationTestRunner:
         
         available_managers = env_info["available_managers"]
         print(f"   Python: {env_info['python']['version']}")
-        print(f"   Package Managers Available:")
+        print("   Package Managers Available:")
         for manager, available in available_managers.items():
             status = "✅" if available else "❌"
             print(f"     {status} {manager}")
@@ -142,7 +141,7 @@ class InstallationTestRunner:
             test_result = self._run_pytest_test(
                 "test_installation_workflows.py::TestPythonInstallation::test_pip_install_workflow"
                 if test_case['language'] == 'python' else
-                f"test_installation_workflows.py",
+                "test_installation_workflows.py",
                 test_case,
                 verbose
             )
@@ -348,7 +347,7 @@ class InstallationTestRunner:
         report_file = self.output_dir / f"install_test_report_{self.test_session_id}.md"
         self._generate_markdown_report(report_file)
         
-        print(f"📊 Results saved to:")
+        print("📊 Results saved to:")
         print(f"   📄 JSON: {json_file}")
         print(f"   📋 Report: {report_file}")
         print()
@@ -356,14 +355,14 @@ class InstallationTestRunner:
     def _generate_markdown_report(self, report_file: Path):
         """Generate markdown report."""
         with open(report_file, 'w') as f:
-            f.write(f"# Installation Test Report\\n\\n")
+            f.write("# Installation Test Report\\n\\n")
             f.write(f"**Session ID:** {self.test_session_id}\\n")
             f.write(f"**Date:** {self.results['started']}\\n")
             f.write(f"**Duration:** {self._format_duration(self.results.get('duration', 0))}\\n\\n")
             
             # Summary
             summary = self.results["summary"]
-            f.write(f"## Summary\\n\\n")
+            f.write("## Summary\\n\\n")
             f.write(f"- **Total Tests:** {summary['total_tests']}\\n")
             f.write(f"- **Passed:** {summary['total_passed']}\\n")
             f.write(f"- **Failed:** {summary['total_failed']}\\n")
@@ -371,13 +370,13 @@ class InstallationTestRunner:
             
             # Environment
             env = self.results["environment"]
-            f.write(f"## Environment\\n\\n")
+            f.write("## Environment\\n\\n")
             f.write(f"- **Python:** {env['python']['version']}\\n")
-            f.write(f"- **Available Package Managers:**\\n")
+            f.write("- **Available Package Managers:**\\n")
             for manager, available in env["available_managers"].items():
                 status = "✅" if available else "❌"
                 f.write(f"  - {status} {manager}\\n")
-            f.write(f"\\n")
+            f.write("\\n")
             
             # Test Suites
             for suite_name, suite_data in self.results["test_suites"].items():

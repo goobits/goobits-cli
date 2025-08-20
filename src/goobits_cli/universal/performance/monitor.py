@@ -8,17 +8,13 @@ Provides benchmarking, profiling, and performance tracking
 
 
 
-import asyncio
 
 import gc
 
-import os
 
 import psutil
 
-import resource
 
-import sys
 
 import threading
 
@@ -30,9 +26,8 @@ from contextlib import contextmanager
 
 from dataclasses import dataclass, field
 
-from pathlib import Path
 
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Any, Dict, List, Optional
 
 import cProfile
 
@@ -516,7 +511,7 @@ class CommandProfiler:
 
         times = self.execution_times[command_name]
 
-        stats_data = {
+        stats_data: Dict[str, Any] = {
 
             "execution_count": len(times),
 
@@ -536,9 +531,12 @@ class CommandProfiler:
 
             # Get top functions from profiler
 
+            from contextlib import redirect_stdout
+            
             stream = StringIO()
-
-            self.profiles[command_name].sort_stats('cumulative').print_stats(10, stream)
+            
+            with redirect_stdout(stream):
+                self.profiles[command_name].sort_stats('cumulative').print_stats(10)
 
             stats_data["profile"] = stream.getvalue()
 
@@ -554,9 +552,11 @@ class CommandProfiler:
 
         return {
 
-            cmd: self.get_command_stats(cmd)
+            cmd: stats
 
             for cmd in self.execution_times.keys()
+
+            if (stats := self.get_command_stats(cmd)) is not None
 
         }
 
@@ -678,7 +678,9 @@ class PerformanceMonitor:
 
         """Run startup benchmark"""
 
-        return self.startup_benchmark.finish()
+        from typing import cast
+        result = self.startup_benchmark.finish()
+        return cast(StartupMetrics, result)
 
     
 
@@ -686,7 +688,8 @@ class PerformanceMonitor:
 
         """Analyze current memory usage"""
 
-        return self.memory_tracker.stop()
+        result = self.memory_tracker.stop()
+        return dict(result) if isinstance(result, dict) else {"error": "Could not get memory stats"}
 
     
 
@@ -856,7 +859,7 @@ class PerformanceMonitor:
 
         """End a monitoring session and return collected metrics"""
 
-        self.record_metric(f"session_end", time.time(), "timestamp", {"session_id": session_id})
+        self.record_metric("session_end", time.time(), "timestamp", {"session_id": session_id})
 
         
 

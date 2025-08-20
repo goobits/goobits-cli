@@ -10,19 +10,9 @@ This module consolidates tests for:
 Consolidated from test_builder_integration.py and test_cli_generation_integration.py
 """
 
-import json
-import os
-import tempfile
-import time
-import subprocess
 import shutil
-import venv
-import sys
-import platform
 import pytest
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any, Union
-from unittest.mock import Mock, patch
 from click.exceptions import Exit
 
 from goobits_cli.builder import load_yaml_config, generate_cli_code, Builder

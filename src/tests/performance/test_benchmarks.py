@@ -15,22 +15,15 @@ Consolidated from:
 - phase4e_integration_suite.py
 """
 
-import asyncio
 import gc
-import json
-import os
 import shutil
-import statistics
-import subprocess
 import sys
-import tempfile
 import time
 import tracemalloc
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Optional
 import pytest
 
 # Add src directory to path for imports
@@ -116,7 +109,7 @@ class TestPerformanceBenchmarks:
         """Context manager to measure execution time and memory usage."""
         tracemalloc.start()
         start_time = time.perf_counter()
-        start_memory = self._get_memory_usage()
+        self._get_memory_usage()
         
         try:
             yield

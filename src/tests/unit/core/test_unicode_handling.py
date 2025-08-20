@@ -22,8 +22,6 @@ import pytest
 import yaml
 import tempfile
 import os
-from pathlib import Path
-from typing import Dict, Any
 from goobits_cli.schemas import (
     GoobitsConfigSchema,
     CLISchema,
@@ -35,8 +33,7 @@ from goobits_cli.schemas import (
     InstallationSchema,
     ShellIntegrationSchema,
     ValidationSchema,
-    MessagesSchema,
-    ConfigSchema
+    MessagesSchema
 )
 from goobits_cli.generators.python import PythonGenerator
 from goobits_cli.generators.nodejs import NodeJSGenerator
@@ -192,7 +189,6 @@ class TestUnicodeInConfigs:
         
         # German project with umlaut normalization
         nfc_german = "Mädchen-Müller"  # NFC
-        nfd_german = "Ma\u0308dchen-Mu\u0308ller"  # NFD
         
         cli_config = CLISchema(
             name="international-projects",
@@ -304,12 +300,11 @@ class TestUnicodeInConfigs:
         
         # Mixed English-Arabic for international companies
         mixed_arabic = f"Database: {arabic_db} - User: {arabic_user}"
-        mixed_hebrew = f"System: {hebrew_file} - Backup: {hebrew_backup}"
         
         cli_config = CLISchema(
             name="international-admin",
             description=f"Admin tools supporting RTL: {mixed_arabic}",
-            tagline=f"Bilingual administration: العربية + English, עברית + English",
+            tagline="Bilingual administration: العربية + English, עברית + English",
             commands={
                 "db-admin": CommandSchema(
                     desc=f"Database administration: {arabic_db}"
@@ -324,7 +319,7 @@ class TestUnicodeInConfigs:
                     desc=f"System backup: {hebrew_backup}"
                 ),
                 "status": CommandSchema(
-                    desc=f"System status - حالة النظام - מצב המערכת"
+                    desc="System status - حالة النظام - מצב המערכת"
                 )
             }
         )

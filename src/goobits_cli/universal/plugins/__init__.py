@@ -42,7 +42,7 @@ def integrate_plugin_system(config_dict, language):
 
     # Create plugin integrator for the target language
 
-    integrator = setup_plugin_integration(language)
+    setup_plugin_integration(language)
 
     
 
