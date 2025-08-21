@@ -114,7 +114,7 @@ class NodeJSGenerator(BaseGenerator):
 
                 self.nodejs_renderer = UniversalNodeJSRenderer()
 
-                self.universal_engine.register_renderer(self.nodejs_renderer)
+                self.universal_engine.register_renderer("nodejs", self.nodejs_renderer)
 
             except Exception as e:
 

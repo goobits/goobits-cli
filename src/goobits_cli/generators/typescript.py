@@ -99,7 +99,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                 self.typescript_renderer = UniversalTypeScriptRenderer()
 
-                self.universal_engine.register_renderer(self.typescript_renderer)
+                self.universal_engine.register_renderer("typescript", self.typescript_renderer)
 
             except Exception as e:
 

@@ -31,7 +31,7 @@ try:
     from .{{ (cli.root_command.name if cli.root_command else project.command_name).replace('-', '_') }}_interactive import run_interactive
 except ImportError:
     run_interactive = None
-{%- endif %}
+{% endif %}
 
 # Enhanced Error Handling Classes
 class CLIError(Exception):
@@ -311,13 +311,13 @@ class VersionedRichGroup(RichGroup):
     type=float{% endif %},
 {%- if option.default is defined and option.default is not none %}
     default={{ option.default | repr }},
-{%- endif %}
+{% endif %}
     {%- if option.required is defined and option.required %}
     required=True,
-    {%- endif %}
+    {% endif %}
     {%- if option.multiple is defined and option.multiple %}
     multiple=True,
-    {%- endif %}
+    {% endif %}
 )
 {% endfor %}
 {% endif %}
@@ -362,7 +362,7 @@ def main(ctx, verbose{% if cli.root_command.options %}{% for option in cli.root_
         else:
             click.echo("Interactive mode not available. Please ensure all dependencies are installed.", err=True)
             sys.exit(1)
-    {%- endif %}
+    {% endif %}
     pass
 
 # Built-in upgrade command
@@ -461,10 +461,10 @@ def upgrade(check, version, pre, dry_run):
     help="{{ (option.description if option.description is defined else 'No description') }}"{%- if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
     is_flag=True{%- elif option.type is defined and option.type == "integer" %},
     type=int{%- elif option.type is defined and option.type == "float" %},
-    type=float{%- endif %}{%- if option.default is defined and option.default is not none %},
-    default={{ option.default | repr }}{%- endif %}{%- if option.required is defined and option.required %},
-    required=True{%- endif %}{%- if option.multiple is defined and option.multiple %},
-    multiple=True{%- endif %}
+    type=float{% endif %}{%- if option.default is defined and option.default is not none %},
+    default={{ option.default | repr }}{% endif %}{%- if option.required is defined and option.required %},
+    required=True{% endif %}{%- if option.multiple is defined and option.multiple %},
+    multiple=True{% endif %}
 )
 {% endfor -%}
 @click.pass_context
@@ -560,7 +560,7 @@ def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.argum
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
-{%- endif %}
+{% endif %}
 
 {%- endmacro %}
 
@@ -568,7 +568,7 @@ def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.argum
 {%- for cmd in cli.command_hierarchy.flat_commands %}
 
 {{ render_command(cmd) }}
-{%- endfor %}
+{% endfor %}
 
 
 if __name__ == "__main__":
@@ -612,7 +612,7 @@ try {
 } catch (e) {
     // Interactive mode not available
 }
-{%- endif %}
+{% endif %}
 
 // Enhanced error handling for Node.js
 class CLIError extends Error {
@@ -658,59 +658,124 @@ program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
     '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
-{%- endfor %}
+{% endfor %}
 
-{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+{# Build commands using flat_commands for unlimited nesting support #}
+// Command hierarchy building for unlimited nesting
+const commandMap = new Map();
 
-program
-    .command('{{ command_config.name }}')
-    .description('{{ ((command_config.description if command_config.description is defined else 'No description')) | js_string }}')
-{%- for arg in command_config.arguments if command_config.arguments is defined %}
-    .argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}')
-{%- endfor %}
-{%- for option in command_config.options if command_config.options is defined %}
-    .option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %})
-{%- endfor %}
-    .action(async ({% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}{% if command_config.options or not loop.last %}, {% endif %}{% endfor %}options) => {
-        const globalOpts = program.opts();
-        const verbose = globalOpts.verbose || false;
+{%- for cmd in cli.command_hierarchy.flat_commands if cli.command_hierarchy and cli.command_hierarchy.flat_commands %}
+{% if cmd.depth == 1 %}
+// Level {{ cmd.depth }}: {{ cmd.path | join(' ') }}
+const {{ cmd.name.replace('-', '_') }}Cmd = program
+    .command('{{ cmd.name }}')
+    .description('{{ ((cmd.description if cmd.description is defined else 'No description')) | js_string }}');
+{% if not cmd.is_group %}
+{% for arg in cmd.arguments if cmd.arguments %}
+{{ cmd.name.replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
+{% endfor %}
+{% for option in cmd.options if cmd.options %}
+{{ cmd.name.replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{% endfor %}
+{{ cmd.name.replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options) => {
+    const globalOpts = program.opts();
+    const verbose = globalOpts.verbose || false;
+    
+    try {
+        const hookName = '{{ cmd.hook_name }}';
         
-        try {
-            const hookName = 'on{{ command_config.name | title | replace('-', '') }}';
-            
-            if (!hooks) {
-                throw new CLIError('Hook module not loaded', 2);
-            }
-            
-            if (typeof hooks[hookName] !== 'function') {
-                const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
-                const message = `Hook function '${hookName}' not implemented in src/hooks.js`;
-                const details = availableHooks.length > 0 
-                    ? `Available hooks: ${availableHooks.join(', ')}`
-                    : 'No hook functions found in src/hooks.js';
-                throw new CLIError(message, 2, details);
-            }
-            
-            // Execute the hook function with proper error handling
-            const args = [{% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-            const result = await hooks[hookName](...args{% if command_config.arguments %}, {% endif %}options);
-            
-            // Handle return codes
-            if (typeof result === 'number' && result !== 0) {
-                throw new CLIError(`Command '{{ command_config.name }}' failed with exit code ${result}`, result);
-            }
-            
-        } catch (error) {
-            if (error.code === 'SIGINT' || error.message.includes('interrupted')) {
-                console.error('\\nCommand interrupted by user');
-                process.exit(130);
-            }
-            
-            handleError(error, 'Command execution', verbose);
+        if (!hooks) {
+            throw new CLIError('Hook module not loaded', 2);
         }
-    });
+        
+        if (typeof hooks[hookName] !== 'function') {
+            const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
+            const message = `Hook function '${hookName}' not implemented in src/hooks.js`;
+            const details = availableHooks.length > 0 
+                ? `Available hooks: ${availableHooks.join(', ')}`
+                : 'No hook functions found in src/hooks.js';
+            throw new CLIError(message, 2, details);
+        }
+        
+        // Execute the hook function with proper error handling
+        const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
+        const result = await hooks[hookName](...args{% if cmd.arguments %}, {% endif %}options);
+        
+        // Handle return codes
+        if (typeof result === 'number' && result !== 0) {
+            throw new CLIError(`Command '{{ ' '.join(cmd.path) }}' failed with exit code ${result}`, result);
+        }
+        
+    } catch (error) {
+        if (error.code === 'SIGINT' || error.message.includes('interrupted')) {
+            console.error('\\nCommand interrupted by user');
+            process.exit(130);
+        }
+        
+        handleError(error, 'Command execution', verbose);
+    }
+});
+{% endif %}
+commandMap.set('{{ '/'.join(cmd.path) }}', {{ cmd.name.replace('-', '_') }}Cmd);
 
-{%- endfor %}
+{% elif cmd.depth > 1 %}
+
+// Level {{ cmd.depth }}: {{ cmd.path | join(' ') }}
+{%- set parent_path = cmd.parent_path | join('/') %}
+{%- set parent_var = cmd.parent_path[-1].replace('-', '_') + 'Cmd' %}
+const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ parent_path }}')
+    .command('{{ cmd.name }}')
+    .description('{{ ((cmd.description if cmd.description is defined else 'No description')) | js_string }}');
+{% if not cmd.is_group %}
+{%- for arg in cmd.arguments if cmd.arguments %}
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
+{% endfor %}
+{%- for option in cmd.options if cmd.options %}
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{% endfor %}
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options) => {
+    const globalOpts = program.opts();
+    const verbose = globalOpts.verbose || false;
+    
+    try {
+        const hookName = '{{ cmd.hook_name }}';
+        
+        if (!hooks) {
+            throw new CLIError('Hook module not loaded', 2);
+        }
+        
+        if (typeof hooks[hookName] !== 'function') {
+            const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
+            const message = `Hook function '${hookName}' not implemented in src/hooks.js`;
+            const details = availableHooks.length > 0 
+                ? `Available hooks: ${availableHooks.join(', ')}`
+                : 'No hook functions found in src/hooks.js';
+            throw new CLIError(message, 2, details);
+        }
+        
+        // Execute the hook function with proper error handling
+        const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
+        const result = await hooks[hookName](...args{% if cmd.arguments %}, {% endif %}options);
+        
+        // Handle return codes
+        if (typeof result === 'number' && result !== 0) {
+            throw new CLIError(`Command '{{ ' '.join(cmd.path) }}' failed with exit code ${result}`, result);
+        }
+        
+    } catch (error) {
+        if (error.code === 'SIGINT' || error.message.includes('interrupted')) {
+            console.error('\\nCommand interrupted by user');
+            process.exit(130);
+        }
+        
+        handleError(error, 'Command execution', verbose);
+    }
+});
+{% endif %}
+commandMap.set('{{ '/'.join(cmd.path) }}', {{ cmd.path | join('_') | replace('-', '_') }}Cmd);
+
+{% endif %}
+{% endfor %}
 
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 // Check for interactive mode
@@ -726,7 +791,7 @@ program.hook('preAction', (thisCommand, actionCommand) => {
         }
     }
 });
-{%- endif %}
+{% endif %}
 
 program.parse();
 
@@ -767,7 +832,7 @@ try {
 
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 import { runInteractive } from './{{ cli.name.replace('-', '_') }}_interactive';
-{%- endif %}
+{% endif %}
 
 // Global error handler
 function handleError(error: unknown, context: string = 'Command execution', verbose: boolean = false): never {
@@ -811,59 +876,124 @@ program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
     '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
-{%- endfor %}
+{% endfor %}
 
-{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+{# Build commands using flat_commands for unlimited nesting support #}
+// Command hierarchy building for unlimited nesting
+const commandMap = new Map<string, any>();
 
-program
-    .command('{{ command_config.name }}')
-    .description('{{ ((command_config.description if command_config.description is defined else 'No description')) | js_string }}')
-{%- for arg in command_config.arguments if command_config.arguments is defined %}
-    .argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}')
-{%- endfor %}
-{%- for option in command_config.options if command_config.options is defined %}
-    .option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %})
-{%- endfor %}
-    .action(async ({% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if command_config.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
-        const globalOpts = program.opts();
-        const verbose: boolean = globalOpts.verbose || false;
+{%- for cmd in cli.command_hierarchy.flat_commands if cli.command_hierarchy and cli.command_hierarchy.flat_commands %}
+{% if cmd.depth == 1 %}
+// Level {{ cmd.depth }}: {{ cmd.path | join(' ') }}
+const {{ cmd.name.replace('-', '_') }}Cmd = program
+    .command('{{ cmd.name }}')
+    .description('{{ ((cmd.description if cmd.description is defined else 'No description')) | js_string }}');
+{% if not cmd.is_group %}
+{% for arg in cmd.arguments if cmd.arguments %}
+{{ cmd.name.replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
+{% endfor %}
+{% for option in cmd.options if cmd.options %}
+{{ cmd.name.replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{% endfor %}
+{{ cmd.name.replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
+    const globalOpts = program.opts();
+    const verbose: boolean = globalOpts.verbose || false;
+    
+    try {
+        const hookName = '{{ cmd.hook_name }}' as keyof typeof hooks;
         
-        try {
-            const hookName = 'on{{ command_config.name | title | replace('-', '') }}' as keyof typeof hooks;
-            
-            if (!hooks) {
-                throw new CLIError('Hook module not loaded', 2);
-            }
-            
-            if (typeof hooks[hookName] !== 'function') {
-                const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
-                const message = `Hook function '${String(hookName)}' not implemented in src/hooks.ts`;
-                const details = availableHooks.length > 0 
-                    ? `Available hooks: ${availableHooks.join(', ')}`
-                    : 'No hook functions found in src/hooks.ts';
-                throw new CLIError(message, 2, details);
-            }
-            
-            // Execute the hook function with proper error handling
-            const args = [{% for arg in command_config.arguments if command_config.arguments is defined %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-            const result = await (hooks[hookName] as Function)(...args{% if command_config.arguments %}, {% endif %}options);
-            
-            // Handle return codes
-            if (typeof result === 'number' && result !== 0) {
-                throw new CLIError(`Command '{{ command_config.name }}' failed with exit code ${result}`, result);
-            }
-            
-        } catch (error: unknown) {
-            if (error instanceof Error && (error.message.includes('SIGINT') || error.message.includes('interrupted'))) {
-                console.error('\\nCommand interrupted by user');
-                process.exit(130);
-            }
-            
-            handleError(error, 'Command execution', verbose);
+        if (!hooks) {
+            throw new CLIError('Hook module not loaded', 2);
         }
-    });
+        
+        if (typeof hooks[hookName] !== 'function') {
+            const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
+            const message = `Hook function '${String(hookName)}' not implemented in src/hooks.ts`;
+            const details = availableHooks.length > 0 
+                ? `Available hooks: ${availableHooks.join(', ')}`
+                : 'No hook functions found in src/hooks.ts';
+            throw new CLIError(message, 2, details);
+        }
+        
+        // Execute the hook function with proper error handling
+        const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
+        const result = await (hooks[hookName] as Function)(...args{% if cmd.arguments %}, {% endif %}options);
+        
+        // Handle return codes
+        if (typeof result === 'number' && result !== 0) {
+            throw new CLIError(`Command '{{ ' '.join(cmd.path) }}' failed with exit code ${result}`, result);
+        }
+        
+    } catch (error: unknown) {
+        if (error instanceof Error && (error.message.includes('SIGINT') || error.message.includes('interrupted'))) {
+            console.error('\\nCommand interrupted by user');
+            process.exit(130);
+        }
+        
+        handleError(error, 'Command execution', verbose);
+    }
+});
+{% endif %}
+commandMap.set('{{ '/'.join(cmd.path) }}', {{ cmd.name.replace('-', '_') }}Cmd);
 
-{%- endfor %}
+{% elif cmd.depth > 1 %}
+
+// Level {{ cmd.depth }}: {{ cmd.path | join(' ') }}
+{%- set parent_path = cmd.parent_path | join('/') %}
+{%- set parent_var = cmd.parent_path[-1].replace('-', '_') + 'Cmd' %}
+const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ parent_path }}')
+    .command('{{ cmd.name }}')
+    .description('{{ ((cmd.description if cmd.description is defined else 'No description')) | js_string }}');
+{% if not cmd.is_group %}
+{%- for arg in cmd.arguments if cmd.arguments %}
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
+{% endfor %}
+{%- for option in cmd.options if cmd.options %}
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{% endfor %}
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
+    const globalOpts = program.opts();
+    const verbose: boolean = globalOpts.verbose || false;
+    
+    try {
+        const hookName = '{{ cmd.hook_name }}' as keyof typeof hooks;
+        
+        if (!hooks) {
+            throw new CLIError('Hook module not loaded', 2);
+        }
+        
+        if (typeof hooks[hookName] !== 'function') {
+            const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
+            const message = `Hook function '${String(hookName)}' not implemented in src/hooks.ts`;
+            const details = availableHooks.length > 0 
+                ? `Available hooks: ${availableHooks.join(', ')}`
+                : 'No hook functions found in src/hooks.ts';
+            throw new CLIError(message, 2, details);
+        }
+        
+        // Execute the hook function with proper error handling
+        const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
+        const result = await (hooks[hookName] as Function)(...args{% if cmd.arguments %}, {% endif %}options);
+        
+        // Handle return codes
+        if (typeof result === 'number' && result !== 0) {
+            throw new CLIError(`Command '{{ ' '.join(cmd.path) }}' failed with exit code ${result}`, result);
+        }
+        
+    } catch (error: unknown) {
+        if (error instanceof Error && (error.message.includes('SIGINT') || error.message.includes('interrupted'))) {
+            console.error('\\nCommand interrupted by user');
+            process.exit(130);
+        }
+        
+        handleError(error, 'Command execution', verbose);
+    }
+});
+{% endif %}
+commandMap.set('{{ '/'.join(cmd.path) }}', {{ cmd.path | join('_') | replace('-', '_') }}Cmd);
+
+{% endif %}
+{% endfor %}
 
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 // Check for interactive mode
@@ -879,7 +1009,7 @@ program.hook('preAction', (thisCommand, actionCommand) => {
         }
     }
 });
-{%- endif %}
+{% endif %}
 
 program.parse();
 
@@ -892,7 +1022,7 @@ mod hooks;
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 mod {{ cli.name.replace('-', '_') }}_interactive;
 use {{ cli.name.replace('-', '_') }}_interactive::run_interactive;
-{%- endif %}
+{% endif %}
 
 /// Enhanced error handling function
 fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
@@ -930,20 +1060,20 @@ fn main() {
                 .long("{{ option.name }}")
                 {%- if option.short is defined and option.short and option.short != 'None' %}
                 .short('{{ option.short }}')
-                {%- endif %}
+                {% endif %}
                 .help("{{ option.description }}")
                 {%- if option.required is defined and option.required %}
                 .required(true)
-                {%- endif %}
+                {% endif %}
                 {%- if option.multiple is defined and option.multiple %}
                 .action(clap::ArgAction::Append)
                 {%- elif option.type is defined and option.type == "boolean" %}
                 .action(clap::ArgAction::SetTrue)
                 {%- else %}
                 .action(clap::ArgAction::Set)
-                {%- endif %}
+                {% endif %}
         )
-{%- endfor %}
+{% endfor %}
         // Built-in upgrade subcommand
         .subcommand(
             Command::new("upgrade")
@@ -973,44 +1103,47 @@ fn main() {
                         .action(clap::ArgAction::SetTrue)
                 )
         )
-{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+{# Build commands using flat_commands for unlimited nesting support #}
+{%- for cmd in cli.command_hierarchy.flat_commands if cli.command_hierarchy and cli.command_hierarchy.flat_commands %}
         .subcommand(
-            Command::new("{{ command_config.name }}")
-                .about("{{ (command_config.description if command_config.description is defined else 'No description') }}")
-{%- for arg in command_config.arguments if command_config.arguments is defined %}
+            Command::new("{{ ' '.join(cmd.path) }}")
+                .about("{{ (cmd.description if cmd.description is defined else 'No description') }}")
+{% if not cmd.is_group %}
+{%- for arg in cmd.arguments if cmd.arguments %}
                 .arg(
                     Arg::new("{{ arg.name }}")
                         .help("{{ (arg.desc if arg.desc is defined else 'No description') }}")
                         {%- if arg.required is defined and arg.required %}
                         .required(true)
-                        {%- endif %}
+                        {% endif %}
                         {%- if arg.multiple is defined and arg.multiple %}
                         .action(clap::ArgAction::Append)
                         {%- else %}
                         .action(clap::ArgAction::Set)
-                        {%- endif %}
+                        {% endif %}
                 )
-{%- endfor %}
-{%- for option in command_config.options if command_config.options is defined %}
+{% endfor %}
+{%- for option in cmd.options if cmd.options %}
                 .arg(
                     Arg::new("{{ option.name }}")
                         .long("{{ option.name }}")
                         {%- if option.short is defined and option.short and option.short != 'None' %}
                         .short('{{ option.short }}')
-                        {%- endif %}
+                        {% endif %}
                         .help("{{ (option.description if option.description is defined else 'No description') }}")
                         {%- if option.required is defined and option.required %}
                         .required(true)
-                        {%- endif %}
+                        {% endif %}
                         {%- if option.multiple is defined and option.multiple %}
                         .action(clap::ArgAction::Append)
                         {%- else %}
                         .action(clap::ArgAction::Set)
-                        {%- endif %}
+                        {% endif %}
                 )
-{%- endfor %}
+{% endfor %}
+{% endif %}
         )
-{%- endfor %};
+{% endfor %};
 
     let matches = app.get_matches();
     
@@ -1027,7 +1160,7 @@ fn main() {
             }
         }
     }
-    {%- endif %}
+    {% endif %}
 
     match matches.subcommand() {
         Some(("upgrade", sub_matches)) => {
@@ -1096,16 +1229,18 @@ fn main() {
                 }
             }
         }
-{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
-        Some(("{{ command_config.name }}", sub_matches)) => {
+{# Match commands using flat_commands for unlimited nesting support #}
+{%- for cmd in cli.command_hierarchy.flat_commands if cli.command_hierarchy and cli.command_hierarchy.flat_commands %}
+{% if not cmd.is_group %}
+        Some(("{{ ' '.join(cmd.path) }}", sub_matches)) => {
             // Enhanced error handling for Rust commands
-            let hook_name = "on_{{ command_config.name | replace('-', '_') }}";
-            match hooks::on_{{ command_config.name | replace('-', '_') }}(sub_matches) {
+            let hook_name = "{{ cmd.hook_name }}";
+            match hooks::{{ cmd.hook_name }}(sub_matches) {
                 Ok(_) => {
                     // Command executed successfully
                 }
                 Err(e) => {
-                    let error_context = format!("Command '{{ command_config.name }}' execution");
+                    let error_context = format!("Command '{{ ' '.join(cmd.path) }}' execution");
                     
                     // Check for specific error types
                     if e.to_string().contains("not implemented") {
@@ -1121,7 +1256,8 @@ fn main() {
                 }
             }
         }
-{%- endfor %}
+{% endif %}
+{% endfor %}
         _ => {
             eprintln!("No subcommand provided. Use --help for available commands.");
             process::exit(1);
