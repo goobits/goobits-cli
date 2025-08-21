@@ -24,6 +24,7 @@ import jinja2
 import time
 
 from .component_registry import ComponentRegistry
+from .command_hierarchy import CommandFlattener, HierarchyBuilder
 
 # Lazy import for heavy Pydantic schemas
 _config_schema = None
@@ -1376,7 +1377,79 @@ class UniversalTemplateEngine:
 
         
 
+        # NEW: Build command hierarchy for nested command support
+        if schema["commands"]:
+            flattener = CommandFlattener()
+            hierarchy_builder = HierarchyBuilder()
+            
+            # Extract flat commands from nested structure
+            flat_commands = flattener.flatten_commands(schema["commands"])
+            
+            # Build hierarchical structure for template rendering
+            command_hierarchy = hierarchy_builder.build_hierarchy(flat_commands)
+            
+            # Add hierarchy to schema for template access
+            schema["command_hierarchy"] = {
+                "groups": [self._serialize_command_group(group) for group in command_hierarchy.groups],
+                "leaves": [self._serialize_flat_command(leaf) for leaf in command_hierarchy.leaves],
+                "max_depth": command_hierarchy.max_depth,
+                "flat_commands": [self._serialize_flat_command(cmd) for cmd in flat_commands]
+            }
+        else:
+            schema["command_hierarchy"] = {
+                "groups": [],
+                "leaves": [],
+                "max_depth": 0,
+                "flat_commands": []
+            }
+
         return schema
+
+    def _serialize_command_group(self, group) -> Dict[str, Any]:
+        """Serialize CommandGroup for template rendering."""
+        return {
+            "name": group.name,
+            "path": group.path,
+            "description": group.description,
+            "arguments": group.arguments,
+            "options": group.options,
+            "hook_name": group.hook_name,
+            "subcommands": [self._serialize_command_node(node) for node in group.subcommands],
+            "depth": group.depth,
+            "parent_path": group.path[:-1] if group.path else [],
+            "click_decorator": self._get_click_decorator(group.path)
+        }
+    
+    def _serialize_flat_command(self, command) -> Dict[str, Any]:
+        """Serialize FlatCommand for template rendering."""
+        return {
+            "name": command.name,
+            "path": command.path,
+            "description": command.description,
+            "arguments": command.arguments,
+            "options": command.options,
+            "hook_name": command.hook_name,
+            "is_group": command.is_group,
+            "parent_path": command.parent_path,
+            "depth": command.depth,
+            "click_decorator": self._get_click_decorator(command.path)
+        }
+    
+    def _serialize_command_node(self, node) -> Dict[str, Any]:
+        """Serialize CommandNode for template rendering."""
+        return {
+            "command": self._serialize_flat_command(node.command),
+            "children": [self._serialize_command_node(child) for child in node.children],
+            "is_leaf": node.is_leaf
+        }
+    
+    def _get_click_decorator(self, command_path: List[str]) -> str:
+        """Generate Click decorator for command path."""
+        if len(command_path) <= 1:
+            return "main"
+        else:
+            parent_path = command_path[:-1]
+            return ".".join(parent_path).replace('-', '_')
 
     
 

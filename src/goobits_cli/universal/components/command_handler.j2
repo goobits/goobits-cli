@@ -442,13 +442,143 @@ def upgrade(check, version, pre, dry_run):
         import sys
         sys.exit(1)
 
+{# NEW: Hierarchical Command Generation using Flat + Post-Processing approach #}
+{%- if cli.command_hierarchy and cli.command_hierarchy.flat_commands %}
+
+{# Macro for rendering a single command with proper decorators #}
+{% macro render_command(cmd) -%}
+{% if cmd.is_group -%}
+@{{ cmd.click_decorator }}.group()
+{% else -%}
+@{{ cmd.click_decorator }}.command()
+{% endif -%}
+{% for arg in cmd.arguments if cmd.arguments -%}
+@click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
+{% endfor -%}
+{% for option in cmd.options if cmd.options -%}
+@click.option(
+    "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
+    help="{{ (option.description if option.description is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
+    is_flag=True{% elif option.type is defined and option.type == "integer" %},
+    type=int{% elif option.type is defined and option.type == "float" %},
+    type=float{% endif %},
+{%- if option.default is defined and option.default is not none %}
+    default={{ option.default | repr }},
+{%- endif %}
+    {%- if option.required is defined and option.required %}
+    required=True,
+    {%- endif %}
+    {%- if option.multiple is defined and option.multiple %}
+    multiple=True,
+    {%- endif %}
+)
+{% endfor -%}
+@click.pass_context
+def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.arguments %}, {{ arg.name.lower() }}{% endfor %}{% for option in cmd.options if cmd.options %}, {{ option.name.replace('-', '_') }}{% endfor %}):
+    """{{ (cmd.description if cmd.description else ('Command ' + cmd.name)) }}"""
+    
+{%- if cmd.is_group %}
+    # This is a group command - subcommands will handle the actual logic
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+{%- else %}
+    # Enhanced error handling for Python CLI
+    verbose_path = ['verbose']
+    current_ctx = ctx
+    verbose = False
+    
+    # Navigate up the context chain to find verbose flag
+    while current_ctx:
+        if hasattr(current_ctx, 'params') and 'verbose' in current_ctx.params:
+            verbose = current_ctx.params['verbose']
+            break
+        current_ctx = current_ctx.parent
+    
+    try:
+        if hooks is None:
+            # Provide helpful error with search paths
+            package_name = "{{ project.package_name if project.package_name else 'unknown' }}"
+            
+            error_msg = f"Hook implementation not found. Expected: app_hooks.py"
+            
+            raise ConfigError(
+                error_msg,
+                suggestion=f"Create app_hooks.py with function: def {{ cmd.hook_name }}(...): pass"
+            )
+        
+        hook_name = '{{ cmd.hook_name }}'
+        if not hasattr(hooks, hook_name):
+            available_hooks = [name for name in dir(hooks) if not name.startswith('_') and callable(getattr(hooks, name))]
+            raise ConfigError(
+                f"Hook function '{hook_name}' not found in app_hooks.py",
+                suggestion=f"Available functions: {', '.join(available_hooks) if available_hooks else 'none'}"
+            )
+        
+        hook_function = getattr(hooks, hook_name)
+        
+        # Prepare arguments and options for the hook
+        args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name.lower() }}{% if not loop.last %}, {% endif %}{% endfor %}]
+        options = {
+        {%- for option in cmd.options if cmd.options %}
+            '{{ option.name.replace('-', '_') }}': {{ option.name.replace('-', '_') }}{% if not loop.last %},{% endif %}
+        {%- endfor %}
+        }
+        
+        # Execute the hook function with signature-aware parameter filtering
+        sig = inspect.signature(hook_function)
+        expected_params = set(sig.parameters.keys())
+        accepts_kwargs = any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values())
+        
+        # Build kwargs with parameters the function expects
+        call_kwargs = {}
+        
+        # Add positional arguments as kwargs if function expects them
+        {% for arg in cmd.arguments if cmd.arguments %}
+        if '{{ arg.name.lower() }}' in expected_params or accepts_kwargs:
+            call_kwargs['{{ arg.name.lower() }}'] = {{ arg.name.lower() }}
+        {% endfor %}
+        
+        # Add options that the function expects or if it accepts **kwargs
+        for param_name, param_value in options.items():
+            if param_name in expected_params or accepts_kwargs:
+                call_kwargs[param_name] = param_value
+        
+        # Call the hook function
+        try:
+            result = hook_function(**call_kwargs)
+        except TypeError as te:
+            raise HookError(
+                f"Hook function signature mismatch: {te}",
+                hook_name=hook_name
+            )
+        
+        # Handle return codes
+        if isinstance(result, int) and result != 0:
+            click.echo(f"Command '{{ ' '.join(cmd.path) }}' failed with exit code {result}", err=True)
+            sys.exit(result)
+            
+    except KeyboardInterrupt:
+        click.echo("\\n⚠️  Command interrupted by user", err=True)
+        sys.exit(130)
+        
+    except Exception as e:
+        exit_code = handle_cli_error(e, verbose)
+        sys.exit(exit_code)
+{%- endif %}
+
+{%- endmacro %}
+
+{# Render all commands in correct order (parents before children) #}
+{%- for cmd in cli.command_hierarchy.flat_commands %}
+
+{{ render_command(cmd) }}
+{%- endfor %}
+
+{%- else %}
+{# Fallback to legacy command rendering if no hierarchy available #}
 {% for command_name, command_config in cli.commands.items() if cli.commands %}
 
-{%- if command_config.subcommands and command_config.subcommands|length > 0 %}
-@main.group()
-{%- else %}
 @main.command()
-{%- endif %}
 
 {% for arg in command_config.arguments if command_config.arguments %}
 @click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
@@ -667,6 +797,7 @@ def {{ subcommand.name.replace('-', '_') }}(ctx{% for arg in subcommand.argument
 {%- endif %}
 
 {%- endfor %}
+{%- endif %}
 
 if __name__ == "__main__":
     main()
