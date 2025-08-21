@@ -216,8 +216,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert "serve" in result.stdout
         assert "upgrade" in result.stdout
 
-    @patch('goobits_cli.main.generate_cli_code')
-    def test_build_command_basic(self, mock_generate):
+    def test_build_command_basic(self):
         """Test basic build command functionality."""
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)

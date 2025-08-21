@@ -265,6 +265,32 @@ class PythonRenderer(LanguageRenderer):
         if "cli" in context:
 
             context["cli"] = self._transform_cli_for_python(context["cli"])
+            
+            # Ensure command_hierarchy is present in CLI section for template compatibility
+            if "command_hierarchy" not in context["cli"]:
+                context["cli"]["command_hierarchy"] = {
+                    "groups": [],
+                    "leaves": [],
+                    "max_depth": 0,
+                    "flat_commands": []
+                }
+
+        
+        # Ensure command_hierarchy is present for template compatibility
+
+        if "command_hierarchy" not in context:
+
+            context["command_hierarchy"] = {
+
+                "groups": [],
+
+                "leaves": [],
+
+                "max_depth": 0,
+
+                "flat_commands": []
+
+            }
 
         
 

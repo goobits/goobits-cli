@@ -734,7 +734,8 @@ Test template with filters:
         """Test lazy loading setup"""
         # Test with lazy loading enabled (default)
         engine = UniversalTemplateEngine(self.templates_dir, enable_lazy_loading=True)
-        assert engine.lazy_loader is None  # No performance components available
+        assert engine.lazy_loader is not None  # LazyLoader object should be created
+        assert hasattr(engine.lazy_loader, 'strategy')  # Should have strategy attribute
         
         # Test with lazy loading disabled
         engine2 = UniversalTemplateEngine(self.templates_dir, enable_lazy_loading=False)
