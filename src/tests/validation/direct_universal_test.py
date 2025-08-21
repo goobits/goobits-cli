@@ -51,7 +51,7 @@ def test_universal_templates():
         
         try:
             # Register renderer
-            engine.register_renderer(renderer)
+            engine.register_renderer(language_name, renderer)
             
             # Test configuration with this language  
             test_config = config.model_copy()

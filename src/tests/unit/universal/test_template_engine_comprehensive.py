@@ -1641,13 +1641,20 @@ Camel case: {{ project.name | camel_case }}
         
         # Check dependency extraction - main dependencies
         deps = ir["dependencies"]
-        assert "click" in deps["python"]
-        assert "pydantic" in deps["python"]
-        assert "requests" in deps["python"]
+        # String dependencies are normalized to type="command" and placed in system dependencies
+        assert "click" in deps["system"]
+        assert "pydantic" in deps["system"]
+        assert "requests" in deps["system"]
+        assert "git" in deps["system"]  # From installation.extras.apt
         
-        # Check extras dependencies are properly structured
+        # Check dependencies are properly structured
         assert "python" in deps
-        assert len(deps["python"]) == 3  # click, pydantic, requests
+        assert "system" in deps
+        assert "npm" in deps
+        assert len(deps["system"]) == 4  # click, pydantic, requests, git (from apt extras)
+        assert len(deps["python"]) == 0  # No Python dependencies since strings are normalized to type="command"
+        assert len(deps["npm"]) == 1  # prettier from installation.extras.npm
+        assert "prettier" in deps["npm"]
 
 
 class TestComponentMetadata:
