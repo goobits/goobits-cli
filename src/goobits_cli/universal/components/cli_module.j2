@@ -273,7 +273,7 @@ def cli(ctx, verbose):
 def {{ command_name | replace('-', '_') }}(ctx{% if command.args %}, {{ command.args | map(attribute='name') | map('lower') | join(', ') }}{% endif %}{% if command.options %}, {{ command.options | map(attribute='name') | map('replace', '-', '_') | join(', ') }}{% endif %}):
     """{{ command.desc | default('No description provided') }}"""
     try:
-        hook_manager.execute_hook('on_{{ command_name | replace('-', '_') }}'{% if command.args %}, {{ command.args | map(attribute='name') | map('lower') | join(', ') }}{% endif %}{% if command.options %}, {{ command.options | map(attribute='name') | map('replace', '-', '_') | join('=', '=') | join(', ') | replace('=', '=') }}{% endif %})
+        hook_manager.execute_hook('on_{{ command_name | replace('-', '_') }}'{% if command.args %}, {{ command.args | map(attribute='name') | map('lower') | join(', ') }}{% endif %}{% if command.options %}{% for option in command.options %}, {{ option.name | replace('-', '_') }}={{ option.name | replace('-', '_') }}{% endfor %}{% endif %})
     except Exception as e:
         if ctx.obj.get('verbose'):
             raise

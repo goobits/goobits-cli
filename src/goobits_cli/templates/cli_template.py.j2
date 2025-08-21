@@ -284,8 +284,8 @@ def _find_and_import_hooks():
                     hooks_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(hooks_module)
                     return hooks_module
-    except Exception:
-        pass
+    except (ImportError, AttributeError):
+        pass  # Expected when hook file/function doesn't exist
     
     {% else %}
     # No hooks path configured, try default locations
@@ -326,8 +326,8 @@ def _find_and_import_hooks():
                     hooks_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(hooks_module)
                     return hooks_module
-    except Exception:
-        pass
+    except (ImportError, AttributeError):
+        pass  # Expected when hook file/function doesn't exist
     {% endif %}
     
     return None
@@ -641,8 +641,8 @@ def get_version():
             match = re.search(r'version\s*=\s*["\']([^"\']+)["\']', content)
             if match:
                 return match.group(1)
-    except Exception:
-        pass
+    except (FileNotFoundError, PermissionError, OSError):
+        pass  # Expected when version file doesn't exist or can't be read
     
     try:
         # Fallback to __init__.py
@@ -652,8 +652,8 @@ def get_version():
             match = re.search(r'__version__\s*=\s*["\']([^"\']+)["\']', content)
             if match:
                 return match.group(1)
-    except Exception:
-        pass
+    except (FileNotFoundError, PermissionError, OSError):
+        pass  # Expected when version file doesn't exist or can't be read
         
     # Final fallback
     return "1.0.0"
@@ -742,7 +742,8 @@ class DefaultGroup(VersionedRichGroup):
                 # Check if stdin is a pipe or file (not a terminal)
                 stdin_stat = os.fstat(sys.stdin.fileno())
                 has_stdin = stat.S_ISFIFO(stdin_stat.st_mode) or stat.S_ISREG(stdin_stat.st_mode)
-            except Exception:
+            except (OSError, AttributeError):
+                # Expected when stdin detection fails
                 # Fallback to isatty check
                 has_stdin = not sys.stdin.isatty()
             

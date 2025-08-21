@@ -100,7 +100,7 @@ class EndToEndIntegrationTester:
     def create_comprehensive_test_config(self, language: str, test_name: str = "e2e_test") -> GoobitsConfigSchema:
         """Create a comprehensive test configuration with multiple command types."""
         config_data = {
-            "package_name": f"{test_name}-{language}",
+            "package_name": f"{test_name.replace('-', '_')}_{language}",
             "command_name": f"{test_name.replace('-', '_')}_{language}",
             "display_name": f"{test_name.title()} {language.title()} CLI",
             "description": f"End-to-end integration test CLI for {language}",
@@ -496,11 +496,40 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                 # Step 5: Create hook implementations
                 hooks = self.create_hook_implementations(temp_dir, language)
                 for hook_file, hook_content in hooks.items():
-                    hook_path = Path(temp_dir) / hook_file
+                    # For Python with Universal Templates, put hook file in same directory as CLI
+                    if language == "python":
+                        # Find where the CLI file was generated
+                        cli_dir = None
+                        for filename in all_files.keys():
+                            if filename.endswith('/cli.py'):
+                                # Extract the directory part
+                                cli_dir = Path(filename).parent
+                                break
+                        
+                        if cli_dir:
+                            # Put hook file in same directory as CLI
+                            hook_path = Path(temp_dir) / cli_dir / hook_file
+                        else:
+                            # Fallback to root directory
+                            hook_path = Path(temp_dir) / hook_file
+                    else:
+                        hook_path = Path(temp_dir) / hook_file
+                    
                     hook_path.parent.mkdir(parents=True, exist_ok=True)
                     hook_path.write_text(hook_content)
                 
                 result.warnings.append(f"Created {len(hooks)} hook files")
+                
+                # Debug: Show where hook files were placed
+                for hook_file in hooks.keys():
+                    if language == "python" and cli_dir:
+                        actual_path = Path(temp_dir) / cli_dir / hook_file
+                    else:
+                        actual_path = Path(temp_dir) / hook_file
+                    if actual_path.exists():
+                        result.warnings.append(f"Hook file exists at: {actual_path.relative_to(temp_dir)}")
+                    else:
+                        result.warnings.append(f"Hook file NOT found at: {actual_path.relative_to(temp_dir)}")
                 
                 # Step 6: Test CLI installation and execution
                 execution_result = self._test_language_specific_integration(language, temp_dir, all_files, config)
@@ -908,21 +937,35 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
         
         patterns = search_patterns.get(language, [])
         
+        # First, try the direct patterns in the root directory
         for pattern in patterns:
             cli_path = Path(temp_dir) / pattern
             if cli_path.exists():
                 return cli_path
         
-        # Fallback: look for any relevant file
+        # Second, look for generated files with their full relative path structure
+        # Files are written as temp_dir/relative_path where relative_path comes from all_files.keys()
         for filename in all_files.keys():
             if language == "python" and filename.endswith('.py'):
-                cli_path = Path(temp_dir) / filename
-                if cli_path.exists():
-                    return cli_path
+                # Check if this is a main CLI file (not __init__.py or other utility files)
+                if 'cli.py' in filename or filename in ['main.py', 'generated_cli.py']:
+                    cli_path = Path(temp_dir) / filename  # filename already includes the relative path
+                    if cli_path.exists():
+                        return cli_path
             elif language in ["nodejs", "typescript"] and filename.endswith(('.js', '.ts')):
-                cli_path = Path(temp_dir) / filename
-                if cli_path.exists():
-                    return cli_path
+                # Check if this looks like a main CLI file
+                if any(pattern in filename for pattern in ['cli.js', 'cli.ts', 'index.js', 'index.ts', 'app.js']):
+                    cli_path = Path(temp_dir) / filename
+                    if cli_path.exists():
+                        return cli_path
+        
+        # Third, fallback to any Python file for Python projects (excluding utility files)
+        if language == "python":
+            for filename in all_files.keys():
+                if filename.endswith('.py') and '__init__.py' not in filename:
+                    cli_path = Path(temp_dir) / filename
+                    if cli_path.exists():
+                        return cli_path
         
         return None
     
@@ -1235,6 +1278,15 @@ if PYTEST_AVAILABLE:
         def test_end_to_end_integration_workflow(self):
             """Test complete end-to-end integration workflow."""
             results = self.integration_tester.test_end_to_end_integration_workflow()
+            
+            # Debug: Show test results
+            for r in results:
+                print(f"\n{r.language} results:")
+                print(f"  Success: {r.success}")
+                print(f"  Hook executed: {r.hook_executed}")
+                print(f"  Warnings: {r.warnings}")
+                if r.error_message:
+                    print(f"  Error: {r.error_message}")
             
             # At least one language should work end-to-end
             successful_results = [r for r in results if r.success]

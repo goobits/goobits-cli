@@ -468,7 +468,7 @@ export async function cli(): Promise<void> {
   {% for option in cli.options %}
   program
     .option(
-      '{% if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <{{ option.type }}>{% endif %}',
+      '{% if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %}{% if option.default is not none %} [{{ option.type }}]{% else %} <{{ option.type }}>{% endif %}{% endif %}',
       '{{ option.desc }}'
       {%- if option.default is not none %},
       {% if option.default is sameas true %}true{% elif option.default is sameas false %}false{% elif option.default is number %}{{ option.default }}{% else %}'{{ option.default }}'{% endif %}
@@ -569,13 +569,10 @@ export async function cli(): Promise<void> {
   {% if not cmd_data.subcommands %}
   {
     const cmd = program
-      .command('{{ cmd_name }}')
+      .command('{{ cmd_name }}'{% if cmd_data.is_default %}, { isDefault: true }{% endif %})
       .description('{% if cmd_data.icon %}{{ cmd_data.icon }} {% endif %}{{ cmd_data.desc }}')
       {% if cmd_data.alias %}
       .alias('{{ cmd_data.alias }}')
-      {% endif %}
-      {% if cmd_data.is_default %}
-      .isDefault(true)
       {% endif %};
 
     {% if cmd_data.args %}
@@ -593,7 +590,7 @@ export async function cli(): Promise<void> {
     {% if cmd_data.options %}
     {% for opt in cmd_data.options %}
     cmd.option(
-      '{% if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %} <{{ opt.type }}>{% endif %}',
+      '{% if opt.short %}-{{ opt.short }}, {% endif %}--{{ opt.name }}{% if opt.type != "flag" %}{% if opt.default is not none %} [{{ opt.type }}]{% else %} <{{ opt.type }}>{% endif %}{% endif %}',
       '{{ opt.desc }}'
       {%- if opt.default is not none %},
       {% if opt.default is sameas true %}true{% elif opt.default is sameas false %}false{% elif opt.default is number %}{{ opt.default }}{% else %}'{{ opt.default }}'{% endif %}

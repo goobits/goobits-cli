@@ -772,7 +772,10 @@ def build(
 
     typer.echo(f"Detected language: {language}")
 
-    
+    # Show experimental warning for Universal Template System
+    if universal_templates:
+        typer.echo("⚠️  WARNING: Universal Template System is experimental. Use at your own risk.", err=True)
+        typer.echo("   For production use, omit --universal-templates flag to use stable legacy templates.", err=True)
 
     typer.echo("Generating CLI script...")
 

@@ -1,8 +1,8 @@
 /**
 
- * Hook functions for TestTSCLI
+ * Hook functions for NodeJSTestCLI
 
- * Auto-generated from test_typescript_cli.yaml
+ * Auto-generated from test_typescript_2level.yaml
 
  * 
 
@@ -48,7 +48,7 @@ export async function onUnknownCommand(args: CommandArgs): Promise<void> {
 
 /**
 
- * Hook function for 'hello' command
+ * Hook function for 'init' command
 
  * @param args - Command arguments and options
 
@@ -56,11 +56,11 @@ export async function onUnknownCommand(args: CommandArgs): Promise<void> {
 
  */
 
-export async function onHello(args: CommandArgs): Promise<void> {
+export async function onInit(args: CommandArgs): Promise<void> {
 
-    // TODO: Implement your 'hello' command logic here
+    // TODO: Implement your 'init' command logic here
 
-    console.log('🚀 Executing hello command...');
+    console.log('🚀 Executing init command...');
 
     console.log('   Command:', args.commandName);
 
@@ -80,13 +80,13 @@ export async function onHello(args: CommandArgs): Promise<void> {
 
     
 
-    console.log('✅ hello command completed successfully!');
+    console.log('✅ init command completed successfully!');
 
 }
 
 /**
 
- * Hook function for 'build' command
+ * Hook function for 'deploy' command
 
  * @param args - Command arguments and options
 
@@ -94,11 +94,11 @@ export async function onHello(args: CommandArgs): Promise<void> {
 
  */
 
-export async function onBuild(args: CommandArgs): Promise<void> {
+export async function onDeploy(args: CommandArgs): Promise<void> {
 
-    // TODO: Implement your 'build' command logic here
+    // TODO: Implement your 'deploy' command logic here
 
-    console.log('🚀 Executing build command...');
+    console.log('🚀 Executing deploy command...');
 
     console.log('   Command:', args.commandName);
 
@@ -118,6 +118,120 @@ export async function onBuild(args: CommandArgs): Promise<void> {
 
     
 
-    console.log('✅ build command completed successfully!');
+    console.log('✅ deploy command completed successfully!');
+
+}
+
+/**
+
+ * Hook function for 'server' command
+
+ * @param args - Command arguments and options
+
+ * @returns Promise<void>
+
+ */
+
+export async function onServer(args: CommandArgs): Promise<void> {
+
+    // TODO: Implement your 'server' command logic here
+
+    console.log('🚀 Executing server command...');
+
+    console.log('   Command:', args.commandName);
+
+    
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
+    }
+
+    
+
+    console.log('✅ server command completed successfully!');
+
+}
+
+/**
+
+ * Hook function for 'database' command
+
+ * @param args - Command arguments and options
+
+ * @returns Promise<void>
+
+ */
+
+export async function onDatabase(args: CommandArgs): Promise<void> {
+
+    // TODO: Implement your 'database' command logic here
+
+    console.log('🚀 Executing database command...');
+
+    console.log('   Command:', args.commandName);
+
+    
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
+    }
+
+    
+
+    console.log('✅ database command completed successfully!');
+
+}
+
+/**
+
+ * Hook function for 'test' command
+
+ * @param args - Command arguments and options
+
+ * @returns Promise<void>
+
+ */
+
+export async function onTest(args: CommandArgs): Promise<void> {
+
+    // TODO: Implement your 'test' command logic here
+
+    console.log('🚀 Executing test command...');
+
+    console.log('   Command:', args.commandName);
+
+    
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
+    }
+
+    
+
+    console.log('✅ test command completed successfully!');
 
 }

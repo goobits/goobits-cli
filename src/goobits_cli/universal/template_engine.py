@@ -1292,6 +1292,7 @@ class UniversalTemplateEngine:
                                 "required": opt_dict.get("required", False),
                                 "short": opt_dict.get("short"),
                                 "default": opt_dict.get("default"),
+                                "multiple": opt_dict.get("multiple", False),
                             })
                     
                     # Handle nested subcommands
@@ -1506,56 +1507,86 @@ class UniversalTemplateEngine:
             
 
             # Extract arguments and options similar to main commands
+            # Handle both dict and object cases
+            if isinstance(cmd, dict):
+                # Subcommands come as dictionaries
+                args = cmd.get('args', [])
+                options = cmd.get('options', [])
+            else:
+                # Main commands come as objects
+                args = getattr(cmd, 'args', []) if hasattr(cmd, 'args') else []
+                options = getattr(cmd, 'options', []) if hasattr(cmd, 'options') else []
 
-            if hasattr(cmd, 'args') and cmd.args:
-
-                for arg in cmd.args:
+            if args:
+                for arg in args:
+                    # Handle both dict and object arg formats
+                    if isinstance(arg, dict):
+                        arg_name = arg.get('name')
+                        arg_desc = arg.get('desc', '')
+                        arg_type = arg.get('type', 'string')
+                        arg_required = arg.get('required', True)
+                        arg_nargs = arg.get('nargs')
+                    else:
+                        arg_name = _safe_get_attr(arg, "name")
+                        arg_desc = _safe_get_attr(arg, "desc")
+                        arg_type = _safe_get_attr(arg, "type", "string")
+                        arg_required = _safe_get_attr(arg, "required", True)
+                        arg_nargs = _safe_get_attr(arg, "nargs")
 
                     command_data["arguments"].append({
-
-                        "name": _safe_get_attr(arg, "name"),
-
-                        "description": _safe_get_attr(arg, "desc"),
-
-                        "type": _safe_get_attr(arg, "type", "string"),
-
-                        "required": _safe_get_attr(arg, "required", True),
-
-                        "multiple": _safe_get_attr(arg, "nargs") == "*",
-
+                        "name": arg_name,
+                        "description": arg_desc,
+                        "type": arg_type,
+                        "required": arg_required,
+                        "multiple": arg_nargs == "*",
                     })
 
             
 
-            if hasattr(cmd, 'options') and cmd.options:
+            # Options handling (already extracted above for dict case)
+            if not isinstance(cmd, dict) and hasattr(cmd, 'options') and cmd.options:
+                options = cmd.options
+            
+            if options:
 
-                for opt in cmd.options:
+                for opt in options:
+                    # Handle both dict and object option formats
+                    if isinstance(opt, dict):
+                        opt_name = opt.get('name')
+                        opt_short = opt.get('short')
+                        opt_desc = opt.get('desc', '')
+                        opt_type = opt.get('type', 'str')
+                        opt_default = opt.get('default')
+                        opt_multiple = opt.get('multiple', False)
+                    else:
+                        opt_name = _safe_get_attr(opt, "name")
+                        opt_short = _safe_get_attr(opt, "short")
+                        opt_desc = _safe_get_attr(opt, "desc")
+                        opt_type = _safe_get_attr(opt, "type", "str")
+                        opt_default = _safe_get_attr(opt, "default")
+                        opt_multiple = _safe_get_attr(opt, "multiple", False)
 
                     command_data["options"].append({
-
-                        "name": _safe_get_attr(opt, "name"),
-
-                        "short": _safe_get_attr(opt, "short"),
-
-                        "description": _safe_get_attr(opt, "desc"),
-
-                        "type": _safe_get_attr(opt, "type", "str"),
-
-                        "default": _safe_get_attr(opt, "default"),
-
+                        "name": opt_name,
+                        "short": opt_short,
+                        "description": opt_desc,
+                        "type": opt_type,
+                        "default": opt_default,
                         "required": False,
-
-                        "multiple": _safe_get_attr(opt, "multiple", False),
-
+                        "multiple": opt_multiple,
                     })
 
             
 
             # Recursively handle nested subcommands
+            if isinstance(cmd, dict):
+                nested_subcommands = cmd.get('subcommands')
+            else:
+                nested_subcommands = getattr(cmd, 'subcommands', None) if hasattr(cmd, 'subcommands') else None
 
-            if hasattr(cmd, 'subcommands') and cmd.subcommands:
+            if nested_subcommands:
 
-                command_data["subcommands"] = self._extract_subcommands_dict(cmd.subcommands)
+                command_data["subcommands"] = self._extract_subcommands_dict(nested_subcommands)
 
             
 
@@ -1631,9 +1662,13 @@ class UniversalTemplateEngine:
 
             
 
-            if hasattr(cmd, 'options') and cmd.options:
+            # Options handling (already extracted above for dict case)
+            if not isinstance(cmd, dict) and hasattr(cmd, 'options') and cmd.options:
+                options = cmd.options
+            
+            if options:
 
-                for opt in cmd.options:
+                for opt in options:
 
                     command_data["options"].append({
 
@@ -1717,11 +1752,18 @@ class UniversalTemplateEngine:
                 for dep in _safe_get_attr(dependencies_obj, 'required', []):
 
                     if hasattr(dep, 'name'):  # DependencyItem object
-
-                        dependencies["python"].append(_safe_get_attr(dep, "name"))
+                        dep_name = _safe_get_attr(dep, "name")
+                        dep_type = _safe_get_attr(dep, "type", "python")
+                        
+                        # Only add to Python dependencies if it's not a system command
+                        if dep_type != "command":
+                            dependencies["python"].append(dep_name)
+                        else:
+                            # System commands go to system dependencies
+                            dependencies["system"].append(dep_name)
 
                     else:  # String
-
+                        # Assume strings are Python dependencies
                         dependencies["python"].append(dep)
 
             
@@ -1733,11 +1775,18 @@ class UniversalTemplateEngine:
                 for dep in _safe_get_attr(dependencies_obj, 'optional', []):
 
                     if hasattr(dep, 'name'):  # DependencyItem object
-
-                        dependencies["python"].append(_safe_get_attr(dep, "name"))
+                        dep_name = _safe_get_attr(dep, "name")
+                        dep_type = _safe_get_attr(dep, "type", "python")
+                        
+                        # Only add to Python dependencies if it's not a system command
+                        if dep_type != "command":
+                            dependencies["python"].append(dep_name)
+                        else:
+                            # System commands go to system dependencies
+                            dependencies["system"].append(dep_name)
 
                     else:  # String
-
+                        # Assume strings are Python dependencies
                         dependencies["python"].append(dep)
 
         
@@ -1747,19 +1796,29 @@ class UniversalTemplateEngine:
         installation_obj = _safe_get_attr(config, 'installation')
         if installation_obj:
 
-            extras = _safe_get_attr(installation_obj, 'extras', {})
+            extras_obj = _safe_get_attr(installation_obj, 'extras')
+            
+            if extras_obj:
+                # Convert Pydantic model to dict if necessary
+                extras = _safe_to_dict(extras_obj)
 
-            if isinstance(extras, dict):
-
-                # NOTE: extras.python contains pip extras (like "dev", "test") not actual packages
-                # These are used for installation (pip install package[dev]) not as dependencies
-                # Only add system packages and specific package managers that are actual packages
+                # Python extras from installation.extras.python are meant for optional-dependencies
+                # NOT for main dependencies. Skip adding them to main dependencies to avoid
+                # pip install errors like "No matching distribution found for dev"
+                python_extras = extras.get("python", [])
+                # NOTE: These are handled separately in pyproject.toml template as optional-dependencies
                 
-                dependencies["system"].extend(extras.get("apt", []))
+                apt_extras = extras.get("apt", [])
+                if apt_extras:
+                    dependencies["system"].extend(apt_extras)
 
-                dependencies["npm"].extend(extras.get("npm", []))
+                npm_extras = extras.get("npm", [])
+                if npm_extras:
+                    dependencies["npm"].extend(npm_extras)
 
-                dependencies["rust"].extend(extras.get("cargo", []))
+                cargo_extras = extras.get("cargo", [])
+                if cargo_extras:
+                    dependencies["rust"].extend(cargo_extras)
 
         
 

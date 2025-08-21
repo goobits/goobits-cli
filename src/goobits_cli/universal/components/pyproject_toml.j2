@@ -48,6 +48,11 @@ dependencies = [
     "click>=8.0.0",
     "rich-click>=1.6.0",
     "rich>=12.0.0"
+{%- if dependencies.python %}
+{%- for dep in dependencies.python %},
+    "{{ dep }}"
+{%- endfor %}
+{%- endif %}
 ]
 
 {%- if installation.extras and installation.extras.python %}

@@ -25,6 +25,7 @@ from rich_click import RichGroup
 import sys
 import traceback
 import inspect
+import builtins
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 try:
     from .{{ (cli.root_command.name if cli.root_command else project.command_name).replace('-', '_') }}_interactive import run_interactive
@@ -74,7 +75,7 @@ click.rich_click.USE_MARKDOWN = False  # Disable markdown to avoid conflicts
 click.rich_click.MARKUP_MODE = "rich"
 
 # Helper function to convert file path to Python import path
-def _path_to_import_path(file_path: str, package_name: str = "{{ project.package_name | default('') }}") -> tuple[str, str]:
+def _path_to_import_path(file_path: str, package_name: str = "{{ project.package_name | default('') | replace('-', '_') }}") -> tuple[str, str]:
     """Convert a file path like 'mypackage/cli/hooks.py' to import path 'mypackage.cli.hooks'"""
     # Remove .py extension
     clean_path = file_path.replace(".py", "")
@@ -116,10 +117,10 @@ def _find_and_import_hooks():
             package_parts = import_path.split(".")
             if len(package_parts) >= 2:
                 relative_import = ".".join(package_parts[1:])  # Remove package name
-                return importlib.import_module(f".{relative_import}", package="{{ project.package_name | default('') }}")
+                return importlib.import_module(f".{relative_import}", package="{{ project.package_name | default('') | replace('-', '_') }}")
         else:
             # Direct relative import
-            return importlib.import_module(f".{module_name}", package="{{ project.package_name | default('') }}")
+            return importlib.import_module(f".{module_name}", package="{{ project.package_name | default('') | replace('-', '_') }}")
     except ImportError:
         pass
     
@@ -158,13 +159,13 @@ def _find_and_import_hooks():
     
     # Strategy 1: Try package-relative import
     try:
-        return importlib.import_module(f"{{ project.package_name | default('') }}.{default_module_name}")
+        return importlib.import_module(f"{{ project.package_name | default('') | replace('-', '_') }}.{default_module_name}")
     except ImportError:
         pass
     
     # Strategy 2: Try relative import
     try:
-        return importlib.import_module(f".{default_module_name}", package="{{ project.package_name | default('') }}")
+        return importlib.import_module(f".{default_module_name}", package="{{ project.package_name | default('') | replace('-', '_') }}")
     except ImportError:
         pass
     
@@ -300,8 +301,8 @@ class VersionedRichGroup(RichGroup):
     is_flag=True,
     default=False
 )
-{% if cli.options %}
-{% for option in cli.options %}
+{% if cli.root_command.options %}
+{% for option in cli.root_command.options %}
 @click.option(
     "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
     help="{{ (option.description if option.description is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
@@ -321,7 +322,7 @@ class VersionedRichGroup(RichGroup):
 {% endfor %}
 {% endif %}
 @click.pass_context
-def main(ctx, verbose{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
+def main(ctx, verbose{% if cli.root_command.options %}{% for option in cli.root_command.options %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
     """{{ cli.tagline | default((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}
 
     \b
@@ -457,30 +458,24 @@ def upgrade(check, version, pre, dry_run):
 {% for option in cmd.options if cmd.options -%}
 @click.option(
     "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
-    help="{{ (option.description if option.description is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
-    is_flag=True{% elif option.type is defined and option.type == "integer" %},
-    type=int{% elif option.type is defined and option.type == "float" %},
-    type=float{% endif %},
-{%- if option.default is defined and option.default is not none %}
-    default={{ option.default | repr }},
-{%- endif %}
-    {%- if option.required is defined and option.required %}
-    required=True,
-    {%- endif %}
-    {%- if option.multiple is defined and option.multiple %}
-    multiple=True,
-    {%- endif %}
+    help="{{ (option.description if option.description is defined else 'No description') }}"{%- if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
+    is_flag=True{%- elif option.type is defined and option.type == "integer" %},
+    type=int{%- elif option.type is defined and option.type == "float" %},
+    type=float{%- endif %}{%- if option.default is defined and option.default is not none %},
+    default={{ option.default | repr }}{%- endif %}{%- if option.required is defined and option.required %},
+    required=True{%- endif %}{%- if option.multiple is defined and option.multiple %},
+    multiple=True{%- endif %}
 )
 {% endfor -%}
 @click.pass_context
 def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.arguments %}, {{ arg.name.lower() }}{% endfor %}{% for option in cmd.options if cmd.options %}, {{ option.name.replace('-', '_') }}{% endfor %}):
     """{{ (cmd.description if cmd.description else ('Command ' + cmd.name)) }}"""
     
-{%- if cmd.is_group %}
+{% if cmd.is_group %}
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
-{%- else %}
+{% else %}
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -518,14 +513,16 @@ def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.argum
         # Prepare arguments and options for the hook
         args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name.lower() }}{% if not loop.last %}, {% endif %}{% endfor %}]
         options = {
-        {%- for option in cmd.options if cmd.options %}
-            '{{ option.name.replace('-', '_') }}': {{ option.name.replace('-', '_') }}{% if not loop.last %},{% endif %}
-        {%- endfor %}
+{% for option in cmd.options if cmd.options -%}
+            '{{ option.name.replace('-', '_') }}': {{ option.name.replace('-', '_') }}{% if not loop.last %},
+{% else %}
+{% endif -%}
+{% endfor -%}
         }
         
         # Execute the hook function with signature-aware parameter filtering
         sig = inspect.signature(hook_function)
-        expected_params = set(sig.parameters.keys())
+        expected_params = builtins.set(sig.parameters.keys())
         accepts_kwargs = any(p.kind == p.VAR_KEYWORD for p in sig.parameters.values())
         
         # Build kwargs with parameters the function expects

@@ -1,0 +1,134 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev,test]"
+    
+    - name: Run linting
+      run: |
+        ruff check src/
+        mypy src/goobits_cli/
+    
+    - name: Run tests
+      run: |
+        pytest src/tests/ --cov=goobits_cli --cov-report=xml --cov-report=term-missing
+    
+    - name: Test CLI generation (Python)
+      run: |
+        goobits build --help
+        # Test basic CLI generation
+        echo "Testing Python CLI generation..."
+        cd /tmp && mkdir test-python && cd test-python
+        cat > goobits.yaml << EOF
+        package_name: test-python-cli
+        command_name: test-python
+        display_name: Test Python CLI
+        description: Test CLI for Python
+        language: python
+        cli:
+          name: test-python
+          version: 1.0.0
+          tagline: Test CLI
+          commands:
+            hello:
+              desc: Say hello
+              args:
+                - name: name
+                  desc: Name to greet
+                  required: false
+                  default: World
+        EOF
+        goobits build
+        python generated_cli.py --help
+    
+    - name: Test CLI generation (Node.js)
+      run: |
+        echo "Testing Node.js CLI generation..."
+        cd /tmp && mkdir test-nodejs && cd test-nodejs
+        cat > goobits.yaml << EOF
+        package_name: test-nodejs-cli
+        command_name: test-nodejs
+        display_name: Test Node.js CLI
+        description: Test CLI for Node.js
+        language: nodejs
+        cli:
+          name: test-nodejs
+          version: 1.0.0
+          tagline: Test CLI
+          commands:
+            hello:
+              desc: Say hello
+              args:
+                - name: name
+                  desc: Name to greet
+                  required: false
+                  default: World
+        EOF
+        goobits build
+        npm install
+        node cli.js --help
+    
+    - name: Test CLI generation (TypeScript)
+      run: |
+        echo "Testing TypeScript CLI generation..."
+        cd /tmp && mkdir test-typescript && cd test-typescript
+        cat > goobits.yaml << EOF
+        package_name: test-typescript-cli
+        command_name: test-typescript
+        display_name: Test TypeScript CLI
+        description: Test CLI for TypeScript
+        language: typescript
+        cli:
+          name: test-typescript
+          version: 1.0.0
+          tagline: Test CLI
+          commands:
+            hello:
+              desc: Say hello
+              args:
+                - name: name
+                  desc: Name to greet
+                  required: false
+                  default: World
+        EOF
+        goobits build
+        npm install
+        npx tsc --noEmit
+        node cli.js --help
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella

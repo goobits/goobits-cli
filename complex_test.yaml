@@ -1,0 +1,74 @@
+display_name: Complex CLI Test
+command_name: complexcli
+package_name: complexcli
+description: Complex test CLI to identify edge cases
+language: python
+
+installation:
+  pypi_name: complexcli
+  development_path: "."
+  extras:
+    python: []
+
+cli:
+  name: complexcli
+  version: "1.0.0"
+  description: Complex test CLI for edge case testing
+  tagline: Testing edge cases in Universal Template System
+
+  options:
+    - name: "config-file"
+      desc: "Path to config file"
+      type: "str"
+      short: "c"
+      default: null
+
+  commands:
+    process:
+      desc: Process files with multiple arguments and options
+      args:
+        - name: "input_file"
+          desc: "Input file to process"
+          type: "str"
+          required: true
+        - name: "output_file"
+          desc: "Output file"
+          type: "str"
+          required: false
+          default: "output.txt"
+      options:
+        - name: "format"
+          desc: "Output format"
+          type: "str"
+          short: "f"
+          default: "json"
+        - name: "verbose"
+          desc: "Verbose output"
+          type: "flag"
+          short: "v"
+          default: false
+        - name: "count"
+          desc: "Number of items to process"
+          type: "int"
+          short: "n"
+          default: 10
+
+    analyze:
+      desc: Analyze data with complex options
+      args:
+        - name: "data_path"
+          desc: "Path to data directory"
+          type: "str"
+          required: true
+      options:
+        - name: "recursive"
+          desc: "Recursive analysis"
+          type: "flag"
+          short: "r"
+          default: false
+        - name: "exclude"
+          desc: "Patterns to exclude"
+          type: "str"
+          short: "e"
+          multiple: true
+          default: []

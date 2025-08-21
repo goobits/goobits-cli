@@ -1,8 +1,8 @@
 /**
 
- * Hook functions for TestConflictCLI
+ * Hook functions for Test 3-Level Commands
 
- * Auto-generated from test_conflict.yaml
+ * Auto-generated from test_3level.yaml
 
  * 
 
@@ -16,7 +16,7 @@
 
 /**
 
- * Hook function for 'config' command
+ * Hook function for 'simple' command
 
  * @param {Object} args - Command arguments and options
 
@@ -24,11 +24,11 @@
 
  */
 
-export async function onConfig(args) {
+export async function onSimple(args) {
 
-    // TODO: Implement your 'config' command logic here
+    // TODO: Implement your 'simple' command logic here
 
-    console.log('🚀 Executing config command...');
+    console.log('🚀 Executing simple command...');
 
     console.log('   Command:', args.commandName);
 
@@ -48,7 +48,7 @@ export async function onConfig(args) {
 
     
 
-    console.log('✅ config command completed successfully!');
+    console.log('✅ simple command completed successfully!');
 
 }
 
@@ -56,7 +56,7 @@ export async function onConfig(args) {
 
 /**
 
- * Hook function for 'completion' command
+ * Hook function for 'api' command
 
  * @param {Object} args - Command arguments and options
 
@@ -64,11 +64,11 @@ export async function onConfig(args) {
 
  */
 
-export async function onCompletion(args) {
+export async function onApi(args) {
 
-    // TODO: Implement your 'completion' command logic here
+    // TODO: Implement your 'api' command logic here
 
-    console.log('🚀 Executing completion command...');
+    console.log('🚀 Executing api command...');
 
     console.log('   Command:', args.commandName);
 
@@ -88,7 +88,7 @@ export async function onCompletion(args) {
 
     
 
-    console.log('✅ completion command completed successfully!');
+    console.log('✅ api command completed successfully!');
 
 }
 
@@ -96,7 +96,7 @@ export async function onCompletion(args) {
 
 /**
 
- * Hook function for 'daemon' command
+ * Hook function for 'nested' command
 
  * @param {Object} args - Command arguments and options
 
@@ -104,11 +104,11 @@ export async function onCompletion(args) {
 
  */
 
-export async function onDaemon(args) {
+export async function onNested(args) {
 
-    // TODO: Implement your 'daemon' command logic here
+    // TODO: Implement your 'nested' command logic here
 
-    console.log('🚀 Executing daemon command...');
+    console.log('🚀 Executing nested command...');
 
     console.log('   Command:', args.commandName);
 
@@ -128,47 +128,7 @@ export async function onDaemon(args) {
 
     
 
-    console.log('✅ daemon command completed successfully!');
-
-}
-
-
-
-/**
-
- * Hook function for 'plugin' command
-
- * @param {Object} args - Command arguments and options
-
- * @returns {Promise<void>}
-
- */
-
-export async function onPlugin(args) {
-
-    // TODO: Implement your 'plugin' command logic here
-
-    console.log('🚀 Executing plugin command...');
-
-    console.log('   Command:', args.commandName);
-
-    
-
-    // Example: access raw arguments
-
-    if (args.rawArgs) {
-
-        Object.entries(args.rawArgs).forEach(([key, value]) => {
-
-            console.log(`   ${key}: ${value}`);
-
-        });
-
-    }
-
-    
-
-    console.log('✅ plugin command completed successfully!');
+    console.log('✅ nested command completed successfully!');
 
 }
 
