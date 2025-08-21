@@ -875,7 +875,15 @@ class TemplateCache:
             default_options.update(env_options)
             env = jinja2.Environment(loader=loader, **default_options)
 
-            
+            # Add pass-through filters for cross-language template compatibility
+            # These allow the template to compile even when language-specific filters are used
+            env.filters['js_string'] = lambda x: x  # JavaScript string escaping (pass-through for Python)
+            env.filters['python_type'] = lambda x: x  # Python type hints (pass-through for other languages)
+            env.filters['python_function_name'] = lambda x: x  # Python function naming (pass-through)
+            env.filters['rust_type'] = lambda x: x  # Rust type system (pass-through)
+            env.filters['ts_type'] = lambda x: x  # TypeScript types (pass-through)
+            env.filters['repr'] = repr  # Python repr() for default values
+            env.filters['tojson'] = str  # JSON serialization (pass-through)
 
             # Enable auto-reloading in development
 

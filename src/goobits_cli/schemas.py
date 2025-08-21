@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Any, Union, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 
@@ -81,6 +81,24 @@ class CommandSchema(BaseModel):
     options: Optional[List[OptionSchema]] = Field(default_factory=list)
 
     subcommands: Optional[Dict[str, "CommandSchema"]] = None
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_no_arguments_field(cls, data):
+        """Validate that 'arguments' field is not used - should be 'args' instead."""
+        if isinstance(data, dict) and 'arguments' in data:
+            raise ValueError(
+                "Invalid field 'arguments' in command configuration. "
+                "Please use 'args' instead. Example:\n"
+                "  commands:\n"
+                "    greet:\n"
+                "      desc: 'Greet someone'\n"
+                "      args:  # <-- Use 'args', not 'arguments'\n"
+                "        - name: name\n"
+                "          desc: 'Name to greet'\n"
+                "          type: string"
+            )
+        return data
 
 
 

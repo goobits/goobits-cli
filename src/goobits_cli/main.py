@@ -493,8 +493,9 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
         elif 'project' in data and 'scripts' in data['project']:
 
             # PEP 621 format
-
-            data['project']['scripts'][command_name] = f"{package_name}.{cli_module_name}:cli_entry"
+            # Convert package name hyphens to underscores for Python module naming
+            module_name = package_name.replace('-', '_')
+            data['project']['scripts'][command_name] = f"{module_name}.{cli_module_name}:cli_entry"
 
             typer.echo(f"✅ Updated PEP 621 entry point for '{command_name}'")
 
@@ -510,7 +511,9 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
 
                 data['project']['scripts'] = {}
 
-            data['project']['scripts'][command_name] = f"{package_name}.{cli_module_name}:cli_entry"
+            # Convert package name hyphens to underscores for Python module naming
+            module_name = package_name.replace('-', '_')
+            data['project']['scripts'][command_name] = f"{module_name}.{cli_module_name}:cli_entry"
 
             typer.echo(f"✅ Created entry point for '{command_name}'")
 
@@ -535,34 +538,36 @@ def update_pyproject_toml(project_dir: Path, package_name: str, command_name: st
             
 
             # Add setup.sh to package-data
+            # Convert package name hyphens to underscores for Python module naming
+            module_name = package_name.replace('-', '_')
 
-            if package_name not in data['tool']['setuptools']['package-data']:
+            if module_name not in data['tool']['setuptools']['package-data']:
 
-                data['tool']['setuptools']['package-data'][package_name] = ["setup.sh"]
+                data['tool']['setuptools']['package-data'][module_name] = ["setup.sh"]
 
-                typer.echo(f"✅ Added setup.sh to package-data for '{package_name}'")
+                typer.echo(f"✅ Added setup.sh to package-data for '{module_name}'")
 
             else:
 
-                existing = data['tool']['setuptools']['package-data'][package_name]
+                existing = data['tool']['setuptools']['package-data'][module_name]
 
                 if isinstance(existing, list) and "setup.sh" not in existing:
 
                     existing.append("setup.sh")
 
-                    typer.echo(f"✅ Added setup.sh to existing package-data for '{package_name}'")
+                    typer.echo(f"✅ Added setup.sh to existing package-data for '{module_name}'")
 
                 elif isinstance(existing, str) and existing != "setup.sh":
 
                     # Convert single string to list and add setup.sh
 
-                    data['tool']['setuptools']['package-data'][package_name] = [existing, "setup.sh"]
+                    data['tool']['setuptools']['package-data'][module_name] = [existing, "setup.sh"]
 
-                    typer.echo(f"✅ Added setup.sh to existing package-data for '{package_name}'")
+                    typer.echo(f"✅ Added setup.sh to existing package-data for '{module_name}'")
 
                 elif "setup.sh" in existing or existing == "setup.sh":
 
-                    typer.echo(f"ℹ️  setup.sh already in package-data for '{package_name}'")
+                    typer.echo(f"ℹ️  setup.sh already in package-data for '{module_name}'")
 
         
 
