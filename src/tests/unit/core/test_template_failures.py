@@ -147,7 +147,7 @@ echo "Setting up {{ project.name }}"
     
     def test_jinja2_template_syntax_error_handling(self):
         """Test handling of Jinja2 template syntax errors"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         renderer = FailingRenderer("python", "syntax_error")
         engine.register_renderer("python", renderer)
         
@@ -173,7 +173,7 @@ Invalid: {{ completely.undefined.variable }}
 """
         (self.components_dir / "undefined.j2").write_text(undefined_template)
         
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         
         class UndefinedRenderer(LanguageRenderer):
             @property
@@ -216,7 +216,7 @@ Invalid: {{ completely.undefined.variable }}
     
     def test_template_engine_memory_exhaustion(self):
         """Test template engine behavior under memory pressure"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         renderer = FailingRenderer("python", "memory_error")
         engine.register_renderer("python", renderer)
         
@@ -241,7 +241,7 @@ Main content here
 """
         (self.components_dir / "dependent.j2").write_text(dependent_template)
         
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         
         class DependencyRenderer(LanguageRenderer):
             @property
@@ -284,7 +284,7 @@ Main content here
     
     def test_cleanup_verification_on_partial_failures(self):
         """Test cleanup when generation fails mid-process"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         renderer = FailingRenderer("python", "partial_failure")
         engine.register_renderer("python", renderer)
         
@@ -314,7 +314,7 @@ Main content here
     
     def test_component_registry_failures(self):
         """Test component registry failure scenarios"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         
         # Mock component registry to simulate failures
         with patch.object(engine.component_registry, 'get_component') as mock_get:
@@ -351,7 +351,8 @@ Main content here
                     
                     engine = UniversalTemplateEngine(
                         self.components_dir,
-                        template_cache=mock_cache
+                        template_cache=mock_cache,
+                        test_mode=True
                     )
                     renderer = FailingRenderer("python")
                     engine.register_renderer("python", renderer)
@@ -368,7 +369,7 @@ Main content here
     
     def test_partial_file_generation_failures(self):
         """Test handling when some files generate successfully but others fail"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         
         class PartialFailureRenderer(LanguageRenderer):
             def __init__(self):
@@ -427,7 +428,7 @@ Main content here
     
     def test_error_message_propagation(self):
         """Test that error messages are properly propagated"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         renderer = FailingRenderer("python", "render_error")
         engine.register_renderer("python", renderer)
         
@@ -659,7 +660,7 @@ class TestTemplateEngineCleanup:
     
     def test_engine_state_after_failures(self):
         """Test that engine maintains consistent state after failures"""
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         renderer = FailingRenderer("python", "render_error")
         engine.register_renderer("python", renderer)
         
@@ -714,7 +715,7 @@ class TestTemplateEngineCleanup:
         large_template = "Large template content: " + "x" * 100000 + "\n{% invalid syntax"
         (self.components_dir / "large_broken.j2").write_text(large_template)
         
-        engine = UniversalTemplateEngine(self.components_dir)
+        engine = UniversalTemplateEngine(self.components_dir, test_mode=True)
         registry = engine.component_registry
         
         # Process large broken template

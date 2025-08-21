@@ -329,7 +329,9 @@ class UniversalTemplateEngine:
 
                  template_cache: Optional[TemplateCache] = None,
 
-                 enable_lazy_loading: bool = True):
+                 enable_lazy_loading: bool = True,
+
+                 test_mode: bool = False):
 
         """
 
@@ -344,6 +346,8 @@ class UniversalTemplateEngine:
             template_cache: Optional template cache for performance optimization
 
             enable_lazy_loading: Whether to enable lazy loading of components
+
+            test_mode: When True, disables performance optimizations and caching for testing
 
         """
 
@@ -369,9 +373,15 @@ class UniversalTemplateEngine:
         self._jinja_env = None
         self._jinja_initialized = False
 
+        # Store test mode for cache bypass
+
+        self.test_mode = test_mode
+
+        
+
         # Performance optimization components
 
-        if PERFORMANCE_AVAILABLE:
+        if PERFORMANCE_AVAILABLE and not test_mode:
 
             if template_cache is not None:
 
@@ -870,7 +880,7 @@ class UniversalTemplateEngine:
 
         
 
-        if self.performance_enabled and self.template_cache:
+        if self.performance_enabled and self.template_cache and not self.test_mode:
 
             # Try to get cached IR
 
@@ -923,9 +933,9 @@ class UniversalTemplateEngine:
 
                 if self.component_registry.has_component(component_name):
 
-                    # Use cached template if available
+                    # Use cached template if available and not in test mode
 
-                    if self.performance_enabled and self.template_cache:
+                    if self.performance_enabled and self.template_cache and not self.test_mode:
 
                         template_path = self.component_registry.components_dir / f"{component_name}.j2"
 
