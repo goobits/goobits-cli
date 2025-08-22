@@ -858,17 +858,23 @@ class CLIError extends Error {
 
 // Hook loading with enhanced error handling
 let hooks: any = null;
-try {
-    hooks = require('./hooks');
-} catch (error: any) {
-    if (error.code === 'MODULE_NOT_FOUND') {
-        console.error('Hook implementation not found. Please create \'src/hooks.ts\' with your command implementations.');
-        console.error('See documentation for hook function signatures.');
-    } else {
-        console.error(`Failed to load hooks: ${error.message}`);
+// Dynamic import for ES modules
+const loadHooks = async () => {
+    try {
+        hooks = await import('./hooks.js');
+    } catch (error: any) {
+        if (error.code === 'MODULE_NOT_FOUND') {
+            console.error('Hook implementation not found. Please create \'src/hooks.ts\' with your command implementations.');
+            console.error('See documentation for hook function signatures.');
+        } else {
+            console.error(`Failed to load hooks: ${error.message}`);
+        }
+        process.exit(2);
     }
-    process.exit(2);
-}
+};
+
+// Load hooks at startup
+await loadHooks();
 
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 import { runInteractive } from './{{ cli.name.replace('-', '_') }}_interactive';
