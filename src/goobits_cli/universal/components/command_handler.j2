@@ -721,8 +721,8 @@ commandMap.set('{{ '/'.join(cmd.path) }}', {{ cmd.name.replace('-', '_') }}Cmd);
 {% elif cmd.depth > 1 %}
 
 // Level {{ cmd.depth }}: {{ cmd.path | join(' ') }}
-{%- set parent_path = cmd.parent_path | join('/') %}
-{%- set parent_var = cmd.parent_path[-1].replace('-', '_') + 'Cmd' %}
+{% set parent_path = cmd.parent_path | join('/') %}
+{% set parent_var = cmd.parent_path[-1].replace('-', '_') + 'Cmd' %}
 const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ parent_path }}')
     .command('{{ cmd.name }}')
     .description('{{ ((cmd.description if cmd.description is defined else 'No description')) | js_string }}');
@@ -939,8 +939,8 @@ commandMap.set('{{ '/'.join(cmd.path) }}', {{ cmd.name.replace('-', '_') }}Cmd);
 {% elif cmd.depth > 1 %}
 
 // Level {{ cmd.depth }}: {{ cmd.path | join(' ') }}
-{%- set parent_path = cmd.parent_path | join('/') %}
-{%- set parent_var = cmd.parent_path[-1].replace('-', '_') + 'Cmd' %}
+{% set parent_path = cmd.parent_path | join('/') %}
+{% set parent_var = cmd.parent_path[-1].replace('-', '_') + 'Cmd' %}
 const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ parent_path }}')
     .command('{{ cmd.name }}')
     .description('{{ ((cmd.description if cmd.description is defined else 'No description')) | js_string }}');

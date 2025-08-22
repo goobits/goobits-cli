@@ -229,7 +229,8 @@ class VersionedRichGroup(RichGroup):
 @click.option(
     "--interactive", "-i",
     help="None",
-    is_flag=True,    default=False,)
+    is_flag=True,    default=False,
+)
 @click.pass_context
 def main(ctx, verbose, interactive):
     """Deep nesting demo
@@ -408,6 +409,8 @@ def simple(ctx, message, verbose):
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
+
+
 @main.group()
 @click.pass_context
 def database(ctx):
@@ -416,6 +419,7 @@ def database(ctx):
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
 
 @database.command()
 @click.argument('ACTION')
@@ -504,6 +508,8 @@ def users(ctx, action, format):
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
+
+
 @database.command()
 @click.option(
     "--compress",
@@ -588,6 +594,8 @@ def backup(ctx, compress):
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
+
+
 @main.group()
 @click.pass_context
 def api(ctx):
@@ -596,6 +604,7 @@ def api(ctx):
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
 
 @api.group()
 @click.pass_context
@@ -606,6 +615,7 @@ def v1(ctx):
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
+
 @api.v1.group()
 @click.pass_context
 def users(ctx):
@@ -614,6 +624,7 @@ def users(ctx):
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
 
 @api.v1.users.command()
 @click.argument('USERNAME')
@@ -710,6 +721,8 @@ def create(ctx, username, email, admin, send_email):
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
+
+
 @api.v1.users.group()
 @click.pass_context
 def permissions(ctx):
@@ -718,6 +731,7 @@ def permissions(ctx):
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
+
 
 @api.v1.users.permissions.command()
 @click.argument('USER_ID')
@@ -808,6 +822,8 @@ def grant(ctx, user_id, permission, expires):
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
+
+
 @api.v1.users.permissions.command()
 @click.argument('USER_ID')
 @click.argument('PERMISSION')
@@ -898,6 +914,8 @@ def revoke(ctx, user_id, permission, force):
     except Exception as e:
         exit_code = handle_cli_error(e, verbose)
         sys.exit(exit_code)
+
+
 
 if __name__ == "__main__":
     main()
