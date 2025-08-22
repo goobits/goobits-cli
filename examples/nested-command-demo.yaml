@@ -5,7 +5,7 @@ package_name: nested-demo
 command_name: demo
 display_name: "Nested Command Demo"
 description: "Demonstration of deep nested command capabilities"
-language: nodejs
+language: rust
 
 cli:
   name: demo

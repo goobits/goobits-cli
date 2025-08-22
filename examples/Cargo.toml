@@ -1,0 +1,47 @@
+[package]
+name = "nested-demo"
+version = "1.0.0"
+edition = "2021"
+authors = ["Unknown Author <unknown@example.com>"]
+description = "Demonstration of deep nested command capabilities"
+license = "MIT"
+documentation = "https://docs.rs/nested-demo"
+readme = "README.md"
+exclude = [
+    ".gitignore",
+    "Cargo.lock",
+]
+
+[[bin]]
+name = "demo"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive", "color", "suggestions"] }
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+# Optional dependencies for advanced features
+colored = { version = "2.0", optional = true }
+dialoguer = { version = "0.11", optional = true }
+indicatif = { version = "0.17", optional = true }
+
+[features]
+default = []
+full = ["tokio", "colored", "dialoguer", "indicatif"]
+async = ["tokio"]
+interactive = ["dialoguer", "colored"]
+progress = ["indicatif", "colored"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+opt-level = 0

@@ -4,16 +4,22 @@
 Demonstration of deep nested command capabilities
 
 ## Installation
-### Using npm
+### From Source
 
 ```bash
-npm install -g nested-demo
+# Clone the repository
+git clone https://github.com/user/nested-demo
+cd nested-demo
+
+# Build and install
+cargo build --release
+cargo install --path .
 ```
 
-### Using yarn
+### Using Cargo
 
 ```bash
-yarn global add nested-demo
+cargo install nested-demo
 ```
 ## Usage
 
@@ -34,7 +40,7 @@ No description provided
 ### Global Options
 
 - `--help`, `-h`: Show help message
-- `--version`, `-V`: Show version information
+- `--version`, `-V`: Show version information- `--verbose`, `-v`: Enable verbose output
 ## Examples
 ```bash
 # Example usage
@@ -46,23 +52,22 @@ demo database```
 # Example usage
 demo api```
 ## Development
-### Setup
+### Building
 
 ```bash
-npm install
+cargo build
 ```
 
-### Building
 ### Testing
 
 ```bash
-npm test
+cargo test
 ```
 
 ### Running
 
 ```bash
-npm start <command> [args...]
+cargo run -- <command> [args...]
 ```
 ## License
 
