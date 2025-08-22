@@ -55,6 +55,9 @@ nodejs_test_cli = [ "setup.sh",]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
 testpaths = [ "tests",]
+markers = [
+    "asyncio: marks tests as async (requires pytest-asyncio)",
+]
 
 [tool.setuptools.packages.find]
 where = [ "src",]
