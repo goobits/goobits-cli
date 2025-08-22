@@ -1,238 +1,81 @@
-# Nested Command Demo
+
+# nested-demo
 
 Demonstration of deep nested command capabilities
 
-> Deep nesting demo
-
 ## Installation
-
-### From Package Manager (Recommended)
+### Using npm
 
 ```bash
 npm install -g nested-demo
 ```
 
-### From Source
-
-Clone this repository and build from source:
+### Using yarn
 
 ```bash
-git clone 
-cd nested-demo
-./setup.sh --dev
+yarn global add nested-demo
 ```
-
-### Development Installation
-
-For development with live updates:
-
-```bash
-./setup.sh --dev
-```
-
 ## Usage
 
-### Basic Commands
+demo is a command-line tool with the following commands:
 
-#### `demo simple`
-Simple command that works today
+### `demo simple`
 
+No description provided
+**Usage:**
 ```bash
-demo simple <message> [OPTIONS]```
-
-**Arguments:**
-- `message`: Message to display
+demo simple [OPTIONS]```
 **Options:**
-- `--verbose`: Verbose output
-#### `demo database`
-Database operations
+- `--verbose`: No description provided### `demo database`
 
-**Subcommands:**
-- `users`: User management
-- `backup`: Database backup operations
-#### `demo api`
-API management
+No description provided### `demo api`
 
-**Subcommands:**
-- `v1`: API v1 endpoints
-
+No description provided
 ### Global Options
 
-All commands support these global options:
-
-- `--help`: Show help message and exit
-- `--version`: Show version information
-
-**Verbose Mode:**
-When `--verbose` is enabled, the CLI provides:
-- Detailed error messages with full context
-- Stack traces for debugging issues
-- Additional diagnostic information
-- Progress details for long-running operations
-
-### Examples
-
+- `--help`, `-h`: Show help message
+- `--version`, `-V`: Show version information
+## Examples
 ```bash
-# Show help
-demo --help
-
-# Show version
-demo --version
-
-# Enable verbose output for detailed error messages
-demo --verbose simple
-
-# Short form of verbose flag
-demo -v simple
-
-# Example simple command
-demo simple "example_message"
-# Same command with verbose output
-demo --verbose simple "example_message"
-# Error handling examples
-demo invalid-command              # Standard error message
-demo --verbose invalid-command   # Detailed error with stack trace
-```
-
-## Configuration
-
-Configuration locations:
-
-- **Linux**: `~/.config/nested-demo/`
-- **macOS**: `~/Library/Application Support/nested-demo/`
-- **Windows**: `%APPDATA%\nested-demo\`
-
-You can edit this file directly or use the CLI to manage settings.
-
-### Configuration Options
-
-- `settings.auto_update`: Enable automatic updates (default: false)
-- `settings.log_level`: Set logging level (debug, info, warn, error)
-- `settings.verbose`: Enable verbose output by default (default: false)
-- `features.colored_output`: Enable colored terminal output (default: true)
-- `features.progress_bars`: Show progress bars for long operations (default: true)
-
-### Environment Variables
-
-You can also control verbose mode using environment variables:
-
+# Example usage
+demo simple```
 ```bash
-# Enable verbose mode for all commands
-export DEMO_VERBOSE=true
-demo simple
-
-# Disable verbose mode (overrides config)
-export DEMO_VERBOSE=false
-demo simple
-```
-
+# Example usage
+demo database```
+```bash
+# Example usage
+demo api```
 ## Development
-
-### Building
+### Setup
 
 ```bash
-# Install dependencies
 npm install
+```
 
-# Build (if TypeScript)
+### Building (TypeScript)
+
+```bash
 npm run build
-
-# Run tests
-npm test
 ```
 
 ### Testing
 
 ```bash
-# Run all tests
 npm test
-
-# Run with coverage
-npm run test:coverage
 ```
 
 ### Running
 
 ```bash
-# Run from source (development)
-node cli.js --help
-
-# Or using npm link
-npm link && demo --help
+npm start <command> [args...]
 ```
-
-## Shell Completions
-
-Generate shell completions for better command-line experience:
-
-```bash
-./setup.sh --completions
-```
-
-This creates completion files in the `completions/` directory for:
-- Bash
-- Zsh  
-- Fish
-
-### Installing Completions
-
-**Bash:**
-```bash
-source completions/demo.bash
-```
-
-**Zsh:**
-```bash
-# Add to your ~/.zshrc
-fpath=(./completions $fpath)
-autoload -U compinit && compinit
-```
-
-**Fish:**
-```bash
-cp completions/demo.fish ~/.config/fish/completions/
-```
-
-## Architecture
-
-This CLI is built using:
-
-- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
-- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
-- **[Chalk](https://github.com/chalk/chalk)**: Terminal string styling
-
-### Project Structure
-
-```
-├── cli.js           # CLI entry point
-├── package.json         # NPM package configuration
-├── src/
-│   ├── hooks.js       # User-defined business logic
-│   ├── config.js      # Configuration management
-│   └── utils.js       # Utility functions
-└── completions/         # Shell completion scripts
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests for new functionality
-5. Run tests and ensure they pass
-6. Commit your changes (`git commit -am 'Add amazing feature'`)
-7. Push to the branch (`git push origin feature/amazing-feature`)
-8. Open a Pull Request
-
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT
 
-## Changelog
+## Author
 
-### 1.0.0
-- Initial release
-- Core CLI functionality implemented
-- `simple` command: Simple command that works today
-- `database` command: Database operations
-- `api` command: API management
+Unknown Author
+---
+
+Generated by [Goobits CLI Framework](https://github.com/DataBassGit/goobits)
