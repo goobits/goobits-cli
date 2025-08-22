@@ -1,0 +1,2 @@
+[console_scripts]
+nodejstestcli = nodejs_test_cli.cli:cli_entry

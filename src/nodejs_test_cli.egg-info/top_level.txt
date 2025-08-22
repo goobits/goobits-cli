@@ -1,0 +1,6 @@
+complexcli
+goobits_cli
+nodejs_test_cli
+test_cli
+testcli
+tests

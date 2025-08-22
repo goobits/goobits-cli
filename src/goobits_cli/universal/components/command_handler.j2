@@ -302,7 +302,7 @@ class VersionedRichGroup(RichGroup):
     default=False
 )
 {% if cli.root_command.options %}
-{% for option in cli.root_command.options %}
+{% for option in cli.root_command.options if option.name != 'verbose' %}
 @click.option(
     "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
     help="{{ (option.description if option.description is defined else 'No description') }}"{% if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
@@ -322,7 +322,7 @@ class VersionedRichGroup(RichGroup):
 {% endfor %}
 {% endif %}
 @click.pass_context
-def main(ctx, verbose{% if cli.root_command.options %}{% for option in cli.root_command.options %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
+def main(ctx, verbose{% if cli.root_command.options %}{% for option in cli.root_command.options if option.name != 'verbose' %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
     """{{ cli.tagline | default((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}
 
     \b
