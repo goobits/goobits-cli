@@ -447,10 +447,12 @@ def upgrade(check, version, pre, dry_run):
 
 {# Macro for rendering a single command with proper decorators #}
 {% macro render_command(cmd) -%}
+{% if cmd.depth == 1 -%}
+{# Level 1 commands use decorators on main #}
 {% if cmd.is_group -%}
-@{{ cmd.click_decorator }}.group()
+@main.group()
 {% else -%}
-@{{ cmd.click_decorator }}.command()
+@main.command()
 {% endif -%}
 {% for arg in cmd.arguments if cmd.arguments -%}
 @click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
@@ -470,12 +472,39 @@ def upgrade(check, version, pre, dry_run):
 @click.pass_context
 def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.arguments %}, {{ arg.name.lower() }}{% endfor %}{% for option in cmd.options if cmd.options %}, {{ option.name.replace('-', '_') }}{% endfor %}):
     """{{ (cmd.description if cmd.description else ('Command ' + cmd.name)) }}"""
+{% else -%}
+{# Level 2+ commands are created programmatically #}
+# Level {{ cmd.depth }} command: {{ ' '.join(cmd.path) }}
+{% if cmd.is_group -%}
+{{ '_'.join(cmd.path).replace('-', '_') }} = click.Group('{{ cmd.name }}', help="{{ (cmd.description if cmd.description else ('Command ' + cmd.name)) }}")
+{% else -%}
+@click.command()
+{% for arg in cmd.arguments if cmd.arguments -%}
+@click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
+{% endfor -%}
+{% for option in cmd.options if cmd.options -%}
+@click.option(
+    "--{{ option.name }}"{% if option.short is defined and option.short %}, "-{{ option.short }}"{% endif %},
+    help="{{ (option.description if option.description is defined else 'No description') }}"{%- if option.type is defined and (option.type == "flag" or option.type == "boolean") %},
+    is_flag=True{%- elif option.type is defined and option.type == "integer" %},
+    type=int{%- elif option.type is defined and option.type == "float" %},
+    type=float{% endif %}{%- if option.default is defined and option.default is not none %},
+    default={{ option.default | repr }}{% endif %}{%- if option.required is defined and option.required %},
+    required=True{% endif %}{%- if option.multiple is defined and option.multiple %},
+    multiple=True{% endif %}
+)
+{% endfor -%}
+@click.pass_context
+def {{ '_'.join(cmd.path).replace('-', '_') }}_cmd(ctx{% for arg in cmd.arguments if cmd.arguments %}, {{ arg.name.lower() }}{% endfor %}{% for option in cmd.options if cmd.options %}, {{ option.name.replace('-', '_') }}{% endfor %}):
+    """{{ (cmd.description if cmd.description else ('Command ' + cmd.name)) }}"""
+{% endif -%}
+{% endif -%}
     
-{% if cmd.is_group %}
+{% if cmd.is_group and cmd.depth == 1 %}
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
-{% else %}
+{% elif not cmd.is_group %}
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -570,6 +599,17 @@ def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.argum
 {{ render_command(cmd) }}
 {% endfor %}
 
+{# Attach nested commands programmatically for levels 2+ #}
+# Attach nested commands to their parents
+{% for cmd in cli.command_hierarchy.flat_commands if cmd.depth > 1 %}
+{% if cmd.depth == 2 %}
+# Attach {{ cmd.name }} to {{ cmd.parent_path[0] }}
+{{ cmd.parent_path[0].replace('-', '_') }}.add_command({% if cmd.is_group %}{{ '_'.join(cmd.path).replace('-', '_') }}{% else %}{{ '_'.join(cmd.path).replace('-', '_') }}_cmd{% endif %}, '{{ cmd.name }}')
+{% elif cmd.depth > 2 %}
+# Attach {{ cmd.name }} to {{ ' '.join(cmd.parent_path) }}
+{{ '_'.join(cmd.parent_path).replace('-', '_') }}.add_command({% if cmd.is_group %}{{ '_'.join(cmd.path).replace('-', '_') }}{% else %}{{ '_'.join(cmd.path).replace('-', '_') }}_cmd{% endif %}, '{{ cmd.name }}')
+{% endif %}
+{% endfor %}
 
 if __name__ == "__main__":
     main()

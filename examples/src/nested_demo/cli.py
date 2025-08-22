@@ -331,7 +331,6 @@ def upgrade(check, version, pre, dry_run):
 @click.pass_context
 def simple(ctx, message, verbose):
     """Simple command that works today"""
-    
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -415,22 +414,21 @@ def simple(ctx, message, verbose):
 @click.pass_context
 def database(ctx):
     """Database operations"""
-    
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
 
-@database.command()
+# Level 2 command: database users
+@click.command()
 @click.argument('ACTION')
 @click.option(
     "--format",
     help="Output format",
     default='table')
 @click.pass_context
-def users(ctx, action, format):
+def database_users_cmd(ctx, action, format):
     """User management"""
-    
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -510,15 +508,15 @@ def users(ctx, action, format):
         sys.exit(exit_code)
 
 
-@database.command()
+# Level 2 command: database backup
+@click.command()
 @click.option(
     "--compress",
     help="Compress backup file",
     is_flag=True)
 @click.pass_context
-def backup(ctx, compress):
+def database_backup_cmd(ctx, compress):
     """Database backup operations"""
-    
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -600,33 +598,21 @@ def backup(ctx, compress):
 @click.pass_context
 def api(ctx):
     """API management"""
-    
     # This is a group command - subcommands will handle the actual logic
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
 
 
-@api.group()
-@click.pass_context
-def v1(ctx):
-    """API v1 endpoints"""
-    
-    # This is a group command - subcommands will handle the actual logic
-    if ctx.invoked_subcommand is None:
-        click.echo(ctx.get_help())
+# Level 2 command: api v1
+api_v1 = click.Group('v1', help="API v1 endpoints")
 
 
-@api.v1.group()
-@click.pass_context
-def users(ctx):
-    """User API endpoints"""
-    
-    # This is a group command - subcommands will handle the actual logic
-    if ctx.invoked_subcommand is None:
-        click.echo(ctx.get_help())
+# Level 3 command: api v1 users
+api_v1_users = click.Group('users', help="User API endpoints")
 
 
-@api.v1.users.command()
+# Level 4 command: api v1 users create
+@click.command()
 @click.argument('USERNAME')
 @click.argument('EMAIL')
 @click.option(
@@ -638,9 +624,8 @@ def users(ctx):
     help="Send welcome email",
     is_flag=True)
 @click.pass_context
-def create(ctx, username, email, admin, send_email):
+def api_v1_users_create_cmd(ctx, username, email, admin, send_email):
     """Create user via API"""
-    
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -723,26 +708,20 @@ def create(ctx, username, email, admin, send_email):
         sys.exit(exit_code)
 
 
-@api.v1.users.group()
-@click.pass_context
-def permissions(ctx):
-    """Manage user permissions"""
-    
-    # This is a group command - subcommands will handle the actual logic
-    if ctx.invoked_subcommand is None:
-        click.echo(ctx.get_help())
+# Level 4 command: api v1 users permissions
+api_v1_users_permissions = click.Group('permissions', help="Manage user permissions")
 
 
-@api.v1.users.permissions.command()
+# Level 5 command: api v1 users permissions grant
+@click.command()
 @click.argument('USER_ID')
 @click.argument('PERMISSION')
 @click.option(
     "--expires",
     help="Permission expiration")
 @click.pass_context
-def grant(ctx, user_id, permission, expires):
+def api_v1_users_permissions_grant_cmd(ctx, user_id, permission, expires):
     """Grant permission to user"""
-    
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -824,7 +803,8 @@ def grant(ctx, user_id, permission, expires):
         sys.exit(exit_code)
 
 
-@api.v1.users.permissions.command()
+# Level 5 command: api v1 users permissions revoke
+@click.command()
 @click.argument('USER_ID')
 @click.argument('PERMISSION')
 @click.option(
@@ -832,9 +812,8 @@ def grant(ctx, user_id, permission, expires):
     help="Force revocation",
     is_flag=True)
 @click.pass_context
-def revoke(ctx, user_id, permission, force):
+def api_v1_users_permissions_revoke_cmd(ctx, user_id, permission, force):
     """Revoke permission from user"""
-    
     # Enhanced error handling for Python CLI
     verbose_path = ['verbose']
     current_ctx = ctx
@@ -916,6 +895,23 @@ def revoke(ctx, user_id, permission, force):
         sys.exit(exit_code)
 
 
+# Attach nested commands to their parents
+# Attach users to database
+database.add_command(database_users_cmd, 'users')
+# Attach backup to database
+database.add_command(database_backup_cmd, 'backup')
+# Attach v1 to api
+api.add_command(api_v1, 'v1')
+# Attach users to api v1
+api_v1.add_command(api_v1_users, 'users')
+# Attach create to api v1 users
+api_v1_users.add_command(api_v1_users_create_cmd, 'create')
+# Attach permissions to api v1 users
+api_v1_users.add_command(api_v1_users_permissions, 'permissions')
+# Attach grant to api v1 users permissions
+api_v1_users_permissions.add_command(api_v1_users_permissions_grant_cmd, 'grant')
+# Attach revoke to api v1 users permissions
+api_v1_users_permissions.add_command(api_v1_users_permissions_revoke_cmd, 'revoke')
 
 if __name__ == "__main__":
     main()
