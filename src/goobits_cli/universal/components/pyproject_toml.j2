@@ -55,8 +55,6 @@ dependencies = [
 {%- endif %}
 ]
 
-{%- if installation.extras and installation.extras.python %}
-
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
@@ -64,8 +62,14 @@ dev = [
     "black>=22.0.0",
     "flake8>=6.0.0",
     "mypy>=1.0.0"
-]
+{%- if installation.extras and installation.extras.python %}
+{%- for dep in installation.extras.python %}
+{%- if dep not in ["pytest", "pytest-cov", "black", "flake8", "mypy"] %},
+    "{{ dep }}"
 {%- endif %}
+{%- endfor %}
+{%- endif %}
+]
 
 [project.urls]
 {%- if project.homepage %}
