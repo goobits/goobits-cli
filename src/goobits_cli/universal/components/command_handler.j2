@@ -739,7 +739,7 @@ const {{ cmd.name.replace('-', '_') }}Cmd = program
         
         // Execute the hook function with proper error handling
         const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-        const result = await hooks[hookName](...args{% if cmd.arguments %}, {% endif %}options);
+        const result = await hooks[hookName](...args{% if cmd.arguments and cmd.arguments|length > 0 %}, {% endif %}options);
         
         // Handle return codes
         if (typeof result === 'number' && result !== 0) {
@@ -795,7 +795,7 @@ const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ par
         
         // Execute the hook function with proper error handling
         const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-        const result = await hooks[hookName](...args{% if cmd.arguments %}, {% endif %}options);
+        const result = await hooks[hookName](...args{% if cmd.arguments and cmd.arguments|length > 0 %}, {% endif %}options);
         
         // Handle return codes
         if (typeof result === 'number' && result !== 0) {

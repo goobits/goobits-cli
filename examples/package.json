@@ -2,7 +2,6 @@
   "name": "nested-demo",
   "version": "1.0.0",
   "description": "Demonstration of deep nested command capabilities",
-  "type": "module",
   "main": "cli.js",
   "bin": {
     "demo": "./bin/cli.js"
@@ -36,7 +35,6 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "type": "module",
   "files": [
     "bin/",
     "commands/",

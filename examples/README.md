@@ -52,12 +52,7 @@ demo api```
 npm install
 ```
 
-### Building (TypeScript)
-
-```bash
-npm run build
-```
-
+### Building
 ### Testing
 
 ```bash
