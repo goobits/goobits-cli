@@ -1,0 +1,361 @@
+// Enhanced Interactive Mode with Dynamic Completion and Plugin Support
+// Generated from: 
+
+const readline = require('readline');
+const path = require('path');
+const { execSync } = require('child_process');
+
+// Enhanced features availability check
+let ENHANCED_FEATURES_AVAILABLE = false;
+let completionIntegrator = null;
+let pluginManager = null;
+
+try {
+    // In a real implementation, these would import from the completion and plugin modules
+    ENHANCED_FEATURES_AVAILABLE = false; // Set to true when modules are available
+    console.log('Enhanced completion and plugin features not yet available for Node.js');
+} catch (error) {
+    console.warn('Enhanced completion and plugin features not available:', error.message);
+}
+
+/**
+ * Enhanced interactive mode with dynamic completion and plugin support.
+ */
+class EnhancedInteractive {
+    constructor() {
+        this.running = false;
+        this.history = [];
+        this.commands = new Map();
+        
+        // Enhanced features initialization
+        if (ENHANCED_FEATURES_AVAILABLE) {
+            this.setupEnhancedFeatures();
+        } else {
+            this.setupBasicFeatures();
+        }
+        
+        // Setup command handlers
+        this.setupBuiltinCommands();
+    }
+    
+    setupEnhancedFeatures() {
+        try {
+            // Setup dynamic completion
+            // this.completionIntegrator = setupCompletionForLanguage('nodejs');
+            
+            // Setup plugin command manager
+            // this.pluginManager = getPluginCommandManager();
+            
+            // Load and activate plugins
+            this.loadPlugins();
+            
+            console.log('Enhanced features initialized successfully');
+            
+        } catch (error) {
+            console.error('Failed to setup enhanced features:', error);
+            this.setupBasicFeatures();
+        }
+    }
+    
+    setupBasicFeatures() {
+        // Basic readline setup with simple tab completion
+        this.rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+            completer: this.basicCompleter.bind(this)
+        });
+    }
+    
+    basicCompleter(line) {
+        const commands = Array.from(this.commands.keys());
+        const hits = commands.filter(cmd => cmd.startsWith(line));
+        return [hits.length ? hits : commands, line];
+    }
+    
+    async loadPlugins() {
+        try {
+            if (!ENHANCED_FEATURES_AVAILABLE) return;
+            
+            // Register plugin commands
+            // const pluginCommands = await this.pluginManager.registerPluginCommands();
+            
+            // Add plugin commands to our command registry
+            // for (const [commandName, pluginInfo] of Object.entries(pluginCommands)) {
+            //     this.commands.set(commandName, {
+            //         handler: this.executePluginCommand.bind(this),
+            //         pluginInfo: pluginInfo,
+            //         description: `Plugin command from ${pluginInfo.name}`
+            //     });
+            // }
+            
+            console.log('Plugins loaded (placeholder)');
+            
+        } catch (error) {
+            console.error('Error loading plugins:', error);
+        }
+    }
+    
+    setupBuiltinCommands() {
+        this.commands.set('help', {
+            handler: this.cmdHelp.bind(this),
+            description: 'Show available commands'
+        });
+        
+        this.commands.set('exit', {
+            handler: this.cmdExit.bind(this),
+            description: 'Exit interactive mode'
+        });
+        
+        this.commands.set('quit', {
+            handler: this.cmdExit.bind(this),
+            description: 'Exit interactive mode'
+        });
+        
+        this.commands.set('history', {
+            handler: this.cmdHistory.bind(this),
+            description: 'Show command history'
+        });
+        
+        this.commands.set('clear', {
+            handler: this.cmdClear.bind(this),
+            description: 'Clear the screen'
+        });
+        
+        this.commands.set('plugins', {
+            handler: this.cmdPlugins.bind(this),
+            description: 'Manage plugins'
+        });
+        
+        this.commands.set('completion', {
+            handler: this.cmdCompletion.bind(this),
+            description: 'Manage completion settings'
+        });
+    }
+    
+    async run() {
+        console.log(`🚀 Welcome to  Enhanced Interactive Mode!`);
+        console.log('📝 Type "help" for available commands, "exit" to quit.');
+        
+        if (ENHANCED_FEATURES_AVAILABLE) {
+            console.log('✨ Enhanced features: Dynamic completion and plugin support enabled');
+        }
+        
+        console.log();
+        
+        this.running = true;
+        
+        // Setup readline interface if not already done
+        if (!this.rl) {
+            this.rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout,
+                completer: this.basicCompleter.bind(this)
+            });
+        }
+        
+        this.promptLoop();
+    }
+    
+    promptLoop() {
+        if (!this.running) {
+            this.rl.close();
+            return;
+        }
+        
+        const prompt = this.getEnhancedPrompt();
+        
+        this.rl.question(prompt, async (input) => {
+            const userInput = input.trim();
+            
+            if (!userInput) {
+                this.promptLoop();
+                return;
+            }
+            
+            try {
+                // Add to history
+                this.history.push(userInput);
+                
+                // Parse and execute command
+                await this.executeCommand(userInput);
+                
+            } catch (error) {
+                console.error('❌ Error:', error.message);
+            }
+            
+            this.promptLoop();
+        });
+    }
+    
+    getEnhancedPrompt() {
+        const baseName = '> ';
+        
+        if (ENHANCED_FEATURES_AVAILABLE) {
+            // Add context indicators
+            const cwd = path.basename(process.cwd());
+            return `[${cwd}] ${baseName}`;
+        }
+        
+        return baseName;
+    }
+    
+    async executeCommand(userInput) {
+        try {
+            // Parse command and arguments
+            const parts = userInput.split(/\s+/);
+            const command = parts[0];
+            const args = parts.slice(1);
+            
+            // Check if it's a registered command
+            if (this.commands.has(command)) {
+                const cmdInfo = this.commands.get(command);
+                await cmdInfo.handler(args, cmdInfo);
+            } else {
+                // Try to execute as system command or show error
+                console.log(`❌ Unknown command: ${command}`);
+                console.log('💡 Type "help" to see available commands');
+            }
+            
+        } catch (error) {
+            console.error('❌ Command execution error:', error.message);
+        }
+    }
+    
+    async executePluginCommand(args, cmdInfo) {
+        try {
+            const pluginInfo = cmdInfo.pluginInfo;
+            console.log(`🔌 Executing plugin command from ${pluginInfo.name}`);
+            
+            // In a real implementation, this would delegate to the plugin's command handler
+            console.log('⚠️  Plugin command execution not fully implemented');
+            console.log(`   Plugin: ${pluginInfo.name}`);
+            console.log(`   Args: ${args.join(' ')}`);
+            
+        } catch (error) {
+            console.error('❌ Plugin command error:', error.message);
+        }
+    }
+    
+    cmdHelp(args, cmdInfo) {
+        console.log('📚 Available Commands:');
+        console.log();
+        
+        // Group commands by type
+        const builtinCommands = new Map();
+        const pluginCommands = new Map();
+        
+        for (const [cmdName, info] of this.commands) {
+            if (info.pluginInfo) {
+                pluginCommands.set(cmdName, info);
+            } else {
+                builtinCommands.set(cmdName, info);
+            }
+        }
+        
+        // Show built-in commands
+        if (builtinCommands.size > 0) {
+            console.log('🏠 Built-in Commands:');
+            for (const [cmdName, info] of builtinCommands) {
+                const desc = info.description || 'No description';
+                console.log(`   ${cmdName.padEnd(15)} - ${desc}`);
+            }
+            console.log();
+        }
+        
+        // Show plugin commands
+        if (pluginCommands.size > 0) {
+            console.log('🔌 Plugin Commands:');
+            for (const [cmdName, info] of pluginCommands) {
+                const desc = info.description || 'No description';
+                const pluginName = info.pluginInfo.name;
+                console.log(`   ${cmdName.padEnd(15)} - ${desc} [${pluginName}]`);
+            }
+            console.log();
+        }
+        
+        if (ENHANCED_FEATURES_AVAILABLE) {
+            console.log('✨ Enhanced Features:');
+            console.log('   - Dynamic contextual completion (Tab)');
+            console.log('   - Plugin command support');
+            console.log('   - Advanced history management');
+        }
+    }
+    
+    cmdExit(args, cmdInfo) {
+        console.log('👋 Goodbye!');
+        this.running = false;
+    }
+    
+    cmdHistory(args, cmdInfo) {
+        if (this.history.length === 0) {
+            console.log('📝 No command history');
+            return;
+        }
+        
+        console.log('📝 Command History:');
+        const recent = this.history.slice(-10); // Show last 10 commands
+        recent.forEach((cmd, index) => {
+            console.log(`   ${(index + 1).toString().padStart(2)}. ${cmd}`);
+        });
+    }
+    
+    cmdClear(args, cmdInfo) {
+        console.clear();
+    }
+    
+    async cmdPlugins(args, cmdInfo) {
+        if (!ENHANCED_FEATURES_AVAILABLE) {
+            console.log('❌ Plugin features not available');
+            return;
+        }
+        
+        if (args.length === 0) {
+            // List plugins
+            try {
+                console.log('🔌 Plugin management not fully implemented for Node.js');
+                console.log('   This would show installed plugins');
+                
+            } catch (error) {
+                console.error('❌ Error listing plugins:', error.message);
+            }
+        } else {
+            console.log('❌ Plugin subcommands not yet implemented');
+        }
+    }
+    
+    cmdCompletion(args, cmdInfo) {
+        if (!ENHANCED_FEATURES_AVAILABLE) {
+            console.log('❌ Enhanced completion not available');
+            return;
+        }
+        
+        if (args.length === 0) {
+            // Show completion status
+            console.log('🎯 Completion System Status:');
+            console.log('   Enhanced completion not fully implemented for Node.js');
+            
+        } else if (args[0] === 'clear') {
+            console.log('✅ Completion cache cleared (placeholder)');
+        } else {
+            console.log('❌ Unknown completion command. Available: status, clear');
+        }
+    }
+}
+
+/**
+ * Start the enhanced interactive mode.
+ */
+function startEnhancedInteractive() {
+    const interactive = new EnhancedInteractive();
+    interactive.run().catch(console.error);
+}
+
+module.exports = {
+    EnhancedInteractive,
+    startEnhancedInteractive
+};
+
+// Run if this file is executed directly
+if (require.main === module) {
+    startEnhancedInteractive();
+}
