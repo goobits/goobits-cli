@@ -12,15 +12,33 @@ import typer
 
 
 
-from .schemas import ConfigSchema, GoobitsConfigSchema
+# Lazy import for heavy schemas to improve startup performance
+_schemas = None
 
-from .generators.python import PythonGenerator
+def _get_schemas():
+    """Lazy load schema classes to avoid Pydantic import overhead."""
+    global _schemas
+    if _schemas is None:
+        from .schemas import ConfigSchema, GoobitsConfigSchema
+        _schemas = (ConfigSchema, GoobitsConfigSchema)
+    return _schemas
+
+# Lazy import for generator  
+_python_generator = None
+
+def _get_python_generator():
+    """Lazy load Python generator to reduce startup overhead.""" 
+    global _python_generator
+    if _python_generator is None:
+        from .generators.python import PythonGenerator
+        _python_generator = PythonGenerator
+    return _python_generator
 
 
 
 
 
-def load_yaml_config(file_path: str) -> Union[ConfigSchema, GoobitsConfigSchema]:
+def load_yaml_config(file_path: str):
 
     """Load and validate YAML configuration file."""
 
@@ -31,6 +49,9 @@ def load_yaml_config(file_path: str) -> Union[ConfigSchema, GoobitsConfigSchema]
             data = yaml.safe_load(f)
 
         
+
+        # Get schema classes lazily
+        ConfigSchema, GoobitsConfigSchema = _get_schemas()
 
         # Try to detect which schema format this is
         # If it has top-level fields like package_name, language, etc., it's GoobitsConfigSchema
@@ -111,18 +132,18 @@ class Builder:
             from .generators.rust import RustGenerator
             self.generator = RustGenerator()
         else:
-            # Default to Python
-            from .generators.python import PythonGenerator
+            # Default to Python - lazy load the generator
+            PythonGenerator = _get_python_generator()
             self.generator = PythonGenerator()
 
-    def build(self, config: Union[ConfigSchema, GoobitsConfigSchema, None] = None, file_name: str = "config.yaml", version: Optional[str] = None) -> str:
+    def build(self, config = None, file_name: str = "config.yaml", version: Optional[str] = None) -> str:
 
         """Build CLI code from configuration and return the rendered template string."""
 
         # If config is not provided but config_data was provided in constructor, use that
 
         if config is None and self.config_data is not None:
-
+            ConfigSchema, GoobitsConfigSchema = _get_schemas()
             config = ConfigSchema(**self.config_data)
 
         
@@ -155,7 +176,7 @@ class Builder:
 
 
 
-def generate_cli_code(config: Union[ConfigSchema, GoobitsConfigSchema], file_name: str, version: Optional[str] = None) -> str:
+def generate_cli_code(config, file_name: str, version: Optional[str] = None) -> str:
 
     """Generate CLI Python code from configuration.
 
@@ -177,6 +198,7 @@ def generate_cli_code(config: Union[ConfigSchema, GoobitsConfigSchema], file_nam
 
     """
 
+    PythonGenerator = _get_python_generator()
     generator = PythonGenerator()
 
     return generator.generate(config, file_name, version)

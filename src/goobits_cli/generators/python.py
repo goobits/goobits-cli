@@ -14,57 +14,9 @@ from jinja2 import Environment, DictLoader
 
 
 
-from . import BaseGenerator
+from . import BaseGenerator, GeneratorError, ConfigurationError, TemplateError, DependencyError, ValidationError, _safe_to_dict
 
 from ..schemas import ConfigSchema, GoobitsConfigSchema
-
-
-def _safe_to_dict(obj: Any) -> Dict[str, Any]:
-    """
-    Safely convert a Pydantic model or dict to a plain dictionary.
-    
-    This handles the type conversion issues where objects might be:
-    - Pydantic v2 models (with model_dump())
-    - Pydantic v1 models (with dict())
-    - Plain dictionaries already
-    - None or other types
-    
-    Args:
-        obj: Object to convert to dict
-        
-    Returns:
-        Dictionary representation of the object
-    """
-    if obj is None:
-        return {}
-    
-    # If it's already a dict, return it as-is
-    if isinstance(obj, dict):
-        return obj
-    
-    # Try Pydantic v2 model_dump() first
-    if hasattr(obj, 'model_dump') and callable(getattr(obj, 'model_dump')):
-        try:
-            return obj.model_dump()
-        except Exception:
-            pass
-    
-    # Try Pydantic v1 dict() method
-    if hasattr(obj, 'dict') and callable(getattr(obj, 'dict')):
-        try:
-            return obj.dict()
-        except Exception:
-            pass
-    
-    # If all else fails, try to convert using vars() or return empty dict
-    try:
-        if hasattr(obj, '__dict__'):
-            return vars(obj)
-    except Exception:
-        pass
-    
-    # Last resort: return empty dict
-    return {}
 
 
 
@@ -104,111 +56,7 @@ except ImportError:
 
 
 
-# Custom Exception Classes for Better Error Handling
-
-class PythonGeneratorError(Exception):
-
-    """Base exception for Python generator errors."""
-
-    def __init__(self, message: str, error_code: int = 1, details: Optional[str] = None):
-
-        self.message = message
-
-        self.error_code = error_code
-
-        self.details = details
-
-        super().__init__(self.message)
-
-
-
-
-
-class ConfigurationError(PythonGeneratorError):
-
-    """Configuration validation or loading error."""
-
-    def __init__(self, message: str, field: Optional[str] = None, suggestion: Optional[str] = None):
-
-        self.field = field
-
-        self.suggestion = suggestion
-
-        error_code = 2  # Configuration errors
-
-        super().__init__(message, error_code, f"Field: {field}" if field else None)
-
-
-
-
-
-class TemplateError(PythonGeneratorError):
-
-    """Template rendering or loading error."""
-
-    def __init__(self, message: str, template_name: Optional[str] = None, line_number: Optional[int] = None):
-
-        self.template_name = template_name
-
-        self.line_number = line_number
-
-        error_code = 3  # Template errors
-
-        details = f"Template: {template_name}" if template_name else None
-
-        if line_number:
-
-            details += f", Line: {line_number}" if details else f"Line: {line_number}"
-
-        super().__init__(message, error_code, details)
-
-
-
-
-
-class DependencyError(PythonGeneratorError):
-
-    """Missing or incompatible dependency error."""
-
-    def __init__(self, message: str, dependency: str, install_command: Optional[str] = None):
-
-        self.dependency = dependency
-
-        self.install_command = install_command
-
-        error_code = 4  # Dependency errors
-
-        super().__init__(message, error_code, f"Dependency: {dependency}")
-
-
-
-
-
-class ValidationError(PythonGeneratorError):
-
-    """Input validation error."""
-
-    def __init__(self, message: str, field: str, value: Optional[str] = None, valid_options: Optional[List[str]] = None):
-
-        self.field = field
-
-        self.value = value
-
-        self.valid_options = valid_options
-
-        error_code = 2  # Validation errors
-
-        details = f"Field: {field}"
-
-        if value:
-
-            details += f", Value: {value}"
-
-        if valid_options:
-
-            details += f", Valid options: {', '.join(valid_options)}"
-
-        super().__init__(message, error_code, details)
+# Error classes now imported from shared generators.__init__ module
 
 
 

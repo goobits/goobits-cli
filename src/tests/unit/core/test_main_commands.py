@@ -220,10 +220,12 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "does not exist" in result.stderr
 
-    @patch('goobits_cli.main.Path.is_dir')  
-    def test_serve_command_not_directory(self, mock_is_dir):
+    @patch('goobits_cli.main.Path.is_dir')
+    @patch('goobits_cli.main.Path.exists')
+    def test_serve_command_not_directory(self, mock_exists, mock_is_dir):
         """Test serve command when path is not a directory."""
-        mock_is_dir.return_value = False
+        mock_exists.return_value = True  # Path exists
+        mock_is_dir.return_value = False  # But is not a directory
         
         result = self.runner.invoke(app, ["serve", "file.txt"])
         
@@ -231,47 +233,52 @@ class TestMainCLICommands(TestMainCLIBase):
         assert "is not a directory" in result.stderr
 
     # Upgrade command tests
-    @patch('shutil.which')
-    def test_upgrade_command_pipx_not_found(self, mock_which):
+    @patch('subprocess.run')
+    def test_upgrade_command_pipx_not_found(self, mock_run):
         """Test upgrade command when pipx is not available."""
-        mock_which.return_value = None
+        mock_run.side_effect = FileNotFoundError()
         
         result = self.runner.invoke(app, ["upgrade"])
         
         assert result.exit_code == 1
         assert "pipx is required" in result.stderr
 
-    @patch('shutil.which')
     @patch('subprocess.run')
-    def test_upgrade_command_invalid_source(self, mock_run, mock_which):
+    def test_upgrade_command_invalid_source(self, mock_run):
         """Test upgrade command with invalid source."""
-        mock_which.return_value = "/usr/bin/pipx"
+        mock_run.return_value = MagicMock(stdout="pipx 1.0.0\n")  # pipx version check succeeds
         
         result = self.runner.invoke(app, ["upgrade", "--source", "invalid-source"])
         
         assert result.exit_code == 1
         assert "Unknown source" in result.stderr
 
-    @patch('shutil.which')
     @patch('subprocess.run')
-    def test_upgrade_command_upgrade_failure(self, mock_run, mock_which):
+    def test_upgrade_command_upgrade_failure(self, mock_run):
         """Test upgrade command when upgrade fails."""
-        mock_which.return_value = "/usr/bin/pipx"
-        mock_run.side_effect = subprocess.CalledProcessError(1, "pipx")
+        # First call succeeds (pipx version check), second call fails (upgrade)
+        mock_run.side_effect = [
+            MagicMock(stdout="pipx 1.0.0\n"),  # pipx version check succeeds
+            subprocess.CalledProcessError(1, "pipx")  # upgrade fails
+        ]
         
-        result = self.runner.invoke(app, ["upgrade"])
+        # Use input="y\n" to automatically confirm the upgrade prompt
+        result = self.runner.invoke(app, ["upgrade"], input="y\n")
         
         assert result.exit_code == 1
         assert "Upgrade failed" in result.stderr
 
-    @patch('shutil.which')  
     @patch('subprocess.run')
-    def test_upgrade_command_unexpected_error(self, mock_run, mock_which):
+    def test_upgrade_command_unexpected_error(self, mock_run):
         """Test upgrade command with unexpected error."""
-        mock_which.return_value = "/usr/bin/pipx"
-        mock_run.side_effect = Exception("Unexpected error")
+        # First call succeeds (pipx version check), second call fails (upgrade)
+        mock_run.side_effect = [
+            MagicMock(stdout="pipx 1.0.0\n"),  # pipx version check succeeds
+            Exception("Unexpected error")       # upgrade fails with exception
+        ]
         
-        result = self.runner.invoke(app, ["upgrade"])
+        # Use input="y\n" to automatically confirm the upgrade prompt
+        result = self.runner.invoke(app, ["upgrade"], input="y\n")
         
         assert result.exit_code == 1
         assert "Unexpected error during upgrade" in result.stderr

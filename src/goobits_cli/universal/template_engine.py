@@ -38,52 +38,8 @@ def _get_config_schema():
     return _config_schema
 
 
-def _safe_to_dict(obj: Any) -> Dict[str, Any]:
-    """
-    Safely convert a Pydantic model or dict to a plain dictionary.
-    
-    This handles the type conversion issues where objects might be:
-    - Pydantic v2 models (with model_dump())
-    - Pydantic v1 models (with dict())
-    - Plain dictionaries already
-    - None or other types
-    
-    Args:
-        obj: Object to convert to dict
-        
-    Returns:
-        Dictionary representation of the object
-    """
-    if obj is None:
-        return {}
-    
-    # If it's already a dict, return it as-is
-    if isinstance(obj, dict):
-        return obj
-    
-    # Try Pydantic v2 model_dump() first
-    if hasattr(obj, 'model_dump') and callable(getattr(obj, 'model_dump')):
-        try:
-            return obj.model_dump()
-        except Exception:
-            pass
-    
-    # Try Pydantic v1 dict() method
-    if hasattr(obj, 'dict') and callable(getattr(obj, 'dict')):
-        try:
-            return obj.dict()
-        except Exception:
-            pass
-    
-    # If all else fails, try to convert using vars() or return empty dict
-    try:
-        if hasattr(obj, '__dict__'):
-            return vars(obj)
-    except Exception:
-        pass
-    
-    # Last resort: return empty dict
-    return {}
+# Import shared _safe_to_dict function
+from ..generators import _safe_to_dict
 
 
 def _safe_get_attr(obj: Any, attr: str, default: Any = "") -> Any:
