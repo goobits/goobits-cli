@@ -6,7 +6,9 @@ used across the test suite. It merges functionality from the original
 helpers.py and test_helpers.py files.
 """
 import pytest
-from typing import Dict, Optional
+import yaml
+from pathlib import Path
+from typing import Dict, Optional, Any
 from goobits_cli.schemas import (
     GoobitsConfigSchema, 
     CLISchema, 
@@ -170,3 +172,8 @@ def nodejs_generator():
 def typescript_generator():
     """Provide a TypeScript generator instance."""
     return TypeScriptGenerator()
+
+
+# Note: YAML test integration has been removed in favor of keeping
+# feature parity tests as a separate, purpose-built system.
+# Use 'make test-parity' to run cross-language CLI validation tests.

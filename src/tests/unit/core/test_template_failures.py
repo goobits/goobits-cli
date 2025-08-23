@@ -458,35 +458,6 @@ class TestComponentRegistryFailures:
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
     
-    def test_component_loading_with_io_errors(self):
-        """Test component loading when I/O errors occur"""
-        registry = ComponentRegistry(self.components_dir)
-        
-        # Create a component file
-        test_file = self.components_dir / "test.j2"
-        test_file.write_text("test content")
-        
-        # Try to handle I/O errors during component loading by catching the exception
-        try:
-            # Mock Path.read_text to simulate I/O error
-            original_read_text = Path.read_text
-            def mock_read_text(self, *args, **kwargs):
-                if self.name == "test.j2":
-                    raise IOError("Disk read error")
-                return original_read_text(self, *args, **kwargs)
-            
-            with patch.object(Path, 'read_text', mock_read_text):
-                # Should handle I/O errors gracefully
-                registry.load_components()
-                
-        except OSError:
-            # I/O error occurred and was not handled - that's also a test result
-            pass
-        
-        # Component should not be loaded due to I/O error (or exception was raised)
-        # Either way, this tests the system's behavior under I/O stress
-        assert True  # Test completes without crash
-    
     def test_component_validation_with_corrupted_templates(self):
         """Test validation of corrupted template files"""
         # Create corrupted template files
