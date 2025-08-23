@@ -287,15 +287,17 @@ class TestMainCLICommands(TestMainCLIBase):
 class TestFastVersionHelp(TestMainCLIBase):
     """Test the fast version and help check functionality."""
     
-    @patch('sys.argv', ['goobits', '--version'])
-    @patch('goobits_cli.main.__version__', '1.2.3')
     @patch('sys.exit')
-    def test_fast_version_check_triggers_exit(self, mock_exit, mock_version):
+    def test_fast_version_check_triggers_exit(self, mock_exit):
         """Test that fast version check triggers sys.exit."""
-        from goobits_cli.main import main
-        
-        # This should trigger fast exit
-        main()
+        with patch('sys.argv', ['goobits', '--version']):
+            # Import module dynamically to trigger top-level code
+            import importlib
+            import sys
+            if 'goobits_cli.main' in sys.modules:
+                importlib.reload(sys.modules['goobits_cli.main'])
+            else:
+                import goobits_cli.main
         
         mock_exit.assert_called_once_with(0)
 

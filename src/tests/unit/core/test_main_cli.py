@@ -1801,9 +1801,9 @@ description = "A test package"
         with pytest.raises(PermissionError):
             backup_file(test_file, create_backup=True)
 
-    @patch('goobits_cli.main.toml.load')
-    @patch('goobits_cli.main.toml.dump')
-    def test_update_pyproject_toml_poetry_format(self, mock_dump, mock_load):
+    @patch('toml.load')
+    @patch('toml.dump')
+    def test_update_pyproject_toml_poetry_format(self, mock_load, mock_dump):
         """Test updating pyproject.toml in Poetry format."""
         pyproject_path = self.temp_dir / "pyproject.toml"
         pyproject_path.touch()
