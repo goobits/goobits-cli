@@ -554,7 +554,11 @@ export function hasHook(hookName: string): boolean {
 use clap::ArgMatches;
 use anyhow::{Result, anyhow};
 
-{%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+{# Simple approach: Handle the known structure we have #}
+{%- if cli and cli.root_command and cli.root_command.subcommands -%}
+
+{# Generate hooks for top-level commands #}
+{%- for command_config in cli.root_command.subcommands -%}
 
 /// Hook function for '{{ command_config.name }}' command
 /// {{ command_config.description if command_config.description is defined else 'No description' }}
@@ -564,44 +568,148 @@ pub fn on_{{ command_config.name | replace('-', '_') }}(matches: &ArgMatches) ->
     {% if command_config.arguments is defined and command_config.arguments %}
     
     // Extract arguments
-    {% for arg in command_config.arguments -%}
-    {% if arg.multiple is defined and arg.multiple -%}
+    {% for arg in command_config.arguments %}
+    {% if arg.multiple is defined and arg.multiple %}
     if let Some({{ arg.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ arg.name }}") {
-        let {{ arg.name | replace('-', '_') }}: Vec<&str> = {{ arg.name | replace('-', '_') }}_values.collect();
+        let {{ arg.name | replace('-', '_') }}: Vec<&String> = {{ arg.name | replace('-', '_') }}_values.collect();
         println!("{{ arg.name }}: {:?}", {{ arg.name | replace('-', '_') }});
     }
-    {% else -%}
+    {% else %}
     if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
         println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
     }
-    {% endif -%}
-    {% endfor -%}
+    {% endif %}
+    {% endfor %}
     {% endif %}
     {% if command_config.options is defined and command_config.options %}
     
     // Extract options
-    {% for option in command_config.options -%}
-    {% if option.type is defined and (option.type == 'boolean' or option.type == 'flag') -%}
+    {% for option in command_config.options %}
+    {% if option.type is defined and (option.type == 'boolean' or option.type == 'flag') %}
     let {{ option.name | replace('-', '_') }} = matches.get_flag("{{ option.name }}");
     println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
-    {% elif option.multiple is defined and option.multiple -%}
+    {% elif option.multiple is defined and option.multiple %}
     if let Some({{ option.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ option.name }}") {
-        let {{ option.name | replace('-', '_') }}: Vec<&str> = {{ option.name | replace('-', '_') }}_values.collect();
+        let {{ option.name | replace('-', '_') }}: Vec<&String> = {{ option.name | replace('-', '_') }}_values.collect();
         println!("{{ option.name }}: {:?}", {{ option.name | replace('-', '_') }});
     }
-    {% else -%}
+    {% else %}
     if let Some({{ option.name | replace('-', '_') }}) = matches.get_one::<String>("{{ option.name }}") {
         println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
     }
-    {% endif -%}
-    {% endfor -%}
+    {% endif %}
+    {% endfor %}
     {% endif %}
     
     // Return Ok(()) for success, Err(...) for error
     Ok(())
 }
 
-{%- endfor %}
+{# Generate hooks for nested subcommands if they exist #}
+{%- if command_config.subcommands is defined and command_config.subcommands -%}
+  {%- if command_config.subcommands is mapping -%}
+    {%- for subcommand_name, subcommand_config in command_config.subcommands.items() -%}
+
+/// Hook function for '{{ command_config.name }} {{ subcommand_name }}' command
+/// {{ subcommand_config.description if subcommand_config.description is defined else subcommand_config.desc if subcommand_config.desc is defined else 'No description' }}
+pub fn on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
+    // TODO: Implement your business logic here
+    println!("Executing {{ command_config.name }} {{ subcommand_name }} command...");
+    {% if subcommand_config.arguments is defined and subcommand_config.arguments %}
+    
+    // Extract arguments
+    {% for arg in subcommand_config.arguments %}
+    {% if arg.multiple is defined and arg.multiple %}
+    if let Some({{ arg.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ arg.name }}") {
+        let {{ arg.name | replace('-', '_') }}: Vec<&String> = {{ arg.name | replace('-', '_') }}_values.collect();
+        println!("{{ arg.name }}: {:?}", {{ arg.name | replace('-', '_') }});
+    }
+    {% else %}
+    if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
+        println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
+    }
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% if subcommand_config.options is defined and subcommand_config.options %}
+    
+    // Extract options
+    {% for option in subcommand_config.options %}
+    {% if option.type is defined and (option.type == 'boolean' or option.type == 'flag') %}
+    let {{ option.name | replace('-', '_') }} = matches.get_flag("{{ option.name }}");
+    println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
+    {% elif option.multiple is defined and option.multiple %}
+    if let Some({{ option.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ option.name }}") {
+        let {{ option.name | replace('-', '_') }}: Vec<&String> = {{ option.name | replace('-', '_') }}_values.collect();
+        println!("{{ option.name }}: {:?}", {{ option.name | replace('-', '_') }});
+    }
+    {% else %}
+    if let Some({{ option.name | replace('-', '_') }}) = matches.get_one::<String>("{{ option.name }}") {
+        println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
+    }
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    
+    // Return Ok(()) for success, Err(...) for error
+    Ok(())
+}
+
+    {%- endfor -%}
+  {%- else -%}
+    {# Subcommands is a list #}
+    {%- for subcommand_config in command_config.subcommands -%}
+
+/// Hook function for '{{ command_config.name }} {{ subcommand_config.name }}' command
+/// {{ subcommand_config.description if subcommand_config.description is defined else subcommand_config.desc if subcommand_config.desc is defined else 'No description' }}
+pub fn on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_config.name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
+    // TODO: Implement your business logic here
+    println!("Executing {{ command_config.name }} {{ subcommand_config.name }} command...");
+    {% if subcommand_config.arguments is defined and subcommand_config.arguments %}
+    
+    // Extract arguments
+    {% for arg in subcommand_config.arguments %}
+    {% if arg.multiple is defined and arg.multiple %}
+    if let Some({{ arg.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ arg.name }}") {
+        let {{ arg.name | replace('-', '_') }}: Vec<&String> = {{ arg.name | replace('-', '_') }}_values.collect();
+        println!("{{ arg.name }}: {:?}", {{ arg.name | replace('-', '_') }});
+    }
+    {% else %}
+    if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
+        println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
+    }
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    {% if subcommand_config.options is defined and subcommand_config.options %}
+    
+    // Extract options
+    {% for option in subcommand_config.options %}
+    {% if option.type is defined and (option.type == 'boolean' or option.type == 'flag') %}
+    let {{ option.name | replace('-', '_') }} = matches.get_flag("{{ option.name }}");
+    println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
+    {% elif option.multiple is defined and option.multiple %}
+    if let Some({{ option.name | replace('-', '_') }}_values) = matches.get_many::<String>("{{ option.name }}") {
+        let {{ option.name | replace('-', '_') }}: Vec<&String> = {{ option.name | replace('-', '_') }}_values.collect();
+        println!("{{ option.name }}: {:?}", {{ option.name | replace('-', '_') }});
+    }
+    {% else %}
+    if let Some({{ option.name | replace('-', '_') }}) = matches.get_one::<String>("{{ option.name }}") {
+        println!("{{ option.name }}: {}", {{ option.name | replace('-', '_') }});
+    }
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+    
+    // Return Ok(()) for success, Err(...) for error
+    Ok(())
+}
+
+    {%- endfor -%}
+  {%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif %}
 
 /// Simple hook manager for compatibility with other templates
 pub struct HookManager;
@@ -615,9 +723,23 @@ impl HookManager {
     /// Execute a hook by name
     pub fn execute_hook(&self, name: &str, matches: &ArgMatches) -> Result<()> {
         match name {
-        {%- for command_config in cli.root_command.subcommands if cli.root_command and cli.root_command.subcommands %}
+{% if cli and cli.root_command and cli.root_command.subcommands %}
+
+{% for command_config in cli.root_command.subcommands %}
             "on_{{ command_config.name | replace('-', '_') }}" => on_{{ command_config.name | replace('-', '_') }}(matches),
-        {%- endfor %}
+{% if command_config.subcommands is defined and command_config.subcommands %}
+  {% if command_config.subcommands is mapping %}
+    {% for subcommand_name, subcommand_config in command_config.subcommands.items() %}
+            "on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_name | replace('-', '_') }}" => on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_name | replace('-', '_') }}(matches),
+    {% endfor %}
+  {% else %}
+    {% for subcommand_config in command_config.subcommands %}
+            "on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_config.name | replace('-', '_') }}" => on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_config.name | replace('-', '_') }}(matches),
+    {% endfor %}
+  {% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
             _ => Err(anyhow::anyhow!("Unknown hook: {}", name)),
         }
     }

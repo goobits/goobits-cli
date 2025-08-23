@@ -22,7 +22,7 @@ export interface CommandContext<T = Record<string, unknown>> {
 export interface GlobalOptions {
   {% if cli.options %}
   {% for option in cli.options %}
-  readonly {{ option.name | replace('-', '_') }}{% if not option.required %}?{% endif %}: {{ option.type | to_ts_type }};
+  readonly {{ option.name | replace('-', '_') }}{% if not option.required %}?{% endif %}: {% if option.type == 'int' or option.type == 'number' %}number{% elif option.type == 'bool' or option.type == 'boolean' %}boolean{% else %}string{% endif %};
   {% endfor %}
   {% else %}
   readonly [key: string]: unknown;
@@ -33,19 +33,19 @@ export interface GlobalOptions {
 
 {% for cmd_name, cmd_data in cli.commands.items() %}
 /** Arguments for {{ cmd_name }} command */
-export interface {{ cmd_name | PascalCase }}Args {
+export interface {{ cmd_name | replace('-', '_') | title }}Args {
   {% if cmd_data.args %}
   {% for arg in cmd_data.args %}
-  readonly {{ arg.name }}{% if not arg.required %}?{% endif %}: {% if arg.choices %}{{ arg.choices | map('tojsonstring') | join(' | ') }}{% else %}{{ arg.type | default('string') | to_ts_type }}{% endif %};
+  readonly {{ arg.name }}{% if not arg.required %}?{% endif %}: {% if arg.choices %}{% for choice in arg.choices %}'{{ choice }}'{% if not loop.last %} | {% endif %}{% endfor %}{% else %}{% if arg.type == 'int' or arg.type == 'number' %}number{% elif arg.type == 'bool' or arg.type == 'boolean' %}boolean{% else %}string{% endif %}{% endif %};
   {% endfor %}
   {% endif %}
 }
 
 /** Options for {{ cmd_name }} command */
-export interface {{ cmd_name | PascalCase }}Options {
+export interface {{ cmd_name | replace('-', '_') | title }}Options {
   {% if cmd_data.options %}
   {% for opt in cmd_data.options %}
-  readonly {{ opt.name | replace('-', '_') }}{% if not opt.required %}?{% endif %}: {% if opt.choices %}{{ opt.choices | map('tojsonstring') | join(' | ') }}{% else %}{{ opt.type | default('string') | to_ts_type }}{% endif %};
+  readonly {{ opt.name | replace('-', '_') }}{% if not opt.required %}?{% endif %}: {% if opt.choices %}{% for choice in opt.choices %}'{{ choice }}'{% if not loop.last %} | {% endif %}{% endfor %}{% else %}{% if opt.type == 'int' or opt.type == 'number' %}number{% elif opt.type == 'bool' or opt.type == 'boolean' %}boolean{% else %}string{% endif %}{% endif %};
   {% endfor %}
   {% else %}
   readonly [key: string]: unknown;
@@ -53,27 +53,27 @@ export interface {{ cmd_name | PascalCase }}Options {
 }
 
 /** Complete context for {{ cmd_name }} command */
-export interface {{ cmd_name | PascalCase }}Context extends CommandContext<{{ cmd_name | PascalCase }}Args> {
-  readonly options: {{ cmd_name | PascalCase }}Options;
+export interface {{ cmd_name | replace('-', '_') | title }}Context extends CommandContext<{{ cmd_name | replace('-', '_') | title }}Args> {
+  readonly options: {{ cmd_name | replace('-', '_') | title }}Options;
 }
 
 {% if cmd_data.subcommands %}
 // Subcommand types for {{ cmd_name }}
 {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
 /** Arguments for {{ cmd_name }} {{ subcmd_name }} subcommand */
-export interface {{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Args {
+export interface {{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}Args {
   {% if subcmd_data.args %}
   {% for arg in subcmd_data.args %}
-  readonly {{ arg.name }}{% if not arg.required %}?{% endif %}: {% if arg.choices %}{{ arg.choices | map('tojsonstring') | join(' | ') }}{% else %}{{ arg.type | default('string') | to_ts_type }}{% endif %};
+  readonly {{ arg.name }}{% if not arg.required %}?{% endif %}: {% if arg.choices %}{% for choice in arg.choices %}'{{ choice }}'{% if not loop.last %} | {% endif %}{% endfor %}{% else %}{% if arg.type == 'int' or arg.type == 'number' %}number{% elif arg.type == 'bool' or arg.type == 'boolean' %}boolean{% else %}string{% endif %}{% endif %};
   {% endfor %}
   {% endif %}
 }
 
 /** Options for {{ cmd_name }} {{ subcmd_name }} subcommand */
-export interface {{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Options {
+export interface {{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}Options {
   {% if subcmd_data.options %}
   {% for opt in subcmd_data.options %}
-  readonly {{ opt.name | replace('-', '_') }}{% if not opt.required %}?{% endif %}: {% if opt.choices %}{{ opt.choices | map('tojsonstring') | join(' | ') }}{% else %}{{ opt.type | default('string') | to_ts_type }}{% endif %};
+  readonly {{ opt.name | replace('-', '_') }}{% if not opt.required %}?{% endif %}: {% if opt.choices %}{% for choice in opt.choices %}'{{ choice }}'{% if not loop.last %} | {% endif %}{% endfor %}{% else %}{% if opt.type == 'int' or opt.type == 'number' %}number{% elif opt.type == 'bool' or opt.type == 'boolean' %}boolean{% else %}string{% endif %}{% endif %};
   {% endfor %}
   {% else %}
   readonly [key: string]: unknown;
@@ -81,8 +81,8 @@ export interface {{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Option
 }
 
 /** Complete context for {{ cmd_name }} {{ subcmd_name }} subcommand */
-export interface {{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Context extends CommandContext<{{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Args> {
-  readonly options: {{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Options;
+export interface {{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}Context extends CommandContext<{{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}Args> {
+  readonly options: {{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}Options;
 }
 {% endfor %}
 {% endif %}
@@ -109,13 +109,13 @@ export interface ManagedCommand<TContext extends CommandContext = CommandContext
 export interface HookRegistry {
   {% for cmd_name, cmd_data in cli.commands.items() %}
   {% if cmd_data.lifecycle == "managed" %}
-  {{ cmd_name }}Command?: ManagedCommand<{{ cmd_name | PascalCase }}Context>;
+  {{ cmd_name }}Command?: ManagedCommand<{{ cmd_name | replace('-', '_') | title }}Context>;
   {% else %}
-  on{{ cmd_name | PascalCase }}?: CommandHook<{{ cmd_name | PascalCase }}Context>;
+  on{{ cmd_name | replace('-', '_') | title }}?: CommandHook<{{ cmd_name | replace('-', '_') | title }}Context>;
   {% endif %}
   {% if cmd_data.subcommands %}
   {% for subcmd_name, subcmd_data in cmd_data.subcommands.items() %}
-  on{{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}?: CommandHook<{{ cmd_name | PascalCase }}{{ subcmd_name | PascalCase }}Context>;
+  on{{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}?: CommandHook<{{ cmd_name | replace('-', '_') | title }}{{ subcmd_name | replace('-', '_') | title }}Context>;
   {% endfor %}
   {% endif %}
   {% endfor %}

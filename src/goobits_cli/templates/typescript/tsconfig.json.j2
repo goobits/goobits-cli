@@ -29,11 +29,12 @@
     "emitDecoratorMetadata": true
   },
   "include": [
-    "{{ main_file_name | default('index.ts') }}",
+    "*.ts",
     "bin/**/*.ts",
     "commands/**/*.ts",
     "lib/**/*.ts",
     "scripts/**/*.ts",
+    "src/**/*.ts",
     {% if hooks_path %}
     "{{ hooks_path }}",
     {% else %}

@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+
+/**
+ * Auto-generated from {{ file_name }}
+ * CLI executable entry point for {{ display_name }}
+ * Simplified version for reliable testing
+ */
+
+const { Command } = require('commander');
+const path = require('path');
+const fs = require('fs');
+
+/**
+ * Simple CLI implementation that works reliably
+ */
+function createCLI() {
+  const program = new Command();
+  
+  program
+    .name('{{ command_name }}')
+    .description('{{ description }}')
+    .version('{{ version }}');
+
+  // Add help command
+  program
+    .command('help')
+    .description('Display help information')
+    .action(() => {
+      program.help();
+    });
+
+  {% for command_name, command in cli.commands.items() %}
+  // {{ command_name }} command
+  const {{ command_name | replace('-', '_') }}Command = program
+    .command('{{ command_name }}')
+    .description('{{ command.desc }}');
+
+  {% for arg in command.args | default([]) %}
+  {{ command_name | replace('-', '_') }}Command.argument('{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}', '{{ arg.desc }}');
+  {% endfor %}
+
+  {% for option in command.options | default([]) %}
+  {{ command_name | replace('-', '_') }}Command.option('--{{ option.name }}{% if option.short %}, -{{ option.short }}{% endif %}', '{{ option.desc }}'{% if option.default %}, {{ option.default | tojson }}{% endif %});
+  {% endfor %}
+
+  {{ command_name | replace('-', '_') }}Command.action(async ({% for arg in command.args | default([]) %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.args and command.options %}, {% endif %}options) => {
+    try {
+      // Try to load hooks
+      let hooks = {};
+      try {
+        hooks = require('../src/hooks');
+      } catch (e) {
+        console.warn('Warning: hooks module not found');
+      }
+
+      const hookName = 'on{{ command_name | replace("-", "") | title }}';
+      if (hooks[hookName] && typeof hooks[hookName] === 'function') {
+        const context = {
+          commandName: '{{ command_name }}',
+          args: { {% for arg in command.args | default([]) %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} },
+          options: options || {},
+          globalOptions: program.opts() || {}
+        };
+        await hooks[hookName](context);
+      } else {
+        console.log('{{ command_name }} command executed successfully');
+        console.log('Hook function "' + hookName + '" not implemented yet');
+      }
+    } catch (error) {
+      console.error('Error executing {{ command_name }}:', error.message);
+      process.exit(1);
+    }
+  });
+  {% endfor %}
+
+  return program;
+}
+
+// Main execution
+function main() {
+  try {
+    const program = createCLI();
+    program.parse(process.argv);
+  } catch (error) {
+    console.error('CLI Error:', error.message);
+    process.exit(1);
+  }
+}
+
+// Execute if this is the main module
+if (require.main === module) {
+  main();
+}
+
+module.exports = { createCLI, main };

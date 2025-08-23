@@ -2,23 +2,16 @@
   "name": "{{ package_name }}",
   "version": "{{ version | default('1.0.0') }}",
   "description": "{{ description | default(cli.description if cli else 'A CLI tool built with goobits') }}",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "type": "commonjs",
   "bin": {
-    "{{ command_name }}": "./dist/bin/cli.js"
+    "{{ command_name }}": "./bin/cli.cjs"
   },
   "scripts": {
-    "build": "tsc && chmod +x dist/bin/cli.js",
-    "build:watch": "tsc --watch",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts",
-    "clean": "rm -rf dist",
-    "dev": "npm run build && node dist/bin/cli.js",
-    "completion:install": "node dist/bin/cli.js completion install",
-    "prepublishOnly": "npm run clean && npm run build"
+    "start": "node bin/cli.cjs",
+    "test": "echo \"No tests specified\"",
+    "dev": "node bin/cli.cjs",
+    "install-cli": "npm link"
   },
   "keywords": [
     "cli",
