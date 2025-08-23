@@ -367,7 +367,7 @@ class TestTypeScriptCLICompilation:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(content)
                 
-                if filename.endswith('.ts') and ('cli' in filename or 'main' in filename):
+                if filename.endswith('.ts') and ('cli' in filename or 'main' in filename or 'index' in filename):
                     cli_file = file_path
                 elif filename == 'tsconfig.json':
                     tsconfig_file = file_path

@@ -204,7 +204,7 @@ class TestPerformanceBenchmarks:
             assert self._last_memory_mb < 150     # Increased memory limit for complex generation
             
             # Verify files were generated (check for either main file types)
-            main_files = ["cli.ts", "index.ts"]
+            main_files = ["cli.ts", "index.ts", "generated_index.ts"]
             assert any((tmp_path / f).exists() for f in main_files), f"No main CLI file found in {list(tmp_path.iterdir())}"
             # Verify at least some files were generated (config files might not be generated in test scenarios)
             generated_files = list(tmp_path.iterdir())

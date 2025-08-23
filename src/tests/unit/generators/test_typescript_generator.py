@@ -99,8 +99,8 @@ class TestTypeScriptGenerator:
         generator = TypeScriptGenerator()
         output_files = generator.get_output_files()
         
-        # TypeScript should generate index.ts, package.json, and setup.sh
-        assert 'index.ts' in output_files
+        # TypeScript should generate generated_index.ts (or index.ts), package.json, and setup.sh
+        assert 'generated_index.ts' in output_files or 'index.ts' in output_files
         assert 'package.json' in output_files
         assert 'setup.sh' in output_files
         # Should not generate Python or Rust files
@@ -216,10 +216,11 @@ class TestTypeScriptGenerator:
         # Should handle unicode without errors
         try:
             output_files = generator.generate_all_files(config, "test.yaml")
-            assert 'index.ts' in output_files
+            assert 'generated_index.ts' in output_files or 'index.ts' in output_files
             
             # Check that unicode is properly handled in output
-            cli_content = output_files['index.ts']
+            ts_file = 'generated_index.ts' if 'generated_index.ts' in output_files else 'index.ts'
+            cli_content = output_files[ts_file]
             assert isinstance(cli_content, str)  # Should be valid string
         except UnicodeError:
             pytest.fail("TypeScript generator failed to handle unicode characters")
@@ -253,7 +254,8 @@ class TestTypeScriptGenerator:
         generator = TypeScriptGenerator()
         output_files = generator.generate_all_files(config, "test.yaml")
         
-        cli_content = output_files['index.ts']
+        ts_file = 'generated_index.ts' if 'generated_index.ts' in output_files else 'index.ts'
+        cli_content = output_files[ts_file]
         
         # Check for complex command structure
         assert 'complex' in cli_content

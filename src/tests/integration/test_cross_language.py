@@ -931,7 +931,7 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
         search_patterns = {
             "python": ["cli.py", "generated_cli.py", "main.py"],
             "nodejs": ["index.js", "cli.js", "app.js", "bin/cli.js"],
-            "typescript": ["dist/bin/cli.js", "bin/cli.js", "index.ts", "cli.ts", "index.js"],
+            "typescript": ["dist/bin/cli.js", "bin/cli.js", "index.ts", "generated_index.ts", "cli.ts", "index.js"],
             "rust": ["src/main.rs", "main.rs"]
         }
         
@@ -954,7 +954,7 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                         return cli_path
             elif language in ["nodejs", "typescript"] and filename.endswith(('.js', '.ts')):
                 # Check if this looks like a main CLI file
-                if any(pattern in filename for pattern in ['cli.js', 'cli.ts', 'index.js', 'index.ts', 'app.js']):
+                if any(pattern in filename for pattern in ['cli.js', 'cli.ts', 'index.js', 'index.ts', 'generated_index.ts', 'app.js']):
                     cli_path = Path(temp_dir) / filename
                     if cli_path.exists():
                         return cli_path

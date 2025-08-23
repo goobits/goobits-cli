@@ -328,11 +328,23 @@ setup(
                 
                 # Check if CLI file exists (either .ts or compiled .js)
                 cli_ts = Path(temp_dir) / "cli.ts"
+                index_ts = Path(temp_dir) / "index.ts"
+                generated_index_ts = Path(temp_dir) / "generated_index.ts"
+                
+                # Find the actual TypeScript CLI file
+                if cli_ts.exists():
+                    cli_ts_file = cli_ts
+                elif index_ts.exists():
+                    cli_ts_file = index_ts
+                elif generated_index_ts.exists():
+                    cli_ts_file = generated_index_ts
+                else:
+                    cli_ts_file = None
                 cli_js = Path(temp_dir) / "cli.js" 
                 dist_cli = Path(temp_dir) / "dist" / "cli.js"
                 
                 # Try to build TypeScript only if build script exists and there's a .ts file
-                if cli_ts.exists():
+                if cli_ts_file and cli_ts_file.exists():
                     build_result = NpmManager.run_script("build", temp_dir)
                     if build_result.returncode != 0:
                         print("⚠️  TypeScript build failed, trying to use raw .ts file")

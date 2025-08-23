@@ -173,11 +173,14 @@ class TestNodeJSGeneratorE2E:
         assert result is not None
         
         # Verify key files were generated
-        cli_file = tmp_path / "cli.ts"
+        index_file = tmp_path / "index.ts"
+        generated_index_file = tmp_path / "generated_index.ts"
         package_file = tmp_path / "package.json"
         tsconfig_file = tmp_path / "tsconfig.json"
         
-        assert cli_file.exists()
+        # Check for either index.ts or generated_index.ts
+        cli_file = index_file if index_file.exists() else generated_index_file
+        assert cli_file.exists(), f"Neither {index_file} nor {generated_index_file} exists"
         assert package_file.exists()
         assert tsconfig_file.exists()
         
