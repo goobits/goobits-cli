@@ -148,7 +148,7 @@ class TestNodeJSGeneratorE2E:
         assert result is not None
         
         # Verify key files were generated
-        cli_file = tmp_path / "cli.js"
+        cli_file = tmp_path / "index.js"
         package_file = tmp_path / "package.json"
         
         assert cli_file.exists()
@@ -201,7 +201,7 @@ class TestNodeJSGeneratorE2E:
         generator = NodeJSGenerator(use_universal_templates=False)
         generator.generate(sample_nodejs_config, str(tmp_path))
         
-        cli_file = tmp_path / "cli.js"
+        cli_file = tmp_path / "index.js"
         
         # Try to run Node.js syntax check
         try:
@@ -274,11 +274,11 @@ class TestCompleteWorkflowValidation:
         
         # Verify basic structure
         assert result is not None
-        assert (tmp_path / "cli.js").exists()
+        assert (tmp_path / "index.js").exists()
         assert (tmp_path / "package.json").exists()
         
         # Verify content
-        cli_content = (tmp_path / "cli.js").read_text()
+        cli_content = (tmp_path / "index.js").read_text()
         assert "status" in cli_content
 
     @pytest.mark.skipif(

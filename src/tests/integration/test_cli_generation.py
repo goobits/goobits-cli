@@ -249,7 +249,7 @@ class TestCLIGenerationIntegration:
         assert result is not None
         
         # Check that key files were generated
-        cli_file = tmp_path / "cli.js"
+        cli_file = tmp_path / "index.js"
         package_file = tmp_path / "package.json"
         
         assert cli_file.exists()
