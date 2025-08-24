@@ -16,7 +16,7 @@ def main():
         help="Run specific test suite(s)",
         nargs="+",
         choices=["basic-commands", "config-commands", "completion-commands", 
-                 "error-handling", "advanced-features"]
+                 "error-handling", "advanced-features", "basic-demos-test"]
     )
     parser.add_argument(
         "--verbose", "-v",

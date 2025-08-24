@@ -102,7 +102,10 @@ class ParityTestRunner:
         # Copy hook file to the generated directory
         hook_source = config_path.parent / "app_hooks.py"
         if language == "python" and hook_source.exists():
+            # Copy to root and to src/demo_cli for basic-demos examples
             shutil.copy(hook_source, output_dir / language / "app_hooks.py")
+            if (output_dir / language / "src" / "demo_cli").exists():
+                shutil.copy(hook_source, output_dir / language / "src" / "demo_cli" / "app_hooks.py")
         elif language in ["nodejs", "typescript"]:
             hook_source = config_path.parent / "hooks.js"
             if hook_source.exists():
@@ -124,6 +127,7 @@ class ParityTestRunner:
             possible_paths = [
                 output_dir / language / "cli.py",
                 output_dir / language / "src" / f"{cli_name.replace('-', '_')}" / "cli.py",
+                output_dir / language / "src" / "demo_cli" / "cli.py",  # For basic-demos examples
                 output_dir / language / f"{cli_name}.py"
             ]
             cli_path = None
@@ -148,11 +152,21 @@ class ParityTestRunner:
                     print(f"npm install warning: {npm_result.stderr[:200]}")
             
             # For Node.js/TypeScript, look for bin/cli.js first, then fallback
-            possible_paths = [
-                output_dir / language / "bin" / "cli.js",
-                output_dir / language / "cli.js",
-                output_dir / language / "index.js"
-            ]
+            # TypeScript generates .cjs files, Node.js generates .js files
+            if language == "typescript":
+                possible_paths = [
+                    output_dir / language / "bin" / "cli.cjs",
+                    output_dir / language / "bin" / "cli.js",
+                    output_dir / language / "cli.cjs",
+                    output_dir / language / "cli.js",
+                    output_dir / language / "index.js"
+                ]
+            else:
+                possible_paths = [
+                    output_dir / language / "bin" / "cli.js",
+                    output_dir / language / "cli.js",
+                    output_dir / language / "index.js"
+                ]
             cli_path = None
             for path in possible_paths:
                 if path.exists():

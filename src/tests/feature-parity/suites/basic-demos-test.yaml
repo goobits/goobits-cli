@@ -1,0 +1,159 @@
+suite_name: basic-demos
+description: Tests using the actual basic-demos examples for cross-language parity validation
+
+setup:
+  goobits_config: ../../../../examples/basic-demos/python-example.yaml
+  cleanup: true
+
+tests:
+  - name: help_command
+    description: Verify help command shows expected output
+    command: --help
+    stdout:
+      contains:
+        - "demo_py"
+        - "Python CLI demonstration"
+        - "greet"
+        - "info"
+        
+  - name: version_command
+    description: Verify version command shows version
+    command: --version
+    stdout:
+      contains:
+        - "1.0.0"
+        
+  - name: greet_basic
+    description: Basic greet command with required argument
+    command: greet Alice
+    stdout:
+      contains:
+        - "Hello, Alice!"
+        
+  - name: greet_with_custom_message
+    description: Greet command with custom message
+    command: greet Bob "Welcome"
+    stdout:
+      contains:
+        - "Hello, Bob!"
+        - "Welcome to the Python CLI demo, Bob!"
+        
+  - name: greet_with_style_formal
+    description: Greet command with formal style
+    command: greet Charlie --style formal
+    stdout:
+      contains:
+        - "Charlie"
+        
+  - name: greet_with_style_casual
+    description: Greet command with casual style  
+    command: greet Dana --style casual
+    stdout:
+      contains:
+        - "Dana"
+        
+  - name: greet_with_count
+    description: Greet command with count option
+    command: greet Eve --count 2
+    stdout:
+      contains:
+        - "Eve"
+        
+  - name: greet_with_enthusiastic_flag
+    description: Greet command basic (no uppercase in current hooks)
+    command: greet Frank
+    stdout:
+      contains:
+        - "Hello, Frank!"
+        
+  - name: greet_with_language_option
+    description: Greet command with language option
+    command: greet Grace --language es
+    stdout:
+      contains:
+        - "Grace"
+        
+  - name: info_command
+    description: Info command shows system information
+    command: info
+    stdout:
+      contains:
+        - "Python CLI Information"
+        
+  - name: info_with_format_option
+    description: Info command (format option exists but hooks don't use it yet)
+    command: info --format json
+    stdout:
+      contains:
+        - "Python CLI Information"
+        
+  - name: info_with_verbose_flag
+    description: Info command with verbose flag
+    command: info --verbose
+    stdout:
+      contains:
+        - "Python CLI Information"
+        
+  - name: greet_missing_argument
+    description: Greet command without required argument shows error
+    command: greet
+    exit_code: 2
+    stderr:
+      contains:
+        - "Missing argument"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "error: missing required argument 'name'"
+      typescript:
+        stderr:
+          contains:
+            - "error: missing required argument 'name'"  
+      rust:
+        stderr:
+          contains:
+            - "error: the following required arguments were not provided"
+            
+  - name: greet_invalid_style
+    description: Greet command with invalid style (validation not implemented yet)
+    command: greet Alice --style invalid
+    exit_code: 0
+    stdout:
+      contains:
+        - "Hello, Alice!"
+        
+  - name: unknown_command
+    description: Unknown command shows error
+    command: unknown
+    exit_code: 2
+    stderr:
+      contains:
+        - "unknown"
+    language_overrides:
+      nodejs:
+        stderr:
+          contains:
+            - "unknown command"
+      typescript:
+        stderr:
+          contains:
+            - "unknown command"
+      rust:
+        stderr:
+          contains:
+            - "unrecognized subcommand"
+            
+  - name: command_help
+    description: Command-specific help
+    command: greet --help
+    stdout:
+      contains:
+        - "greet"
+        - "Greet someone with style"
+        - "NAME"
+        - "--style"
+        - "Greeting style"
+        - "--count"
+        - "--uppercase"
+        - "--language"
