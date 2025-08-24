@@ -21,18 +21,11 @@ cli:
           desc: "Name to greet"
           required: true
       options:
-        - name: style
-          short: s
-          type: str
-          desc: "Greeting style"
-          choices: ["formal", "casual", "excited"]
-          default: "casual"
+        - name: enthusiastic
+          short: e
+          type: flag
+          desc: "Add exclamation marks"
+          default: false
     
-    serve:
-      desc: "Start a simple HTTP server"
-      options:
-        - name: port
-          short: p
-          type: int
-          desc: "Port number"
-          default: 3000
+    info:
+      desc: "Show system information"

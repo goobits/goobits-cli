@@ -1,17 +1,17 @@
-# TypeScript CLI Example  
-package_name: demo-typescript-cli
-command_name: demo_ts
-display_name: "Demo TypeScript CLI"
-description: "A sample TypeScript CLI built with Goobits"
+# Rust CLI Example
+package_name: demo-rust-cli
+command_name: demo_rust
+display_name: "Demo Rust CLI"
+description: "A sample Rust CLI built with Goobits"
 version: "1.0.0"
-language: typescript
+language: rust
 author: "Demo User"
 email: "demo@example.com"
 license: "MIT"
 
 cli:
-  name: demo_ts
-  tagline: "TypeScript CLI demonstration"
+  name: demo_rust
+  tagline: "Rust CLI demonstration"
   commands:
     greet:
       desc: "Greet someone"

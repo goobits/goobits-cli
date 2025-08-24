@@ -281,6 +281,35 @@ class TestCompleteWorkflowValidation:
         cli_content = (tmp_path / "index.js").read_text()
         assert "status" in cli_content
 
+    def test_minimal_workflow_typescript(self, tmp_path):
+        """Test minimal workflow with TypeScript generator."""
+        # Create minimal config
+        config = ConfigSchema(cli={
+            "name": "minimal-cli",
+            "tagline": "Minimal test CLI",
+            "version": "1.0.0",
+            "commands": {
+                "status": {
+                    "desc": "Show status",
+                    "handler": "status_handler"
+                }
+            }
+        })
+        
+        # Generate CLI
+        from goobits_cli.generators.typescript import TypeScriptGenerator
+        generator = TypeScriptGenerator(use_universal_templates=False)
+        result = generator.generate(config, str(tmp_path))
+        
+        # Verify basic structure
+        assert result is not None
+        assert (tmp_path / "index.ts").exists()
+        assert (tmp_path / "package.json").exists()
+        
+        # Verify content
+        cli_content = (tmp_path / "index.ts").read_text()
+        assert "status" in cli_content
+
     @pytest.mark.skipif(
         shutil.which("cargo") is None,
         reason="Cargo not available - Rust tests require Rust toolchain"
