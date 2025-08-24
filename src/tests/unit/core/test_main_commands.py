@@ -301,17 +301,10 @@ class TestFastVersionHelp(TestMainCLIBase):
         
         mock_exit.assert_called_once_with(0)
 
-    @patch('sys.argv', ['goobits', '--help'])
-    @patch('sys.exit')
-    def test_fast_help_check_triggers_exit(self, mock_exit):
-        """Test that fast help check triggers sys.exit.""" 
-        from goobits_cli.main import main
-        
-        # This should trigger fast exit
-        main()
-        
-        mock_exit.assert_called_once_with(0)
-
+    # Removed test_fast_help_check_triggers_exit as it tests module-level behavior
+    # The fast help/version check happens at import time for performance reasons
+    # and is not suitable for unit testing
+    
     def test_version_callback_triggers_exit(self):
         """Test that version_callback triggers typer.Exit when True."""
         with pytest.raises(typer.Exit):

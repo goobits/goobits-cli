@@ -1,36 +1,8 @@
 """
 Goobits CLI Shared Templates
 
-This package contains documentation generation templates and utilities
-for all supported languages.
+This package contains templates for code generation.
 """
 
-from .doc_generator import (
-    DocumentationGenerator,
-    DocumentationType,
-    OutputFormat,
-    DocumentationContext,
-    DocumentationSection,
-    LanguageAdapter,
-    PythonAdapter,
-    NodeJSAdapter,
-    TypeScriptAdapter,
-    RustAdapter,
-    generate_documentation,
-    create_readme_file
-)
-
-__all__ = [
-    'DocumentationGenerator',
-    'DocumentationType',
-    'OutputFormat',
-    'DocumentationContext',
-    'DocumentationSection',
-    'LanguageAdapter',
-    'PythonAdapter',
-    'NodeJSAdapter',
-    'TypeScriptAdapter',
-    'RustAdapter',
-    'generate_documentation',
-    'create_readme_file'
-]
+# Currently empty - doc_generator was removed as it was unused
+# The actual documentation generator is in shared/components/doc_generator.py
