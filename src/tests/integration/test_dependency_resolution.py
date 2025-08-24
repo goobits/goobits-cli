@@ -740,7 +740,7 @@ process.exit(0);
         try:
             if language == "python":
                 result = subprocess.run(
-                    ["python", str(cli_file), "--help"],
+                    ["python3", str(cli_file), "--help"],
                     cwd=temp_dir,
                     capture_output=True,
                     text=True,

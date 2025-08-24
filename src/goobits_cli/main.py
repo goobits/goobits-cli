@@ -185,15 +185,59 @@ def load_goobits_config(file_path: Path) -> 'GoobitsConfigSchema':
         raise typer.Exit(1)
 
     except yaml.YAMLError as e:
-
-        typer.echo(f"Error parsing YAML: {e}", err=True)
-
+        # Extract line number and provide helpful context
+        error_msg = str(e)
+        if hasattr(e, 'problem_mark'):
+            mark = e.problem_mark
+            error_msg = (
+                f"\n❌ YAML Parsing Error at line {mark.line + 1}, column {mark.column + 1}:\n"
+                f"   {e.problem}\n"
+            )
+            if e.context:
+                error_msg += f"   Context: {e.context}\n"
+            
+            # Try to show the problematic line
+            try:
+                with open(file_path, 'r') as f:
+                    lines = f.readlines()
+                    if 0 <= mark.line < len(lines):
+                        error_msg += f"\n   Line {mark.line + 1}: {lines[mark.line].rstrip()}\n"
+                        error_msg += "   " + " " * mark.column + "^\n"
+            except:
+                pass
+                
+            error_msg += "\n💡 Tip: Check that indentation is consistent (use 2 spaces, not tabs)"
+        else:
+            error_msg = f"\n❌ YAML Parsing Error: {e}\n"
+            error_msg += "\n💡 Tip: Validate your YAML at https://yamlchecker.com/"
+            
+        typer.echo(error_msg, err=True)
         raise typer.Exit(1)
 
     except ValidationError as e:
-
-        typer.echo(f"Error validating configuration: {e}", err=True)
-
+        # Format validation errors more helpfully
+        error_msg = "\n❌ Configuration Validation Errors:\n"
+        
+        for error in e.errors():
+            field_path = '.'.join(str(x) for x in error['loc'])
+            error_type = error['type']
+            msg = error['msg']
+            
+            error_msg += f"\n   • Field '{field_path}': {msg}\n"
+            
+            # Add helpful suggestions based on error type
+            if 'missing' in error_type:
+                error_msg += f"     💡 Add this required field to your configuration\n"
+            elif 'choice' in error_type or 'enum' in error_type:
+                if 'ctx' in error and 'enum_values' in error['ctx']:
+                    valid_values = error['ctx']['enum_values']
+                    error_msg += f"     💡 Valid values: {', '.join(map(str, valid_values))}\n"
+            elif 'type' in error_type:
+                error_msg += f"     💡 Expected type: {error_type.replace('type_error.', '')}\n"
+        
+        error_msg += "\n📖 See examples at: https://github.com/goobits/goobits-cli#quick-start\n"
+        
+        typer.echo(error_msg, err=True)
         raise typer.Exit(1)
 
 
@@ -369,41 +413,41 @@ def generate_setup_script(config: 'GoobitsConfigSchema', project_dir: Path) -> s
 
         'installation': {
 
-            'pypi_name': config.installation.pypi_name,
+            'pypi_name': config.installation.pypi_name if hasattr(config, 'installation') and config.installation else config.package_name,
 
-            'development_path': config.installation.development_path,
+            'development_path': config.installation.development_path if hasattr(config, 'installation') and config.installation else '.',
 
-            'extras': config.installation.extras,
+            'extras': config.installation.extras if hasattr(config, 'installation') and config.installation else {},
 
         },
 
         'shell_integration': {
 
-            'enabled': config.shell_integration.enabled,
+            'enabled': config.shell_integration.enabled if hasattr(config, 'shell_integration') and config.shell_integration and hasattr(config.shell_integration, 'enabled') else False,
 
-            'alias': config.shell_integration.alias,
+            'alias': config.shell_integration.alias if hasattr(config, 'shell_integration') and config.shell_integration and hasattr(config.shell_integration, 'alias') else config.command_name,
 
         },
 
         'validation': {
 
-            'check_api_keys': config.validation.check_api_keys,
+            'check_api_keys': config.validation.check_api_keys if hasattr(config, 'validation') and config.validation and hasattr(config.validation, 'check_api_keys') else False,
 
-            'check_disk_space': config.validation.check_disk_space,
+            'check_disk_space': config.validation.check_disk_space if hasattr(config, 'validation') and config.validation and hasattr(config.validation, 'check_disk_space') else True,
 
-            'minimum_disk_space_mb': config.validation.minimum_disk_space_mb,
+            'minimum_disk_space_mb': config.validation.minimum_disk_space_mb if hasattr(config, 'validation') and config.validation and hasattr(config.validation, 'minimum_disk_space_mb') else 100,
 
         },
 
         'messages': {
 
-            'install_success': config.messages.install_success,
+            'install_success': config.messages.install_success if hasattr(config, 'messages') and config.messages and hasattr(config.messages, 'install_success') else f"✅ {config.display_name} installed successfully!",
 
-            'install_dev_success': config.messages.install_dev_success,
+            'install_dev_success': config.messages.install_dev_success if hasattr(config, 'messages') and config.messages and hasattr(config.messages, 'install_dev_success') else f"✅ {config.display_name} installed in development mode!",
 
-            'upgrade_success': config.messages.upgrade_success,
+            'upgrade_success': config.messages.upgrade_success if hasattr(config, 'messages') and config.messages and hasattr(config.messages, 'upgrade_success') else f"✅ {config.display_name} upgraded successfully!",
 
-            'uninstall_success': config.messages.uninstall_success,
+            'uninstall_success': config.messages.uninstall_success if hasattr(config, 'messages') and config.messages and hasattr(config.messages, 'uninstall_success') else f"✅ {config.display_name} uninstalled successfully!",
 
         },
 
@@ -1109,6 +1153,71 @@ def build(
 
 
 
+
+
+@app.command()
+def validate(
+    config_path: Optional[Path] = typer.Argument(
+        None,
+        help="Path to goobits.yaml file (defaults to ./goobits.yaml)"
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose", "-v",
+        help="Show detailed validation information"
+    )
+):
+    """
+    Validate a goobits.yaml configuration file without generating any files.
+    
+    This command checks:
+    - YAML syntax correctness
+    - Required fields presence
+    - Field type validation
+    - Value constraints
+    """
+    _lazy_imports()
+    
+    # Determine config file path
+    if config_path is None:
+        config_path = Path.cwd() / "goobits.yaml"
+    
+    config_path = Path(config_path).resolve()
+    
+    if not config_path.exists():
+        typer.echo(f"❌ Configuration file '{config_path}' not found.", err=True)
+        raise typer.Exit(1)
+    
+    typer.echo(f"🔍 Validating: {config_path}")
+    
+    try:
+        # Try to load and validate the configuration
+        config = load_goobits_config(config_path)
+        
+        # If we get here, validation passed
+        typer.echo("✅ Configuration is valid!")
+        
+        if verbose:
+            typer.echo("\n📋 Configuration Summary:")
+            typer.echo(f"   Package: {config.package_name}")
+            typer.echo(f"   Command: {config.command_name}")
+            typer.echo(f"   Language: {getattr(config, 'language', 'python')}")
+            
+            if hasattr(config, 'cli') and config.cli:
+                typer.echo(f"   CLI Version: {config.cli.version}")
+                if hasattr(config.cli, 'commands') and config.cli.commands:
+                    typer.echo(f"   Commands: {len(config.cli.commands)}")
+                    for cmd_name in list(config.cli.commands.keys())[:5]:
+                        typer.echo(f"      - {cmd_name}")
+                    if len(config.cli.commands) > 5:
+                        typer.echo(f"      ... and {len(config.cli.commands) - 5} more")
+        
+        typer.echo("\n💡 Ready to build! Run: goobits build")
+        
+    except Exception as e:
+        # Errors are already formatted nicely by load_goobits_config
+        # Just exit with error code (error message already printed)
+        raise typer.Exit(1)
 
 
 @app.command()

@@ -68,6 +68,26 @@ export class PluginLoadError extends CLIError {
   }
 }
 
+// Plugin not found errors
+export class PluginNotFoundError extends CLIError {
+  constructor(pluginName, searchPaths = []) {
+    const pathsInfo = searchPaths.length > 0 
+      ? `\n\nSearched in: ${searchPaths.join(', ')}`
+      : '';
+    super(`Plugin not found: ${pluginName}${pathsInfo}`, EXIT_CODES.PLUGIN_ERROR);
+    this.pluginName = pluginName;
+    this.searchPaths = searchPaths;
+  }
+}
+
+// General plugin errors  
+export class PluginError extends CLIError {
+  constructor(message, pluginName = null, cause = null) {
+    super(`Plugin Error: ${message}`, EXIT_CODES.PLUGIN_ERROR, cause);
+    this.pluginName = pluginName;
+  }
+}
+
 // Command not found errors
 export class CommandNotFoundError extends CLIError {
   constructor(command, availableCommands = []) {
@@ -108,6 +128,24 @@ export class ValidationError extends CLIError {
     super(`Validation Error: ${field} = "${value}" - ${message}`, EXIT_CODES.MISUSE);
     this.field = field;
     this.value = value;
+  }
+}
+
+// File system errors
+export class FileSystemError extends CLIError {
+  constructor(message, path, operation = null) {
+    super(`File System Error: ${message}`, EXIT_CODES.GENERAL_ERROR);
+    this.path = path;
+    this.operation = operation;
+  }
+}
+
+// Process execution errors  
+export class ProcessError extends CLIError {
+  constructor(command, exitCode, message) {
+    super(`Process Error: ${message}`, EXIT_CODES.GENERAL_ERROR);
+    this.command = command;
+    this.exitCode = exitCode;
   }
 }
 

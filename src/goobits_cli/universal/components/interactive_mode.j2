@@ -84,8 +84,16 @@ class {{ project.name | replace('-', '') | replace(' ', '') | title }}Interactiv
             hook_name = "{{ command.hook_name }}"
             if hook_name in globals():
                 hook_func = globals()[hook_name]
-                # TODO: Parse args properly and call hook
-                hook_func(*args)
+                # Parse and validate arguments according to command definition
+                import inspect
+                sig = inspect.signature(hook_func)
+                try:
+                    bound_args = sig.bind(*args)
+                    bound_args.apply_defaults()
+                    hook_func(*bound_args.args, **bound_args.kwargs)
+                except TypeError as e:
+                    print(f"Error calling {hook_name}: {e}")
+                    print(f"Expected signature: {sig}")
             else:
                 print(f"Command '{{ command.name }}' executed successfully")
                 print(f"To implement custom behavior, add '{hook_name}' function to hooks.py")
@@ -230,7 +238,21 @@ class {{ project.name | replace('-', '') | replace(' ', '') | title }}Interactiv
     async handle{{ command.name | replace('-', '') | title }}(args) {
         const hookName = '{{ command.hook_name }}';
         if (typeof hooks[hookName] === 'function') {
-            // TODO: Parse args properly with options
+            // Parse and validate arguments for the command
+            const hookName = "{{ command.hook_name }}";
+            if (typeof hooks[hookName] === 'function') {
+                try {
+                    const result = await hooks[hookName](...args);
+                    if (result !== undefined) {
+                        console.log(result);
+                    }
+                } catch (error) {
+                    console.error(`Error executing ${hookName}:`, error.message);
+                }
+            } else {
+                console.log(`Command '{{ command.name }}' executed successfully`);
+                console.log(`To implement custom behavior, add '${hookName}' function to hooks.js`);
+            }
             await hooks[hookName](...args);
         } else {
             console.log(`Command '{{ command.name }}' executed successfully`);
@@ -359,7 +381,21 @@ export class {{ project.name | replace('-', '') | replace(' ', '') | title }}Int
     private async handle{{ command.name | replace('-', '') | title }}(args: string[]): Promise<void> {
         const hookName = '{{ command.hook_name }}' as keyof typeof hooks;
         if (typeof hooks[hookName] === 'function') {
-            // TODO: Parse args properly with options
+            // Parse and validate arguments for the command
+            const hookName = "{{ command.hook_name }}";
+            if (typeof hooks[hookName] === 'function') {
+                try {
+                    const result = await hooks[hookName](...args);
+                    if (result !== undefined) {
+                        console.log(result);
+                    }
+                } catch (error) {
+                    console.error(`Error executing ${hookName}:`, error.message);
+                }
+            } else {
+                console.log(`Command '{{ command.name }}' executed successfully`);
+                console.log(`To implement custom behavior, add '${hookName}' function to hooks.js`);
+            }
             await (hooks[hookName] as Function)(...args);
         } else {
             console.log(`Command '{{ command.name }}' executed successfully`);

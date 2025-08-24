@@ -1085,7 +1085,7 @@ setup(
 
         opt_type = option.get("type", "string")
 
-        if opt_type == "flag" or opt_type == "boolean":
+        if opt_type == "flag" or opt_type == "boolean" or opt_type == "bool":
 
             parts.append("is_flag=True")
 

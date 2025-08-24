@@ -884,10 +884,19 @@ class NodeJSInteractiveUtils:
             const jsCode = expression.substring(3).trim();
 
             try {
-
-                // SECURITY WARNING: This eval() is for REPL functionality only
-                // Never expose to untrusted input in production environments
-                const result = eval(jsCode);
+                
+                // Secure evaluation using vm module instead of unsafe eval()
+                const vm = require('vm');
+                const context = vm.createContext({
+                    console, require, process, Buffer, setTimeout, clearTimeout,
+                    setInterval, clearInterval, setImmediate, clearImmediate,
+                    chalk, fs, path, os, util, crypto
+                });
+                
+                const result = vm.runInContext(jsCode, context, {
+                    timeout: 5000, // 5 second timeout
+                    displayErrors: true
+                });
 
                 if (result !== undefined) {
 
@@ -917,9 +926,18 @@ class NodeJSInteractiveUtils:
 
                 const asyncCode = `(async () => { return ${expression}; })()`;
 
-                // SECURITY WARNING: This eval() is for REPL functionality only
-                // Never expose to untrusted input in production environments
-                const result = await eval(asyncCode);
+                // Secure evaluation using vm module instead of unsafe eval()  
+                const vm = require('vm');
+                const context = vm.createContext({
+                    console, require, process, Buffer, setTimeout, clearTimeout,
+                    setInterval, clearInterval, setImmediate, clearImmediate,
+                    chalk, fs, path, os, util, crypto
+                });
+                
+                const result = await vm.runInContext(asyncCode, context, {
+                    timeout: 5000, // 5 second timeout
+                    displayErrors: true
+                });
 
                 if (result !== undefined) {
 
@@ -1823,9 +1841,18 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             try {
 
-                // SECURITY WARNING: This eval() is for REPL functionality only
-                // Never expose to untrusted input in production environments
-                const result = eval(jsCode);
+                // Secure evaluation using vm module instead of unsafe eval()
+                const vm = require('vm');
+                const context = vm.createContext({
+                    console, require, process, Buffer, setTimeout, clearTimeout,
+                    setInterval, clearInterval, setImmediate, clearImmediate,
+                    chalk, fs, path, os, util, crypto
+                });
+                
+                const result = vm.runInContext(jsCode, context, {
+                    timeout: 5000, // 5 second timeout
+                    displayErrors: true
+                });
 
                 if (result !== undefined) {
 

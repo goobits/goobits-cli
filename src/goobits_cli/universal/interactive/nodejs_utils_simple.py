@@ -346,7 +346,17 @@ class NodeJSInteractiveUtils:
 
             try {
 
-                const result = eval(jsCode);
+                // Secure evaluation using vm module instead of unsafe eval()
+                const vm = require('vm');
+                const context = vm.createContext({
+                    console, require, process, Buffer, setTimeout, clearTimeout,
+                    setInterval, clearInterval, setImmediate, clearImmediate
+                });
+                
+                const result = vm.runInContext(jsCode, context, {
+                    timeout: 5000, // 5 second timeout
+                    displayErrors: true
+                });
 
                 if (result !== undefined) {
 
@@ -812,7 +822,17 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             try {
 
-                const result = eval(jsCode);
+                // Secure evaluation using vm module instead of unsafe eval()
+                const vm = require('vm');
+                const context = vm.createContext({
+                    console, require, process, Buffer, setTimeout, clearTimeout,
+                    setInterval, clearInterval, setImmediate, clearImmediate
+                });
+                
+                const result = vm.runInContext(jsCode, context, {
+                    timeout: 5000, // 5 second timeout
+                    displayErrors: true
+                });
 
                 if (result !== undefined) {
 

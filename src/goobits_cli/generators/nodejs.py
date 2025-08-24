@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from typing import List, Optional, Union, Dict
+from datetime import datetime
 
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
@@ -720,6 +721,8 @@ class NodeJSGenerator(BaseGenerator):
             'hooks_path': metadata['hooks_path'],
 
             'completion_features': completion_features,
+            
+            'datetime': datetime,
 
             # Add missing metadata fields for package.json template (now included in metadata)
 
@@ -833,7 +836,17 @@ class NodeJSGenerator(BaseGenerator):
 
             "completion_engine.js",
 
-            "enhanced_interactive_mode.js"
+            "enhanced_interactive_mode.js",
+
+            "commands/builtin/plugin.js",
+
+            "commands/builtin/completion.js",
+
+            "commands/builtin/format-demo.js",
+
+            "commands/builtin/upgrade.js",
+
+            "commands/builtin/daemon.js"
 
         ]
 
@@ -1185,6 +1198,8 @@ export default cli;
             'hooks_path': metadata['hooks_path'],
 
             'completion_features': completion_features,
+            
+            'datetime': datetime,
 
             # Add missing metadata fields for package.json template (now included in metadata)
 
@@ -1355,6 +1370,18 @@ export default cli;
         files['README.md'] = self._generate_readme(context)
 
         
+
+        # Generate builtin commands
+        builtin_commands = ['plugin.js', 'completion.js', 'format-demo.js', 'upgrade.js', 'daemon.js']
+        for builtin_cmd in builtin_commands:
+            try:
+                template = self.env.get_template(f"commands/builtin/{builtin_cmd}.j2")
+                files[f'commands/builtin/{builtin_cmd}'] = template.render(**context)
+            except TemplateNotFound:
+                if builtin_cmd == 'plugin.js':
+                    # Generate a minimal plugin.js fallback since it's essential
+                    files[f'commands/builtin/{builtin_cmd}'] = self._generate_minimal_plugin_command(context)
+                # Skip other builtin commands if templates not found
 
         # Generate .gitignore
 
@@ -1946,6 +1973,16 @@ logs/
 
 config.local.json
 
+"""
+
+    def _generate_minimal_plugin_command(self, context: dict) -> str:
+        """Generate a minimal plugin.js command when template is not found."""
+        return """// Minimal plugin command fallback
+export default function registerPluginCommand(program) {
+    // Plugin command not fully implemented yet
+    // This is a fallback to prevent import errors
+    return program;
+}
 """
 
     def _to_camelcase(self, text: str) -> str:

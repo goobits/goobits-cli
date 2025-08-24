@@ -1,20 +1,55 @@
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0
 
 jobs:
-  publish:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[test]
+    
+    - name: Run tests
+      run: |
+        pytest src/tests/unit/ -v
+        pytest src/tests/integration/ -v --timeout=300
+    
+    - name: Check code quality
+      run: |
+        pip install black flake8 mypy
+        black --check src/
+        flake8 src/ --max-line-length=120
+        mypy src/goobits_cli/ --ignore-missing-imports
+
+  build:
+    name: Build Distribution
+    needs: test
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: "3.11"
+        python-version: '3.11'
     
     - name: Install build dependencies
       run: |
@@ -24,17 +59,107 @@ jobs:
     - name: Build package
       run: python -m build
     
-    - name: Check package
-      run: twine check dist/*
+    - name: Check distribution
+      run: |
+        twine check dist/*
+        ls -la dist/
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/goobits-cli/
+    permissions:
+      id-token: write  # Required for trusted publishing
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
     
     - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      run: twine upload dist/*
+      uses: pypa/gh-action-pypi-publish@release/v1
+      # Uses PyPI trusted publishing - no password needed!
+      # Just configure the project on PyPI to trust this GitHub repo
+
+  publish-test-pypi:
+    name: Publish to TestPyPI (Optional)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.ref, '-rc')  # Only for release candidates
+    environment:
+      name: test-pypi
+      url: https://test.pypi.org/project/goobits-cli/
+    permissions:
+      id-token: write
     
-    - name: Create GitHub release with artifacts
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Publish to TestPyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+  create-release:
+    name: Create GitHub Release
+    needs: publish-pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+    
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
+        name: Release v${{ steps.version.outputs.VERSION }}
+        draft: false
+        prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
         files: dist/*
-        generate_release_notes: true
+        body: |
+          ## 🎉 Goobits CLI Framework v${{ steps.version.outputs.VERSION }}
+          
+          ### Installation
+          ```bash
+          pip install goobits-cli==${{ steps.version.outputs.VERSION }}
+          ```
+          
+          ### What's Changed
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          
+          ### Quick Start
+          ```bash
+          goobits init
+          goobits build
+          ./setup.sh install
+          ```
+          
+          ---
+          📖 [Documentation](https://github.com/${{ github.repository }}#readme)
+          🐛 [Report Issues](https://github.com/${{ github.repository }}/issues)

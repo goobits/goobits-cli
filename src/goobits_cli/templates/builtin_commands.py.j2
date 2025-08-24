@@ -23,8 +23,27 @@ def builtin_upgrade_command(check_only=False, pre=False, version=None, dry_run=F
 
     if check_only:
         print(f"Checking for updates to {display_name}...")
-        # TODO: Implement PyPI version check
-        print("Update check not yet implemented. Run without --check to upgrade.")
+        try:
+            import json
+            import urllib.request
+            import urllib.error
+            from packaging import version
+            
+            # Check PyPI for latest version
+            url = f"https://pypi.org/pypi/{{ package_name }}/json"
+            with urllib.request.urlopen(url, timeout=10) as response:
+                data = json.loads(response.read().decode())
+                latest_version = data['info']['version']
+                
+            if version.parse(latest_version) > version.parse(current_version):
+                print(f"📦 Update available: {current_version} → {latest_version}")
+                print(f"Run 'goobits upgrade {display_name.lower()}' or '{{ command_name }} upgrade' to update")
+            else:
+                print(f"✅ You have the latest version ({current_version})")
+                
+        except (urllib.error.URLError, json.JSONDecodeError, KeyError, ImportError) as e:
+            print(f"⚠️  Could not check for updates: {e}")
+            print("Run without --check to upgrade anyway")
         return
 
     # Try to detect installation method

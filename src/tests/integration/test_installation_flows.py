@@ -211,7 +211,7 @@ class CLITestHelper:
                     result['cli_file'] = str(file_path)
                 elif filename.endswith('.js') and ('cli' in filename or 'main' in filename):
                     result['cli_file'] = str(file_path)
-                elif filename.endswith('.ts') and ('cli' in filename or 'main' in filename):
+                elif filename.endswith('.ts') and ('cli' in filename or 'main' in filename or 'index' in filename):
                     result['cli_file'] = str(file_path)
                 elif filename.endswith('.rs') and ('main' in filename):
                     result['cli_file'] = str(file_path)

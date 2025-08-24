@@ -1110,9 +1110,9 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         
 
-        # Generate src/hooks.js file - user's business logic (using CommonJS for compatibility)
+        # Generate src/hooks.ts file - user's business logic (TypeScript for better type safety)
 
-        files['src/hooks.js'] = self._generate_simple_hooks(context)
+        files['src/hooks.ts'] = self._generate_typescript_hooks(context)
 
         
 
@@ -1162,13 +1162,18 @@ class TypeScriptGenerator(NodeJSGenerator):
         # TODO: Fix helper library templates to work with simplified TypeScript setup
 
         helper_files = [
-            # 'lib/errors.ts',      # Disabled - has TypeScript errors
-            # 'lib/config.ts',      # Disabled - has TypeScript errors  
-            # 'lib/completion.ts',  # Disabled - has TypeScript errors
-            # 'lib/progress.ts',    # Disabled - has TypeScript errors
-            # 'lib/prompts.ts',     # Disabled - has TypeScript errors
-            # 'lib/decorators.ts',  # Disabled - has TypeScript errors
-            # 'completion_engine.ts' # Disabled - has TypeScript errors
+            # NOTE: Helper libraries temporarily disabled due to TypeScript compilation issues:
+            # - Missing type definitions from types/errors module
+            # - Import/export conflicts with Commander.js types  
+            # - Path module conflicts in prompts.ts
+            # These should be fixed by updating type definitions and resolving import conflicts
+            # 'lib/errors.ts',      # Disabled - type definition conflicts 
+            # 'lib/config.ts',      # Disabled - private property access issues
+            # 'lib/completion.ts',  # Disabled - import dependency issues
+            # 'lib/progress.ts',    # Disabled - type conflicts
+            # 'lib/prompts.ts',     # Disabled - path module conflicts
+            # 'lib/decorators.ts',  # Disabled - Commander.js type conflicts
+            # 'completion_engine.ts' # Disabled - dependency issues
         ]
 
         
@@ -1276,18 +1281,9 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         
 
-        # Generate cli.ts as alternative entry point (disabled due to CommonJS incompatibility)
-        # TODO: Fix cli.ts.j2 template to use ES module imports instead of require()
-
-        try:
-
-            # template = self.env.get_template("cli.ts.j2")
-            # files['cli.ts'] = template.render(**context)
-            pass  # Disabled for now
-
-        except TemplateNotFound:
-
-            pass
+        # NOTE: cli.ts generation disabled due to CommonJS/ES module compatibility issues
+        # The current TypeScript templates use require() calls incompatible with ES modules
+        # This would need significant template rework to support proper ES module syntax
 
         
         
@@ -1458,7 +1454,67 @@ module.exports = {
         
         return hooks_content
 
+    def _generate_typescript_hooks(self, context: dict) -> str:
+        """Generate TypeScript hooks file with proper type definitions."""
+        cli_config = context.get('cli')
+
+        hooks_content = f'''/**
+ * Hook functions for {context['display_name']}
+ * Auto-generated from {context['file_name']}
+ * 
+ * Implement your business logic in these hook functions.
+ * Each command will call its corresponding hook function.
+ */
+
+// Type definitions for hook arguments
+interface CommandArgs {{
+  commandName: string;
+  rawArgs?: Record<string, any>;
+  [key: string]: any;
+}}
+
+/**
+ * Hook function for unknown commands
+ * @param args - Command arguments and options
+ * @returns Promise<void>
+ */
+export async function onUnknownCommand(args: CommandArgs): Promise<void> {{
+  console.log(`🤔 Unknown command: ${{args.commandName}}`);
+  console.log('   Use --help to see available commands');
+}}
+
+'''
+
+        # Generate hook functions for each command
+        if cli_config and hasattr(cli_config, 'commands'):
+            for cmd_name, cmd_data in cli_config.commands.items():
+                safe_cmd_name = cmd_name.replace('-', '_')
+                function_name = f"on{safe_cmd_name.replace('_', '').title()}"
+                
+                hooks_content += f'''
+/**
+ * Hook function for '{cmd_name}' command
+ * @param args - Command arguments and options
+ * @returns Promise<void>
+ */
+export async function {function_name}(args: CommandArgs): Promise<void> {{
+    // TODO: Implement your '{cmd_name}' command logic here
+    console.log('🚀 Executing {cmd_name} command...');
+    console.log('   Command:', args.commandName);
     
+    // Example: access raw arguments
+    if (args.rawArgs) {{
+        console.log('   Raw arguments:');
+        Object.entries(args.rawArgs).forEach(([key, value]) => {{
+            console.log(`   ${{key}}: ${{value}}`);
+        }});
+    }}
+    
+    console.log('✅ {cmd_name} command completed successfully!');
+}}
+'''
+
+        return hooks_content
 
     
 
@@ -1610,7 +1666,7 @@ The compiled JavaScript files are in the `dist/` directory.
 
 import {{ Command }} from 'commander';
 
-import * as hooks from './src/hooks.js';
+import * as hooks from './src/hooks';
 
 
 
@@ -2158,7 +2214,7 @@ echo "TypeScript CLI setup complete!"
 
 import * as readline from 'readline';
 
-import * as hooks from './src/hooks.js';
+import * as hooks from './src/hooks';
 
 
 

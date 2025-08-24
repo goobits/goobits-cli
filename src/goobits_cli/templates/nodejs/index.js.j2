@@ -557,7 +557,13 @@ export const cli = asyncErrorHandler(async function cli() {
       '{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}',
       '{{ arg.desc }}'
       {%- if arg.choices %},
-      { choices: {{ arg.choices | json_stringify }} }
+      (value) => {
+        const choices = {{ arg.choices | json_stringify }};
+        if (!choices.includes(value)) {
+          throw new Error(`Invalid {{ arg.name }} '${value}'. Choose from: ${choices.join(', ')}`);
+        }
+        return value;
+      }
       {%- endif %}
     );
     {% endfor %}
@@ -721,7 +727,13 @@ export const cli = asyncErrorHandler(async function cli() {
         '{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}',
         '{{ arg.desc }}'
         {%- if arg.choices %},
-        { choices: {{ arg.choices | json_stringify }} }
+        (value) => {
+          const choices = {{ arg.choices | json_stringify }};
+          if (!choices.includes(value)) {
+            throw new Error(`Invalid {{ arg.name }} '${value}'. Choose from: ${choices.join(', ')}`);
+          }
+          return value;
+        }
         {%- endif %}
       );
       {% endfor %}

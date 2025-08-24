@@ -1302,7 +1302,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                     if hasattr(sub_data, 'options') and sub_data.options:
                         for opt in sub_data.options:
                             short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
-                            if opt.type == 'bool':
+                            if opt.type == 'bool' or opt.type == 'flag':
                                 sub_cmd_def += f'''
                     .arg(Arg::new("{opt.name}")
                         .help("{opt.desc}")
@@ -1356,7 +1356,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 if hasattr(cmd_data, 'options') and cmd_data.options:
                     for opt in cmd_data.options:
                         short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
-                        if opt.type == 'bool':
+                        if opt.type == 'bool' or opt.type == 'flag':
                             cmd_def += f'''
             .arg(Arg::new("{opt.name}")
                 .help("{opt.desc}")
@@ -1468,6 +1468,11 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
         extractions = []
         matches_var = "sub_sub_matches" if is_subcommand else "sub_matches"
         
+        # Collect option names to detect conflicts with global options
+        option_names = set()
+        if hasattr(cmd_data, 'options') and cmd_data.options:
+            option_names = {opt.name for opt in cmd_data.options}
+        
         # Extract arguments
         if hasattr(cmd_data, 'args') and cmd_data.args:
             for arg in cmd_data.args:
@@ -1479,26 +1484,34 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 else:
                     extractions.append(f'''let {arg.name} = {matches_var}.get_one::<String>("{arg.name}").map(|s| s.as_str()).unwrap_or("");''')
         
-        # Extract options
+        # Extract options with smart naming
         if hasattr(cmd_data, 'options') and cmd_data.options:
             for opt in cmd_data.options:
-                if opt.type == 'bool':
-                    extractions.append(f'''let {opt.name} = {matches_var}.get_flag("{opt.name}");''')
+                var_name = f"opt_{opt.name}" if opt.name in ['verbose', 'config'] else opt.name
+                if opt.type == 'bool' or opt.type == 'flag':
+                    extractions.append(f'''let {var_name} = {matches_var}.get_flag("{opt.name}");''')
                 elif opt.type == 'int':
-                    extractions.append(f'''let {opt.name}: Option<i32> = {matches_var}.get_one::<String>("{opt.name}")
+                    extractions.append(f'''let {var_name}: Option<i32> = {matches_var}.get_one::<String>("{opt.name}")
                     .and_then(|s| s.parse().ok());''')
                 else:
-                    extractions.append(f'''let {opt.name}: Option<&str> = {matches_var}.get_one::<String>("{opt.name}").map(|s| s.as_str());''')
+                    extractions.append(f'''let {var_name}: Option<&str> = {matches_var}.get_one::<String>("{opt.name}").map(|s| s.as_str());''')
         
-        # Add global options (verbose and config)
-        extractions.append(f'''let verbose = {matches_var}.get_flag("verbose");''')
-        extractions.append(f'''let config: Option<&str> = {matches_var}.get_one::<String>("config").map(|s| s.as_str());''')
+        # Add global options with smart naming to avoid conflicts
+        global_verbose = "global_verbose" if "verbose" in option_names else "verbose"
+        global_config = "global_config" if "config" in option_names else "config"
+        extractions.append(f'''let {global_verbose} = {matches_var}.get_flag("verbose");''')
+        extractions.append(f'''let {global_config}: Option<&str> = {matches_var}.get_one::<String>("config").map(|s| s.as_str());''')
         
         return '\n                '.join(extractions) if extractions else '// No parameters to extract'
     
     def _generate_hook_call(self, hook_name: str, cmd_data) -> str:
         """Generate the hook function call with parameters."""
         params = []
+        
+        # Collect option names to detect conflicts with global options
+        option_names = set()
+        if hasattr(cmd_data, 'options') and cmd_data.options:
+            option_names = {opt.name for opt in cmd_data.options}
         
         # Add arguments
         if hasattr(cmd_data, 'args') and cmd_data.args:
@@ -1508,13 +1521,16 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 else:
                     params.append(f"{arg.name}")
         
-        # Add options
+        # Add options with smart naming
         if hasattr(cmd_data, 'options') and cmd_data.options:
             for opt in cmd_data.options:
-                params.append(f"{opt.name}")
+                var_name = f"opt_{opt.name}" if opt.name in ['verbose', 'config'] else opt.name
+                params.append(var_name)
         
-        # Always add verbose and config at the end
-        params.extend(["verbose", "config"])
+        # Always add verbose and config at the end with smart naming
+        global_verbose = "global_verbose" if "verbose" in option_names else "verbose"
+        global_config = "global_config" if "config" in option_names else "config"
+        params.extend([global_verbose, global_config])
         
         return f"{hook_name}({', '.join(params)})"
 
@@ -1677,7 +1693,7 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
         if hasattr(data, 'options') and data.options:
             for opt in data.options:
                 opt_type = self._get_rust_param_type(opt.type if hasattr(opt, 'type') else 'str')
-                if opt.type == 'bool':
+                if opt.type == 'bool' or opt.type == 'flag':
                     params.insert(-2, f"{opt.name}: bool")
                 else:
                     params.insert(-2, f"{opt.name}: Option<{opt_type}>")
