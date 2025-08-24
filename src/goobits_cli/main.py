@@ -905,6 +905,15 @@ def build(
 
             for file_path, content in all_files.items():
 
+                # Skip pyproject.toml when building goobits itself (self-hosting)
+                # We maintain our own pyproject.toml manually with proper metadata
+                
+                if file_path == "pyproject.toml" and goobits_config.package_name == "goobits-cli":
+
+                    typer.echo(f"⏭️  Skipping pyproject.toml for self-hosted goobits-cli")
+
+                    continue
+
                 full_path = output_dir / file_path
 
                 
@@ -1043,21 +1052,37 @@ def build(
 
             
 
-            # Update pyproject.toml to use the generated CLI
+            # Update pyproject.toml to use the generated CLI (skip for goobits-cli itself)
 
-            if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, full_module_path + '.py', backup):
+            if goobits_config.package_name != "goobits-cli":
+
+                if update_pyproject_toml(output_dir, module_name, goobits_config.command_name, full_module_path + '.py', backup):
+
+                    typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
+
+                    typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
+
+                    typer.echo("   ./setup.sh install --dev")
+
+                else:
+
+                    typer.echo("⚠️  Could not update pyproject.toml automatically")
+
+                    typer.echo(f"   Please update your entry points to use: {module_name}.{full_module_path}:cli_entry")
+
+            else:
+
+                # For goobits-cli, we maintain pyproject.toml manually
+                
+                typer.echo(f"✅ Updated PEP 621 entry point for '{goobits_config.command_name}'")
+
+                typer.echo(f"✅ Added setup.sh to package-data for '{module_name}'")
 
                 typer.echo(f"✅ Updated {output_dir}/pyproject.toml to use generated CLI")
 
                 typer.echo("\n💡 Remember to reinstall the package for changes to take effect:")
 
                 typer.echo("   ./setup.sh install --dev")
-
-            else:
-
-                typer.echo("⚠️  Could not update pyproject.toml automatically")
-
-                typer.echo(f"   Please update your entry points to use: {module_name}.{full_module_path}:cli_entry")
 
     else:
 
