@@ -14,17 +14,55 @@ cli:
   tagline: "Rust CLI demonstration"
   commands:
     greet:
-      desc: "Greet someone"
+      desc: "Greet someone with style"
       args:
         - name: name
           desc: "Name to greet"
           required: true
+        - name: message
+          desc: "Custom greeting message"
+          required: false
+          default: "Hello"
       options:
-        - name: enthusiastic
-          short: e
+        - name: style
+          short: s
+          type: str
+          desc: "Greeting style"
+          choices: ["formal", "casual", "excited"]
+          default: "casual"
+        - name: count
+          short: c
+          type: int
+          desc: "Repeat greeting N times"
+          default: 1
+        - name: uppercase
+          short: u
           type: flag
-          desc: "Add exclamation marks"
+          desc: "Convert to uppercase"
           default: false
+        - name: language
+          short: l
+          type: str
+          desc: "Language code"
+          choices: ["en", "es", "fr"]
+          default: "en"
     
     info:
-      desc: "Show system information"
+      desc: "Display system and environment information"
+      options:
+        - name: format
+          short: f
+          type: str
+          desc: "Output format"
+          choices: ["text", "json", "yaml"]
+          default: "text"
+        - name: verbose
+          short: v
+          type: flag
+          desc: "Show detailed information"
+          default: false
+        - name: sections
+          short: s
+          type: str
+          desc: "Comma-separated sections to show"
+          default: "all"
