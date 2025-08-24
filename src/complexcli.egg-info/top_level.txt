@@ -1,5 +1,0 @@
-complexcli
-goobits_cli
-test_cli
-testcli
-tests

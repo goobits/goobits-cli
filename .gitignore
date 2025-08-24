@@ -1,3 +1,84 @@
+test_env/
+venv/
+node_modules/
+__pycache__/
+test-nodejs-out/
+test-python-out/
+test-rust-out/
+test-typescript-out/
+test-py-out/
+test-py-legacy/
+test_nodejs_release/
+test_python_release/
+test_rust_release/
+test_typescript_release/
+test_frameworks/
+test_results/
+src/test_cli/
+src/testcli/
+src/test_python_cli/
+src/nodejs_test_cli/
+src/complexcli/
+examples/node_modules/
+demo-examples/node_modules/
+test-nodejs-out/node_modules/
+test-typescript-out/node_modules/
+examples/target/
+test-rust-out/target/
+performance_validation_results/
+benchmarks/results/
+test-fixtures/outputs/
+examples/outputs/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+dist/
+build/
+.eggs/
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual Environments
+venv/
+ENV/
+env/
+test_env/
+test_venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Testing
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.bak
+*.backup
 # Python
 __pycache__/
 *.py[cod]
