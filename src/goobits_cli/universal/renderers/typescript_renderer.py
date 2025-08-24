@@ -182,6 +182,8 @@ class TypeScriptRenderer(LanguageRenderer):
 
         }
 
+        # Add datetime module for template generation headers
+        context["datetime"] = datetime
         
 
         return context

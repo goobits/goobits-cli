@@ -14,6 +14,7 @@ with proper type safety, structs, and Rust-specific conventions using clap.
 
 
 from typing import Dict, Any, List
+from datetime import datetime
 
 import re
 
@@ -186,6 +187,8 @@ class RustRenderer(LanguageRenderer):
 
         }
 
+        # Add datetime module for template generation headers
+        context["datetime"] = datetime
         
 
         return context
