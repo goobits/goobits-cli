@@ -1,50 +1,13 @@
-test_env/
-venv/
-node_modules/
-__pycache__/
-test-nodejs-out/
-test-python-out/
-test-rust-out/
-test-typescript-out/
-test-py-out/
-test-py-legacy/
-test_nodejs_release/
-test_python_release/
-test_rust_release/
-test_typescript_release/
-test_frameworks/
-test_results/
-src/test_cli/
-src/testcli/
-src/test_python_cli/
-src/nodejs_test_cli/
-src/complexcli/
-examples/node_modules/
-demo-examples/node_modules/
-test-nodejs-out/node_modules/
-test-typescript-out/node_modules/
-examples/target/
-test-rust-out/target/
-performance_validation_results/
-benchmarks/results/
-test-fixtures/outputs/
-examples/outputs/
-htmlcov/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-dist/
-build/
-.eggs/
 # Python
 __pycache__/
 *.py[cod]
-*.pyc
-*.pyo
-*.pyd
-.Python
+*$py.class
 *.so
+.Python
+*.egg-info/
+*.egg
+MANIFEST
+.installed.cfg
 
 # Virtual Environments
 venv/
@@ -52,39 +15,13 @@ ENV/
 env/
 test_env/
 test_venv/
+test-env/
 .venv/
+.env/
+env.bak/
+venv.bak/
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Testing
-.coverage
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-htmlcov/
-
-# Logs
-*.log
-logs/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Temporary
-*.tmp
-*.bak
-*.backup
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# Build/Distribution
 build/
 develop-eggs/
 dist/
@@ -97,28 +34,20 @@ parts/
 sdist/
 var/
 wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
-htmlcov/
+__pypackages__/
+
+# Testing
 .coverage
 .coverage.*
 coverage.xml
 *.cover
-
-# Virtual Environments
-venv/
-ENV/
-env/
-test_env/
-test_venv/
-test-env/
-.venv/
-.env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
 
 # Generated Test Outputs
 test-*-out/
@@ -130,16 +59,14 @@ examples/outputs/
 benchmarks/results/
 performance_validation_results/
 
-# Generated CLI files
-test_cli.py
+# Generated Test CLIs
 src/test_cli/
 src/testcli/
 src/test_python_cli/
 src/nodejs_test_cli/
 src/complexcli/
-generated_cli.py
 
-# Ad-hoc test scripts (temporary)
+# Test scripts in root (but not in src/tests)
 test_*.py
 !src/tests/**/test_*.py
 
@@ -168,10 +95,17 @@ Cargo.lock
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Environment
+# Environment files
 .env
 .env.local
 .env.*.local
@@ -187,23 +121,6 @@ logs/
 *.backup
 .~*
 
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Symbolic links directory
-.links/
-
-# Testing artifacts
-.tox/
-.nox/
-.hypothesis/
-
 # Documentation builds
 docs/_build/
 site/
@@ -211,14 +128,9 @@ site/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# pyenv
+# Python version management
 .python-version
-
-# pipenv
 Pipfile.lock
-
-# PEP 582
-__pypackages__/
 
 # Celery
 celerybeat-schedule
@@ -227,18 +139,13 @@ celerybeat.pid
 # SageMath
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
 # mkdocs
 /site
 
 # Local development
 *.local
 .local/
+
+# Symbolic links directory (except specific allowed content)
+.links/
+!.links/pip/claudeflow
