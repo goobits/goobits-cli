@@ -1,78 +1,163 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Virtual Environments
+venv/
+ENV/
+env/
+test_env/
+test_venv/
+test-env/
+.venv/
+.env/
+
+# Generated Test Outputs
+test-*-out/
+test_*_out/
+test-*-output/
+test_*_release/
+test-fixtures/outputs/
+examples/outputs/
+benchmarks/results/
+performance_validation_results/
+
+# Generated CLI files
+test_cli.py
+src/test_cli/
+src/testcli/
+src/test_python_cli/
+src/nodejs_test_cli/
+src/complexcli/
+generated_cli.py
+
+# Ad-hoc test scripts (temporary)
+test_*.py
+!src/tests/**/test_*.py
+
 # Node.js
-
 node_modules/
-
 npm-debug.log*
-
 yarn-debug.log*
-
 yarn-error.log*
-
 lerna-debug.log*
-
 .npm
+package-lock.json
+yarn.lock
 
+# TypeScript
+*.tsbuildinfo
+*.d.ts.map
 
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
 
-# Environment variables
-
-.env
-
-.env.local
-
-.env.development.local
-
-.env.test.local
-
-.env.production.local
-
-
-
-# OS files
-
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 .DS_Store
-
 Thumbs.db
 
-
-
-# IDE files
-
-.idea/
-
-.vscode/
-
-*.swp
-
-*.swo
-
-
-
-# Test coverage
-
-coverage/
-
-.nyc_output/
-
-
-
-# Build outputs
-
-dist/
-
-build/
-
-
-
-# Logs
-
-logs/
-
-*.log
-
-
-
-# Config (keep local config private)
-
+# Environment
+.env
+.env.local
+.env.*.local
 config.local.json
 
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+.~*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Symbolic links directory
+.links/
+
+# Testing artifacts
+.tox/
+.nox/
+.hypothesis/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mkdocs
+/site
+
+# Local development
+*.local
+.local/
