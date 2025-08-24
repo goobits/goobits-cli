@@ -1247,6 +1247,68 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
 
     
 
+    def _generate_subcommand_recursively(self, cmd_data, indent_level=0) -> str:
+        """Recursively generate subcommand definitions for nested commands."""
+        result = ""
+        
+        # Add arguments for this command
+        if hasattr(cmd_data, 'args') and cmd_data.args:
+            for arg in cmd_data.args:
+                if hasattr(arg, 'nargs') and arg.nargs == "*":
+                    result += f'''
+                    .arg(Arg::new("{arg.name}")
+                        .help("{arg.desc}")
+                        .num_args(0..)
+                        .value_name("{arg.name.upper()}"))'''
+                else:
+                    result += f'''
+                    .arg(Arg::new("{arg.name}")
+                        .help("{arg.desc}")
+                        .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
+                        .value_name("{arg.name.upper()}"))'''
+        
+        # Add options for this command
+        if hasattr(cmd_data, 'options') and cmd_data.options:
+            for opt in cmd_data.options:
+                short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
+                if opt.type == 'bool' or opt.type == 'flag':
+                    result += f'''
+                    .arg(Arg::new("{opt.name}")
+                        .help("{opt.desc}")
+                        {short_part}
+                        .long("{opt.name}")
+                        .action(clap::ArgAction::SetTrue))'''
+                elif opt.type == 'int':
+                    result += f'''
+                    .arg(Arg::new("{opt.name}")
+                        .help("{opt.desc}")
+                        {short_part}
+                        .long("{opt.name}")
+                        .value_name("NUMBER"))'''
+                else:
+                    result += f'''
+                    .arg(Arg::new("{opt.name}")
+                        .help("{opt.desc}")
+                        {short_part}
+                        .long("{opt.name}")
+                        .value_name("VALUE"))'''
+        
+        # Recursively add subcommands if they exist
+        if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+            for sub_name, sub_data in cmd_data.subcommands.items():
+                result += f'''
+            .subcommand(
+                Command::new("{sub_name}")
+                    .about("{sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'}")'''
+                
+                # Recursively process this subcommand
+                result += self._generate_subcommand_recursively(sub_data, indent_level + 1)
+                
+                result += '''
+            )'''
+        
+        return result
+
     def _generate_fallback_commands(self, context: dict) -> str:
 
         """Generate command definitions for fallback main.rs."""
@@ -1275,58 +1337,8 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
             .subcommand_required(true)
             .arg_required_else_help(true)'''
             
-                # Add subcommands
-                for sub_name, sub_data in cmd_data.subcommands.items():
-                    sub_cmd_def = f'''
-            .subcommand(
-                Command::new("{sub_name}")
-                    .about("{sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'}")'''
-                    
-                    # Add arguments for subcommand
-                    if hasattr(sub_data, 'args') and sub_data.args:
-                        for arg in sub_data.args:
-                            if hasattr(arg, 'nargs') and arg.nargs == "*":
-                                sub_cmd_def += f'''
-                    .arg(Arg::new("{arg.name}")
-                        .help("{arg.desc}")
-                        .num_args(0..)
-                        .value_name("{arg.name.upper()}"))'''
-                            else:
-                                sub_cmd_def += f'''
-                    .arg(Arg::new("{arg.name}")
-                        .help("{arg.desc}")
-                        .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
-                        .value_name("{arg.name.upper()}"))'''
-                    
-                    # Add options for subcommand
-                    if hasattr(sub_data, 'options') and sub_data.options:
-                        for opt in sub_data.options:
-                            short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
-                            if opt.type == 'bool' or opt.type == 'flag':
-                                sub_cmd_def += f'''
-                    .arg(Arg::new("{opt.name}")
-                        .help("{opt.desc}")
-                        {short_part}
-                        .long("{opt.name}")
-                        .action(clap::ArgAction::SetTrue))'''
-                            elif opt.type == 'int':
-                                sub_cmd_def += f'''
-                    .arg(Arg::new("{opt.name}")
-                        .help("{opt.desc}")
-                        {short_part}
-                        .long("{opt.name}")
-                        .value_name("NUMBER"))'''
-                            else:
-                                sub_cmd_def += f'''
-                    .arg(Arg::new("{opt.name}")
-                        .help("{opt.desc}")
-                        {short_part}
-                        .long("{opt.name}")
-                        .value_name("VALUE"))'''
-                    
-                    sub_cmd_def += '''
-            )'''
-                    cmd_def += sub_cmd_def
+                # Use recursive helper to generate all nested subcommands
+                cmd_def += self._generate_subcommand_recursively(cmd_data, 0)
                 
                 cmd_def += '''
     );'''

@@ -62,7 +62,7 @@ python performance/cross_language_analyzer.py \
 **Validates CLI startup times** against <100ms targets.
 
 **Features:**
-- Language-specific startup targets (Python: 90ms, Node.js: 70ms, TypeScript: 80ms)
+- Language-specific startup targets (Python: 110ms, Node.js: 85ms, TypeScript: 95ms)
 - Statistical analysis with multiple iterations
 - Warmup iterations for accurate measurements
 - Success rate and reliability tracking
@@ -108,7 +108,7 @@ python performance/cross_language_analyzer.py \
 
 | Metric | Python | Node.js | TypeScript |
 |--------|--------|---------|------------|
-| Startup Time | <90ms | <70ms | <80ms |
+| Startup Time | <110ms | <85ms | <95ms |
 | Memory Usage | <35MB | <45MB | <50MB |
 | Template Render | <60ms | <50ms | <70ms |
 

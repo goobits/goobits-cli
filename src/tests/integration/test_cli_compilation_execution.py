@@ -315,7 +315,8 @@ class TestNodeJSCLICompilation:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(content)
                 
-                if filename.endswith('.js') and ('cli' in filename or 'main' in filename):
+                # Specifically look for bin/cli.js for Node.js CLIs
+                if filename == 'bin/cli.js':
                     cli_file = file_path
                     cli_file.chmod(0o755)
             

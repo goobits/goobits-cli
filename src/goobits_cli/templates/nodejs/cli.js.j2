@@ -158,21 +158,33 @@ async function loadHooks() {
         {% else %}
         // No hooks path configured, try default locations
         const possiblePaths = [
-            path.join(__dirname, '../hooks.js'),
             path.join(__dirname, '../src/hooks.js'),
-            path.join(process.cwd(), 'hooks.js'),
-            path.join(process.cwd(), 'src/hooks.js')
+            path.join(__dirname, '../../src/hooks.js'),
+            path.join(__dirname, '../hooks.js'),
+            path.join(__dirname, '../../hooks.js'),
+            path.join(process.cwd(), 'src/hooks.js'),
+            path.join(process.cwd(), 'hooks.js')
         ];
         
         for (const hookPath of possiblePaths) {
             if (fs.existsSync(hookPath)) {
-                appHooks = await import(hookPath);
+                // Use file:// URL for proper ES module loading
+                const fileUrl = new URL(`file://${hookPath}`).href;
+                appHooks = await import(fileUrl);
                 break;
             }
         }
         {% endif %}
     } catch (e) {
-        // No hooks module found - use empty hooks object
+        // Failed to load hooks - log error in verbose mode
+        if (process.env.DEBUG || process.argv.includes('--verbose')) {
+            console.error(`Failed to load hooks: ${e.message}`);
+        }
+        appHooks = {};
+    }
+    
+    // Ensure we have an object to work with
+    if (!appHooks) {
         appHooks = {};
     }
     

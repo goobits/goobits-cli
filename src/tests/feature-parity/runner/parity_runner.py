@@ -120,9 +120,46 @@ class ParityTestRunner:
         cli_name = config["cli"]["name"]
         
         if language == "python":
-            cli_path = output_dir / language / "cli.py"
+            # Try multiple possible locations for Python CLI
+            possible_paths = [
+                output_dir / language / "cli.py",
+                output_dir / language / "src" / f"{cli_name.replace('-', '_')}" / "cli.py",
+                output_dir / language / f"{cli_name}.py"
+            ]
+            cli_path = None
+            for path in possible_paths:
+                if path.exists():
+                    cli_path = path
+                    break
+            if not cli_path:
+                cli_path = possible_paths[0]  # Default to first option
         elif language in ["nodejs", "typescript"]:
-            cli_path = output_dir / language / "cli.js"
+            # Install npm dependencies first
+            npm_dir = output_dir / language
+            if (npm_dir / "package.json").exists():
+                npm_result = subprocess.run(
+                    ["npm", "install", "--silent"],
+                    cwd=npm_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+                if npm_result.returncode != 0 and self.verbose:
+                    print(f"npm install warning: {npm_result.stderr[:200]}")
+            
+            # For Node.js/TypeScript, look for bin/cli.js first, then fallback
+            possible_paths = [
+                output_dir / language / "bin" / "cli.js",
+                output_dir / language / "cli.js",
+                output_dir / language / "index.js"
+            ]
+            cli_path = None
+            for path in possible_paths:
+                if path.exists():
+                    cli_path = path
+                    break
+            if not cli_path:
+                cli_path = possible_paths[0]  # Default to bin/cli.js
         elif language == "rust":
             # For Rust, we need to build the binary
             cargo_dir = output_dir / language

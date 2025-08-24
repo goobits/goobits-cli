@@ -1325,21 +1325,12 @@ export default cli;
 
         except TemplateNotFound:
 
-            pass
-
-        
-
-        # Generate cli.js as alternative entry point
-
-        try:
-
-            template = self.env.get_template("cli.js.j2")
-
-            files['cli.js'] = template.render(**context)
-
-        except TemplateNotFound:
-
-            pass
+            # If bin/cli.js template doesn't exist, use cli.js template and place it in bin/
+            try:
+                template = self.env.get_template("cli.js.j2")
+                files['bin/cli.js'] = template.render(**context)
+            except TemplateNotFound:
+                pass
 
         
 

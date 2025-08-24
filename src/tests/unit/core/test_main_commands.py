@@ -171,7 +171,7 @@ class TestMainCLICommands(TestMainCLIBase):
             result = self.runner.invoke(app, ["init", "test-project"])
             
             assert result.exit_code == 1
-            assert "already exists" in result.stderr
+            assert "already exists" in result.output
         finally:
             os.chdir(original_cwd)
 
@@ -205,7 +205,7 @@ class TestMainCLICommands(TestMainCLIBase):
             result = self.runner.invoke(app, ["init", "--template", "nonexistent", "test-project"])
             
             assert result.exit_code == 1
-            assert "Unknown template" in result.stderr
+            assert "Unknown template" in result.output
         finally:
             os.chdir(original_cwd)
 
@@ -218,7 +218,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["serve", "/nonexistent/path"])
         
         assert result.exit_code == 1
-        assert "does not exist" in result.stderr
+        assert "does not exist" in result.output
 
     @patch('goobits_cli.main.Path.is_dir')
     @patch('goobits_cli.main.Path.exists')
@@ -230,7 +230,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["serve", "file.txt"])
         
         assert result.exit_code == 1
-        assert "is not a directory" in result.stderr
+        assert "is not a directory" in result.output
 
     # Upgrade command tests
     @patch('subprocess.run')
@@ -241,7 +241,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade"])
         
         assert result.exit_code == 1
-        assert "pipx is required" in result.stderr
+        assert "pipx is required" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_invalid_source(self, mock_run):
@@ -251,7 +251,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade", "--source", "invalid-source"])
         
         assert result.exit_code == 1
-        assert "Unknown source" in result.stderr
+        assert "Unknown source" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_upgrade_failure(self, mock_run):
@@ -266,7 +266,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade"], input="y\n")
         
         assert result.exit_code == 1
-        assert "Upgrade failed" in result.stderr
+        assert "Upgrade failed" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_unexpected_error(self, mock_run):
@@ -281,7 +281,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade"], input="y\n")
         
         assert result.exit_code == 1
-        assert "Unexpected error during upgrade" in result.stderr
+        assert "Unexpected error during upgrade" in result.output
 
 
 class TestFastVersionHelp(TestMainCLIBase):

@@ -35,7 +35,7 @@ cli:
   tagline: A test CLI for verifying feature parity
   version: 1.0.0
   
-  global_options:
+  options:
     - name: verbose
       short: v
       desc: "Enable verbose output"

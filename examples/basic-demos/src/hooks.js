@@ -25,31 +25,18 @@
  */
 
 export async function onGreet(args) {
-
-    // TODO: Implement your 'greet' command logic here
-
-    console.log('🚀 Executing greet command...');
-
-    console.log('   Command:', args.commandName);
-
+    const { name, style } = args;
     
-
-    // Example: access raw arguments
-
-    if (args.rawArgs) {
-
-        Object.entries(args.rawArgs).forEach(([key, value]) => {
-
-            console.log(`   ${key}: ${value}`);
-
-        });
-
+    let greeting = `Hello ${name}!`;
+    
+    if (style === 'excited') {
+        greeting = `🎉 ${greeting.toUpperCase()} 🎉`;
+    } else if (style === 'formal') {
+        greeting = `Good day, ${name}.`;
     }
-
     
-
-    console.log('✅ greet command completed successfully!');
-
+    console.log(greeting);
+    console.log(`Welcome to the Node.js CLI demo!`);
 }
 
 

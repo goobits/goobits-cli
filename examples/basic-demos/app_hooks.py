@@ -15,7 +15,7 @@ def on_greet(name, enthusiastic=False, **kwargs):
     
     print(greeting)
     print(f"Welcome to the Python CLI demo, {name}!")
-    return True
+    return 0
 
 def on_info(**kwargs):
     """Handle info command"""
@@ -25,4 +25,4 @@ def on_info(**kwargs):
     print(f"Platform: {platform.platform()}")
     print(f"Architecture: {platform.architecture()[0]}")
     print(f"Processor: {platform.processor()}")
-    return True
+    return 0

@@ -417,7 +417,7 @@ class TestMainCLICommands(TestMainCLIBase):
             result = self.runner.invoke(app, ["init", "test-project"])
             
             assert result.exit_code == 1
-            assert "already exists" in result.stderr
+            assert "already exists" in result.output
         finally:
             os.chdir(original_cwd)
 
@@ -453,7 +453,7 @@ class TestMainCLICommands(TestMainCLIBase):
             result = self.runner.invoke(app, ["init", "--template", "invalid-template", "test-project"])
             
             assert result.exit_code == 1
-            assert "Unknown template" in result.stderr
+            assert "Unknown template" in result.output
         finally:
             os.chdir(original_cwd)
 
@@ -481,7 +481,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["serve", str(non_existent_dir)])
         
         assert result.exit_code == 1
-        assert "does not exist" in result.stderr
+        assert "does not exist" in result.output
 
     def test_serve_command_not_directory(self):
         """Test serve command when path is not a directory."""
@@ -491,7 +491,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["serve", str(test_file)])
         
         assert result.exit_code == 1
-        assert "is not a directory" in result.stderr
+        assert "is not a directory" in result.output
 
     @patch('goobits_cli.main.serve_packages')
     def test_serve_command_custom_host_port(self, mock_serve):
@@ -524,7 +524,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["serve", str(packages_dir)])
         
         assert result.exit_code == 1
-        assert "already in use" in result.stderr
+        assert "already in use" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_basic(self, mock_subprocess):
@@ -551,7 +551,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade"])
         
         assert result.exit_code == 1
-        assert "pipx is required" in result.stderr
+        assert "pipx is required" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_specific_version(self, mock_subprocess):
@@ -615,7 +615,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade", "--source", "invalid"])
         
         assert result.exit_code == 1
-        assert "Unknown source" in result.stderr
+        assert "Unknown source" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_user_cancellation(self, mock_subprocess):
@@ -638,7 +638,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade"], input="y\n")
         
         assert result.exit_code == 1
-        assert "Upgrade failed" in result.stderr
+        assert "Upgrade failed" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_version_check_failure(self, mock_subprocess):
@@ -665,7 +665,7 @@ class TestMainCLICommands(TestMainCLIBase):
         result = self.runner.invoke(app, ["upgrade"], input="y\n")
         
         assert result.exit_code == 1
-        assert "Unexpected error during upgrade" in result.stderr
+        assert "Unexpected error during upgrade" in result.output
 
     @patch('subprocess.run')
     def test_upgrade_command_pre_release_flag(self, mock_subprocess):
@@ -782,7 +782,7 @@ cli:
             result = self.runner.invoke(app, ["serve", str(packages_dir)])
         
         assert result.exit_code == 1
-        assert "Error starting server" in result.stderr
+        assert "Error starting server" in result.output
 
     def test_build_command_no_cli_section(self):
         """Test build command when CLI section is missing."""
@@ -1524,7 +1524,7 @@ class TestMainCLIConfig(TestMainCLIBase):
         result = self.runner.invoke(app, ["build", str(config_path)])
         
         assert result.exit_code == 1
-        assert "Error parsing YAML" in result.stderr
+        assert "invalid: yaml: content: [" in result.output
 
     def test_build_command_missing_required_fields(self):
         """Test build command with missing required fields."""
@@ -1534,7 +1534,7 @@ class TestMainCLIConfig(TestMainCLIBase):
         result = self.runner.invoke(app, ["build", str(config_path)])
         
         assert result.exit_code == 1
-        assert "Error validating configuration" in result.stderr
+        assert "this required field to your configuration" in result.output
 
     def test_empty_and_whitespace_only_configs(self):
         """Test handling of empty and whitespace-only configs."""

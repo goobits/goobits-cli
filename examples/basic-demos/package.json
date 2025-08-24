@@ -8,6 +8,7 @@
     "demo_ts": "./bin/cli.cjs"
   },
   "scripts": {
+    "build": "tsc",
     "start": "node bin/cli.cjs",
     "test": "echo \"No tests specified\"",
     "dev": "node bin/cli.cjs",
