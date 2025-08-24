@@ -466,7 +466,7 @@ def upgrade(check, version, pre, dry_run):
 @main.command()
 {% endif -%}
 {% for arg in cmd.arguments if cmd.arguments -%}
-@click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
+@click.argument('{{ arg.name.upper() }}'{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
 {% endfor -%}
 {% for option in cmd.options if cmd.options -%}
 @click.option(
@@ -491,7 +491,7 @@ def {{ cmd.name.replace('-', '_') }}(ctx{% for arg in cmd.arguments if cmd.argum
 {% else -%}
 @click.command()
 {% for arg in cmd.arguments if cmd.arguments -%}
-@click.argument('{{ arg.name.upper() }}'{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
+@click.argument('{{ arg.name.upper() }}'{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if not (arg.required is defined and arg.required) %}, required=False{% endif %})
 {% endfor -%}
 {% for option in cmd.options if cmd.options -%}
 @click.option(

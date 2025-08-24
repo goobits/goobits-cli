@@ -1174,6 +1174,8 @@ class UniversalTemplateEngine:
 
                     "multiple": _safe_get_attr(arg, "nargs") == "*",
 
+                    "nargs": _safe_get_attr(arg, "nargs"),
+
                 })
 
         
@@ -1299,6 +1301,8 @@ class UniversalTemplateEngine:
                                 "required": _safe_get_attr(arg, "required", True),
 
                                 "multiple": _safe_get_attr(arg, "nargs") == "*",
+
+                                "nargs": _safe_get_attr(arg, "nargs"),
 
                             })
 
@@ -1495,6 +1499,7 @@ class UniversalTemplateEngine:
                         "type": arg_type,
                         "required": arg_required,
                         "multiple": arg_nargs == "*",
+                        "nargs": arg_nargs,
                     })
 
             
