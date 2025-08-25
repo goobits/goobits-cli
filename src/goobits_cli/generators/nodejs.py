@@ -77,12 +77,11 @@ except ImportError:
     integrate_plugin_system = None
 
 # Phase 2 shared components
-# TODO: Uncomment when validation framework is available
-# from ..shared.components.validation_framework import ValidationRunner, ValidationMode
-# from ..shared.components.validators import (
-#     CommandValidator, ArgumentValidator, OptionValidator,
-#     ConfigurationValidator, HookValidator
-# )
+from ..shared.components.validation_framework import ValidationRunner, ValidationMode
+from ..shared.components.validators import (
+    CommandValidator, ArgumentValidator, OptionValidator,
+    ConfigValidator, HookValidator
+)
 
 try:
     from ..shared.components.doc_generator import DocumentationGenerator
@@ -144,9 +143,8 @@ class NodeJSGenerator(BaseGenerator):
             )
             self.template_missing = True
 
-        # Initialize shared components (Phase 2)
-        # TODO: Uncomment when validation framework is available
-        # self.validation_runner = ValidationRunner()
+        # Initialize shared components
+        self.validation_runner = ValidationRunner()
         self.doc_generator = None  # Will be initialized per generation with config
 
         
@@ -321,12 +319,10 @@ class NodeJSGenerator(BaseGenerator):
 
         """
 
-        # Phase 2: Use ConfigurationValidator when available
-
+        # Validation with ConfigValidator available
+        # TODO: Enable validation when validation_runner is configured
         # if self.validation_runner:
-
-        #     validator = ConfigurationValidator()
-
+        #     validator = ConfigValidator()
         #     result = self.validation_runner.validate(validator, config)
 
         #     if not result.is_valid:
@@ -355,12 +351,10 @@ class NodeJSGenerator(BaseGenerator):
 
                 for cmd_name, cmd_data in cli_config.commands.items():
 
-                    # Phase 2: Use CommandValidator
-
+                    # Validation with CommandValidator available
+                    # TODO: Enable validation when validation_runner is configured
                     # if self.validation_runner:
-
                     #     cmd_validator = CommandValidator()
-
                     #     cmd_result = self.validation_runner.validate(cmd_validator, cmd_data)
 
                     #     if not cmd_result.is_valid:
@@ -375,7 +369,7 @@ class NodeJSGenerator(BaseGenerator):
 
                         for arg in cmd_data.args:
 
-                            # Phase 2: Use ArgumentValidator
+                            # ArgumentValidator available, TODO: integrate validation
 
                             pass
 
@@ -387,7 +381,7 @@ class NodeJSGenerator(BaseGenerator):
 
                         for opt in cmd_data.options:
 
-                            # Phase 2: Use OptionValidator
+                            # OptionValidator available, TODO: integrate validation
 
                             pass
 
