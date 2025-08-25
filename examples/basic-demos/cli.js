@@ -11,7 +11,7 @@ let hooks = null;
 
 const loadHooks = async () => {
     try {
-        const hookModule = await import('./hooks.js');
+        const hookModule = await import('./src/hooks.js');
         hooks = hookModule.default || hookModule;
     } catch (error) {
         if (error.code === 'ERR_MODULE_NOT_FOUND') {
@@ -163,4 +163,12 @@ infoCmd.action(async (options) => {
 });
 commandMap.set('info', infoCmd);
 
-program.parse();
+// Main CLI function for module export
+export function cli() {
+    program.parse();
+}
+
+// If this is the main module, run the CLI
+if (import.meta.url === `file://${process.argv[1]}`) {
+    cli();
+}

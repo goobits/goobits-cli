@@ -13,14 +13,14 @@ const program = new Command();
 program
   .name('testts')
   .description('Test TS compilation')
-  .version('1.0.0');
-// hello command
+  .version('1.0.0');// Global option: interactive
+program.option('-i, --interactive <value>', '');// hello command
 program
   .command('hello')
-  .description('')  .action(async (options) => {
+  .description('Say hello')  .argument('<name>', 'Name to greet')  .action(async (name, options) => {
     const args = {
       commandName: 'hello',
-      rawArgs: options,    };
+      rawArgs: options,      name,    };
     
     try {
       const hookFunction = hooks.onHello;

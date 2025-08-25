@@ -1,73 +1,73 @@
 
-# demo-typescript-cli
+# demo-rust-cli
 
-A sample TypeScript CLI built with Goobits
+A sample Rust CLI built with Goobits
 
 ## Installation
-### Using npm
+### From Source
 
 ```bash
-npm install -g demo-typescript-cli
+# Clone the repository
+git clone https://github.com/user/demo-rust-cli
+cd demo-rust-cli
+
+# Build and install
+cargo build --release
+cargo install --path .
 ```
 
-### Using yarn
+### Using Cargo
 
 ```bash
-yarn global add demo-typescript-cli
+cargo install demo-rust-cli
 ```
 ## Usage
 
-demo_ts is a command-line tool with the following commands:
+demo_rust is a command-line tool with the following commands:
 
-### `demo_ts greet`
+### `demo_rust greet`
 
 No description provided
 **Usage:**
 ```bash
-demo_ts greet [OPTIONS]```
+demo_rust greet [OPTIONS]```
 **Options:**
-- `--style`, `-s`: No description provided (default: casual)- `--count`, `-c`: No description provided (default: 1)- `--uppercase`, `-u`: No description provided- `--language`, `-l`: No description provided (default: en)### `demo_ts info`
+- `--style`, `-s`: No description provided (default: casual)- `--count`, `-c`: No description provided (default: 1)- `--uppercase`, `-u`: No description provided- `--language`, `-l`: No description provided (default: en)### `demo_rust info`
 
 No description provided
 **Usage:**
 ```bash
-demo_ts info [OPTIONS]```
+demo_rust info [OPTIONS]```
 **Options:**
 - `--format`, `-f`: No description provided (default: text)- `--verbose`, `-v`: No description provided- `--sections`, `-s`: No description provided (default: all)
 ### Global Options
 
 - `--help`, `-h`: Show help message
-- `--version`, `-V`: Show version information
+- `--version`, `-V`: Show version information- `--verbose`, `-v`: Enable verbose output
 ## Examples
 ```bash
 # Example usage
-demo_ts greet```
+demo_rust greet```
 ```bash
 # Example usage
-demo_ts info```
+demo_rust info```
 ## Development
-### Setup
+### Building
 
 ```bash
-npm install
-```
-
-### Building (TypeScript)
-
-```bash
-npm run build
+cargo build
 ```
 
 ### Testing
 
 ```bash
-npm test
+cargo test
 ```
 
 ### Running
 
 ```bash
-npm start <command> [args...]
+cargo run -- <command> [args...]
 ```
 ## License
 

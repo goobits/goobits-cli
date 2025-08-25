@@ -22,6 +22,9 @@ pub mod completion;
 /// CLI command handlers
 pub mod cli;
 
+/// Structured logging functionality
+pub mod logger;
+
 // Re-export main types for convenience
 pub use errors::{CliError, ExitCode, CliResult};
 pub use config::Config;

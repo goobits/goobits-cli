@@ -7,12 +7,22 @@
 
 use clap::ArgMatches;
 use anyhow::{Result, anyhow};
+use serde_json::json;
+use std::collections::HashMap;
+
+use crate::logger::{info, warn, error, debug, update_context, LogContext};
 
 /// Hook function for 'greet' command
 /// Greet someone with style
 pub fn on_greet(matches: &ArgMatches) -> Result<()> {
+    // Set up logging context for this command
+    let mut context: LogContext = HashMap::new();
+    context.insert("command".to_string(), json!("greet"));
+    update_context(context);
+
+    info("hooks", "Executing greet command", None);
+    
     // Add your business logic here
-    println!("Executing greet command...");
     
     // Extract arguments
     if let Some(name) = matches.get_one::<String>("name") {
@@ -42,8 +52,14 @@ pub fn on_greet(matches: &ArgMatches) -> Result<()> {
 /// Hook function for 'info' command
 /// Display system and environment information
 pub fn on_info(matches: &ArgMatches) -> Result<()> {
+    // Set up logging context for this command
+    let mut context: LogContext = HashMap::new();
+    context.insert("command".to_string(), json!("info"));
+    update_context(context);
+
+    info("hooks", "Executing info command", None);
+    
     // Add your business logic here
-    println!("Executing info command...");
     
     // Extract options
     if let Some(format) = matches.get_one::<String>("format") {

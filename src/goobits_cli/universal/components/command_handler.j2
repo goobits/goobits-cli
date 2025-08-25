@@ -1282,7 +1282,7 @@ fn main() {
             let display_name = "{{ project.display_name | default(project.name) }}";
             
             // Get current version (simple fallback for Rust)
-            let current_version = "{{ cli.version | default('1.0.0') }}";
+            let current_version = "{{ cli.version | default('3.0.0-alpha.1') }}";
             println!("Current version: {}", current_version);
             
             let check_only = sub_matches.get_flag("check");

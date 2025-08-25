@@ -320,14 +320,12 @@ class NodeJSGenerator(BaseGenerator):
         """
 
         # Validation with ConfigValidator available
-        # TODO: Enable validation when validation_runner is configured
-        # if self.validation_runner:
-        #     validator = ConfigValidator()
-        #     result = self.validation_runner.validate(validator, config)
+        if self.validation_runner:
+            validator = ConfigValidator()
+            result = self.validation_runner.validate(validator, config)
 
-        #     if not result.is_valid:
-
-        #         raise ValueError(f"Configuration validation failed: {result.errors}")
+            if not result.is_valid:
+                raise ValueError(f"Configuration validation failed: {result.errors}")
 
         
 
@@ -352,14 +350,12 @@ class NodeJSGenerator(BaseGenerator):
                 for cmd_name, cmd_data in cli_config.commands.items():
 
                     # Validation with CommandValidator available
-                    # TODO: Enable validation when validation_runner is configured
-                    # if self.validation_runner:
-                    #     cmd_validator = CommandValidator()
-                    #     cmd_result = self.validation_runner.validate(cmd_validator, cmd_data)
+                    if self.validation_runner:
+                        cmd_validator = CommandValidator()
+                        cmd_result = self.validation_runner.validate(cmd_validator, cmd_data)
 
-                    #     if not cmd_result.is_valid:
-
-                    #         raise ValueError(f"Command '{cmd_name}' validation failed: {cmd_result.errors}")
+                        if not cmd_result.is_valid:
+                            raise ValueError(f"Command '{cmd_name}' validation failed: {cmd_result.errors}")
 
                     
 
@@ -369,9 +365,12 @@ class NodeJSGenerator(BaseGenerator):
 
                         for arg in cmd_data.args:
 
-                            # ArgumentValidator available, TODO: integrate validation
-
-                            pass
+                            # ArgumentValidator available
+                            if self.validation_runner:
+                                arg_validator = ArgumentValidator()
+                                arg_result = self.validation_runner.validate(arg_validator, arg)
+                                if not arg_result.is_valid:
+                                    raise ValueError(f"Argument validation failed: {arg_result.errors}")
 
                     
 
@@ -381,9 +380,12 @@ class NodeJSGenerator(BaseGenerator):
 
                         for opt in cmd_data.options:
 
-                            # OptionValidator available, TODO: integrate validation
-
-                            pass
+                            # OptionValidator available
+                            if self.validation_runner:
+                                opt_validator = OptionValidator()
+                                opt_result = self.validation_runner.validate(opt_validator, opt)
+                                if not opt_result.is_valid:
+                                    raise ValueError(f"Option validation failed: {opt_result.errors}")
 
     
 

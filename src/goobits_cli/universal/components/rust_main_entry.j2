@@ -47,7 +47,7 @@ fn main() {
 
     let app = Command::new("{{ project.command_name }}")
         .about("{{ cli.tagline | default(project.description) }}")
-        .version("{{ project.version | default('1.0.0') }}")
+        .version("{{ project.version | default('3.0.0-alpha.1') }}")
         .subcommand_required(false)
         .arg_required_else_help(true)
         // Add global options

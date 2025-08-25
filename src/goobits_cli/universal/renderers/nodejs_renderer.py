@@ -183,7 +183,7 @@ class NodeJSRenderer(LanguageRenderer):
 
                     "name": ir.get("project", {}).get("package_name", "cli"),
 
-                    "version": ir.get("project", {}).get("version", "1.0.0"),
+                    "version": ir.get("project", {}).get("version", _get_version()),
 
                     "description": ir.get("project", {}).get("description", "CLI application"),
 
@@ -455,7 +455,7 @@ class NodeJSRenderer(LanguageRenderer):
 
                 "description": root_command.get("description", "CLI application"),
 
-                "version": root_command.get("version", "1.0.0"),
+                "version": root_command.get("version", _get_version()),
 
                 "options": [],
 

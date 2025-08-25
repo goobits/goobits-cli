@@ -144,7 +144,7 @@ class PythonRenderer(LanguageRenderer):
 
                 "description": context["project"].get("description", "A CLI application"),
 
-                "version": context["project"].get("version") or "1.0.0",
+                "version": context["project"].get("version") or _version,
 
                 "author": context["project"].get("author", ""),
 
@@ -477,7 +477,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="{Path(main_file_path).stem}",
-    version="1.0.0",
+    version="{_version}",
     packages=find_packages(),
     entry_points={{
         'console_scripts': [

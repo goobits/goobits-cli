@@ -1,14 +1,18 @@
 use clap::{Arg, Command, ArgMatches};
 use std::process;
 use anyhow::{Result, anyhow};
+use serde_json::json;
 
 mod hooks;
+mod logger;
+use logger::{setup_logging, info, error, set_context, create_command_context, log_error};
+
 /// Enhanced error handling function
 fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
-    eprintln!("❌ {}: {}", context, error);
+    log_error(context, &error);
     
     if verbose {
-        eprintln!("Details: {:#}", error);
+        error(context, &format!("Details: {:#}", error), None);
     }
     
     // Check for specific error types to provide better exit codes
@@ -22,6 +26,14 @@ fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
 }
 
 fn main() {
+    // Initialize logging as early as possible
+    if let Err(e) = setup_logging() {
+        eprintln!("Failed to initialize logging: {}", e);
+        process::exit(1);
+    }
+
+    info("main", "Starting  CLI", None);
+
     let app = Command::new("")
         .version("None")
         .about("Rust CLI demonstration")
@@ -125,6 +137,9 @@ fn main() {
     match matches.subcommand() {
         Some(("upgrade", sub_matches)) => {
             // Built-in upgrade command implementation
+            let context = create_command_context("upgrade", &[]);
+            set_context(context);
+            info("main", "Executing upgrade command", None);
             let package_name = "demo-rust-cli";
             let command_name = "demo_rust";
             let display_name = "Demo Rust CLI";
@@ -139,8 +154,8 @@ fn main() {
             let dry_run = sub_matches.get_flag("dry-run");
             
             if check_only {
-                println!("Checking for updates to {}...", display_name);
-                println!("Update check not yet implemented for Rust. Use without --check to upgrade.");
+                info("upgrade", &format!("Checking for updates to {}...", display_name), None);
+                info("upgrade", "Update check not yet implemented for Rust. Use without --check to upgrade.", None);
                 return;
             }
             
@@ -162,12 +177,12 @@ fn main() {
             cmd_args.push(package_name);
             
             if dry_run {
-                println!("Dry run - would execute: cargo {}", cmd_args.join(" "));
+                info("upgrade", &format!("Dry run - would execute: cargo {}", cmd_args.join(" ")), None);
                 return;
             }
             
             // Execute upgrade
-            println!("Upgrading {} with cargo...", display_name);
+            info("upgrade", &format!("Upgrading {} with cargo...", display_name), None);
             
             let output = std::process::Command::new("cargo")
                 .args(&cmd_args)
@@ -190,11 +205,15 @@ fn main() {
             }
         }
         Some(("greet", sub_matches)) => {
-            // Enhanced error handling for Rust commands
+            // Enhanced error handling for Rust commands with structured logging
+            let context = create_command_context("greet", &[]);
+            set_context(context);
+            info("main", "Executing greet command", None);
+            
             let hook_name = "on_greet";
             match hooks::on_greet(sub_matches) {
                 Ok(_) => {
-                    // Command executed successfully
+                    info("main", "Command greet executed successfully", None);
                 }
                 Err(e) => {
                     let error_context = format!("Command 'greet' execution");
@@ -214,11 +233,15 @@ fn main() {
             }
         }
         Some(("info", sub_matches)) => {
-            // Enhanced error handling for Rust commands
+            // Enhanced error handling for Rust commands with structured logging
+            let context = create_command_context("info", &[]);
+            set_context(context);
+            info("main", "Executing info command", None);
+            
             let hook_name = "on_info";
             match hooks::on_info(sub_matches) {
                 Ok(_) => {
-                    // Command executed successfully
+                    info("main", "Command info executed successfully", None);
                 }
                 Err(e) => {
                     let error_context = format!("Command 'info' execution");
@@ -238,8 +261,10 @@ fn main() {
             }
         }
         _ => {
-            eprintln!("No subcommand provided. Use --help for available commands.");
+            info("main", "No subcommand provided. Use --help for available commands.", None);
             process::exit(1);
         }
     }
+    
+    info("main", "CLI execution completed successfully", None);
 }
