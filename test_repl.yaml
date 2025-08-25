@@ -1,0 +1,40 @@
+package_name: test_repl
+command_name: testrepl
+display_name: "Test REPL"
+description: "Test Enhanced REPL functionality"
+language: python
+
+features:
+  interactive_mode:
+    enabled: true
+    repl: true
+    smart_completion: true
+    history_enabled: true
+
+cli:
+  name: testrepl
+  version: "1.0.0"
+  tagline: "Enhanced REPL testing"
+  
+  commands:
+    hello:
+      desc: "Say hello with enhanced features"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: false
+      options:
+        - name: uppercase
+          short: u
+          type: boolean
+          desc: "Convert to uppercase"
+          default: false
+    
+    test:
+      desc: "Test multi-line command support"
+      options:
+        - name: verbose
+          short: v
+          type: boolean
+          desc: "Verbose output"
+          default: false

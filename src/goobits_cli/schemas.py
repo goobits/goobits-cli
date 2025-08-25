@@ -269,6 +269,23 @@ class MessagesSchema(BaseModel):
     uninstall_success: str = "Uninstall completed successfully!"
 
 
+class InteractiveModeSchema(BaseModel):
+    """Schema for interactive mode features."""
+    
+    enabled: bool = True
+    repl: bool = False  # Enable enhanced REPL features
+    smart_completion: bool = True  # Enable smart completion from Phase 1A
+    history_enabled: bool = True
+    tab_completion: bool = True
+    prompt: Optional[str] = None  # Custom prompt (defaults to CLI name)
+
+
+class FeaturesSchema(BaseModel):
+    """Schema for optional CLI features."""
+    
+    interactive_mode: Optional[InteractiveModeSchema] = Field(default_factory=InteractiveModeSchema)
+
+
 
 
 
@@ -319,6 +336,9 @@ class GoobitsConfigSchema(BaseModel):
     
     # Post-installation messages
     messages: Optional[MessagesSchema] = Field(default_factory=MessagesSchema)
+    
+    # Optional feature configuration
+    features: Optional[FeaturesSchema] = Field(default_factory=FeaturesSchema)
     
     # Optional CLI configuration (for backward compatibility)
     cli: Optional[CLISchema] = None

@@ -50,7 +50,7 @@ This release delivers full multi-language support with unlimited nested commands
 - **Node.js dependency resolution** error messages
 - **TypeScript compilation** configuration
 - **Rust unused variable warnings** in generated code
-- **Test suite stability** - comprehensive test coverage across 53 test files
+- **Test suite stability** - comprehensive test coverage across 55 test files
 
 ## [1.x] - Previous Versions
 

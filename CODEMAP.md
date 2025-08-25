@@ -11,7 +11,7 @@ PROJECT SUMMARY
   Framework:    typer (framework CLI), rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
   
-  Total Files:  4 generator files + __init__.py, 53 test files
+  Total Files:  4 generator files + __init__.py, 55 test files
   Total LOC:    ~60,000+ lines of Python code
 
 ================================================================================
@@ -62,7 +62,7 @@ Key Patterns:
 │   │   ├── performance/     [Performance monitoring]
 │   │   └── completion/      [Dynamic completion system]
 │   └── shared/              [Cross-language utilities]
-├── src/tests/               [Comprehensive test suite - 53 test files]
+├── src/tests/               [Comprehensive test suite - 55 test files]
 │   ├── unit/                [Unit tests by component]
 │   ├── integration/         [Cross-language integration]
 │   ├── e2e/                 [End-to-end CLI testing]
@@ -197,7 +197,7 @@ Development:
 • Performance: Generated CLIs <100ms startup target met
 • Interactive mode available for all generated CLIs
 • Rust support fully operational with Clap framework
-• Test coverage: 53 test files, comprehensive coverage
+• Test coverage: 55 test files, comprehensive coverage
 • Generated CLIs use hook system: hooks.py/js/ts/rs for logic
 
 ================================================================================

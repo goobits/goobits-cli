@@ -3,11 +3,27 @@
    This template generates interactive mode for CLI applications.
    It provides a REPL interface where users can run commands interactively.
    
+   If features.interactive_mode.repl is enabled, generates enhanced REPL with:
+   - Multi-line command support
+   - Smart completion integration  
+   - Persistent command history
+   - Performance optimizations
+   
    Variables expected:
    - language: Target language (python, nodejs, typescript, rust)
    - project: Project metadata
    - cli: CLI schema with commands, arguments, options
+   - features.interactive_mode.repl: Boolean to enable enhanced REPL features
 #}
+
+{%- set repl_enabled = features.interactive_mode.repl | default(false) -%}
+
+{%- if repl_enabled -%}
+{# Enhanced REPL Mode - Use the repl_loop.j2 template content #}
+{% include 'repl_loop.j2' %}
+
+{%- else -%}
+{# Standard Interactive Mode #}
 
 {%- if language == 'python' -%}
 #!/usr/bin/env python3
@@ -532,5 +548,7 @@ mod tests {
         assert!(result.is_ok());
     }
 }
+
+{%- endif -%}
 
 {%- endif -%}

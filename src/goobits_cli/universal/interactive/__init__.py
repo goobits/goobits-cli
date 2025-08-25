@@ -18,7 +18,11 @@ from .base import (
 
     InteractiveEngine,
 
-    InteractiveRenderer
+    InteractiveRenderer,
+
+    BasicREPL,
+
+    create_basic_repl
 
 )
 
@@ -31,6 +35,10 @@ __all__ = [
     'InteractiveEngine',
 
     'InteractiveRenderer',
+
+    'BasicREPL',
+
+    'create_basic_repl',
 
     'integrate_interactive_mode',
 
@@ -173,7 +181,9 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
         'history_enabled': True,
 
-        'tab_completion': is_tab_completion_supported(language)
+        'tab_completion': is_tab_completion_supported(language),
+
+        'repl': False  # Default REPL features disabled for backward compatibility
 
     }
 

@@ -26,6 +26,13 @@ from .providers import (
 
 )
 
+from .smart_completion import (
+    SmartCompletionEngine,
+    HistoryCompletionProvider,
+    FuzzyMatchProvider,
+    get_smart_completion_registry
+)
+
 
 
 __all__ = [
@@ -43,6 +50,14 @@ __all__ = [
     'ConfigKeyProvider',
 
     'HistoryProvider',
+
+    'SmartCompletionEngine',
+
+    'HistoryCompletionProvider',
+
+    'FuzzyMatchProvider',
+
+    'get_smart_completion_registry',
 
     'integrate_completion_system'
 
