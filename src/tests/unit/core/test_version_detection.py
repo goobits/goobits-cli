@@ -64,7 +64,7 @@ class TestVersionDetectionEdgeCases:
         init_py_path = self.temp_dir / "__init__.py"
         
         # Create the files with content
-        pyproject_path.write_text('[project]\nversion = "2.0.0"')
+        pyproject_path.write_text('[project]\nversion = "3.0.0"')
         package_json_path.write_text('{"version": "3.0.0"}')
         cargo_toml_path.write_text('version = "4.0.0"')
         init_py_path.write_text('__version__ = "5.0.0"')

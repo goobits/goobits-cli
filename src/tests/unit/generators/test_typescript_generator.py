@@ -18,7 +18,7 @@ class TestTypeScriptGenerator:
         
         assert generator is not None
         assert hasattr(generator, 'template_env')
-        assert hasattr(generator, 'use_universal_templates')
+        # Template system is integrated
     
     def test_typescript_generator_basic_generation(self, tmp_path):
         """Test basic CLI generation functionality."""
@@ -31,7 +31,7 @@ class TestTypeScriptGenerator:
             commands={}
         ))
         
-        generator = TypeScriptGenerator(use_universal_templates=True)
+        generator = TypeScriptGenerator()
         
         # Test that generation doesn't raise exceptions
         try:
@@ -54,7 +54,7 @@ class TestTypeScriptGenerator:
             }
         ))
         
-        generator = TypeScriptGenerator(use_universal_templates=True)
+        generator = TypeScriptGenerator()
         
         # Test generation with commands
         try:

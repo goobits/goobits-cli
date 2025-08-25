@@ -142,7 +142,7 @@ class TestPythonCLICompilation:
     def test_python_cli_syntax_validation(self):
         """Test that generated Python CLI has valid syntax and can be compiled."""
         config = create_realistic_config("python")
-        generator = PythonGenerator(use_universal_templates=True)
+        generator = PythonGenerator()
         
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -190,7 +190,7 @@ class TestPythonCLICompilation:
             pytest.skip("pip not available for Python dependency installation")
         
         config = create_realistic_config("python")
-        generator = PythonGenerator(use_universal_templates=True)
+        generator = PythonGenerator()
         
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -449,7 +449,7 @@ class TestCrossLanguageConsistency:
             config = create_realistic_config(language)
             
             if language == "python":
-                generator = PythonGenerator(use_universal_templates=True)
+                generator = PythonGenerator()
             elif language == "nodejs":
                 generator = NodeJSGenerator()
             elif language == "typescript":

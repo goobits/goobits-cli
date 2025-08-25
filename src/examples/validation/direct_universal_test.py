@@ -21,7 +21,7 @@ from goobits_cli.universal.renderers.python_renderer import PythonRenderer
 from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer  
 from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
 
-def test_universal_templates():
+def test_template_system():
     """Test the Universal Template System with all languages"""
     
     # Load test configuration
@@ -88,7 +88,7 @@ if __name__ == "__main__":
     print("🚀 Testing Universal Template System directly...\n")
     
     try:
-        test_universal_templates()
+        test_template_system()
         print("\n🎉 All universal template tests passed!")
         sys.exit(0)
     except AssertionError as e:

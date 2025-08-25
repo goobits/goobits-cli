@@ -19,7 +19,7 @@ cli_hooks: "app_hooks.py"  # Hook file path (language-specific)
 # CLI definition
 cli:
   name: "My CLI"
-  version: "1.0.0"
+  version: "3.0.0-alpha.1"
   tagline: "Short description"
   
   commands:

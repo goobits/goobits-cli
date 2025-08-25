@@ -52,7 +52,6 @@ goobits build goobits.yaml
   - `--output-dir`: Output directory for generated files
   - `--output`: Output filename for generated CLI
   - `--backup`: Create .bak files when overwriting
-  - `--universal-templates`: Use Universal Template System (production-ready)
 
 - `goobits init <project_name>` - Create initial goobits.yaml
   - `--template`: Choose template (basic, advanced, api-client, text-processor)
@@ -181,7 +180,7 @@ pub fn on_greet(matches: &ArgMatches) -> Result<()> {
 
 ### Universal Template System
 
-The Universal Template System provides consistent CLI generation across all supported languages from a single template. Enable with the `--universal-templates` flag.
+The Universal Template System provides consistent CLI generation across all supported languages from a single template. It is now always enabled for optimal performance and consistency.
 
 ### Interactive Mode
 Generated CLIs support interactive REPL:

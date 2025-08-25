@@ -27,7 +27,7 @@ Goobits CLI Framework is a **production-ready multi-language** CLI generator tha
 goobits build goobits.yaml
 
 # Build with Universal Template System (production ready)
-goobits build goobits.yaml --universal-templates
+goobits build goobits.yaml
 
 # Install in development mode (includes dev dependencies, changes reflected immediately)
 pip install -e .[dev,test]
@@ -268,7 +268,7 @@ The generated CLI includes the source YAML filename in comments for traceability
 ### Working with Templates
 
 Templates are in `src/goobits_cli/templates/`. After modifying:
-1. Run `goobits build` to regenerate (or `goobits build --universal-templates` for universal system)
+1. Run `goobits build` to regenerate
 2. Test with `./setup.sh install --dev`
 
 ### Using Advanced Features
@@ -297,7 +297,7 @@ my-cli --interactive  # Works across all languages with optimized performance
 
 **Universal Templates:** Generate CLIs using the universal template system:
 ```bash
-goobits build --universal-templates
+goobits build
 ```
 
 **Performance Monitoring:** 

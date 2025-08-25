@@ -136,7 +136,7 @@ class TestPerformanceBenchmarks:
     
     def test_python_generation_performance(self, tmp_path):
         """Test Python CLI generation performance."""
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator()
         
         with self.measure_performance():
             result = generator.generate(self.test_config, str(tmp_path))
@@ -152,7 +152,7 @@ class TestPerformanceBenchmarks:
     
     def test_nodejs_generation_performance(self, tmp_path):
         """Test Node.js CLI generation performance."""
-        generator = NodeJSGenerator(use_universal_templates=False)
+        generator = NodeJSGenerator()
         
         # Add timeout to prevent hanging
         import signal
@@ -183,7 +183,7 @@ class TestPerformanceBenchmarks:
     
     def test_typescript_generation_performance(self, tmp_path):
         """Test TypeScript CLI generation performance."""
-        generator = TypeScriptGenerator(use_universal_templates=False)
+        generator = TypeScriptGenerator()
         
         # Add timeout to prevent hanging
         import signal
@@ -218,7 +218,7 @@ class TestPerformanceBenchmarks:
     )
     def test_rust_generation_performance(self, tmp_path):
         """Test Rust CLI generation performance."""
-        generator = RustGenerator(use_universal_templates=False)
+        generator = RustGenerator()
         
         with self.measure_performance():
             result = generator.generate(self.test_config, str(tmp_path))
@@ -251,7 +251,7 @@ class TestPerformanceBenchmarks:
             lang_dir = tmp_path / lang
             lang_dir.mkdir()
             
-            generator = generator_class(use_universal_templates=False)
+            generator = generator_class()
             
             with self.measure_performance():
                 try:
@@ -316,7 +316,7 @@ class TestPerformanceBenchmarks:
             }
         })
         
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator()
         
         with self.measure_performance():
             result = generator.generate(large_config, str(tmp_path))
@@ -329,7 +329,7 @@ class TestPerformanceBenchmarks:
     
     def test_memory_efficiency(self, tmp_path):
         """Test memory efficiency by generating multiple CLIs."""
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator()
         
         initial_memory = self._get_memory_usage()
         
@@ -368,7 +368,7 @@ class TestPerformanceBenchmarks:
     
     def test_template_rendering_performance(self, tmp_path):
         """Test template rendering performance specifically."""
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator()
         
         # Measure template rendering specifically
         start_time = time.perf_counter()
@@ -402,7 +402,7 @@ class TestSimpleBenchmarks:
             }
         })
         
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator()
         
         start_time = time.perf_counter()
         result = generator.generate(config, str(tmp_path))
@@ -427,7 +427,7 @@ class TestSimpleBenchmarks:
             }
         })
         
-        generator = NodeJSGenerator(use_universal_templates=False)
+        generator = NodeJSGenerator()
         
         start_time = time.perf_counter()
         result = generator.generate(config, str(tmp_path))

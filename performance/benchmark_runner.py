@@ -373,12 +373,12 @@ class PerformanceValidationSuite:
         if "error" not in template_results:
             template_score = 75  # Base score
             
-            # Analyze universal vs legacy performance
-            universal_vs_legacy = template_results.get("universal_vs_legacy", {})
-            if universal_vs_legacy:
-                # Good performance if universal isn't much slower than legacy
+            # Analyze universal template performance
+            universal_performance = template_results.get("universal_performance", {})
+            if universal_performance:
+                # Analyze universal template performance characteristics
                 avg_overhead = []
-                for lang_comparison in universal_vs_legacy.values():
+                for lang_comparison in universal_performance.values():
                     overhead = lang_comparison.get("performance_difference_pct", 0)
                     avg_overhead.append(overhead)
                 
@@ -450,8 +450,8 @@ class PerformanceValidationSuite:
             template_ok = True  # Assume OK if no critical template issues
             
             # Check for excessive universal template overhead
-            universal_vs_legacy = template_results.get("universal_vs_legacy", {})
-            for lang_comparison in universal_vs_legacy.values():
+            universal_performance = template_results.get("universal_performance", {})
+            for lang_comparison in universal_performance.values():
                 overhead = lang_comparison.get("performance_difference_pct", 0)
                 if overhead > 100:  # More than 100% slower
                     template_ok = False
@@ -503,11 +503,11 @@ class PerformanceValidationSuite:
             issues.append(f"Template benchmarks failed: {template_results['error']}")
         else:
             # Check for severe universal template performance issues
-            universal_vs_legacy = template_results.get("universal_vs_legacy", {})
-            for language, comparison in universal_vs_legacy.items():
+            universal_performance = template_results.get("universal_performance", {})
+            for language, comparison in universal_performance.items():
                 overhead = comparison.get("performance_difference_pct", 0)
                 if overhead > 200:  # More than 200% slower
-                    issues.append(f"Universal templates are {overhead:.0f}% slower than legacy in {language}")
+                    issues.append(f"Universal templates need optimization in {language}")
         
         # Overall production readiness
         if not meets_requirements:
@@ -564,10 +564,10 @@ class PerformanceValidationSuite:
         
         # Template performance recommendations
         if "error" not in template_results:
-            universal_vs_legacy = template_results.get("universal_vs_legacy", {})
+            universal_performance = template_results.get("universal_performance", {})
             high_overhead_langs = []
             
-            for language, comparison in universal_vs_legacy.items():
+            for language, comparison in universal_performance.items():
                 overhead = comparison.get("performance_difference_pct", 0)
                 if overhead > 50:
                     high_overhead_langs.append(f"{language} ({overhead:.1f}%)")

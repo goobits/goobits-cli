@@ -3,6 +3,7 @@ command_name: testrepl
 display_name: "Test REPL"
 description: "Test Enhanced REPL functionality"
 language: python
+cli_output_path: "test_repl_cli.py"
 
 features:
   interactive_mode:

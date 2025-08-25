@@ -57,9 +57,9 @@ The framework generates:
 ## Advanced Features
 
 ### Universal Template System
-Use `--universal-templates` for consistent cross-language generation:
+Universal templates are now always enabled for consistent cross-language generation:
 ```bash
-goobits build --universal-templates
+goobits build
 ```
 
 ### Interactive Mode

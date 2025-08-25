@@ -45,11 +45,11 @@ pip install goobits-cli[dev]
 
 ### Universal Template System Issues
 
-**Problem**: Errors when using `--universal-templates`
+**Problem**: Template generation errors
 
 **Solutions**:
 - Update to latest version: `pip install --upgrade goobits-cli`
-- Fall back to legacy templates: Remove `--universal-templates` flag
+- Universal templates are now always enabled for consistency
 - Check component registry: Templates may need regeneration
 
 ## Language-Specific Issues

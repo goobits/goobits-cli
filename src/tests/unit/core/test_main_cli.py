@@ -156,8 +156,8 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "Detected language: typescript" in result.stdout
 
-    def test_build_command_with_universal_templates(self):
-        """Test build command (universal templates are now default)."""
+    def test_build_command_default_templates(self):
+        """Test build command with template system."""
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
         
@@ -171,7 +171,7 @@ class TestMainCLICommands(TestMainCLIBase):
             result = self.runner.invoke(app, ["build", str(config_path)])
         
         assert result.exit_code == 0
-        # Universal templates are the default now, so we don't need the flag
+        # Template system handles CLI generation
 
     def test_build_command_with_backup(self):
         """Test build command with --backup flag."""
@@ -1574,14 +1574,14 @@ version = "1.2.3"
         pyproject_content = """
 [project]
 name = "test-package"
-version = "2.0.0"
+version = "3.0.0"
 """
         pyproject_path = self.temp_dir / "pyproject.toml"
         with open(pyproject_path, 'w') as f:
             f.write(pyproject_content)
         
         result = extract_version_from_pyproject(self.temp_dir)
-        assert result == "2.0.0"
+        assert result == "3.0.0"
 
     def test_extract_version_from_pyproject_parse_error(self):
         """Test version extraction with invalid TOML."""

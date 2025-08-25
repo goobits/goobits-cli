@@ -91,7 +91,6 @@ class CrossLanguageAnalyzer:
                     "interactive_mode": True,
                     "completion_system": True,
                     "plugin_support": True,
-                    "universal_templates": True,
                     "performance_optimization": True
                 }
             },
@@ -104,7 +103,6 @@ class CrossLanguageAnalyzer:
                     "interactive_mode": True,
                     "completion_system": True,
                     "plugin_support": True,
-                    "universal_templates": True,
                     "performance_optimization": True
                 }
             },
@@ -117,7 +115,6 @@ class CrossLanguageAnalyzer:
                     "interactive_mode": True,
                     "completion_system": True,
                     "plugin_support": True,
-                    "universal_templates": True,
                     "performance_optimization": True
                 }
             }
@@ -263,12 +260,11 @@ class CrossLanguageAnalyzer:
             }
         ]
     
-    def build_test_cli(self, test_dir: Path, language: str, universal_templates: bool = False) -> bool:
+    def build_test_cli(self, test_dir: Path, language: str) -> bool:
         """Build test CLI for the specified language"""
         try:
             cmd = [sys.executable, "-m", "goobits_cli.main", "build"]
-            if universal_templates:
-                cmd.append("--universal-templates")
+            # Universal templates are now always enabled (no flag needed)
             cmd.extend([str(test_dir / "goobits.yaml"), "--output-dir", str(test_dir)])
             
             process = subprocess.run(
@@ -294,11 +290,10 @@ class CrossLanguageAnalyzer:
         test_dir, cli_config = self.create_standardized_test_cli(language)
         
         try:
-            # Build both universal and legacy versions
-            legacy_built = self.build_test_cli(test_dir, language, universal_templates=False)
-            universal_built = self.build_test_cli(test_dir, language, universal_templates=True)
+            # Build CLI (universal templates always enabled)
+            built = self.build_test_cli(test_dir, language)
             
-            if not (legacy_built or universal_built):
+            if not built:
                 if self.console:
                     self.console.print(f"[red]❌ Failed to build {language} CLI[/red]")
                 return self._create_failed_profile(language)
@@ -420,7 +415,7 @@ class CrossLanguageAnalyzer:
         
         return {
             "average_render_ms": template_speed.get(language, 100.0),
-            "legacy_vs_universal_ratio": 1.15,  # Universal typically 15% slower
+            "universal_performance_baseline": 1.0,  # Performance baseline for universal templates
             "meets_target": template_speed.get(language, 100.0) <= 150.0
         }
     

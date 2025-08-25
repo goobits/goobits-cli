@@ -278,6 +278,26 @@ class InteractiveModeSchema(BaseModel):
     history_enabled: bool = True
     tab_completion: bool = True
     prompt: Optional[str] = None  # Custom prompt (defaults to CLI name)
+    
+    # Session Management (Phase 2 Advanced Interactive Mode)
+    session_persistence: bool = False  # Enable session save/load functionality
+    auto_save: bool = False  # Auto-save sessions on exit
+    auto_load_last: bool = False  # Auto-load most recent session on startup
+    max_sessions: int = 20  # Maximum number of sessions to keep
+    max_history: int = 1000  # Maximum commands per session
+    session_directory: Optional[str] = None  # Custom session storage directory (defaults to ~/.goobits/sessions/)
+    
+    # Variable System (Phase 3 Advanced Interactive Mode)
+    variables: bool = False  # Enable variable storage and management
+    variable_expansion: bool = True  # Enable $variable_name substitution in commands
+    variable_types: bool = True  # Enable automatic type inference
+    max_variables: int = 100  # Maximum number of variables to store per session
+    
+    # Pipeline System (Phase 4 Advanced Interactive Mode)
+    pipelines: bool = False  # Enable Unix-style pipeline operations (command1 | command2)
+    pipeline_templates: bool = True  # Enable pipeline template definitions and execution
+    max_pipelines: int = 50  # Maximum number of pipeline templates to store
+    pipeline_timeout: int = 60  # Default timeout for pipeline execution in seconds
 
 
 class FeaturesSchema(BaseModel):

@@ -79,7 +79,10 @@ class EndToEndIntegrationTester:
     """Comprehensive end-to-end CLI generation and execution tester."""
     
     def __init__(self):
-        self.supported_languages = ["python", "nodejs", "typescript", "rust"]
+        # Only test Rust if cargo is available - skip if not to prevent hanging
+        self.supported_languages = ["python", "nodejs", "typescript"]
+        if self._check_command_availability("cargo"):
+            self.supported_languages.append("rust")
         self.test_results = []
         self.temp_dirs = []
         self.virtual_environments = {}
@@ -566,7 +569,7 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
         if language not in generators:
             raise ValueError(f"Unsupported language: {language}")
         
-        return generators[language](use_universal_templates=True)
+        return generators[language]()
     
     def _test_language_specific_integration(self, language: str, temp_dir: str, all_files: Dict[str, str], 
                                          config: GoobitsConfigSchema) -> Dict[str, Any]:
@@ -862,11 +865,13 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
             # Try to build the Rust project
             if (Path(temp_dir) / "Cargo.toml").exists():
                 try:
+                    # Reduce timeout to prevent hanging in CI
                     build_result = subprocess.run([
                         "cargo", "build", "--release"
-                    ], capture_output=True, text=True, cwd=temp_dir, timeout=300)
+                    ], capture_output=True, text=True, cwd=temp_dir, timeout=120)
                 except subprocess.TimeoutExpired:
-                    result["error_message"] = "cargo build timed out"
+                    result["error_message"] = "cargo build timed out (120s)"
+                    result["warnings"].append("Consider using 'cargo build' instead of '--release' for faster builds in tests")
                     return result
                 
                 if build_result.returncode == 0:
@@ -1275,6 +1280,7 @@ if PYTEST_AVAILABLE:
             """Clean up test class."""
             cls.integration_tester.cleanup()
         
+        @pytest.mark.timeout(300)  # 5 minute timeout
         def test_end_to_end_integration_workflow(self):
             """Test complete end-to-end integration workflow."""
             results = self.integration_tester.test_end_to_end_integration_workflow()
@@ -1296,6 +1302,7 @@ if PYTEST_AVAILABLE:
             hook_results = [r for r in results if r.hook_executed]
             assert len(hook_results) >= 1, "No hook integration working in any language"
         
+        @pytest.mark.timeout(180)  # 3 minute timeout
         def test_error_handling_scenarios(self):
             """Test that generated CLIs handle errors gracefully."""
             results = self.integration_tester.test_error_handling_scenarios()
@@ -1305,6 +1312,7 @@ if PYTEST_AVAILABLE:
             success_rate = len(successful_results) / len(results) if results else 0
             assert success_rate >= 0.5, f"Error handling success rate too low: {success_rate:.1%}"
         
+        @pytest.mark.timeout(600)  # 10 minute timeout for comprehensive test
         def test_comprehensive_integration_health(self):
             """Test overall integration health."""
             report = self.integration_tester.run_comprehensive_integration_tests()

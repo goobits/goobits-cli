@@ -173,19 +173,23 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
     
 
-    cli_config['features']['interactive_mode'] = {
-
-        'enabled': True,
-
-        'prompt': f"{cli_name}> ",
-
-        'history_enabled': True,
-
-        'tab_completion': is_tab_completion_supported(language),
-
-        'repl': False  # Default REPL features disabled for backward compatibility
-
+    # Get existing interactive_mode config if it exists
+    existing_interactive = cli_config.get('features', {}).get('interactive_mode', {})
+    
+    # Build interactive mode config, preserving user settings and adding sensible defaults
+    interactive_config = {
+        'enabled': existing_interactive.get('enabled', True),
+        'prompt': existing_interactive.get('prompt', f"{cli_name}> "),
+        'history_enabled': existing_interactive.get('history_enabled', True),
+        'tab_completion': existing_interactive.get('tab_completion', is_tab_completion_supported(language)),
+        'repl': existing_interactive.get('repl', False),  # Respect user setting, default False for compatibility
+        'smart_completion': existing_interactive.get('smart_completion', True),
+        'session_persistence': existing_interactive.get('session_persistence', False),
+        'variables': existing_interactive.get('variables', False),
+        'pipelines': existing_interactive.get('pipelines', False),
     }
+    
+    cli_config['features']['interactive_mode'] = interactive_config
 
     
 

@@ -17,7 +17,7 @@ hooks_path: "src/my_hooks.py"  # ⚠️ Deprecated
 
 cli:
   name: mycli
-  version: "1.0.0"
+  version: "3.0.0-alpha.1"
   # ... rest of config
 ```
 
@@ -30,7 +30,7 @@ cli_hooks: "src/my_hooks.py"  # ✅ Recommended
 
 cli:
   name: mycli
-  version: "1.0.0"
+  version: "3.0.0-alpha.1"
   # ... rest of config
 ```
 

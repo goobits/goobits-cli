@@ -1173,6 +1173,8 @@ class UniversalTemplateEngine:
             },
 
             "dependencies": self._extract_dependencies(config),
+            
+            "features": _safe_to_dict(_safe_get_attr(config, "features", {})),
 
             "metadata": {
 

@@ -387,7 +387,11 @@ class ParityTestRunner:
             for file_path in expected_files["created"]:
                 # Handle $$ placeholder for PID
                 file_path = file_path.replace("$$", str(os.getpid()))
-                full_path = working_dir / file_path.lstrip("/")
+                # For absolute paths, check them as-is; for relative paths, check relative to working_dir
+                if file_path.startswith("/"):
+                    full_path = Path(file_path)
+                else:
+                    full_path = working_dir / file_path
                 if not full_path.exists():
                     errors.append(f"Expected file to be created: {file_path}")
                     
@@ -395,7 +399,11 @@ class ParityTestRunner:
         if "deleted" in expected_files:
             for file_path in expected_files["deleted"]:
                 file_path = file_path.replace("$$", str(os.getpid()))
-                full_path = working_dir / file_path.lstrip("/")
+                # For absolute paths, check them as-is; for relative paths, check relative to working_dir
+                if file_path.startswith("/"):
+                    full_path = Path(file_path)
+                else:
+                    full_path = working_dir / file_path
                 if full_path.exists():
                     errors.append(f"Expected file to be deleted: {file_path}")
                     

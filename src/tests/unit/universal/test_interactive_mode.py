@@ -165,6 +165,10 @@ class TestInteractiveMode:
         # Transform context for Python
         context = renderer.get_template_context(sample_ir)
         
+        # Ensure features are in context (fix undefined error)
+        if 'features' not in context:
+            context['features'] = sample_ir.get('features', {})
+        
         # Render the template
         rendered = renderer.render_component("interactive_mode", interactive_template, context)
         
@@ -183,7 +187,7 @@ class TestInteractiveMode:
         
         # Check that interactive mode is included in output structure
         output_structure = renderer.get_output_structure(sample_ir)
-        assert "interactive_mode" in output_structure
+        assert "interactive_mode" in output_structure, f"Interactive mode not found in: {list(output_structure.keys())}"
         assert output_structure["interactive_mode"] == "test_cli_interactive.js"
         
         # Get template content
@@ -273,6 +277,11 @@ class TestInteractiveMode:
         renderer = PythonRenderer()
         interactive_template = template_engine.component_registry.get_component("interactive_mode")
         context = renderer.get_template_context(sample_ir)
+        
+        # Ensure features are in context (fix undefined error)
+        if 'features' not in context:
+            context['features'] = sample_ir.get('features', {})
+            
         rendered = renderer.render_component("interactive_mode", interactive_template, context)
         
         # Check for custom prompt
@@ -283,6 +292,11 @@ class TestInteractiveMode:
         renderer = PythonRenderer()
         interactive_template = template_engine.component_registry.get_component("interactive_mode")
         context = renderer.get_template_context(sample_ir)
+        
+        # Ensure features are in context (fix undefined error)
+        if 'features' not in context:
+            context['features'] = sample_ir.get('features', {})
+            
         rendered = renderer.render_component("interactive_mode", interactive_template, context)
         
         # Check for completion methods

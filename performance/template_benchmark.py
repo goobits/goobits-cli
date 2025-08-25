@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Template Rendering Performance Benchmark
-Compares Universal vs Legacy template systems across languages
+Analyzes Universal Template System performance across languages
 """
 
 import json
@@ -32,7 +32,7 @@ except ImportError:
 class TemplateRenderingResult:
     """Results from template rendering benchmark"""
     language: str
-    template_system: str  # "universal" or "legacy"
+    template_system: str  # Always "universal"
     complexity: str      # "simple", "medium", "complex", "extreme"
     command_count: int
     render_time_ms: float
@@ -254,11 +254,8 @@ class TemplateBenchmark:
                 # Measure template rendering time
                 start_time = time.perf_counter()
                 
-                # Build CLI using goobits
+                # Build CLI using goobits (universal templates are now default)
                 cmd = [sys.executable, "-m", "goobits_cli.main", "build"]
-                if template_system == "universal":
-                    cmd.append("--universal-templates")
-                
                 cmd.extend([str(test_dir / "goobits.yaml"), "--output-dir", str(test_dir)])
                 
                 process = subprocess.run(
@@ -351,14 +348,14 @@ class TemplateBenchmark:
             self.console.print(Panel.fit(
                 "[bold blue]🏗️ Template Rendering Performance Benchmark[/bold blue]\n"
                 f"Languages: {', '.join(self.languages)}\n"
-                f"Template Systems: Universal vs Legacy\n"
+                f"Template System: Universal (production-ready)\n"
                 f"Complexity Levels: {', '.join(self.complexity_configs.keys())}\n"
                 f"Iterations: {self.iterations}",
                 title="Template Benchmark Suite"
             ))
         
         # Calculate total tests
-        total_tests = len(self.languages) * 2 * len(self.complexity_configs)  # 2 = universal + legacy
+        total_tests = len(self.languages) * len(self.complexity_configs)  # Only universal system
         completed_tests = 0
         
         if self.console:
@@ -379,13 +376,13 @@ class TemplateBenchmark:
                 futures = []
                 
                 for language in self.languages:
-                    for template_system in ["legacy", "universal"]:
-                        for complexity in self.complexity_configs.keys():
-                            future = executor.submit(
-                                self.benchmark_template_rendering,
-                                language, template_system, complexity
-                            )
-                            futures.append((future, f"{language}_{template_system}_{complexity}"))
+                    # Only benchmark universal template system (legacy removed)
+                    for complexity in self.complexity_configs.keys():
+                        future = executor.submit(
+                            self.benchmark_template_rendering,
+                            language, "universal", complexity
+                        )
+                        futures.append((future, f"{language}_universal_{complexity}"))
                 
                 # Collect results
                 for future, test_name in futures:
@@ -430,7 +427,7 @@ class TemplateBenchmark:
                 "complexity_levels": len(set(r.complexity for r in self.results))
             },
             "performance_comparison": {},
-            "universal_vs_legacy": {},
+            "universal_performance": {},
             "scaling_analysis": {},
             "recommendations": []
         }
@@ -441,29 +438,24 @@ class TemplateBenchmark:
             if not lang_results:
                 continue
             
-            # Separate by template system
+            # All results are universal system now
             universal_results = [r for r in lang_results if r.template_system == "universal"]
-            legacy_results = [r for r in lang_results if r.template_system == "legacy"]
             
-            # Calculate performance metrics
+            # Calculate performance metrics for universal system
             analysis["performance_comparison"][language] = {
-                "universal": self._calculate_performance_metrics(universal_results),
-                "legacy": self._calculate_performance_metrics(legacy_results)
+                "universal": self._calculate_performance_metrics(universal_results)
             }
             
-            # Universal vs Legacy comparison
-            if universal_results and legacy_results:
-                universal_avg = statistics.mean([r.render_time_ms for r in universal_results if r.build_success])
-                legacy_avg = statistics.mean([r.render_time_ms for r in legacy_results if r.build_success])
-                
-                if universal_avg and legacy_avg:
-                    performance_ratio = universal_avg / legacy_avg
-                    analysis["universal_vs_legacy"][language] = {
-                        "universal_avg_ms": universal_avg,
-                        "legacy_avg_ms": legacy_avg,
-                        "performance_ratio": performance_ratio,
-                        "universal_faster": performance_ratio < 1.0,
-                        "performance_difference_pct": ((universal_avg - legacy_avg) / legacy_avg) * 100
+            # Universal system performance analysis
+            if universal_results:
+                successful_results = [r for r in universal_results if r.build_success]
+                if successful_results:
+                    universal_avg = statistics.mean([r.render_time_ms for r in successful_results])
+                    analysis["universal_performance"][language] = {
+                        "avg_render_time_ms": universal_avg,
+                        "total_builds": len(universal_results),
+                        "successful_builds": len(successful_results),
+                        "success_rate_pct": (len(successful_results) / len(universal_results)) * 100
                     }
         
         # Scaling analysis
@@ -503,7 +495,7 @@ class TemplateBenchmark:
         scaling = {}
         
         for language in self.languages:
-            for template_system in ["universal", "legacy"]:
+            for template_system in ["universal"]:  # Legacy removed
                 key = f"{language}_{template_system}"
                 
                 # Get results for each complexity level
@@ -543,18 +535,25 @@ class TemplateBenchmark:
         """Generate template performance recommendations"""
         recommendations = []
         
-        # Universal vs Legacy comparison
-        universal_vs_legacy = analysis.get("universal_vs_legacy", {})
+        # Universal Template Performance comparison
+        universal_performance = analysis.get("universal_performance", {})
         
-        for language, comparison in universal_vs_legacy.items():
-            performance_diff = comparison.get("performance_difference_pct", 0)
+        for language, comparison in universal_performance.items():
+            # Analyze absolute performance metrics
+            startup_time = comparison.get("startup_time_ms", 0)
+            memory_usage = comparison.get("memory_usage_mb", 0)
             
-            if performance_diff > 50:
-                recommendations.append(f"{language.title()}: Universal templates are {performance_diff:.1f}% slower than legacy. Consider optimization.")
-            elif performance_diff < -20:
-                recommendations.append(f"{language.title()}: Universal templates are {abs(performance_diff):.1f}% faster than legacy. Excellent!")
-            elif abs(performance_diff) < 10:
-                recommendations.append(f"{language.title()}: Universal and legacy templates show similar performance.")
+            # Flag slow startup times (>100ms is poor for CLI tools)
+            if startup_time > 100:
+                recommendations.append(f"{language}: Slow startup time ({startup_time:.1f}ms). Consider lazy loading or reducing imports.")
+            
+            # Flag high memory usage (>50MB is excessive for CLI tools)  
+            if memory_usage > 50:
+                recommendations.append(f"{language}: High memory usage ({memory_usage:.1f}MB). Consider memory optimization.")
+                
+            # Flag good performance for positive reinforcement
+            if startup_time <= 50 and memory_usage <= 20:
+                recommendations.append(f"{language}: Excellent performance - {startup_time:.1f}ms startup, {memory_usage:.1f}MB memory.")
         
         # Scaling analysis
         scaling_analysis = analysis.get("scaling_analysis", {})
@@ -606,7 +605,7 @@ class TemplateBenchmark:
             "## 📊 Executive Summary",
             f"- **Total Measurements**: {summary.get('total_measurements', 0)}",
             f"- **Languages Tested**: {summary.get('languages_tested', 0)}",
-            f"- **Template Systems**: Universal vs Legacy",
+            f"- **Template Systems**: Universal Template Performance",
             f"- **Complexity Levels**: {summary.get('complexity_levels', 0)}",
             ""
         ])
@@ -631,12 +630,12 @@ class TemplateBenchmark:
         
         report_lines.extend(["", ""])
         
-        # Universal vs Legacy Analysis
-        universal_vs_legacy = analysis.get("universal_vs_legacy", {})
-        if universal_vs_legacy:
-            report_lines.extend(["## 🔄 Universal vs Legacy Comparison", ""])
+        # Universal Template Performance Analysis
+        universal_performance = analysis.get("universal_performance", {})
+        if universal_performance:
+            report_lines.extend(["## 🔄 Universal Template Performance Comparison", ""])
             
-            for language, comparison in universal_vs_legacy.items():
+            for language, comparison in universal_performance.items():
                 perf_diff = comparison.get("performance_difference_pct", 0)
                 status = "🚀" if perf_diff < 0 else "⚠️" if perf_diff > 25 else "✅"
                 

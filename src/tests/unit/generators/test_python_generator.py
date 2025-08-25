@@ -19,7 +19,7 @@ class TestPythonGenerator:
         
         assert generator is not None
         assert hasattr(generator, 'template_env')
-        assert hasattr(generator, 'use_universal_templates')
+        # Template system is integrated
     
     def test_python_generator_basic_generation(self, tmp_path):
         """Test basic CLI generation functionality."""
@@ -32,7 +32,7 @@ class TestPythonGenerator:
             commands={}
         ))
         
-        generator = PythonGenerator(use_universal_templates=True)
+        generator = PythonGenerator()
         
         # Test that generation doesn't raise exceptions
         try:
@@ -55,7 +55,7 @@ class TestPythonGenerator:
             }
         ))
         
-        generator = PythonGenerator(use_universal_templates=True)
+        generator = PythonGenerator()
         
         # Test generation with commands
         try:

@@ -64,7 +64,7 @@ messages:
 
 cli:
   name: "Goobits CLI"
-  version: "3.0.0-alpha.1"
+  version: "3.0.0-beta.1"
   display_version: true
   tagline: "Build professional command-line tools with YAML configuration"
   description: "Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."
@@ -126,9 +126,6 @@ cli:
         - name: "backup"
           type: "flag"
           desc: "💾 Create backup files (.bak) when overwriting existing files"
-        - name: "universal-templates"
-          type: "flag"
-          desc: "🚀 Use Universal Template System (production-ready)"
     
     init:
       desc: "Create initial goobits.yaml template"

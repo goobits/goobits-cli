@@ -140,7 +140,7 @@ class TestRustGenerator:
         cli_schema = CLISchema(
             name="complex-cli",
             tagline="Complex CLI with multiple features",
-            version="2.0.0",
+            version="3.0.0",
             commands={
                 "deploy": CommandSchema(
                     desc="Deploy application",

@@ -870,7 +870,7 @@ def build(
 
             from goobits_cli.generators.nodejs import NodeJSGenerator
 
-            generator = NodeJSGenerator(use_universal_templates=True)
+            generator = NodeJSGenerator()
 
             
 
@@ -882,7 +882,7 @@ def build(
 
             from goobits_cli.generators.typescript import TypeScriptGenerator
 
-            generator = TypeScriptGenerator(use_universal_templates=True)
+            generator = TypeScriptGenerator()
 
             
 
@@ -894,7 +894,7 @@ def build(
 
             from goobits_cli.generators.rust import RustGenerator
 
-            generator = RustGenerator(use_universal_templates=True)
+            generator = RustGenerator()
 
             
 
@@ -908,7 +908,7 @@ def build(
 
             from goobits_cli.generators.python import PythonGenerator  
 
-            generator = PythonGenerator(use_universal_templates=True)
+            generator = PythonGenerator()
 
             
 

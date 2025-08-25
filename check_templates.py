@@ -51,7 +51,7 @@ def check_python_templates():
         else:
             print("Main CLI template not found")
 
-def check_universal_templates():
+def check_template_system():
     """Check universal template structure."""
     print("\n=== Universal Templates ===")
     
@@ -142,7 +142,7 @@ def main():
     print("=" * 50)
     
     check_python_templates()
-    check_universal_templates() 
+    check_template_system() 
     check_template_engine()
     check_builder_integration()
 

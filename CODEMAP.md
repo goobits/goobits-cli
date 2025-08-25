@@ -193,7 +193,7 @@ Development:
 
 • Self-hosting: goobits generates its own CLI from goobits.yaml
 • All 4 languages work end-to-end with production quality
-• Universal template system available via --universal-templates flag
+• Universal template system (always enabled for consistency)
 • Performance: Generated CLIs <100ms startup target met
 • Interactive mode available for all generated CLIs
 • Rust support fully operational with Clap framework

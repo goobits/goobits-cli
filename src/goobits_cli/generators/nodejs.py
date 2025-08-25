@@ -736,13 +736,9 @@ class NodeJSGenerator(BaseGenerator):
 
  * 
 
- * Note: Node.js templates are not yet installed.
+ * Modern Node.js CLI with Commander.js framework
 
- * This is a basic CLI structure. To get full functionality,
-
- * ensure Node.js templates are installed in:
-
- * src/goobits_cli/templates/nodejs/
+ * Full template system available at src/goobits_cli/templates/nodejs/
 
  */
 

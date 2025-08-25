@@ -116,7 +116,6 @@ class PerformanceValidator:
                     "interactive_mode": False,
                     "completion_system": False,
                     "plugin_support": False,
-                    "universal_templates": False,
                     "performance_optimization": False
                 },
                 expected_startup_ms=self.targets["startup_time_ms"][lang] * 0.7,
@@ -133,7 +132,6 @@ class PerformanceValidator:
                     "interactive_mode": True,
                     "completion_system": True,
                     "plugin_support": False,
-                    "universal_templates": False,
                     "performance_optimization": True
                 },
                 expected_startup_ms=self.targets["startup_time_ms"][lang],
@@ -150,7 +148,6 @@ class PerformanceValidator:
                     "interactive_mode": True,
                     "completion_system": True,
                     "plugin_support": True,
-                    "universal_templates": True,
                     "performance_optimization": True
                 },
                 expected_startup_ms=self.targets["startup_time_ms"][lang] * 1.2,  # Allow 20% overhead
@@ -329,10 +326,9 @@ class PerformanceValidator:
         """Build the test CLI using goobits"""
         try:
             # Use the current goobits CLI to build the test CLI
-            cmd = ["python", "-m", "goobits_cli.main", "build"]
+            cmd = ["python3", "-m", "goobits_cli.main", "build"]
             
-            if config.features.get("universal_templates"):
-                cmd.append("--universal-templates")
+            # Universal templates are now always enabled (no flag needed)
             
             cmd.extend([str(test_dir / "goobits.yaml"), "--output-dir", str(test_dir)])
             
@@ -367,7 +363,7 @@ class PerformanceValidator:
             cli_path = test_dir / f"perf-{config.name}.py"
             if not cli_path.exists():
                 cli_path = test_dir / "cli.py"
-            cmd_base = ["python", str(cli_path)]
+            cmd_base = ["python3", str(cli_path)]
         elif config.language == "nodejs":
             cli_path = test_dir / "cli.js"
             cmd_base = ["node", str(cli_path)]
@@ -513,8 +509,7 @@ class PerformanceValidator:
                         
                         # Build CLI using goobits
                         cmd = ["python", "-m", "goobits_cli.main", "build"]
-                        if config.features.get("universal_templates"):
-                            cmd.append("--universal-templates")
+                        # Universal templates are now always enabled (no flag needed)
                         cmd.extend([str(config_file), "--output-dir", str(test_dir)])
                         
                         result = subprocess.run(
@@ -552,7 +547,7 @@ class PerformanceValidator:
                         metadata={
                             "complexity": complexity_name,
                             "command_count": command_count,
-                            "universal_templates": config.features.get("universal_templates", False)
+                            "template_system": "universal"  # Always universal now
                         }
                     )
                     

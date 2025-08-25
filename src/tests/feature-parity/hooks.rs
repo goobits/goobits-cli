@@ -2,14 +2,18 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::env;
+use clap::ArgMatches;
+use anyhow::{Result, anyhow};
 
-pub fn on_hello(name: &str, greeting: Option<&str>, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-    let greeting = greeting.unwrap_or("Hello");
+pub fn on_hello(matches: &ArgMatches) -> Result<()> {
+    let name = matches.get_one::<String>("name").map(|s| s.as_str()).unwrap_or("");
+    let greeting = matches.get_one::<String>("greeting").map(|s| s.as_str()).unwrap_or("Hello");
     println!("{} {}", greeting, name);
     Ok(())
 }
 
-pub fn on_config_get(key: &str, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_config_get(matches: &ArgMatches) -> Result<()> {
+    let key = matches.get_one::<String>("key").map(|s| s.as_str()).unwrap_or("");
     let theme = env::var("TEST_CLI_THEME").unwrap_or_else(|_| "default".to_string());
     
     let value = match key {
@@ -17,8 +21,7 @@ pub fn on_config_get(key: &str, _verbose: bool, _config: Option<&str>) -> Result
         "api_key" => "".to_string(),
         "timeout" => "30".to_string(),
         _ => {
-            eprintln!("Config key not found: {}", key);
-            std::process::exit(1);
+            return Err(anyhow!("Config key not found: {}", key));
         }
     };
     
@@ -26,19 +29,22 @@ pub fn on_config_get(key: &str, _verbose: bool, _config: Option<&str>) -> Result
     Ok(())
 }
 
-pub fn on_config_set(key: &str, value: &str, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_config_set(matches: &ArgMatches) -> Result<()> {
+    let key = matches.get_one::<String>("key").map(|s| s.as_str()).unwrap_or("");
+    let value = matches.get_one::<String>("value").map(|s| s.as_str()).unwrap_or("");
     println!("Setting {} to {}", key, value);
     Ok(())
 }
 
-pub fn on_config_list(_verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_config_list(_matches: &ArgMatches) -> Result<()> {
     println!("theme: default");
     println!("api_key: ");
     println!("timeout: 30");
     Ok(())
 }
 
-pub fn on_config_reset(force: bool, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_config_reset(matches: &ArgMatches) -> Result<()> {
+    let force = matches.get_flag("force");
     if !force {
         print!("Are you sure you want to reset the configuration? (y/N): ");
         io::stdout().flush()?;
@@ -56,20 +62,25 @@ pub fn on_config_reset(force: bool, _verbose: bool, _config: Option<&str>) -> Re
     Ok(())
 }
 
-pub fn on_fail(code: Option<i32>, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
-    let exit_code = code.unwrap_or(1);
+pub fn on_fail(matches: &ArgMatches) -> Result<()> {
+    let exit_code = matches.get_one::<String>("code")
+        .and_then(|s| s.parse::<i32>().ok())
+        .unwrap_or(1);
     eprintln!("Error: Command failed with exit code {}", exit_code);
     std::process::exit(exit_code);
 }
 
-pub fn on_echo(words: Vec<&str>, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_echo(matches: &ArgMatches) -> Result<()> {
+    let words = matches.get_one::<String>("words").map(|s| s.as_str()).unwrap_or("");
     if !words.is_empty() {
-        println!("{}", words.join(" "));
+        println!("{}", words);
     }
     Ok(())
 }
 
-pub fn on_file_create(path: &str, content: Option<&str>, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_file_create(matches: &ArgMatches) -> Result<()> {
+    let path = matches.get_one::<String>("path").map(|s| s.as_str()).unwrap_or("");
+    let content = matches.get_one::<String>("content").map(|s| s.as_str());
     let file_path = Path::new(path);
     
     if let Some(parent) = file_path.parent() {
@@ -86,7 +97,8 @@ pub fn on_file_create(path: &str, content: Option<&str>, _verbose: bool, _config
     Ok(())
 }
 
-pub fn on_file_delete(path: &str, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn on_file_delete(matches: &ArgMatches) -> Result<()> {
+    let path = matches.get_one::<String>("path").map(|s| s.as_str()).unwrap_or("");
     match fs::remove_file(path) {
         Ok(_) => {
             println!("Deleted file: {}", path);
@@ -94,13 +106,12 @@ pub fn on_file_delete(path: &str, _verbose: bool, _config: Option<&str>) -> Resu
         }
         Err(e) => {
             if e.kind() == io::ErrorKind::NotFound {
-                eprintln!("File not found: {}", path);
+                Err(anyhow!("File not found: {}", path))
             } else if e.kind() == io::ErrorKind::PermissionDenied {
-                eprintln!("Permission denied: {}", path);
+                Err(anyhow!("Permission denied: {}", path))
             } else {
-                eprintln!("Error deleting file: {}", e);
+                Err(anyhow!("Error deleting file: {}", e))
             }
-            std::process::exit(1);
         }
     }
 }
