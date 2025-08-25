@@ -334,7 +334,7 @@ class VersionedRichGroup(RichGroup):
 {% endif %}
 @click.pass_context
 def main(ctx, verbose{% if cli.root_command.options %}{% for option in cli.root_command.options if option.name != 'verbose' %}, {{ option.name.replace('-', '_') }}{% endfor %}{% endif %}):
-    """{{ cli.tagline | default((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}
+    """{{ cli.tagline | default(cli.description if cli.description is defined else (project.description if project.description is defined else 'No description')) }}
 
     \b
     [italic #B3B8C0]{{ cli.description if cli.description is defined else (project.description if project.description is defined else 'Transform simple YAML configuration into rich terminal applications.') }}[/italic #B3B8C0]
@@ -706,7 +706,7 @@ const program = new Command();
 
 program
     .name('{{ cli.name }}')
-    .description('{{ ((cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
+    .description('{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
     .option('-v, --verbose', 'Enable verbose error output and debugging information', false);
 
@@ -930,7 +930,7 @@ const program = new Command();
 
 program
     .name('{{ cli.name }}')
-    .description('{{ ((cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
+    .description('{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
     .option('-v, --verbose', 'Enable verbose error output and debugging information', false);
 

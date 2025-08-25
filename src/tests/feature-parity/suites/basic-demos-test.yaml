@@ -102,6 +102,10 @@ tests:
       contains:
         - "error"
     language_overrides:
+      python:
+        stderr:
+          contains:
+            - "Error"  # Rich/Typer uses formatted "Error" not plain "error"
       nodejs:
         exit_code: 1
         stderr:

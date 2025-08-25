@@ -18,7 +18,7 @@ function createCLI() {
   
   program
     .name('demo_ts')
-    .description('A sample TypeScript CLI built with Goobits')
+    .description('TypeScript CLI demonstration')
     .version('1.0.0');
 
   // Add help command
@@ -37,17 +37,17 @@ function createCLI() {
   greetCommand.argument('<name>', 'Name to greet');
   greetCommand.argument('[message]', 'Custom greeting message');
 
-  greetCommand.option('--style, -s', 'Greeting style', "casual");
-  greetCommand.option('--count, -c', 'Repeat greeting N times', 1);
+  greetCommand.option('--style, -s <style>', 'Greeting style', "casual");
+  greetCommand.option('--count, -c <count>', 'Repeat greeting N times', 1);
   greetCommand.option('--uppercase, -u', 'Convert to uppercase');
-  greetCommand.option('--language, -l', 'Language code', "en");
+  greetCommand.option('--language, -l <language>', 'Language code', "en");
 
   greetCommand.action(async (name, message, options) => {
     try {
       // Try to load hooks
       let hooks = {};
       try {
-        hooks = require('../src/hooks');
+        hooks = require('../dist/src/hooks');
       } catch (e) {
         console.warn('Warning: hooks module not found');
       }
@@ -76,16 +76,16 @@ function createCLI() {
     .description('Display system and environment information');
 
 
-  infoCommand.option('--format, -f', 'Output format', "text");
+  infoCommand.option('--format, -f <format>', 'Output format', "text");
   infoCommand.option('--verbose, -v', 'Show detailed information');
-  infoCommand.option('--sections, -s', 'Comma-separated sections to show', "all");
+  infoCommand.option('--sections, -s <sections>', 'Comma-separated sections to show', "all");
 
   infoCommand.action(async (options) => {
     try {
       // Try to load hooks
       let hooks = {};
       try {
-        hooks = require('../src/hooks');
+        hooks = require('../dist/src/hooks');
       } catch (e) {
         console.warn('Warning: hooks module not found');
       }

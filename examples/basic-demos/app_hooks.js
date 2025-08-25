@@ -1,8 +1,8 @@
 /**
- * Hook implementations for Node.js/TypeScript CLI demo
+ * Hook implementations for Node.js CLI demo - ES Module format
  */
 
-async function onGreet(args) {
+export async function onGreet(args) {
     // Handle both Node.js (direct args) and TypeScript (context object) formats
     let name, message = "Hello", style = "casual", count = 1, uppercase = false, language = "en";
     
@@ -38,10 +38,10 @@ async function onGreet(args) {
         console.log(greeting);
     }
     
-    console.log(`Welcome to the Node.js CLI demo, ${name}!`);
+    console.log(`Welcome to the CLI demo, ${name}!`);
 }
 
-async function onInfo(args) {
+export async function onInfo(args) {
     // Handle both Node.js (direct args) and TypeScript (context object) formats
     let format = "text", verbose = false, sections = "all";
     
@@ -54,12 +54,12 @@ async function onInfo(args) {
     }
     
     const info = {
-        title: "🟢 Node.js CLI Information",
-        separator: "-".repeat(30),
-        node_version: `Node.js Version: ${process.version}`,
+        title: "=== CLI Information ===",
+        separator: "=====================",
+        node_version: `Node Version: ${process.version}`,
         platform: `Platform: ${process.platform}`,
         architecture: `Architecture: ${process.arch}`,
-        memory: `Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`
+        memory: `Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`
     };
     
     if (format === "json") {
@@ -80,8 +80,3 @@ async function onInfo(args) {
         }
     }
 }
-
-module.exports = {
-    onGreet,
-    onInfo
-};

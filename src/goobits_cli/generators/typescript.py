@@ -509,6 +509,8 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
 
+            'tagline': getattr(cli_config, 'tagline', None) if cli_config else None,
+
             'version': self._get_dynamic_version(version, cli_config),
 
             'installation': metadata['installation'],
@@ -1046,6 +1048,8 @@ class TypeScriptGenerator(NodeJSGenerator):
             'display_name': metadata['display_name'],
 
             'description': getattr(config, 'description', cli_config.description if cli_config else ''),
+
+            'tagline': getattr(cli_config, 'tagline', None) if cli_config else None,
 
             'version': self._get_dynamic_version(version, cli_config),
 

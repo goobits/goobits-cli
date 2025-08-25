@@ -766,7 +766,9 @@ process.exit(0);
                 )
                 # Should either work or fail with module not found
                 if result.returncode != 0:
-                    assert "Cannot find module" in result.stderr or "MODULE_NOT_FOUND" in result.stderr
+                    assert ("Cannot find module" in result.stderr or 
+                           "MODULE_NOT_FOUND" in result.stderr or
+                           "Cannot find package" in result.stderr)
             
             elif language == "rust":
                 # Rust CLI needs to be compiled first

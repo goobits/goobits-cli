@@ -1,5 +1,5 @@
 /**
- * Hook implementations for Node.js/TypeScript CLI demo
+ * Hook implementations for Node.js CLI demo
  */
 
 async function onGreet(args) {
@@ -38,7 +38,7 @@ async function onGreet(args) {
         console.log(greeting);
     }
     
-    console.log(`Welcome to the Node.js CLI demo, ${name}!`);
+    console.log(`Welcome to the CLI demo, ${name}!`);
 }
 
 async function onInfo(args) {
@@ -54,12 +54,12 @@ async function onInfo(args) {
     }
     
     const info = {
-        title: "🟢 Node.js CLI Information",
-        separator: "-".repeat(30),
-        node_version: `Node.js Version: ${process.version}`,
+        title: "=== CLI Information ===",
+        separator: "=====================",
+        node_version: `Node Version: ${process.version}`,
         platform: `Platform: ${process.platform}`,
         architecture: `Architecture: ${process.arch}`,
-        memory: `Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`
+        memory: `Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`
     };
     
     if (format === "json") {

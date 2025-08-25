@@ -153,6 +153,27 @@ class ParityTestRunner:
                 )
                 if npm_result.returncode != 0 and self.verbose:
                     print(f"npm install warning: {npm_result.stderr[:200]}")
+                    
+                # For TypeScript, build after npm install
+                if language == "typescript":
+                    build_result = subprocess.run(
+                        ["npm", "run", "build", "--silent"],
+                        cwd=npm_dir,
+                        capture_output=True,
+                        text=True,
+                        timeout=60
+                    )
+                    if build_result.returncode != 0 and self.verbose:
+                        print(f"npm build warning: {build_result.stderr[:200]}")
+                        
+                    # Copy hooks AFTER TypeScript compilation to ensure CommonJS format
+                    hook_source = config_path.parent / "hooks.js"
+                    if hook_source.exists():
+                        src_dir = output_dir / language / "src"
+                        if src_dir.exists():
+                            shutil.copy(hook_source, src_dir / "hooks.js")
+                            if self.verbose:
+                                print(f"Copied CommonJS hooks after TypeScript build")
             
             # For Node.js/TypeScript, look for bin/cli.js first, then fallback
             # TypeScript generates .cjs files, Node.js generates .js files

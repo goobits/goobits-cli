@@ -379,7 +379,7 @@ const {{ cmd_name }}Cmd = program
     {% if arg.choices %}
     .addArgument(new Argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}').choices({{ arg.choices | tojson }}))
     {% else %}
-    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}')
+    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name | upper }}]{% else %}<{{ arg.name | upper }}>{% endif %}', '{{ arg.desc | default("") }}')
     {% endif %}
     {% endfor %}
     {% for opt in (cmd_data.options or []) %}
@@ -473,7 +473,7 @@ const {{ cmd_name }}Cmd = program
     {% if arg.choices %}
     .addArgument(new Argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}').choices({{ arg.choices | tojson }}))
     {% else %}
-    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name }}]{% else %}<{{ arg.name }}>{% endif %}', '{{ arg.desc | default("") }}')
+    .argument('{% if arg.required is defined and not arg.required %}[{{ arg.name | upper }}]{% else %}<{{ arg.name | upper }}>{% endif %}', '{{ arg.desc | default("") }}')
     {% endif %}
     {% endfor %}
     {% for opt in (subcmd_data.options or []) %}

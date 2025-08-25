@@ -1029,7 +1029,8 @@ class UniversalTemplateEngine:
         # Convert config to dict for safe access
         config_dict = _safe_to_dict(config)
         
-        cli_schema = self._extract_config_schema(config_dict.get('cli', {}))
+        cli_config = config_dict.get('cli', {})
+        cli_schema = self._extract_config_schema(cli_config)
 
         
 
@@ -1039,7 +1040,7 @@ class UniversalTemplateEngine:
 
                 "name": _safe_get_attr(config, 'display_name', _safe_get_attr(config, 'command_name')),
 
-                "description": _safe_get_attr(config, "description"),
+                "description": _safe_get_attr(cli_config, 'tagline', _safe_get_attr(config, "description")) if cli_config else _safe_get_attr(config, "description"),
 
                 "version": (lambda v: v if v is not None else '1.0.0')(_safe_get_attr(_safe_get_attr(config, 'cli', {}), 'version', '1.0.0')) if _safe_get_attr(config, 'cli') else '1.0.0',
 

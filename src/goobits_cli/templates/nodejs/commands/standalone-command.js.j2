@@ -23,7 +23,7 @@ export default function registerCommand(program) {
     .alias('{{ alias }}')
     {% endif %}
     {% for arg in args %}
-    .argument('{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}', '{{ arg.description }}')
+    .argument('{% if arg.required %}<{{ arg.name | upper }}>{% else %}[{{ arg.name | upper }}]{% endif %}', '{{ arg.description }}')
     {% endfor %}
     {% for option in options %}
     .option('{%- if option.short %}-{{ option.short }}, {% endif %}--{{ option.name }}{% if option.type != "flag" %} <value>{% endif %}', '{{ option.description }}'{% if option.default %}, {{ option.default | tojson }}{% endif %})

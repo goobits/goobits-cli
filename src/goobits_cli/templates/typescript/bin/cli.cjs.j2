@@ -18,7 +18,7 @@ function createCLI() {
   
   program
     .name('{{ command_name }}')
-    .description('{{ description }}')
+    .description('{{ tagline if tagline else description }}')
     .version('{{ version }}');
 
   // Add help command
@@ -36,11 +36,11 @@ function createCLI() {
     .description('{{ command.desc }}');
 
   {% for arg in command.args | default([]) %}
-  {{ command_name | replace('-', '_') }}Command.argument('{% if arg.required %}<{{ arg.name }}>{% else %}[{{ arg.name }}]{% endif %}', '{{ arg.desc }}');
+  {{ command_name | replace('-', '_') }}Command.argument('{% if arg.required %}<{{ arg.name | upper }}>{% else %}[{{ arg.name | upper }}]{% endif %}', '{{ arg.desc }}');
   {% endfor %}
 
   {% for option in command.options | default([]) %}
-  {{ command_name | replace('-', '_') }}Command.option('--{{ option.name }}{% if option.short %}, -{{ option.short }}{% endif %}', '{{ option.desc }}'{% if option.default %}, {{ option.default | tojson }}{% endif %});
+  {{ command_name | replace('-', '_') }}Command.option('--{{ option.name }}{% if option.short %}, -{{ option.short }}{% endif %}{% if option.type != 'flag' %} <{{ option.name }}>{% endif %}', '{{ option.desc }}'{% if option.default %}, {{ option.default | tojson }}{% endif %});
   {% endfor %}
 
   {{ command_name | replace('-', '_') }}Command.action(async ({% for arg in command.args | default([]) %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.args and command.options %}, {% endif %}options) => {

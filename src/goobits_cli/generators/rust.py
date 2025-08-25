@@ -1182,8 +1182,6 @@ fn main() {{
 
         .arg(Arg::new("config")
 
-            .short('c')
-
             .long("config")
 
             .help("Config file path")
