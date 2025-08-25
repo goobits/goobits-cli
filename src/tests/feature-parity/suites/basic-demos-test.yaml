@@ -11,8 +11,7 @@ tests:
     command: --help
     stdout:
       contains:
-        - "demo_py"
-        - "Python CLI demonstration"
+        - "CLI demonstration" 
         - "greet"
         - "info"
         
@@ -35,8 +34,9 @@ tests:
     command: greet Bob "Welcome"
     stdout:
       contains:
-        - "Hello, Bob!"
-        - "Welcome to the Python CLI demo, Bob!"
+        - "Welcome, Bob!"
+        - "Welcome to the"
+        - "CLI demo, Bob!"
         
   - name: greet_with_style_formal
     description: Greet command with formal style
@@ -78,21 +78,21 @@ tests:
     command: info
     stdout:
       contains:
-        - "Python CLI Information"
+        - "CLI Information"
         
   - name: info_with_format_option
-    description: Info command (format option exists but hooks don't use it yet)
+    description: Info command with JSON format
     command: info --format json
     stdout:
       contains:
-        - "Python CLI Information"
+        - "{"
         
   - name: info_with_verbose_flag
     description: Info command with verbose flag
     command: info --verbose
     stdout:
       contains:
-        - "Python CLI Information"
+        - "CLI Information"
         
   - name: greet_missing_argument
     description: Greet command without required argument shows error

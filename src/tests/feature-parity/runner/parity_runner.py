@@ -111,6 +111,7 @@ class ParityTestRunner:
             if hook_source.exists():
                 src_dir = output_dir / language / "src"
                 src_dir.mkdir(parents=True, exist_ok=True)
+                # Replace the generated placeholder hooks
                 shutil.copy(hook_source, src_dir / "hooks.js")
         elif language == "rust":
             hook_source = config_path.parent / "hooks.rs"
