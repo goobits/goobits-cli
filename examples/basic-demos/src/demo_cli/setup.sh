@@ -79,7 +79,7 @@ readonly REQUIRED_MB="100"
 readonly SHELL_INTEGRATION="False"
 readonly SHELL_ALIAS="demo_py"
 
-# Dependencies (legacy format for backward compatibility)
+# Dependencies
 readonly REQUIRED_DEPS=()
 readonly OPTIONAL_DEPS=()
 
@@ -602,7 +602,7 @@ except Exception as e:
             fi
         done <<< "$required_result"
     else
-        # Fallback to legacy validation
+        # Fallback validation
         for dep in "${REQUIRED_DEPS[@]}"; do
             if ! command -v "$dep" >/dev/null 2>&1; then
                 missing_deps+=("$dep")
@@ -923,7 +923,7 @@ except Exception as e:
             fi
         done <<< "$required_result"
     else
-        # Fallback to legacy validation
+        # Fallback validation
         for dep in "${REQUIRED_DEPS[@]}"; do
             if ! command -v "$dep" >/dev/null 2>&1; then
                 missing_deps+=("$dep")

@@ -360,7 +360,7 @@ class NodeJSRenderer(LanguageRenderer):
 
         output = {
 
-            "main_entry": "cli.js",
+            "command_handler": "cli.js",
 
             "hook_system": "src/hooks.js", 
 

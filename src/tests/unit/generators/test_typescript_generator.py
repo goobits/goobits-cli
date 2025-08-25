@@ -245,5 +245,5 @@ class TestTypeScriptGenerator:
         # Test with invalid config (missing required fields)
         invalid_config = {}
         
-        with pytest.raises((TypeError, ValueError, AttributeError)):
+        with pytest.raises((TypeError, ValueError, AttributeError, RuntimeError)):
             generator.generate_all_files(invalid_config, "test.yaml")

@@ -1,54 +1,56 @@
 /**
- * Hook system interface for Demo Node.js CLI
+ * Hook system interface for Demo TypeScript CLI
  * 
  * This module defines the interface between the generated CLI and user-defined hooks.
- * Users should implement hook functions in hooks.js to provide business logic.
+ * Users should implement hook functions in hooks.ts to provide business logic.
  */
 
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
-class HookManager {
-    constructor(hooksModulePath = './hooks.js') {
+type HookFunction = (...args: any[]) => Promise<any> | any;
+
+export class HookManager {
+    private hooksModulePath: string;
+    private hooks: Record<string, HookFunction> = {};
+
+    constructor(hooksModulePath: string = './hooks') {
         this.hooksModulePath = hooksModulePath;
-        this.hooks = {};
         this.loadHooks();
     }
 
-    loadHooks() {
+    public async loadHooks(): Promise<void> {
         try {
-            // Clear require cache to allow reloading
-            delete require.cache[require.resolve(this.hooksModulePath)];
-            
-            const hooksModule = require(this.hooksModulePath);
+            // Dynamic import to support reloading
+            const hooksModule = await import(`${this.hooksModulePath}?t=${Date.now()}`);
             this.hooks = {};
             
             // Cache all exported hook functions
             for (const [name, func] of Object.entries(hooksModule)) {
                 if (typeof func === 'function' && name.startsWith('on')) {
-                    this.hooks[name] = func;
+                    this.hooks[name] = func as HookFunction;
                 }
             }
         } catch (error) {
-            if (error.code === 'MODULE_NOT_FOUND') {
+            if ((error as any).code === 'MODULE_NOT_FOUND') {
                 // Hooks module doesn't exist yet
                 this.hooks = {};
             } else {
-                console.warn(`Warning: Failed to load hooks: ${error.message}`);
+                console.warn(`Warning: Failed to load hooks: ${(error as Error).message}`);
                 this.hooks = {};
             }
         }
     }
 
-    reloadHooks() {
-        this.loadHooks();
+    public async reloadHooks(): Promise<void> {
+        await this.loadHooks();
     }
 
-    hasHook(hookName) {
+    public hasHook(hookName: string): boolean {
         return hookName in this.hooks;
     }
 
-    async executeHook(hookName, ...args) {
+    public async executeHook(hookName: string, ...args: any[]): Promise<any> {
         if (!this.hasHook(hookName)) {
             throw new HookNotFoundError(`Hook '${hookName}' not found`);
         }
@@ -59,12 +61,12 @@ class HookManager {
             const result = await hookFunc(...args);
             return result;
         } catch (error) {
-            throw new HookExecutionError(`Error executing hook '${hookName}': ${error.message}`);
+            throw new HookExecutionError(`Error executing hook '${hookName}': ${(error as Error).message}`);
         }
     }
 
-    listHooks() {
-        const hooksInfo = {};
+    public listHooks(): Record<string, string> {
+        const hooksInfo: Record<string, string> = {};
         for (const [name, func] of Object.entries(this.hooks)) {
             // Try to extract function docstring/comments
             const funcString = func.toString();
@@ -75,9 +77,9 @@ class HookManager {
         return hooksInfo;
     }
 
-    generateHooksTemplate() {
+    public generateHooksTemplate(): string {
         return `/**
- * Hook implementations for Demo Node.js CLI
+ * Hook implementations for Demo TypeScript CLI
  * 
  * This file contains the business logic for your CLI commands.
  * Implement the hook functions below to handle your CLI commands.
@@ -91,13 +93,13 @@ class HookManager {
  */
 
 // Import any modules you need here
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 /**
  * Greet someone with style
- * * @param {name} Name to greet * @param {message} Custom greeting message * @param {Object} options - Command options * @param {str} options.style - Greeting style * @param {int} options.count - Repeat greeting N times * @param {flag} options.uppercase - Convert to uppercase * @param {str} options.language - Language code * @returns {Promise<void>}
+ * * @param name Name to greet * @param message Custom greeting message * @param options Command options * @param options.style Greeting style * @param options.count Repeat greeting N times * @param options.uppercase Convert to uppercase * @param options.language Language code * @returns Promise<void>
  */
-async function on_greet(name, message, options) {
+export async function on_greet(    name: string,    message: string,    options: {        style?: string;        count?: string;        uppercase?: string;        language?: string;    }): Promise<void> {
     // Add your business logic here
     console.log('Hook on_greet called');    console.log('Arguments:', { name, message });    console.log('Options:', options);    
     // You can return a value or throw an error
@@ -105,59 +107,47 @@ async function on_greet(name, message, options) {
 }
 /**
  * Display system and environment information
- * * @param {Object} options - Command options * @param {str} options.format - Output format * @param {flag} options.verbose - Show detailed information * @param {str} options.sections - Comma-separated sections to show * @returns {Promise<void>}
+ * * @param options Command options * @param options.format Output format * @param options.verbose Show detailed information * @param options.sections Comma-separated sections to show * @returns Promise<void>
  */
-async function on_info(options) {
+export async function on_info(    options: {        format?: string;        verbose?: string;        sections?: string;    }): Promise<void> {
     // Add your business logic here
     console.log('Hook on_info called');    console.log('Options:', options);    
     // You can return a value or throw an error
     // Returning nothing is equivalent to success
 }
-// Export all hook functions
-module.exports = {    on_greet,    on_info,};
-
 // Add any utility functions or classes here
 `;
     }
 }
 
-class HookNotFoundError extends Error {
-    constructor(message) {
+export class HookNotFoundError extends Error {
+    constructor(message: string) {
         super(message);
         this.name = 'HookNotFoundError';
     }
 }
 
-class HookExecutionError extends Error {
-    constructor(message) {
+export class HookExecutionError extends Error {
+    constructor(message: string) {
         super(message);
         this.name = 'HookExecutionError';
     }
 }
 
 // Global hook manager instance
-let _hookManager = null;
+let _hookManager: HookManager | null = null;
 
-function getHookManager() {
+export function getHookManager(): HookManager {
     if (!_hookManager) {
         _hookManager = new HookManager();
     }
     return _hookManager;
 }
 
-async function executeHook(hookName, ...args) {
+export async function executeHook(hookName: string, ...args: any[]): Promise<any> {
     return getHookManager().executeHook(hookName, ...args);
 }
 
-function hasHook(hookName) {
+export function hasHook(hookName: string): boolean {
     return getHookManager().hasHook(hookName);
 }
-
-module.exports = {
-    HookManager,
-    HookNotFoundError,
-    HookExecutionError,
-    getHookManager,
-    executeHook,
-    hasHook
-};

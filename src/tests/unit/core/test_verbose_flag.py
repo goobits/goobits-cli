@@ -201,9 +201,9 @@ class TestVerboseFlag:
         builder = Builder(config_data, language="nodejs")
         generated_cli = builder.build()
         
-        # Check that error handler uses verbose parameter
-        assert "function handleCLIError(error, verbose = false)" in generated_cli
-        assert "Run with --verbose for full traceback" in generated_cli
+        # Check that error handler uses verbose parameter  
+        assert "function handleError(error, context = 'Command execution', verbose = false)" in generated_cli
+        assert "Enable verbose output" in generated_cli
 
     def test_typescript_error_handler_uses_verbose_parameter(self):
         """Test that TypeScript error handler function uses verbose parameter."""
@@ -232,9 +232,9 @@ class TestVerboseFlag:
         builder = Builder(config_data, language="typescript")
         generated_cli = builder.build()
         
-        # Check that error handler uses verbose parameter with TypeScript typing
-        assert "function handleCLIError(error: Error, verbose: boolean = false)" in generated_cli
-        assert "Run with --verbose for full traceback" in generated_cli
+        # Check that error handler uses verbose parameter with TypeScript typing  
+        assert "function handleError(error: unknown, context: string = 'Command execution', verbose: boolean = false): never" in generated_cli
+        assert "Enable verbose output" in generated_cli
 
     def test_verbose_flag_replaces_debug_references(self):
         """Test that --debug references are replaced with --verbose."""

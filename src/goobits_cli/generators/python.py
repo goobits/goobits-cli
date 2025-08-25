@@ -407,6 +407,14 @@ class PythonGenerator(BaseGenerator):
 
             
 
+        except PermissionError as e:
+
+            # Propagate permission errors as-is (they're legitimate system errors)
+
+            typer.echo(f"❌ Permission error during CLI generation: {e}", err=True)
+
+            raise e
+
         except Exception as e:
 
             # Fall back to legacy mode if universal templates fail

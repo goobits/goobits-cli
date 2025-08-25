@@ -539,9 +539,9 @@ class TestGeneratedCodeSyntaxValidation:
     def test_nodejs_unicode_syntax_validation(self):
         """Test that Node.js/JavaScript code with Unicode is valid."""
         cli_config = CLISchema(
-            name="js-syntax-test",
-            description="JavaScript syntax with Unicode: プログラミング",
-            tagline="JS Unicode validation",
+            name="js-syntax-test", 
+            description="JavaScript syntax validation",
+            tagline="JS Unicode validation: プログラミング",
             commands={
                 "テスト": CommandSchema(
                     desc="Japanese test command: テストコマンド"
@@ -579,8 +579,8 @@ class TestGeneratedCodeSyntaxValidation:
         """Test that Rust code with Unicode compiles correctly."""
         cli_config = CLISchema(
             name="rust-syntax-test",
-            description="Rust syntax with Unicode: ржавчина (rust in Russian)",
-            tagline="Rust Unicode validation",
+            description="Rust syntax validation",
+            tagline="Rust Unicode validation: ржавчина (rust in Russian)",
             commands={
                 "тест": CommandSchema(
                     desc="Russian test command: тестовая команда"
@@ -736,9 +736,9 @@ class TestComplexUnicodeScenarios:
         """Test enterprise software CLI with realistic multilingual support."""
         # Based on real enterprise software like SAP, Oracle, Microsoft Azure CLI
         cli_config = CLISchema(
-            name="enterprise-cloud-cli",
-            description="Enterprise Cloud Management | 企业云管理 | Управление облаком предприятия",
-            tagline="Global Cloud Operations: English, 中文简体, Русский, Deutsch, 日本語",
+            name="enterprise-cloud-cli", 
+            description="Global Cloud Operations for multiple languages",
+            tagline="Enterprise Cloud Management | 企业云管理 | Управление облаком предприятия",
             commands={
                 "deploy": CommandSchema(  
                     desc="Deploy application | 部署应用程序 | Развернуть приложение | アプリケーションをデプロイ",

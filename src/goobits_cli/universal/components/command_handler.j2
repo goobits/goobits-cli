@@ -714,14 +714,18 @@ program
     .name('{{ cli.name }}')
     .description('{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
-    .option('-v, --verbose', 'Enable verbose error output and debugging information', false);
+    {%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
+    .option('-v, --verbose', 'Enable verbose error output and debugging information', false)
+    {%- endif %};
 
-{%- for option in cli.options %}
+{%- if cli.root_command.options %}
+{%- for option in cli.root_command.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
     '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
 {% endfor %}
+{%- endif %}
 
 {# Build commands using flat_commands for unlimited nesting support #}
 // Command hierarchy building for unlimited nesting
@@ -938,14 +942,18 @@ program
     .name('{{ cli.name }}')
     .description('{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
-    .option('-v, --verbose', 'Enable verbose error output and debugging information', false);
+    {%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
+    .option('-v, --verbose', 'Enable verbose error output and debugging information', false)
+    {%- endif %};
 
-{%- for option in cli.options %}
+{%- if cli.root_command.options %}
+{%- for option in cli.root_command.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
     '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
 );
 {% endfor %}
+{%- endif %}
 
 {# Build commands using flat_commands for unlimited nesting support #}
 // Command hierarchy building for unlimited nesting
@@ -1114,8 +1122,9 @@ fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
 fn main() {
     let app = Command::new("{{ cli.name }}")
         .version("{{ cli.version }}")
-        .about("{{ (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description')) }}")
+        .about("{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}")
         .arg_required_else_help(true)
+        {%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
         .arg(
             Arg::new("verbose")
                 .long("verbose")
@@ -1123,7 +1132,9 @@ fn main() {
                 .help("Enable verbose error output and debugging information")
                 .action(clap::ArgAction::SetTrue)
         )
-{%- for option in cli.options %}
+        {%- endif %}
+{%- if cli.root_command.options %}
+{%- for option in cli.root_command.options %}
         .arg(
             Arg::new("{{ option.name }}")
                 .long("{{ option.name }}")
@@ -1143,6 +1154,7 @@ fn main() {
                 {% endif %}
         )
 {% endfor %}
+{%- endif %}
         // Built-in upgrade subcommand
         .subcommand(
             Command::new("upgrade")

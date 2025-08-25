@@ -38,6 +38,13 @@ Template Variables Expected:
     {%- endfor %}
     {%- endif %}
   },
+  {%- if typescript is defined and typescript.package_config.devDependencies %}
+  "devDependencies": {
+    {%- for dep, version in typescript.package_config.devDependencies.items() %}
+    "{{ dep }}": "{{ version }}"{{ "," if not loop.last }}
+    {%- endfor %}
+  },
+  {%- endif %}
   "engines": {
     "node": ">=14.0.0"
   }

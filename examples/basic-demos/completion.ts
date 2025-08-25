@@ -1,20 +1,37 @@
 /**
- * Shell completion engine for Demo Node.js CLI
+ * Shell completion engine for Demo TypeScript CLI
  */
 
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
-class CompletionEngine {
-    constructor(cliSchema) {
-        this.cliSchema = cliSchema;
-    }
+interface CliSchema {
+    root_command: {
+        name: string;
+        subcommands: Array<{
+            name: string;
+            description: string;
+            options: Array<{
+                name: string;
+                short?: string;
+                description: string;
+            }>;
+            arguments: Array<{
+                name: string;
+                description: string;
+            }>;
+        }>;
+    };
+}
 
-    generateBashCompletion() {        return `#!/bin/bash
-# Bash completion for demo_js
+export class CompletionEngine {
+    constructor(private cliSchema: CliSchema) {}
 
-_demo_js_completions()
+    public generateBashCompletion(): string {        return `#!/bin/bash
+# Bash completion for demo_ts
+
+_demo_ts_completions()
 {
     local cur prev words cword
     COMPREPLY=()
@@ -43,19 +60,19 @@ _demo_js_completions()
     esac
 }
 
-complete -F _demo_js_completions demo_js
+complete -F _demo_ts_completions demo_ts
 `;    }
 
-    generateZshCompletion() {        return `#compdef demo_js
-# Zsh completion for demo_js
+    public generateZshCompletion(): string {        return `#compdef demo_ts
+# Zsh completion for demo_ts
 
-_demo_js() {
+_demo_ts() {
     local context state line
     
     _arguments -C \\
         '(--help -h){--help,-h}[Show help information]' \\
         '(--version)--version[Show version information]' \\
-        '1: :_demo_js_commands' \\
+        '1: :_demo_ts_commands' \\
         '*::arg:->args'
     
     case $state in
@@ -69,44 +86,46 @@ _demo_js() {
     esac
 }
 
-_demo_js_commands() {
+_demo_ts_commands() {
     local commands
     commands=(        'greet:Greet someone with style'        'info:Display system and environment information'    )
     _describe 'commands' commands
 }
 
-_demo_js "$@"
+_demo_ts "$@"
 `;    }
 
-    generateFishCompletion() {        return `# Fish completion for demo_js
+    public generateFishCompletion(): string {        return `# Fish completion for demo_ts
 
 # Global options
-complete -c demo_js -f
-complete -c demo_js -s h -l help -d "Show help information"
-complete -c demo_js -l version -d "Show version information"
+complete -c demo_ts -f
+complete -c demo_ts -s h -l help -d "Show help information"
+complete -c demo_ts -l version -d "Show version information"
 
-# Subcommandscomplete -c demo_js -n "__fish_use_subcommand" -a "greet" -d "Greet someone with style"complete -c demo_js -n "__fish_seen_subcommand_from greet" -l style -s s -d "Greeting style"complete -c demo_js -n "__fish_seen_subcommand_from greet" -l count -s c -d "Repeat greeting N times"complete -c demo_js -n "__fish_seen_subcommand_from greet" -l uppercase -s u -d "Convert to uppercase"complete -c demo_js -n "__fish_seen_subcommand_from greet" -l language -s l -d "Language code"complete -c demo_js -n "__fish_use_subcommand" -a "info" -d "Display system and environment information"complete -c demo_js -n "__fish_seen_subcommand_from info" -l format -s f -d "Output format"complete -c demo_js -n "__fish_seen_subcommand_from info" -l verbose -s v -d "Show detailed information"complete -c demo_js -n "__fish_seen_subcommand_from info" -l sections -s s -d "Comma-separated sections to show"`;    }
+# Subcommandscomplete -c demo_ts -n "__fish_use_subcommand" -a "greet" -d "Greet someone with style"complete -c demo_ts -n "__fish_seen_subcommand_from greet" -l style -s s -d "Greeting style"complete -c demo_ts -n "__fish_seen_subcommand_from greet" -l count -s c -d "Repeat greeting N times"complete -c demo_ts -n "__fish_seen_subcommand_from greet" -l uppercase -s u -d "Convert to uppercase"complete -c demo_ts -n "__fish_seen_subcommand_from greet" -l language -s l -d "Language code"complete -c demo_ts -n "__fish_use_subcommand" -a "info" -d "Display system and environment information"complete -c demo_ts -n "__fish_seen_subcommand_from info" -l format -s f -d "Output format"complete -c demo_ts -n "__fish_seen_subcommand_from info" -l verbose -s v -d "Show detailed information"complete -c demo_ts -n "__fish_seen_subcommand_from info" -l sections -s s -d "Comma-separated sections to show"`;    }
 
-    async installCompletion(shell = null) {
+    public async installCompletion(shell: string | null = null): Promise<boolean> {
         shell = shell || path.basename(process.env.SHELL || 'bash');
         
-        let script, completionDir, filename;
+        let script: string;
+        let completionDir: string;
+        let filename: string;
         
         switch (shell) {
             case 'bash':
                 script = this.generateBashCompletion();
                 completionDir = path.join(os.homedir(), '.bash_completion.d');
-                filename = 'demo_js';
+                filename = 'demo_ts';
                 break;
             case 'zsh':
                 script = this.generateZshCompletion();
                 completionDir = path.join(os.homedir(), '.zsh', 'completions');
-                filename = 'demo_js.zsh';
+                filename = 'demo_ts.zsh';
                 break;
             case 'fish':
                 script = this.generateFishCompletion();
                 completionDir = path.join(os.homedir(), '.config', 'fish', 'completions');
-                filename = 'demo_js.fish';
+                filename = 'demo_ts.fish';
                 break;
             default:
                 console.error(`Unsupported shell: ${shell}`);
@@ -131,10 +150,8 @@ complete -c demo_js -l version -d "Show version information"
             
             return true;
         } catch (error) {
-            console.error(`Failed to install completion: ${error.message}`);
+            console.error(`Failed to install completion: ${(error as Error).message}`);
             return false;
         }
     }
 }
-
-module.exports = { CompletionEngine };

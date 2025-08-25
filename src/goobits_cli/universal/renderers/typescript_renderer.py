@@ -144,7 +144,31 @@ class TypeScriptRenderer(LanguageRenderer):
 
             'imports': self._generate_imports(ir),
 
-            'exports': self._generate_exports(ir)
+            'exports': self._generate_exports(ir),
+
+            'main_entry': 'cli.ts',
+
+            'bin_entry': 'bin/index.js',
+
+            'package_config': {
+
+                'dependencies': {
+
+                    'commander': '^9.0.0'
+
+                },
+
+                'devDependencies': {
+
+                    'typescript': '^5.0.0',
+
+                    '@types/node': '^18.0.0',
+
+                    'ts-node': '^10.0.0'
+
+                }
+
+            }
 
         }
 
