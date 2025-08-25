@@ -67,21 +67,21 @@ class TestRustGenerator:
     
     def test_generator_initialization_universal_templates(self):
         """Test RustGenerator initialization with universal templates enabled."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Check that generator has required attributes
         assert hasattr(generator, 'env')
         assert generator.env is not None
-        assert hasattr(generator, 'use_universal_templates')
+        # Template system is integrated
         
-    def test_generator_initialization_legacy_templates(self):
-        """Test RustGenerator initialization with legacy templates."""
-        generator = RustGenerator(use_universal_templates=False)
+    def test_generator_initialization_template_system(self):
+        """Test RustGenerator initialization with template system."""
+        generator = RustGenerator()
         
         # Check that generator has required attributes
         assert hasattr(generator, 'env')
         assert generator.env is not None
-        assert not generator.use_universal_templates
+        # Template system is always integrated
         
     def test_template_loader_configuration(self):
         """Test that Jinja2 environment is properly configured."""
@@ -109,7 +109,7 @@ class TestRustGenerator:
         )
         config = create_test_goobits_config("test-cli", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         output_files = generator.generate_all_files(config, "test.yaml")
         
         # Check that output_files is a dictionary
@@ -173,7 +173,7 @@ class TestRustGenerator:
         )
         config = create_test_goobits_config("complex-cli", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complex.yaml")
         
         # Check command generation
@@ -215,7 +215,7 @@ class TestRustGenerator:
         )
         config = create_test_goobits_config("nested-cli", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         output_files = generator.generate_all_files(config, "nested.yaml")
         
         # Check subcommand structure (note: fallback generation may not include all subcommands)
@@ -244,7 +244,7 @@ class TestRustGenerator:
         )
         config = create_test_goobits_config("global-cli", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         output_files = generator.generate_all_files(config, "global.yaml")
         
         # Check global options (note: fallback generation may not include global options)
@@ -281,7 +281,7 @@ class TestRustGenerator:
         )
         config = create_test_goobits_config("test-cli", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         generator.generate_all_files(config, "test.yaml")
         
         generated_files = generator.get_generated_files()
@@ -305,7 +305,7 @@ class TestRustGeneratorErrorConditions:
     
     def test_hanging_prevention_with_large_configs(self):
         """Test that generator handles large configs without hanging."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Create a config with many commands, args, and options
         commands = {}
@@ -346,7 +346,7 @@ class TestRustGeneratorErrorConditions:
     
     def test_generator_with_malformed_config_schema(self):
         """Test generator behavior with malformed configuration schema."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Create a mock config with missing required fields
         class MalformedConfig:
@@ -367,7 +367,7 @@ class TestRustGeneratorErrorConditions:
     @timeout(15)
     def test_generator_template_loading_failure(self):
         """Test generator when template files cannot be loaded."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Mock the template environment to simulate loading failures
         with patch.object(generator.env, 'get_template') as mock_get_template:
@@ -387,7 +387,7 @@ class TestRustGeneratorErrorConditions:
     @timeout(15)
     def test_generator_template_rendering_failure(self):
         """Test generator when template rendering fails."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         cli_schema = CLISchema(
             name="test-cli",
@@ -409,7 +409,7 @@ class TestRustGeneratorErrorConditions:
     
     def test_generator_with_invalid_command_configurations(self):
         """Test generator with invalid command configurations."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Test various invalid command configurations
         invalid_configs = [
@@ -460,7 +460,7 @@ class TestRustGeneratorErrorConditions:
     
     def test_generator_with_unicode_and_special_characters(self):
         """Test generator with unicode and special characters in configuration."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Configuration with various unicode and special characters
         cli_schema = CLISchema(
@@ -512,7 +512,7 @@ class TestRustGeneratorErrorConditions:
     
     def test_generator_config_validation_errors(self):
         """Test generator with configuration validation errors."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Create config that should definitely fail - missing required CLI name
         try:
@@ -619,7 +619,7 @@ class TestRustGeneratorFallbackGeneration:
     
     def test_generate_fallback_main_rs(self):
         """Test fallback main.rs generation."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         cli_schema = CLISchema(
             name="fallback-cli",
@@ -652,7 +652,7 @@ class TestRustGeneratorFallbackGeneration:
         
     def test_generate_fallback_cargo_toml(self):
         """Test fallback Cargo.toml generation."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         context = {
             'package_name': 'test-cli',
@@ -673,7 +673,7 @@ class TestRustGeneratorFallbackGeneration:
         
     def test_generate_fallback_hooks_rs(self):
         """Test fallback hooks.rs generation."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         cli_schema = CLISchema(
             name="hooks-cli",
@@ -700,7 +700,7 @@ class TestRustGeneratorFallbackGeneration:
         
     def test_generate_fallback_setup_sh(self):
         """Test fallback setup.sh generation."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         context = {
             'display_name': 'Test CLI',
@@ -718,7 +718,7 @@ class TestRustGeneratorFallbackGeneration:
         
     def test_generate_readme(self):
         """Test README.md generation."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         cli_schema = CLISchema(
             name="readme-cli",
@@ -753,7 +753,7 @@ class TestRustGeneratorFallbackGeneration:
         
     def test_generate_gitignore(self):
         """Test .gitignore generation."""
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         result = generator._generate_gitignore()
         
@@ -769,14 +769,13 @@ class TestRustGeneratorUniversalTemplates:
     
     def test_universal_templates_initialization(self):
         """Test initialization with universal templates."""
-        # Test when universal templates are available
-        with patch('goobits_cli.generators.rust.UNIVERSAL_TEMPLATES_AVAILABLE', True):
-            generator = RustGenerator(use_universal_templates=True)
-            assert generator.use_universal_templates
+        # Test template system initialization
+        generator = RustGenerator()
+        # Template system is integrated
     
-    def test_universal_templates_fallback(self):
-        """Test fallback to legacy mode when universal templates fail."""
-        generator = RustGenerator(use_universal_templates=True)
+    def test_rust_generator_functionality(self):
+        """Test Rust generator basic functionality with universal templates."""
+        generator = RustGenerator()
         
         cli_schema = CLISchema(
             name="test-cli",
@@ -785,7 +784,7 @@ class TestRustGeneratorUniversalTemplates:
         )
         config = create_test_goobits_config("test-cli", cli_schema, language="rust")
         
-        # Should use legacy mode
+        # Should generate using universal templates
         result = generator.generate(config, "test.yaml")
         assert isinstance(result, str)
         assert len(result) > 0
@@ -839,7 +838,7 @@ class TestRustGeneratorIntegration:
         )
         config = create_test_goobits_config("complete-cli", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         output_files = generator.generate_all_files(config, "complete.yaml", version="1.2.3")
         
         # Verify all expected files are generated
@@ -970,7 +969,7 @@ cli:
         assert config.language == "rust"
         
         # Create RustGenerator directly to test
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         output_files = generator.generate_all_files(config, "test_rust.yaml")
         
         # Check that we get Rust files, not Python/Node.js files
@@ -1013,7 +1012,7 @@ class TestClapIntegration:
         )
         config = create_test_goobits_config("clap-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "clap.yaml")
         
         main_rs = result['src/main.rs']
@@ -1053,7 +1052,7 @@ class TestClapIntegration:
         )
         config = create_test_goobits_config("args-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "args.yaml")
         
         main_rs = result['src/main.rs']
@@ -1090,7 +1089,7 @@ class TestClapIntegration:
         )
         config = create_test_goobits_config("nested-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "nested.yaml")
         
         main_rs = result['src/main.rs']
@@ -1123,7 +1122,7 @@ class TestClapIntegration:
         )
         config = create_test_goobits_config("help-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "help.yaml")
         
         main_rs = result['src/main.rs']
@@ -1158,7 +1157,7 @@ class TestRustTypeSystemEnhanced:
         )
         config = create_test_goobits_config("option-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "option.yaml")
         
         # The generated code should handle optional values appropriately
@@ -1178,7 +1177,7 @@ class TestRustTypeSystemEnhanced:
         )
         config = create_test_goobits_config("result-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "result.yaml")
         
         main_rs = result['src/main.rs']
@@ -1212,7 +1211,7 @@ class TestRustTypeSystemEnhanced:
         )
         config = create_test_goobits_config("complex-types", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "complex.yaml")
         
         # Verify generation completes successfully with complex types
@@ -1233,7 +1232,7 @@ class TestCargoEcosystem:
         )
         config = create_test_goobits_config("cargo-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "cargo.yaml", version="2.1.0")
         
         cargo_toml = result['Cargo.toml']
@@ -1264,7 +1263,7 @@ class TestCargoEcosystem:
         )
         config = create_test_goobits_config("deps-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "deps.yaml")
         
         cargo_toml = result['Cargo.toml']
@@ -1289,7 +1288,7 @@ class TestCargoEcosystem:
         )
         config = create_test_goobits_config("features-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "features.yaml")
         
         cargo_toml = result['Cargo.toml']
@@ -1308,7 +1307,7 @@ class TestCargoEcosystem:
         )
         config = create_test_goobits_config("workspace-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "workspace.yaml")
         
         cargo_toml = result['Cargo.toml']
@@ -1327,7 +1326,7 @@ class TestCargoEcosystem:
         )
         config = create_test_goobits_config("cross-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "cross.yaml")
         
         cargo_toml = result['Cargo.toml']
@@ -1352,7 +1351,7 @@ class TestRustErrorPatterns:
         )
         config = create_test_goobits_config("error-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "error.yaml")
         
         main_rs = result['src/main.rs']
@@ -1401,7 +1400,7 @@ class TestRustErrorPatterns:
         )
         config = create_test_goobits_config("msg-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "msg.yaml")
         
         main_rs = result['src/main.rs']
@@ -1419,7 +1418,7 @@ class TestRustErrorPatterns:
         )
         config = create_test_goobits_config("panic-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "panic.yaml")
         
         main_rs = result['src/main.rs']
@@ -1438,7 +1437,7 @@ class TestRustErrorPatterns:
         )
         config = create_test_goobits_config("context-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "context.yaml")
         
         cargo_toml = result['Cargo.toml']
@@ -1464,7 +1463,7 @@ class TestRustConventionsEnhanced:
         )
         config = create_test_goobits_config("module-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "module.yaml")
         
         hooks_rs = result['src/hooks.rs']
@@ -1487,7 +1486,7 @@ class TestRustConventionsEnhanced:
         )
         config = create_test_goobits_config("func-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "func.yaml")
         
         hooks_rs = result['src/hooks.rs']
@@ -1528,7 +1527,7 @@ class TestRustConventionsEnhanced:
         )
         config = create_test_goobits_config("style-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "style.yaml")
         
         main_rs = result['src/main.rs']
@@ -1557,7 +1556,7 @@ class TestRustSpecificGenerationEdgeCases:
         )
         config = create_test_goobits_config("empty-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         
         # Should handle empty commands gracefully
         try:
@@ -1580,7 +1579,7 @@ class TestRustSpecificGenerationEdgeCases:
         )
         config = create_test_goobits_config("long-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "long.yaml")
         
         # Should handle long names without truncation
@@ -1604,7 +1603,7 @@ class TestRustSpecificGenerationEdgeCases:
         )
         config = create_test_goobits_config("special-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "special.yaml")
         
         # Should generate valid Rust code despite special characters
@@ -1623,7 +1622,7 @@ class TestRustSpecificGenerationEdgeCases:
         )
         config = create_test_goobits_config("numeric-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "numeric.yaml")
         
         # Should handle numeric prefixes in function names
@@ -1646,7 +1645,7 @@ class TestRustSpecificGenerationEdgeCases:
         )
         config = create_test_goobits_config("keyword-test", cli_schema, language="rust")
         
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate_all_files(config, "keyword.yaml")
         
         # Should generate valid Rust code despite keyword conflicts

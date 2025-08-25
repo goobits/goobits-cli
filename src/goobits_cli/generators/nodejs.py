@@ -56,25 +56,15 @@ from ..schemas import ConfigSchema, GoobitsConfigSchema
 from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
 
 # Universal Template System imports
-try:
-    from ..universal.template_engine import UniversalTemplateEngine
-    from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
-    from ..universal.interactive import integrate_interactive_mode
-    from ..universal.completion import (
-        integrate_completion_system,
-        get_completion_files_for_language,
-    )
-    from ..universal.plugins import integrate_plugin_system
-    
-    UNIVERSAL_TEMPLATES_AVAILABLE = True
-except ImportError:
-    UNIVERSAL_TEMPLATES_AVAILABLE = False
-    UniversalTemplateEngine = None
-    UniversalNodeJSRenderer = None
-    integrate_interactive_mode = None
-    integrate_completion_system = None
-    get_completion_files_for_language = None
-    integrate_plugin_system = None
+# Universal Template System is required
+from ..universal.template_engine import UniversalTemplateEngine
+from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
+from ..universal.interactive import integrate_interactive_mode
+from ..universal.completion import (
+    integrate_completion_system,
+    get_completion_files_for_language,
+)
+from ..universal.plugins import integrate_plugin_system
 
 # Phase 2 shared components
 from ..shared.components.validation_framework import ValidationRunner, ValidationMode
@@ -96,32 +86,26 @@ except ImportError:
 class NodeJSGenerator(BaseGenerator):
     """CLI code generator for Node.js using Commander.js framework."""
 
-    def __init__(self, use_universal_templates: bool = True):
-        """Initialize the Node.js generator with Universal Template System.
-
-        Args:
-            use_universal_templates: If True, use Universal Template System
-        """
+    def __init__(self):
+        """Initialize the Node.js generator with Universal Template System."""
         _lazy_imports()  # Initialize lazy imports when generator is created
 
-        self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
-
-        # Initialize Universal Template System if requested
-        if self.use_universal_templates:
-            try:
-                # Detect test mode to avoid asyncio conflicts
-                import sys
-                is_test = 'pytest' in sys.modules
-                
-                self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
-                self.nodejs_renderer = UniversalNodeJSRenderer()
-                self.universal_engine.register_renderer("nodejs", self.nodejs_renderer)
-            except Exception as e:
-                typer.echo(f"⚠️  Failed to initialize Universal Template System: {e}", err=True)
-                typer.echo("   Falling back to legacy template system", err=True)
-                self.use_universal_templates = False
-                self.universal_engine = None
-                self.nodejs_renderer = None
+        # Initialize Universal Template System
+        try:
+            # Detect test mode to avoid asyncio conflicts
+            import sys
+            is_test = 'pytest' in sys.modules
+            
+            self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
+            self.nodejs_renderer = UniversalNodeJSRenderer()
+            self.universal_engine.register_renderer("nodejs", self.nodejs_renderer)
+        except Exception as e:
+            from . import DependencyError
+            raise DependencyError(
+                f"Failed to initialize Universal Template System: {e}",
+                dependency="goobits-cli universal templates",
+                install_command="pip install --upgrade goobits-cli"
+            ) from e
 
         # Set up Jinja2 environment for Node.js templates
         template_dir = Path(__file__).parent.parent / "templates" / "nodejs"
@@ -421,9 +405,9 @@ class NodeJSGenerator(BaseGenerator):
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
             
-            # Generate CLI content using universal templates (primary system)
+            # Generate CLI content using universal templates
             try:
-                cli_content = self._generate_with_universal_templates(config, "test.yaml", version)
+                cli_content = self._generate_cli(config, "test.yaml", version)
             except Exception as e:
                 # If universal templates fail in E2E tests, provide helpful error
                 error_msg = (
@@ -448,27 +432,12 @@ class NodeJSGenerator(BaseGenerator):
             
             return cli_content
 
-        # Use Universal Template System if enabled
-        if self.use_universal_templates:
-            return self._generate_with_universal_templates(config, config_filename, version)
-
-        # Universal Templates should be the primary path
-        # If we reach here, it means universal templates are disabled
-        error_msg = (
-            "❌ CLI Generation Error: Universal Templates are disabled\n\n"
-            "🔧 To fix this:\n"
-            "1. Universal Templates are now the primary generation system\n"
-            "2. Re-enable with: generator.use_universal_templates = True\n"
-            "3. Legacy fallbacks have been removed for better reliability\n\n"
-            "💬 If you encounter this error, please report it as it indicates an unexpected code path."
-        )
-        
-        typer.echo(error_msg, err=True)
-        raise RuntimeError("Universal Templates are disabled - this should not happen in normal operation")
+        # Use Universal Template System
+        return self._generate_cli(config, config_filename, version)
 
     
 
-    def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+    def _generate_cli(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 
                                          config_filename: str, version: Optional[str] = None) -> str:
 
@@ -639,7 +608,7 @@ class NodeJSGenerator(BaseGenerator):
 3. Try regenerating with `goobits build --debug` for detailed logs
 4. Report this issue if the problem persists
             
-💡 Universal Templates are now the primary system. Legacy fallbacks have been removed for better reliability."""
+💡 CLI generation uses universal templates."""
             
             typer.echo(error_msg, err=True)
             raise RuntimeError(f"CLI generation failed: {type(e).__name__}: {e}") from e
@@ -951,26 +920,10 @@ export default cli;
 
         """
 
-        # Use Universal Template System if enabled
-
-        if self.use_universal_templates:
-
-            # Generate main file to populate _generated_files
-
-            self.generate(config, config_filename, version)
-
-            return self._generated_files.copy() if self._generated_files else {}
-
-        
-
-        # Universal Templates are now the primary system
-        error_msg = f"""❌ generate_all_files fallback reached - this should not happen
-        
-🔧 This indicates the universal template system path was not taken.
-Please report this as a bug if you encounter this message."""
-        
-        typer.echo(error_msg, err=True)
-        raise RuntimeError("generate_all_files fallback should not be reached with universal templates")
+        # Use Universal Template System
+        # Generate main file to populate _generated_files
+        self.generate(config, config_filename, version)
+        return self._generated_files.copy() if self._generated_files else {}
 
     
 

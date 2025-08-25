@@ -92,7 +92,7 @@ class TestBuilderIntegration:
     
     def _assert_cli_metadata_present(self, generated_code):
         """Assert that CLI metadata from YAML is present in generated code."""
-        # Check for tagline (Legacy template doesn't include CLI name)
+        # Check for tagline (Generated templates may not include CLI name)
         assert "A test CLI for integration tests." in generated_code
     
     def _assert_commands_present(self, generated_code):
@@ -210,7 +210,7 @@ class TestCLIGenerationIntegration:
         })
         
         # Generate Python CLI
-        generator = PythonGenerator(use_universal_templates=True)
+        generator = PythonGenerator()
         result = generator.generate(config, str(tmp_path))
         
         # Verify generation was successful
@@ -242,7 +242,7 @@ class TestCLIGenerationIntegration:
         })
         
         # Generate Node.js CLI
-        generator = NodeJSGenerator(use_universal_templates=True)
+        generator = NodeJSGenerator()
         result = generator.generate(config, str(tmp_path))
         
         # Verify generation was successful
@@ -280,7 +280,7 @@ class TestCLIGenerationIntegration:
         })
         
         # Generate Rust CLI
-        generator = RustGenerator(use_universal_templates=True)
+        generator = RustGenerator()
         result = generator.generate(config, str(tmp_path))
         
         # Verify generation was successful
@@ -331,7 +331,7 @@ class TestCLIGenerationIntegration:
             lang_dir.mkdir()
             
             try:
-                generator = generator_class(use_universal_templates=True)
+                generator = generator_class()
                 result = generator.generate(config, str(lang_dir))
                 results[lang] = {"success": result is not None, "error": None}
             except Exception as e:

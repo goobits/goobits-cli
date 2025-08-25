@@ -52,36 +52,12 @@ from ..formatter import (
 
 
 # Universal Template System imports
-
-try:
-
-    from ..universal.template_engine import UniversalTemplateEngine
-
-    from ..universal.renderers.rust_renderer import RustRenderer
-
-    from ..universal.interactive import integrate_interactive_mode
-
-    from ..universal.completion import integrate_completion_system, get_completion_files_for_language
-
-    from ..universal.plugins import integrate_plugin_system
-
-    UNIVERSAL_TEMPLATES_AVAILABLE = True
-
-except ImportError:
-
-    UNIVERSAL_TEMPLATES_AVAILABLE = False
-
-    UniversalTemplateEngine = None
-
-    RustRenderer = None
-
-    integrate_interactive_mode = None
-
-    integrate_completion_system = None
-
-    get_completion_files_for_language = None
-
-    integrate_plugin_system = None
+# Universal Template System is required
+from ..universal.template_engine import UniversalTemplateEngine
+from ..universal.renderers.rust_renderer import RustRenderer
+from ..universal.interactive import integrate_interactive_mode
+from ..universal.completion import integrate_completion_system, get_completion_files_for_language
+from ..universal.plugins import integrate_plugin_system
 
 
 
@@ -151,48 +127,27 @@ class RustGenerator(BaseGenerator):
 
     
 
-    def __init__(self, use_universal_templates: bool = True):
-
-        """Initialize the Rust generator with Jinja2 environment.
-
-        Args:
-
-            use_universal_templates: If True, use Universal Template System
-
-        """
+    def __init__(self):
+        """Initialize the Rust generator with Universal Template System."""
         _lazy_imports()  # Initialize lazy imports when generator is created
 
-        self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
+        
+
+        # Initialize Universal Template System
+        try:
+            self.universal_engine = UniversalTemplateEngine()
+            self.rust_renderer = RustRenderer()
+            self.universal_engine.register_renderer("rust", self.rust_renderer)
+        except Exception as e:
+            raise DependencyError(
+                f"Failed to initialize Universal Template System: {e}",
+                dependency="goobits-cli universal templates", 
+                install_command="pip install --upgrade goobits-cli"
+            ) from e
 
         
 
-        # Initialize Universal Template System if requested
-
-        if self.use_universal_templates:
-
-            try:
-
-                self.universal_engine = UniversalTemplateEngine()
-
-                self.rust_renderer = RustRenderer()
-
-                self.universal_engine.register_renderer("rust", self.rust_renderer)
-
-            except Exception as e:
-
-                typer.echo(f"⚠️  Failed to initialize Universal Template System: {e}", err=True)
-
-                typer.echo("   Falling back to legacy template system", err=True)
-
-                self.use_universal_templates = False
-
-                self.universal_engine = None
-
-                self.rust_renderer = None
-
-        
-
-        # Set up Jinja2 environment for legacy mode
+        # Set up Jinja2 environment for template fallbacks
 
         template_dir = Path(__file__).parent.parent / "templates" / "rust"
 
@@ -334,14 +289,8 @@ class RustGenerator(BaseGenerator):
             return generated_files.get('src/main.rs', '')
         
         # Normal case: config_filename is actually a filename
-        # Use Universal Template System if enabled
-        if self.use_universal_templates:
-            return self._generate_with_universal_templates(config, config_filename, version)
-        
-        # Universal Templates are now the primary system for Rust
-        error_msg = "Rust generator reached unexpected fallback - Universal Templates should handle all generation"
-        typer.echo(error_msg, err=True)
-        raise RuntimeError("Rust generator fallback should not be reached")
+        # Use Universal Template System
+        return self._generate_cli(config, config_filename, version)
 
     
 
@@ -350,7 +299,7 @@ class RustGenerator(BaseGenerator):
         from . import BaseGenerator
         return BaseGenerator._get_dynamic_version(self, version, cli_config, "rust", project_dir)
 
-    def _generate_with_universal_templates(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+    def _generate_cli(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
 
                                          config_filename: str, version: Optional[str] = None) -> str:
 
@@ -504,13 +453,11 @@ class RustGenerator(BaseGenerator):
 
         except Exception as e:
 
-            # Fall back to legacy mode if universal templates fail
+            # Handle template generation failure
 
-            typer.echo(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), falling back to legacy mode", err=True)
+            typer.echo(f"⚠️  Template generation failed ({type(e).__name__}: {e})", err=True)
 
-            # Disable universal templates for subsequent calls to avoid repeated failures
-
-            self.use_universal_templates = False
+            # Universal templates failed - this is now a critical error
 
             # Rust Universal Templates failed - provide helpful error
             error_msg = f"""❌ Rust Universal Templates failed: {type(e).__name__}: {e}
@@ -558,15 +505,7 @@ class RustGenerator(BaseGenerator):
             
 
             # For universal templates, files are already generated during generate() call
-
-            if self.use_universal_templates and self._generated_files:
-
-                return self._generated_files.copy()  # Return a copy to prevent external modification
-
-            
-
-            # For legacy mode, return the stored files
-
+            # Return the stored files from generation
             return self._generated_files.copy() if self._generated_files else {}
 
         except Exception as e:

@@ -43,36 +43,12 @@ from ..shared.test_utils.validation import ValidationResult, TestDataValidator
 
 
 # Universal Template System imports
-
-try:
-
-    from ..universal.template_engine import UniversalTemplateEngine
-
-    from ..universal.renderers.typescript_renderer import TypeScriptRenderer as UniversalTypeScriptRenderer
-
-    from ..universal.interactive import integrate_interactive_mode
-
-    from ..universal.completion import integrate_completion_system, get_completion_files_for_language
-
-    from ..universal.plugins import integrate_plugin_system
-
-    UNIVERSAL_TEMPLATES_AVAILABLE = True
-
-except ImportError:
-
-    UNIVERSAL_TEMPLATES_AVAILABLE = False
-
-    UniversalTemplateEngine = None
-
-    UniversalTypeScriptRenderer = None
-
-    integrate_interactive_mode = None
-
-    integrate_completion_system = None
-
-    get_completion_files_for_language = None
-
-    integrate_plugin_system = None
+# Universal Template System is required
+from ..universal.template_engine import UniversalTemplateEngine
+from ..universal.renderers.typescript_renderer import TypeScriptRenderer as UniversalTypeScriptRenderer
+from ..universal.interactive import integrate_interactive_mode
+from ..universal.completion import integrate_completion_system, get_completion_files_for_language
+from ..universal.plugins import integrate_plugin_system
 
 
 
@@ -84,54 +60,35 @@ class TypeScriptGenerator(NodeJSGenerator):
 
     
 
-    def __init__(self, use_universal_templates: bool = True):
-
-        """Initialize the TypeScript generator with TypeScript-specific templates.
-
-        Args:
-
-            use_universal_templates: If True, use Universal Template System
-
-        """
+    def __init__(self):
+        """Initialize the TypeScript generator with TypeScript-specific templates."""
         _lazy_imports()  # Initialize lazy imports when generator is created
 
-        # Pass universal templates flag to parent
-
-        super().__init__(use_universal_templates)
+        # Initialize parent without parameters
+        super().__init__()
 
         
 
-        # Initialize Universal Template System if requested and available
+        # Initialize Universal Template System
+        try:
+            # Initialize universal engine if not already done by parent
+            if not hasattr(self, 'universal_engine') or not self.universal_engine:
+                # Detect test mode to avoid asyncio conflicts
+                import sys
+                is_test = 'pytest' in sys.modules
+                
+                self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
 
-        if use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE:
-
-            try:
-
-                # Initialize universal engine if not already done by parent
-
-                if not hasattr(self, 'universal_engine') or not self.universal_engine:
-
-                    # Detect test mode to avoid asyncio conflicts
-                    import sys
-                    is_test = 'pytest' in sys.modules
-                    
-                    self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
-
-                # Override the nodejs renderer with typescript renderer
-
-                self.typescript_renderer = UniversalTypeScriptRenderer()
-
-                self.universal_engine.register_renderer("typescript", self.typescript_renderer)
-
-            except Exception as e:
-
-                typer.echo(f"⚠️  Failed to initialize TypeScript Universal Template System: {e}", err=True)
-
-                typer.echo("   Falling back to legacy template system", err=True)
-
-                self.use_universal_templates = False
-
-                self.typescript_renderer = None
+            # Override the nodejs renderer with typescript renderer
+            self.typescript_renderer = UniversalTypeScriptRenderer()
+            self.universal_engine.register_renderer("typescript", self.typescript_renderer)
+        except Exception as e:
+            from . import DependencyError
+            raise DependencyError(
+                f"Failed to initialize TypeScript Universal Template System: {e}",
+                dependency="goobits-cli universal templates",
+                install_command="pip install --upgrade goobits-cli"
+            ) from e
 
         
 
@@ -201,7 +158,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         def js_string(value: str) -> str:
             """
-            Escape string for JavaScript/TypeScript while preserving Unicode characters (legacy template compatibility).
+            Escape string for JavaScript/TypeScript while preserving Unicode characters.
             
             Only escapes necessary characters for JavaScript/TypeScript string literals:
             - Backslashes (must be first to avoid double-escaping)
@@ -303,7 +260,7 @@ class TypeScriptGenerator(NodeJSGenerator):
             # Generate CLI content using legacy method (which works correctly with test configs)
             # Generate CLI content using universal templates for E2E tests
             try:
-                cli_content = self._generate_with_universal_templates(config, "test.yaml", version)
+                cli_content = self._generate_cli(config, "test.yaml", version)
             except Exception as e:
                 error_msg = f"TypeScript E2E test generation failed: {type(e).__name__}: {e}"
                 typer.echo(error_msg, err=True)
@@ -324,18 +281,8 @@ class TypeScriptGenerator(NodeJSGenerator):
             
             return cli_content
 
-        # Use Universal Template System if enabled
-
-        if self.use_universal_templates:
-
-            return self._generate_with_universal_templates(config, config_filename, version)
-
-        
-
-        # Universal Templates are now the primary system for TypeScript
-        error_msg = "TypeScript generator reached unexpected fallback - Universal Templates should handle all generation"
-        typer.echo(error_msg, err=True)
-        raise RuntimeError("TypeScript generator fallback should not be reached")
+        # Use Universal Template System
+        return self._generate_cli(config, config_filename, version)
 
     
 
@@ -344,7 +291,7 @@ class TypeScriptGenerator(NodeJSGenerator):
         from . import BaseGenerator
         return BaseGenerator._get_dynamic_version(self, version, cli_config, "typescript", project_dir)
 
-    def _generate_with_universal_templates(self, config, config_filename: str, version: Optional[str] = None) -> str:
+    def _generate_cli(self, config, config_filename: str, version: Optional[str] = None) -> str:
 
         """
 
@@ -512,13 +459,13 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         except Exception as e:
 
-            # Fall back to legacy mode if universal templates fail
+            # Handle template generation failure
 
-            typer.echo(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), falling back to legacy mode", err=True)
+            typer.echo(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), template generation failed", err=True)
 
-            # Disable universal templates for subsequent calls to avoid repeated failures
+            # Template generation failed - this is a critical error
 
-            self.use_universal_templates = False
+            # Universal templates failed - critical error
 
             # TypeScript Universal Templates failed - provide helpful error
             error_msg = f"""❌ TypeScript Universal Templates failed: {type(e).__name__}: {e}
@@ -982,19 +929,14 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         """Generate all files for a TypeScript CLI project."""
 
-        # Use Universal Template System if enabled
-
-        if self.use_universal_templates:
-
-            # Generate main file to populate _generated_files
-
-            self.generate(config, config_filename, version)
-
-            return self._generated_files.copy() if self._generated_files else {}
+        # Use Universal Template System
+        # Generate main file to populate _generated_files
+        self.generate(config, config_filename, version)
+        return self._generated_files.copy() if self._generated_files else {}
 
         
 
-        # Extract metadata using base class helper for legacy mode
+        # Extract metadata using base class helper
 
 
 

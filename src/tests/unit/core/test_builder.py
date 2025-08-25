@@ -125,8 +125,7 @@ class TestBuilder:
         builder.build(config, "test.yaml")
         
         # Verify managed command functionality
-        # Legacy template doesn't include managed command comments
-        # Legacy template doesn't include managed command lifecycle code
+        # Generated templates may not include managed command comments
     
     def test_build_includes_global_options(self):
         """Test that global CLI options are properly included."""
@@ -164,7 +163,7 @@ class TestBuilder:
         
         # Check metadata inclusion
         assert "test.yaml" in result
-        assert "1.0.0" in result  # Legacy template uses default version
+        assert "1.0.0" in result  # Generated template uses default version
     
     def test_build_escapes_special_characters_in_json(self):
         """Test that special characters are properly escaped in embedded JSON."""
