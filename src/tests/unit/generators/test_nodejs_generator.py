@@ -26,7 +26,7 @@ from unittest.mock import Mock, patch
 from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.schemas import CLISchema, CommandSchema, ArgumentSchema, OptionSchema
 from goobits_cli.main import load_goobits_config
-from conftest import create_test_goobits_config, determine_language, generate_cli
+from ...conftest import create_test_goobits_config, determine_language, generate_cli
 
 
 class TestNodeJSGeneratorCore:

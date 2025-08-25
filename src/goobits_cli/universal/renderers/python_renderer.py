@@ -381,7 +381,7 @@ class PythonRenderer(LanguageRenderer):
 
         """
 
-        # Create Jinja2 environment with custom filters
+        # Create Jinja2 environment with custom filters and Unicode support
 
         env = jinja2.Environment(
 
@@ -389,7 +389,13 @@ class PythonRenderer(LanguageRenderer):
 
             trim_blocks=True,
 
-            lstrip_blocks=True
+            lstrip_blocks=True,
+
+            autoescape=False,
+
+            # Enable optimized Unicode handling
+
+            finalize=lambda x: x if x is not None else ''
 
         )
 
@@ -1201,7 +1207,17 @@ setup(
 
     def _js_string_filter(self, value: str) -> str:
 
-        """Escape string for JavaScript (compatibility with universal templates)."""
+        """
+        Escape string for JavaScript while preserving Unicode characters (compatibility with universal templates).
+        
+        Only escapes necessary characters for JavaScript string literals:
+        - Backslashes (must be first to avoid double-escaping)
+        - Quote characters that would break string literals
+        - Control characters that would break JavaScript parsing
+        
+        Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
+        since JavaScript natively supports UTF-8.
+        """
 
         if not isinstance(value, str):
 
@@ -1209,4 +1225,14 @@ setup(
 
         
 
-        return value.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')
+        # Only escape characters that would break JavaScript syntax
+        # Order matters: backslash first to avoid double-escaping
+        escaped = value.replace('\\', '\\\\')  # Escape backslashes first  
+        escaped = escaped.replace('"', '\\"')  # Escape double quotes
+        escaped = escaped.replace("'", "\\'")  # Escape single quotes
+        escaped = escaped.replace('\n', '\\n')  # Escape newlines
+        escaped = escaped.replace('\r', '\\r')  # Escape carriage returns
+        escaped = escaped.replace('\t', '\\t')  # Escape tabs
+        
+        # Do NOT escape Unicode characters - they should be preserved
+        return escaped

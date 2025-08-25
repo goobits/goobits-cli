@@ -155,7 +155,7 @@ class BaseGenerator(ABC):
 
                 'installation': config.installation,
 
-                'hooks_path': config.hooks_path,
+                'hooks_path': config.cli_hooks or config.hooks_path,  # Use cli_hooks, fallback to deprecated hooks_path
 
                 # Add additional metadata fields
 

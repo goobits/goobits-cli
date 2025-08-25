@@ -25,7 +25,7 @@ use anyhow::Result;
 /// Hook function for '{{ command_config.name }}' command
 /// {{ command_config.description if command_config.description is defined else 'No description' }}
 pub fn on_{{ command_config.name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
-    // TODO: Implement your business logic here
+    // Add your business logic here
     println!("Executing {{ command_config.name }} command...");
     
     {%- if command_config.arguments is defined and command_config.arguments %}

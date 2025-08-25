@@ -5,29 +5,6 @@
 
 import chalk from 'chalk';
 
-// Re-export types and enums from types/errors (these will be available at runtime)
-export type {
-  CLIError,
-  CommandError,
-  ValidationError,
-  ConfigError,
-  HookError,
-  PluginError,
-  FileSystemError,
-  NetworkError,
-  SystemError,
-  ErrorContext,
-  ErrorFactory,
-  ErrorHandler,
-  ErrorRecovery,
-  ErrorFormatter,
-  ErrorManager,
-  Result,
-  Success,
-  Failure,
-  BaseCLIError,
-} from '../types/errors.js';
-
 // Define enums and runtime values here (since they can't be imported from .d.ts files)
 export enum ExitCode {
   SUCCESS = 0,
@@ -48,6 +25,39 @@ export enum ErrorSeverity {
   WARNING = 'warning', 
   ERROR = 'error',
   FATAL = 'fatal',
+}
+
+// Type definitions that match those in types/errors.d.ts
+export interface CLIErrorData {
+  readonly name: string;
+  readonly message: string;
+  readonly code: ExitCode;
+  readonly severity: ErrorSeverity;
+  readonly timestamp: string;
+  readonly cause?: Error;
+  readonly context?: Record<string, unknown>;
+}
+
+export type Result<T, E = CLIError> = {
+  success: true;
+  data: T;
+} | {
+  success: false;
+  error: E;
+};
+
+export interface ErrorContext {
+  command?: string;
+  subcommand?: string;
+  args?: string[];
+  options?: Record<string, unknown>;
+  workingDirectory?: string;
+  environment?: Record<string, string>;
+  commandName?: string;
+  parameterName?: string;
+  filePath?: string;
+  metadata?: Record<string, unknown>;
+  cause?: Error;
 }
 
 export enum CLIErrorCode {

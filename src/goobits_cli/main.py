@@ -810,16 +810,24 @@ def build(
 
     
 
+    # Check for deprecated hooks_path field and warn user
+    if hasattr(goobits_config, 'hooks_path') and goobits_config.hooks_path and not goobits_config.cli_hooks:
+        typer.echo("⚠️  WARNING: 'hooks_path' is deprecated and will be removed in v4.0.0 (Q2 2025)", err=True)
+        typer.echo("   Please use 'cli_hooks' instead in your configuration file.", err=True)
+        typer.echo(f"   Current value: hooks_path: \"{goobits_config.hooks_path}\"", err=True)
+        typer.echo(f"   Change to: cli_hooks: \"{goobits_config.hooks_path}\"", err=True)
+        typer.echo("   📖 Migration guide: docs/migration_guides/hooks_path_deprecation.md", err=True)
+
     # Detect language from configuration
 
     language = goobits_config.language
 
     typer.echo(f"Detected language: {language}")
 
-    # Show experimental warning for Universal Template System
+    # Universal Template System is production-ready (v3.0.0+)
     if universal_templates:
-        typer.echo("⚠️  WARNING: Universal Template System is experimental. Use at your own risk.", err=True)
-        typer.echo("   For production use, omit --universal-templates flag to use stable legacy templates.", err=True)
+        typer.echo("✅ Using Universal Template System (production-ready)")
+        typer.echo("   Generating optimized cross-language CLI with enhanced features.")
 
     typer.echo("Generating CLI script...")
 

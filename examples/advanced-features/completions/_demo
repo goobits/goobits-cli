@@ -138,7 +138,7 @@ _demo_api_subcommands() {
 _demo_plugin() {
     local plugin_commands=(
         'list:List all available and loaded plugins'
-        'install:Install a plugin from crates.io'
+        'install:Install a plugin from npm'
         'uninstall:Uninstall a plugin'
         'create:Create a new plugin template'
         'info:Show detailed information about a plugin'
@@ -168,7 +168,7 @@ _demo_plugin() {
                 ;;
             create)
                 _arguments \
-                    '--type[Plugin type]:type:(library binary)' \
+                    '--type[Plugin type]:type:(function class npm)' \
                     '--dir[Output directory]:directory:_directories' \
                     '(-h --help)'{-h,--help}'[Show help for plugin create]' \
                     ':plugin-name:'
@@ -208,3 +208,6 @@ _demo_cache_policy() {
 zstyle ':completion:*:*:demo:*:descriptions' format '%F{green}-- %d --%f'
 zstyle ':completion:*:*:demo:*:commands' group-name commands
 zstyle ':completion:*:*:demo:*:options' group-name options
+
+# Support for npx execution
+compdef _demo "npx demo"

@@ -307,7 +307,7 @@ const program = new Command();
 program
     .name('{{ cli.name }}')
     .version(getVersion())
-    .description(`{% if cli.icon %}{{ cli.icon }} {% endif %}{{ cli.name }}{% if cli.display_version %} v${getVersion()}{% endif %} - {{ cli.tagline }}`)
+    .description(`{% if cli.icon %}{{ cli.icon }} {% endif %}{{ cli.name }}{% if cli.display_version %} v${getVersion()}{% endif %} - {{ cli.tagline | js_string }}`)
     .helpOption('-h, --help', 'Display help for command')
     .configureHelp({
         sortSubcommands: true,
@@ -317,7 +317,7 @@ program
 // Add custom help formatting
 program.addHelpText('after', `
 {% if cli.description %}
-{{ cli.description }}
+{{ cli.description | js_string }}
 {% endif %}
 
 {% if cli.header_sections %}

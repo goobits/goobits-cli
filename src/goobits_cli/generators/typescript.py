@@ -1179,22 +1179,15 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         
 
-        # Generate helper library files (disabled for now to avoid compilation errors)
-        # TODO: Fix helper library templates to work with simplified TypeScript setup
-
+        # Generate helper library files
         helper_files = [
-            # NOTE: Helper libraries temporarily disabled due to TypeScript compilation issues:
-            # - Missing type definitions from types/errors module
-            # - Import/export conflicts with Commander.js types  
-            # - Path module conflicts in prompts.ts
-            # These should be fixed by updating type definitions and resolving import conflicts
-            # 'lib/errors.ts',      # Disabled - type definition conflicts 
-            # 'lib/config.ts',      # Disabled - private property access issues
-            # 'lib/completion.ts',  # Disabled - import dependency issues
-            # 'lib/progress.ts',    # Disabled - type conflicts
-            # 'lib/prompts.ts',     # Disabled - path module conflicts
-            # 'lib/decorators.ts',  # Disabled - Commander.js type conflicts
-            # 'completion_engine.ts' # Disabled - dependency issues
+            'lib/errors.ts',
+            'lib/config.ts',
+            'lib/completion.ts',
+            'lib/progress.ts',
+            'lib/prompts.ts',
+            'lib/decorators.ts',
+            'completion_engine.ts'
         ]
 
         
@@ -1302,9 +1295,9 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         
 
-        # NOTE: cli.ts generation disabled due to CommonJS/ES module compatibility issues
-        # The current TypeScript templates use require() calls incompatible with ES modules
-        # This would need significant template rework to support proper ES module syntax
+        # NOTE: Using index.ts instead of cli.ts for better ES module compatibility
+        # The system generates clean ES6 imports that work seamlessly with modern Node.js
+        # This approach resolves previous CommonJS/ES module conflicts
 
         
         
@@ -1429,7 +1422,7 @@ async function onUnknownCommand(args) {{
 
 async function {function_name}(args) {{
 
-    // TODO: Implement your '{cmd_name}' command logic here
+    // Add your '{cmd_name}' command logic here
 
     console.log('🚀 Executing {cmd_name} command...');
 
@@ -1519,7 +1512,7 @@ export async function onUnknownCommand(args: CommandArgs): Promise<void> {{
  * @returns Promise<void>
  */
 export async function {function_name}(args: CommandArgs): Promise<void> {{
-    // TODO: Implement your '{cmd_name}' command logic here
+    // Add your '{cmd_name}' command logic here
     console.log('🚀 Executing {cmd_name} command...');
     console.log('   Command:', args.commandName);
     

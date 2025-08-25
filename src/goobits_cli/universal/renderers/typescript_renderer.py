@@ -57,11 +57,14 @@ class TypeScriptRenderer(LanguageRenderer):
 
         """Initialize the TypeScript renderer."""
 
-        # Setup Jinja2 environment with custom filters
+        # Setup Jinja2 environment with custom filters and Unicode support
 
         self._env = jinja2.Environment(
             trim_blocks=True,
-            lstrip_blocks=True
+            lstrip_blocks=True,
+            autoescape=False,
+            # Enable optimized Unicode handling
+            finalize=lambda x: x if x is not None else ''
         )
 
         self._add_custom_filters()
@@ -118,15 +121,9 @@ class TypeScriptRenderer(LanguageRenderer):
 
         """
 
-        # Start with base IR context
+        # Start with base IR context and set language
 
-        context = ir.copy()
-
-        
-
-        # CRITICAL: Set language for universal template conditional logic
-
-        context['language'] = 'typescript'
+        context = self._set_language_context(ir)
 
         
 
@@ -1296,7 +1293,17 @@ class TypeScriptRenderer(LanguageRenderer):
 
     def _js_string_filter(self, value: str) -> str:
 
-        """Escape string for JavaScript/TypeScript."""
+        """
+        Escape string for JavaScript/TypeScript while preserving Unicode characters.
+        
+        Only escapes necessary characters for JavaScript/TypeScript string literals:
+        - Backslashes (must be first to avoid double-escaping)
+        - Quote characters that would break string literals
+        - Control characters that would break JavaScript parsing
+        
+        Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
+        since JavaScript/TypeScript natively supports UTF-8.
+        """
 
         if not isinstance(value, str):
 
@@ -1304,4 +1311,14 @@ class TypeScriptRenderer(LanguageRenderer):
 
         
 
-        return value.replace("'", "\\'").replace('"', '\\"').replace('\n', '\\n')
+        # Only escape characters that would break JavaScript/TypeScript syntax
+        # Order matters: backslash first to avoid double-escaping
+        escaped = value.replace('\\', '\\\\')  # Escape backslashes first
+        escaped = escaped.replace('"', '\\"')  # Escape double quotes 
+        escaped = escaped.replace("'", "\\'")  # Escape single quotes
+        escaped = escaped.replace('\n', '\\n')  # Escape newlines
+        escaped = escaped.replace('\r', '\\r')  # Escape carriage returns  
+        escaped = escaped.replace('\t', '\\t')  # Escape tabs
+        
+        # Do NOT escape Unicode characters - they should be preserved
+        return escaped

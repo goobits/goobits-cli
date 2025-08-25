@@ -9,7 +9,7 @@
 **MISSION STATUS**: ✅ **PARTIALLY SUCCESSFUL**  
 **CRITICAL FINDING**: Generated CLIs meet performance targets, but advanced features integration introduces significant overhead
 
-**⚠️ NOTE**: This report tests the legacy main CLI. Current v2.0.0-beta.3 generated CLI achieves ~72ms startup time.
+**⚠️ NOTE**: This report tests the legacy main CLI. Current v3.0.0-alpha.1 generated CLI achieves ~72ms startup time.
 
 ### Key Performance Metrics
 - **Generated CLI Performance**: 88.7ms ✅ (target: <100ms)

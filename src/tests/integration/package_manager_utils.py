@@ -735,3 +735,59 @@ def cleanup_global_packages(packages_to_clean: List[Dict[str, str]]):
             })
     
     return cleanup_results
+
+
+class TestPathManager:
+    """Utility for managing PATH modifications during tests."""
+    
+    def __init__(self):
+        self._path_additions = []
+        self._original_path = os.environ.get('PATH', '')
+    
+    def add_to_path(self, path_dir: Path, reason: str = None):
+        """
+        Add directory to PATH with tracking for cleanup.
+        
+        Args:
+            path_dir: Directory to add to PATH
+            reason: Optional reason for logging
+        """
+        path_str = str(path_dir.resolve())
+        
+        if path_dir.exists() and path_str not in os.environ['PATH']:
+            new_path = f"{path_str}{os.pathsep}{os.environ['PATH']}"
+            os.environ['PATH'] = new_path
+            self._path_additions.append(path_str)
+            
+            if reason:
+                print(f"Added to PATH: {path_str} ({reason})")
+    
+    def add_scoped_venv_to_path(self, temp_dir: Path):
+        """Add scoped Python virtual environment to PATH."""
+        venv_bin = temp_dir / ".test_venv" / "bin"
+        if not venv_bin.exists():
+            venv_bin = temp_dir / ".test_venv" / "Scripts"  # Windows
+        
+        if venv_bin.exists():
+            self.add_to_path(venv_bin, "scoped Python venv")
+    
+    def add_npm_prefix_to_path(self, temp_dir: Path):
+        """Add npm prefix bin directory to PATH."""
+        npm_prefix_bin = temp_dir / ".npm_prefix" / "bin"
+        if npm_prefix_bin.exists():
+            self.add_to_path(npm_prefix_bin, "npm prefix")
+    
+    def add_cargo_home_to_path(self, temp_dir: Path):
+        """Add cargo home bin directory to PATH."""
+        cargo_bin = temp_dir / ".cargo_home" / "bin"
+        if cargo_bin.exists():
+            self.add_to_path(cargo_bin, "cargo home")
+    
+    def cleanup(self):
+        """Restore original PATH by removing all tracked additions."""
+        os.environ['PATH'] = self._original_path
+        self._path_additions.clear()
+    
+    def get_path_additions(self) -> List[str]:
+        """Return list of directories added to PATH."""
+        return self._path_additions.copy()

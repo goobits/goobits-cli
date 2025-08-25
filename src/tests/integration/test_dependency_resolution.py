@@ -16,7 +16,8 @@ import pytest
 
 from .package_manager_utils import (
     PackageManagerRegistry, validate_installation_environment,
-    PipManager, NpmManager, CargoManager, TestEnvironmentManager
+    PipManager, NpmManager, CargoManager, TestEnvironmentManager,
+    TestPathManager
 )
 from .test_configs import TestConfigTemplates
 from goobits_cli.schemas import GoobitsConfigSchema
@@ -174,14 +175,11 @@ class TestDependencyResolution:
         self.installed_packages = []
         self.env_info = validate_installation_environment()
         
-        # Store original PATH for restoration
-        self._original_path = os.environ.get('PATH', '')
+        # Initialize PATH manager for clean PATH handling
+        self.path_manager = TestPathManager()
         
         # Store original NODE_PATH if it exists
         self._original_node_path = os.environ.get('NODE_PATH', '')
-        
-        # Track PATH additions for proper cleanup
-        self._path_additions = []
     
     def teardown_method(self, method):
         """Clean up after each test method to prevent pollution."""
@@ -209,8 +207,8 @@ class TestDependencyResolution:
         # Clean up pip installed packages
         self._cleanup_pip_packages()
         
-        # Reset environment PATH
-        self._reset_environment_path()
+        # Reset environment PATH using PATH manager
+        self.path_manager.cleanup()
     
     def _create_temp_dir(self) -> str:
         """Create temporary directory for testing."""
@@ -369,15 +367,8 @@ class TestDependencyResolution:
                     # Use scoped installation instead of global
                     PipManager.install_editable_scoped(temp_dir)
                     
-                    # CRITICAL: Update PATH to include the scoped venv
-                    venv_bin = Path(temp_dir) / ".test_venv" / "bin"
-                    if not venv_bin.exists():
-                        venv_bin = Path(temp_dir) / ".test_venv" / "Scripts"  # Windows
-                    
-                    if venv_bin.exists():
-                        new_path = f"{venv_bin}{os.pathsep}{os.environ['PATH']}"
-                        os.environ['PATH'] = new_path
-                        self._path_additions.append(str(venv_bin))
+                    # Add scoped venv to PATH using path manager
+                    self.path_manager.add_scoped_venv_to_path(Path(temp_dir))
                     
                     self._track_installation("pip", config.package_name)
                 else:
@@ -440,12 +431,8 @@ process.exit(0);
                         # If npm link fails, create direct symlink as fallback
                         pass
                     
-                    # CRITICAL: Make the CLI command accessible
-                    npm_prefix_bin = Path(temp_dir) / ".npm_prefix" / "bin"
-                    if npm_prefix_bin.exists():
-                        new_path = f"{npm_prefix_bin}{os.pathsep}{os.environ['PATH']}"
-                        os.environ['PATH'] = new_path
-                        self._path_additions.append(str(npm_prefix_bin))
+                    # Add npm prefix to PATH using path manager
+                    self.path_manager.add_npm_prefix_to_path(Path(temp_dir))
                     
                     # Alternative: Create direct symlink if npm link fails
                     cli_source = Path(temp_dir) / "cli.js"
@@ -478,12 +465,8 @@ process.exit(0);
                         # Use scoped cargo installation
                         CargoManager.install_from_path_scoped(temp_dir)
                         
-                        # CRITICAL: Update PATH to include cargo home bin
-                        cargo_bin = Path(temp_dir) / ".cargo_home" / "bin"
-                        if cargo_bin.exists():
-                            new_path = f"{cargo_bin}{os.pathsep}{os.environ['PATH']}"
-                            os.environ['PATH'] = new_path
-                            self._path_additions.append(str(cargo_bin))
+                        # Add cargo home to PATH using path manager
+                        self.path_manager.add_cargo_home_to_path(Path(temp_dir))
                         
                         self._track_installation("cargo", config.package_name)
                     except subprocess.CalledProcessError as e:

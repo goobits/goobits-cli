@@ -24,7 +24,7 @@ from goobits_cli.main import (
     generate_text_processor_template, version_callback
 )
 from goobits_cli.schemas import GoobitsConfigSchema
-from tests.unit.core.test_base import TestMainCLIBase
+from .test_base import TestMainCLIBase
 
 
 # ============================================================================

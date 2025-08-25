@@ -143,12 +143,10 @@ complete -F _demo_completions demo
 
 # Also register for common variations
 
-# Support for cargo installation paths
-if [[ -n "${CARGO_HOME:-}" ]]; then
-    complete -F _demo_completions "${CARGO_HOME}/bin/demo"
+# Support for npm global installation (TypeScript CLIs are often distributed via npm)
+if [[ -n "${NPM_CONFIG_PREFIX:-}" ]]; then
+    complete -F _demo_completions "${NPM_CONFIG_PREFIX}/bin/demo"
 fi
 
-# Support for default cargo binary location
-if [[ -d "$HOME/.cargo/bin" ]]; then
-    complete -F _demo_completions "$HOME/.cargo/bin/demo"
-fi
+# Support for npx execution
+complete -F _demo_completions "npx demo"

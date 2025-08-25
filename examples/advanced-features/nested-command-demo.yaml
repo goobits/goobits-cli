@@ -1,5 +1,5 @@
 # Nested Command Demonstration
-# This example showcases the proposed nested command capabilities
+# This example showcases unlimited nested command capabilities (fully supported)
 
 package_name: nested-demo
 command_name: demo
@@ -30,7 +30,7 @@ cli:
       subcommands:
         users:
           desc: "User management" 
-          args:  # BUG: These args are ignored in current system
+          args:
             - name: action
               desc: "Action to perform"
           options:
@@ -46,7 +46,7 @@ cli:
               type: flag
               desc: "Compress backup file"
     
-    # Level 3+: BROKEN in current system (proposed feature)
+    # Level 3+: ✅ FULLY SUPPORTED - Unlimited nested command depth
     api:
       desc: "API management"
       subcommands:

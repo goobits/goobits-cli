@@ -170,13 +170,6 @@ class TestTypeScriptGenerator:
         # Universal Templates might use different CLI frameworks
         assert len(cli_content) > 0, "Generated TypeScript CLI content is empty"
     
-    @pytest.mark.skip(reason="Universal Template System handles template errors more robustly - this error condition no longer occurs")
-    def test_typescript_template_rendering_failure(self):
-        """Test handling of template rendering failures."""
-        # This test is no longer relevant with the Universal Template System
-        # as it handles template rendering more robustly and doesn't raise
-        # exceptions in the same way as the legacy template system
-        pass
     
     def test_typescript_unicode_special_characters(self):
         """Test TypeScript generator with unicode and special characters."""

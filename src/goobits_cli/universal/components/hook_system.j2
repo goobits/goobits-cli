@@ -142,7 +142,7 @@ def {{ command.hook_name }}({% for arg in command.arguments %}{{ arg.name }}{% i
         {{ option.name.replace('-', '_') }} ({% if option.type == 'boolean' %}bool{% elif option.type == 'integer' %}int{% elif option.type == 'float' %}float{% else %}str{% endif %}): {{ option.description }}
 {%- endfor %}
     """
-    # TODO: Implement your business logic here
+    # Add your business logic here
     print(f"Hook {{ command.hook_name }} called")
     {%- if command.arguments %}
     print(f"Arguments: {%- for arg in command.arguments %}{{ arg.name }}={{ '{' }}{{ arg.name }}{{ '}' }}{% if not loop.last %}, {% endif %}{% endfor %}")
@@ -298,7 +298,7 @@ const path = require('path');
  * @returns {{ '{' }}Promise<void>{{ '}' }}
  */
 async function {{ command.hook_name }}({% for arg in command.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.arguments and command.options %}, {% endif %}{% if command.options %}options{% endif %}) {
-    // TODO: Implement your business logic here
+    // Add your business logic here
     console.log('Hook {{ command.hook_name }} called');
     {%- if command.arguments %}
     console.log('Arguments:', { {{ command.arguments | map(attribute='name') | join(', ') }} });
@@ -491,7 +491,7 @@ export async function {{ command.hook_name }}(
     }
 {%- endif %}
 ): Promise<void> {
-    // TODO: Implement your business logic here
+    // Add your business logic here
     console.log('Hook {{ command.hook_name }} called');
     {%- if command.arguments %}
     console.log('Arguments:', { {{ command.arguments | map(attribute='name') | join(', ') }} });
@@ -563,7 +563,7 @@ use anyhow::{Result, anyhow};
 /// Hook function for '{{ command_config.name }}' command
 /// {{ command_config.description if command_config.description is defined else 'No description' }}
 pub fn on_{{ command_config.name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
-    // TODO: Implement your business logic here
+    // Add your business logic here
     println!("Executing {{ command_config.name }} command...");
     {% if command_config.arguments is defined and command_config.arguments %}
     
@@ -613,7 +613,7 @@ pub fn on_{{ command_config.name | replace('-', '_') }}(matches: &ArgMatches) ->
 /// Hook function for '{{ command_config.name }} {{ subcommand_name }}' command
 /// {{ subcommand_config.description if subcommand_config.description is defined else subcommand_config.desc if subcommand_config.desc is defined else 'No description' }}
 pub fn on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
-    // TODO: Implement your business logic here
+    // Add your business logic here
     println!("Executing {{ command_config.name }} {{ subcommand_name }} command...");
     {% if subcommand_config.arguments is defined and subcommand_config.arguments %}
     
@@ -663,7 +663,7 @@ pub fn on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_name | rep
 /// Hook function for '{{ command_config.name }} {{ subcommand_config.name }}' command
 /// {{ subcommand_config.description if subcommand_config.description is defined else subcommand_config.desc if subcommand_config.desc is defined else 'No description' }}
 pub fn on_{{ command_config.name | replace('-', '_') }}_{{ subcommand_config.name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
-    // TODO: Implement your business logic here
+    // Add your business logic here
     println!("Executing {{ command_config.name }} {{ subcommand_config.name }} command...");
     {% if subcommand_config.arguments is defined and subcommand_config.arguments %}
     

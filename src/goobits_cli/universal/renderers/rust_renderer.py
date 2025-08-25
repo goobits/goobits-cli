@@ -119,15 +119,9 @@ class RustRenderer(LanguageRenderer):
 
         """
 
-        # Start with base IR context
+        # Start with base IR context and set language
 
-        context = ir.copy()
-
-        
-
-        # CRITICAL: Set language for universal template conditional logic
-
-        context['language'] = 'rust'
+        context = self._set_language_context(ir)
 
         
 

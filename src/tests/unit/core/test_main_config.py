@@ -18,7 +18,7 @@ from typer.testing import CliRunner
 
 from goobits_cli.main import load_goobits_config
 from goobits_cli.schemas import GoobitsConfigSchema
-from tests.unit.core.test_base import TestMainCLIBase
+from .test_base import TestMainCLIBase
 
 
 # ============================================================================

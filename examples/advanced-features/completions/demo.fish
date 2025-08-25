@@ -131,7 +131,7 @@ function __demo_complete_plugin
     if test (count $subcmd) -eq 0
         echo 'list\tList all available and loaded plugins'
         echo 'ls\tList all available and loaded plugins'
-        echo 'install\tInstall a plugin from crates.io'
+        echo 'install\tInstall a plugin from npm'
         echo 'uninstall\tUninstall a plugin'
         echo 'remove\tUninstall a plugin'
         echo 'create\tCreate a new plugin template'
@@ -154,7 +154,7 @@ function __demo_complete_plugin
                 echo '--help\tShow help for plugin uninstall'
                 echo '-h\tShow help for plugin uninstall'
             case 'create'
-                echo '--type\tPlugin type (library|binary)'
+                echo '--type\tPlugin type (function|class|npm)'
                 echo '--dir\tOutput directory'
                 echo '--help\tShow help for plugin create'
                 echo '-h\tShow help for plugin create'
@@ -202,7 +202,7 @@ complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcomm
 complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from install' -l global -s g -d 'Install globally'
 complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from install' -l version -d 'Install specific version'
 complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from uninstall' -l global -s g -d 'Uninstall globally'
-complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from create' -l type -d 'Plugin type' -a 'library binary'
+complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from create' -l type -d 'Plugin type' -a 'function class npm'
 complete -c demo -n '__fish_seen_subcommand_from plugin; and __fish_seen_subcommand_from create' -l dir -d 'Output directory' -a '(__fish_complete_directories)'
 
 # Upgrade command options
@@ -214,3 +214,6 @@ complete -c demo -n '__fish_seen_subcommand_from upgrade' -l dry-run -d 'Show wh
 # File completion for certain options
 complete -c demo -n '__fish_prev_arg_in --config --file -f' -a '(__fish_complete_path)'
 complete -c demo -n '__fish_prev_arg_in --dir --directory -d' -a '(__fish_complete_directories)'
+
+# Support for npx execution
+complete -c npx -n '__fish_prev_arg_in npx && __fish_seen_subcommand_from demo' -f -a '(__demo_complete)'

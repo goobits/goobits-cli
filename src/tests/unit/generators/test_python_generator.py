@@ -138,13 +138,6 @@ class TestPythonGenerator:
         assert has_imports, f"No imports found in CLI: {cli_content[:200]}"
         assert has_main or 'def ' in cli_content, f"No function definitions found in CLI: {cli_content[:200]}"
     
-    @pytest.mark.skip(reason="Universal Template System handles template errors more robustly - this error condition no longer occurs")
-    def test_python_template_rendering_failure(self):
-        """Test handling of template rendering failures."""
-        # This test is no longer relevant with the Universal Template System
-        # as it handles template rendering more robustly and doesn't raise
-        # exceptions in the same way as the legacy template system
-        pass
     
     def test_python_unicode_special_characters(self):
         """Test Python generator with unicode and special characters."""

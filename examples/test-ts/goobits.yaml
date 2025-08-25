@@ -1,0 +1,17 @@
+package_name: test_ts
+command_name: testts
+display_name: "Test TypeScript"
+description: "Test TypeScript helper libraries"
+language: typescript
+
+cli:
+  name: testts
+  version: "1.0.0"
+  tagline: "Test TS compilation"
+  
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        - name: name
+          desc: "Name to greet"

@@ -130,11 +130,10 @@ class NodeJSRenderer(LanguageRenderer):
 
         
 
+        # Start with base IR context and set language
+        context = self._set_language_context(ir)
+
         context.update({
-
-            # CRITICAL: Set language for universal template conditional logic
-
-            "language": "nodejs",
 
             
 
@@ -300,7 +299,9 @@ class NodeJSRenderer(LanguageRenderer):
                 loader=jinja2.BaseLoader(),
                 autoescape=False,
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
+                # Enable optimized Unicode handling
+                finalize=lambda x: x if x is not None else ''
             )
 
             # Add custom filters
@@ -1203,7 +1204,17 @@ class NodeJSRenderer(LanguageRenderer):
 
     def _js_string_filter(self, value: str) -> str:
 
-        """Escape string for JavaScript and wrap in quotes."""
+        """
+        Escape string for JavaScript while preserving Unicode characters and wrap in quotes.
+        
+        Only escapes necessary characters for JavaScript string literals:
+        - Backslashes (must be first to avoid double-escaping)
+        - Quote characters that would break string literals  
+        - Control characters that would break JavaScript parsing
+        
+        Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
+        since JavaScript natively supports UTF-8.
+        """
 
         if not isinstance(value, str):
 
@@ -1211,8 +1222,15 @@ class NodeJSRenderer(LanguageRenderer):
 
         
 
-        escaped = value.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+        # Only escape characters that would break JavaScript syntax
+        # Order matters: backslash first to avoid double-escaping
+        escaped = value.replace('\\', '\\\\')  # Escape backslashes first
+        escaped = escaped.replace('"', '\\"')  # Escape double quotes
+        escaped = escaped.replace('\n', '\\n')  # Escape newlines
+        escaped = escaped.replace('\r', '\\r')  # Escape carriage returns
+        escaped = escaped.replace('\t', '\\t')  # Escape tabs
 
+        # Do NOT escape Unicode characters - they should be preserved
         return f'"{escaped}"'
 
     

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nested-demo"
 version = "1.0.0"
-description = "Demonstration of deep nested command capabilities"
+description = "Deep nesting demo"
 readme = "README.md"
 keywords = []
 classifiers = [ "Development Status :: 4 - Beta", "Intended Audience :: Developers", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3.8", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Topic :: Software Development :: Libraries :: Python Modules", "Topic :: System :: Systems Administration", "Topic :: Utilities",]
@@ -16,6 +16,9 @@ name = "Unknown Author"
 
 [project.license]
 text = "MIT"
+
+[project.optional-dependencies]
+dev = [ "pytest>=7.0.0", "pytest-cov>=4.0.0", "black>=22.0.0", "flake8>=6.0.0", "mypy>=1.0.0",]
 
 [project.urls]
 

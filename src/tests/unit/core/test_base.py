@@ -1,8 +1,8 @@
 """
-Shared test base classes and utilities for main CLI tests.
+Base test class for main CLI functionality.
 
-This module provides common setup, fixtures, and helper methods
-used across all main CLI test files.
+This module provides the shared TestMainCLIBase class that contains
+common setup, teardown, and helper methods used by multiple test modules.
 """
 import pytest
 import tempfile

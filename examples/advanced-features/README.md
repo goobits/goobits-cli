@@ -9,7 +9,7 @@ Demonstration of deep nested command capabilities
 ### From Package Manager (Recommended)
 
 ```bash
-cargo install nested-demo
+npm install -g nested-demo
 ```
 
 ### From Source
@@ -96,7 +96,11 @@ demo --verbose invalid-command   # Detailed error with stack trace
 
 ## Configuration
 
-The CLI stores configuration in `~/.config/nested-demo/config.yaml`.
+Configuration locations:
+
+- **Linux**: `~/.config/nested-demo/`
+- **macOS**: `~/Library/Application Support/nested-demo/`
+- **Windows**: `%APPDATA%\nested-demo\`
 
 You can edit this file directly or use the CLI to manage settings.
 
@@ -127,31 +131,34 @@ demo simple
 ### Building
 
 ```bash
-# Debug build
-cargo build
+# Install dependencies
+npm install
 
-# Release build
-cargo build --release
+# Build (if TypeScript)
+npm run build
+
+# Run tests
+npm test
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-cargo test
+npm test
 
-# Run tests with output
-cargo test -- --nocapture
+# Run with coverage
+npm run test:coverage
 ```
 
 ### Running
 
 ```bash
-# Run from source (debug)
-cargo run -- --help
+# Run from source (development)
+node cli.js --help
 
-# Run specific command
-cargo run -- simple --help
+# Or using npm link
+npm link && demo --help
 ```
 
 ## Shell Completions
@@ -190,21 +197,20 @@ cp completions/demo.fish ~/.config/fish/completions/
 
 This CLI is built using:
 
-- **[Clap](https://docs.rs/clap/)**: Command-line argument parsing with derive macros
-- **[Anyhow](https://docs.rs/anyhow/)**: Flexible error handling
-- **[Serde](https://docs.rs/serde/)**: Serialization/deserialization for configuration
-- **[Tokio](https://docs.rs/tokio/)**: Async runtime (optional feature)
+- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
+- **[TypeScript](https://www.typescriptlang.org/)**: Typed superset of JavaScript
+- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
 
 ### Project Structure
 
 ```
-src/
-├── main.rs          # CLI entry point and command definitions
-├── lib.rs           # Library exports and core functionality  
-├── config.rs        # Configuration management
-├── commands.rs      # Command implementations
-├── hooks.rs         # User-defined business logic
-└── utils.rs         # Utility functions
+├── cli.ts           # CLI entry point
+├── package.json         # NPM package configuration
+├── src/
+│   ├── hooks.ts       # User-defined business logic
+│   ├── config.ts      # Configuration management
+│   └── utils.ts       # Utility functions
+└── completions/         # Shell completion scripts
 ```
 
 ## Contributing

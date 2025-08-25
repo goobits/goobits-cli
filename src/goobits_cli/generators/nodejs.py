@@ -211,8 +211,36 @@ class NodeJSGenerator(BaseGenerator):
             """Escape backtick characters for safe template rendering."""
             return text.replace('`', '\\`')
 
+        def js_string(value: str) -> str:
+            """
+            Escape string for JavaScript while preserving Unicode characters (legacy template compatibility).
+            
+            Only escapes necessary characters for JavaScript string literals:
+            - Backslashes (must be first to avoid double-escaping)
+            - Quote characters that would break string literals
+            - Control characters that would break JavaScript parsing
+            
+            Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
+            since JavaScript natively supports UTF-8.
+            """
+            if not isinstance(value, str):
+                return str(value)
+            
+            # Only escape characters that would break JavaScript syntax
+            # Order matters: backslash first to avoid double-escaping
+            escaped = value.replace('\\', '\\\\')  # Escape backslashes first
+            escaped = escaped.replace('"', '\\"')  # Escape double quotes
+            escaped = escaped.replace("'", "\\'")  # Escape single quotes
+            escaped = escaped.replace('\n', '\\n')  # Escape newlines
+            escaped = escaped.replace('\r', '\\r')  # Escape carriage returns
+            escaped = escaped.replace('\t', '\\t')  # Escape tabs
+            
+            # Do NOT escape Unicode characters - they should be preserved
+            return escaped
+
         self.env.filters['json_stringify'] = json_stringify
         self.env.filters['escape_backticks'] = escape_backticks
+        self.env.filters['js_string'] = js_string
 
         self.env.filters['align_header_items'] = align_header_items
 
@@ -1480,7 +1508,7 @@ export default cli;
 
 export async function on{safe_cmd_name.replace('_', '').title()}(args) {{
 
-    // TODO: Implement your '{cmd_name}' command logic here
+    // Add your '{cmd_name}' command logic here
 
     console.log('🚀 Executing {cmd_name} command...');
 
