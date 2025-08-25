@@ -566,7 +566,7 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
         if language not in generators:
             raise ValueError(f"Unsupported language: {language}")
         
-        return generators[language](use_universal_templates=False)
+        return generators[language](use_universal_templates=True)
     
     def _test_language_specific_integration(self, language: str, temp_dir: str, all_files: Dict[str, str], 
                                          config: GoobitsConfigSchema) -> Dict[str, Any]:

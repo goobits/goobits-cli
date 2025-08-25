@@ -61,7 +61,7 @@ class TestCLIE2E:
         # Generate CLI using Python generator
         from goobits_cli.generators.python import PythonGenerator
         
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator(use_universal_templates=True)
         result = generator.generate(test_config, str(tmp_path))
         
         # Verify generation succeeded
@@ -81,7 +81,7 @@ class TestCLIE2E:
         """Test that generated CLI produces valid help output."""
         from goobits_cli.generators.python import PythonGenerator
         
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator(use_universal_templates=True)
         generator.generate(test_config, str(tmp_path))
         
         cli_file = tmp_path / "cli.py"
@@ -141,7 +141,7 @@ class TestNodeJSGeneratorE2E:
 
     def test_nodejs_generator_e2e(self, sample_nodejs_config, tmp_path):
         """Test Node.js generator end-to-end workflow."""
-        generator = NodeJSGenerator(use_universal_templates=False)
+        generator = NodeJSGenerator(use_universal_templates=True)
         
         # Generate the CLI
         result = generator.generate(sample_nodejs_config, str(tmp_path))
@@ -166,7 +166,7 @@ class TestNodeJSGeneratorE2E:
 
     def test_typescript_generator_e2e(self, sample_nodejs_config, tmp_path):
         """Test TypeScript generator end-to-end workflow."""
-        generator = TypeScriptGenerator(use_universal_templates=False)
+        generator = TypeScriptGenerator(use_universal_templates=True)
         
         # Generate the CLI
         result = generator.generate(sample_nodejs_config, str(tmp_path))
@@ -198,7 +198,7 @@ class TestNodeJSGeneratorE2E:
     )
     def test_nodejs_cli_syntax_validation(self, sample_nodejs_config, tmp_path):
         """Test that generated Node.js CLI has valid syntax."""
-        generator = NodeJSGenerator(use_universal_templates=False)
+        generator = NodeJSGenerator(use_universal_templates=True)
         generator.generate(sample_nodejs_config, str(tmp_path))
         
         cli_file = tmp_path / "cli.js"
@@ -241,7 +241,7 @@ class TestCompleteWorkflowValidation:
         
         # Generate CLI
         from goobits_cli.generators.python import PythonGenerator
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify basic structure
@@ -269,7 +269,7 @@ class TestCompleteWorkflowValidation:
         })
         
         # Generate CLI
-        generator = NodeJSGenerator(use_universal_templates=False)
+        generator = NodeJSGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify basic structure
@@ -298,7 +298,7 @@ class TestCompleteWorkflowValidation:
         
         # Generate CLI
         from goobits_cli.generators.typescript import TypeScriptGenerator
-        generator = TypeScriptGenerator(use_universal_templates=False)
+        generator = TypeScriptGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify basic structure
@@ -331,7 +331,7 @@ class TestCompleteWorkflowValidation:
         
         # Generate CLI
         from goobits_cli.generators.rust import RustGenerator
-        generator = RustGenerator(use_universal_templates=False)
+        generator = RustGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify basic structure

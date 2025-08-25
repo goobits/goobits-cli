@@ -388,9 +388,11 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                     command_name=getattr(config, 'command_name', config.cli.name),
 
+                    display_name=getattr(config, 'display_name', config.cli.name.title()),
+
                     description=getattr(config.cli, 'tagline', getattr(config, 'description', config.cli.description)),
 
-                    cli=config,
+                    cli=config.cli,
 
                     installation=getattr(config, 'installation', None)
 

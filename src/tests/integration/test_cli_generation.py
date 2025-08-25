@@ -210,7 +210,7 @@ class TestCLIGenerationIntegration:
         })
         
         # Generate Python CLI
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify generation was successful
@@ -242,7 +242,7 @@ class TestCLIGenerationIntegration:
         })
         
         # Generate Node.js CLI
-        generator = NodeJSGenerator(use_universal_templates=False)
+        generator = NodeJSGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify generation was successful
@@ -280,7 +280,7 @@ class TestCLIGenerationIntegration:
         })
         
         # Generate Rust CLI
-        generator = RustGenerator(use_universal_templates=False)
+        generator = RustGenerator(use_universal_templates=True)
         result = generator.generate(config, str(tmp_path))
         
         # Verify generation was successful
@@ -331,7 +331,7 @@ class TestCLIGenerationIntegration:
             lang_dir.mkdir()
             
             try:
-                generator = generator_class(use_universal_templates=False)
+                generator = generator_class(use_universal_templates=True)
                 result = generator.generate(config, str(lang_dir))
                 results[lang] = {"success": result is not None, "error": None}
             except Exception as e:

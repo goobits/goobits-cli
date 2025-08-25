@@ -566,9 +566,11 @@ class NodeJSGenerator(BaseGenerator):
 
                     command_name=getattr(config, 'command_name', config.cli.name),
 
+                    display_name=getattr(config, 'display_name', config.cli.name.title()),
+
                     description=getattr(config, 'description', config.cli.description or config.cli.tagline),
 
-                    cli=config,
+                    cli=config.cli,
 
                     installation=getattr(config, 'installation', None)
 
