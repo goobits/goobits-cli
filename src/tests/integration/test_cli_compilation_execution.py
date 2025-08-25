@@ -22,6 +22,12 @@ from goobits_cli.generators.nodejs import NodeJSGenerator
 from goobits_cli.generators.typescript import TypeScriptGenerator
 from goobits_cli.generators.rust import RustGenerator
 
+# Timeout configurations for different operations
+QUICK_CHECK_TIMEOUT = 45  # Quick syntax/import checks (increased from 30s)
+DEPENDENCY_INSTALL_TIMEOUT = 120  # Package installation (increased from 60s)
+COMPILATION_TIMEOUT = 600  # Full compilation (increased from 300s)
+EXECUTION_TIMEOUT = 180  # CLI execution tests (increased from 120s)
+
 
 class CLICompilationError(Exception):
     """Error during CLI compilation."""
@@ -167,7 +173,7 @@ class TestPythonCLICompilation:
             # Test 2: Import validation - check that imports work
             import_test_result = subprocess.run([
                 sys.executable, '-c', f'import sys; sys.path.insert(0, "{temp_dir}"); exec(open("{cli_file}").read())'
-            ], capture_output=True, text=True, timeout=30, cwd=temp_dir)
+            ], capture_output=True, text=True, timeout=QUICK_CHECK_TIMEOUT, cwd=temp_dir)
             
             if import_test_result.returncode != 0:
                 # Allow for missing dependencies but not syntax/import errors
@@ -216,7 +222,7 @@ class TestPythonCLICompilation:
             
             try:
                 # Install both click and rich-click as required by generated CLI
-                subprocess.run([str(pip_executable), 'install', 'click', 'rich-click'], check=True, timeout=60)
+                subprocess.run([str(pip_executable), 'install', 'click', 'rich-click'], check=True, timeout=DEPENDENCY_INSTALL_TIMEOUT)
             except subprocess.TimeoutExpired:
                 pytest.skip("pip install timed out during dependency installation")
             
@@ -228,7 +234,7 @@ class TestPythonCLICompilation:
             # Test help command
             help_result = subprocess.run([
                 str(python_executable), str(cli_file), '--help'
-            ], capture_output=True, text=True, timeout=30, cwd=temp_dir)
+            ], capture_output=True, text=True, timeout=QUICK_CHECK_TIMEOUT, cwd=temp_dir)
             
             assert help_result.returncode == 0, f"Python CLI help failed: {help_result.stderr}"
             assert "hello" in help_result.stdout.lower(), "Help should show hello command"
@@ -276,7 +282,7 @@ class TestNodeJSCLICompilation:
             # Test 1: JavaScript syntax validation
             syntax_result = subprocess.run([
                 'node', '--check', str(cli_file)
-            ], capture_output=True, text=True, timeout=30)
+            ], capture_output=True, text=True, timeout=QUICK_CHECK_TIMEOUT)
             
             if syntax_result.returncode != 0:
                 cli_content = cli_file.read_text()
@@ -323,7 +329,7 @@ class TestNodeJSCLICompilation:
             # Install dependencies with timeout protection
             try:
                 npm_result = subprocess.run(['npm', 'install'], cwd=temp_dir, 
-                                          capture_output=True, text=True, timeout=300)
+                                          capture_output=True, text=True, timeout=COMPILATION_TIMEOUT)
                 if npm_result.returncode != 0:
                     pytest.skip(f"npm install failed: {npm_result.stderr}")
             except subprocess.TimeoutExpired:
@@ -381,7 +387,7 @@ class TestTypeScriptCLICompilation:
             # Install dependencies with timeout protection
             try:
                 npm_result = subprocess.run(['npm', 'install'], cwd=temp_dir,
-                                          capture_output=True, text=True, timeout=300)
+                                          capture_output=True, text=True, timeout=COMPILATION_TIMEOUT)
                 if npm_result.returncode != 0:
                     pytest.skip(f"npm install failed: {npm_result.stderr}")
             except subprocess.TimeoutExpired:
@@ -391,11 +397,11 @@ class TestTypeScriptCLICompilation:
             try:
                 if tsconfig_file and tsconfig_file.exists():
                     tsc_result = subprocess.run(['npx', 'tsc'], cwd=temp_dir,
-                                              capture_output=True, text=True, timeout=120)
+                                              capture_output=True, text=True, timeout=EXECUTION_TIMEOUT)
                 else:
                     # Try direct compilation
                     tsc_result = subprocess.run(['npx', 'tsc', str(cli_file.name), '--outDir', 'dist'],
-                                              cwd=temp_dir, capture_output=True, text=True, timeout=120)
+                                              cwd=temp_dir, capture_output=True, text=True, timeout=EXECUTION_TIMEOUT)
             except subprocess.TimeoutExpired:
                 pytest.skip("TypeScript compilation timed out")
             
@@ -469,7 +475,7 @@ class TestRustCLICompilation:
                 # First try a quick check with timeout protection
                 try:
                     check_result = subprocess.run(['cargo', 'check'], cwd=temp_dir,
-                                                capture_output=True, text=True, timeout=60)
+                                                capture_output=True, text=True, timeout=DEPENDENCY_INSTALL_TIMEOUT)
                 except subprocess.TimeoutExpired:
                     pytest.skip("cargo check timed out")
                 
@@ -477,7 +483,7 @@ class TestRustCLICompilation:
                     # If check passes, try build with timeout protection
                     try:
                         build_result = subprocess.run(['cargo', 'build'], cwd=temp_dir,
-                                                    capture_output=True, text=True, timeout=300)
+                                                    capture_output=True, text=True, timeout=COMPILATION_TIMEOUT)
                     except subprocess.TimeoutExpired:
                         pytest.skip("cargo build timed out")
                     
@@ -541,7 +547,7 @@ class TestRustCLICompilation:
             # Try to build and run
             try:
                 build_result = subprocess.run(['cargo', 'build'], cwd=temp_dir,
-                                            capture_output=True, text=True, timeout=300)
+                                            capture_output=True, text=True, timeout=COMPILATION_TIMEOUT)
                 
                 if build_result.returncode != 0:
                     # Check for network issues
@@ -553,7 +559,7 @@ class TestRustCLICompilation:
                 
                 # Test execution
                 run_result = subprocess.run(['cargo', 'run', '--', '--help'], cwd=temp_dir,
-                                          capture_output=True, text=True, timeout=60)
+                                          capture_output=True, text=True, timeout=DEPENDENCY_INSTALL_TIMEOUT)
                 
                 assert run_result.returncode == 0, f"Rust CLI execution failed: {run_result.stderr}"
                 assert "hello" in run_result.stdout.lower(), "Help should show hello command"

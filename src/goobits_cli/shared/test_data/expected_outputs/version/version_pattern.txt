@@ -9,4 +9,4 @@ rust: r'\d+\.\d+\.\d+'
 # Example outputs:
 # 0.1.0
 # 1.2.3
-# 2.0.0-beta1
+# 3.0.0-alpha.1

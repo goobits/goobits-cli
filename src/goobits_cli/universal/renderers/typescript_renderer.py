@@ -14,10 +14,13 @@ with proper type safety, interfaces, and TypeScript-specific conventions.
 
 
 from typing import Dict, Any, List, Optional
-
 from datetime import datetime
-
 import re
+
+try:
+    from ...__version__ import __version__ as _version
+except ImportError:
+    _version = "3.0.0-alpha.1"  # Fallback version
 
 import jinja2
 
@@ -53,6 +56,10 @@ class TypeScriptRenderer(LanguageRenderer):
 
     
 
+    def _get_version(self) -> str:
+        """Get current version for generator metadata."""
+        return _version
+    
     def __init__(self):
 
         """Initialize the TypeScript renderer."""
@@ -171,7 +178,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
             "timestamp": datetime.now().isoformat(),
 
-            "generator_version": "2.0.0-beta.2",
+            "generator_version": self._get_version(),
 
             "package_name": context["project"].get("package_name", "cli"),
 

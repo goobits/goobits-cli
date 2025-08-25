@@ -79,7 +79,7 @@ readonly REQUIRED_MB="{{ validation.minimum_disk_space_mb | default('100') }}"
 readonly SHELL_INTEGRATION="{{ shell_integration.enabled | default('false') }}"
 readonly SHELL_ALIAS="{{ shell_integration.alias | default(command_name) }}"
 
-# Dependencies (legacy format for backward compatibility)
+# Dependencies
 readonly REQUIRED_DEPS=({% for dep in dependencies.required | default([]) %}{% if dep is string %}"{{ dep }}"{% else %}"{{ dep.name }}"{% endif %}{{ " " if not loop.last }}{% endfor %})
 readonly OPTIONAL_DEPS=({% for dep in dependencies.optional | default([]) %}{% if dep is string %}"{{ dep }}"{% else %}"{{ dep.name }}"{% endif %}{{ " " if not loop.last }}{% endfor %})
 
@@ -602,7 +602,7 @@ except Exception as e:
             fi
         done <<< "$required_result"
     else
-        # Fallback to legacy validation
+        # Fallback validation
         for dep in "${REQUIRED_DEPS[@]}"; do
             if ! command -v "$dep" >/dev/null 2>&1; then
                 missing_deps+=("$dep")
@@ -707,7 +707,7 @@ except Exception as e:
             fi
         done <<< "$required_result"
     else
-        # Fallback to legacy validation
+        # Fallback validation
         for dep in "${REQUIRED_DEPS[@]}"; do
             if ! command -v "$dep" >/dev/null 2>&1; then
                 missing_deps+=("$dep")

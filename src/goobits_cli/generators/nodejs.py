@@ -147,7 +147,7 @@ class NodeJSGenerator(BaseGenerator):
 
         
 
-        # Set up Jinja2 environment for Node.js templates (legacy mode)
+        # Set up Jinja2 environment for Node.js templates
 
         template_dir = Path(__file__).parent.parent / "templates" / "nodejs"
 
@@ -213,7 +213,7 @@ class NodeJSGenerator(BaseGenerator):
 
         def js_string(value: str) -> str:
             """
-            Escape string for JavaScript while preserving Unicode characters (legacy template compatibility).
+            Escape string for JavaScript while preserving Unicode characters.
             
             Only escapes necessary characters for JavaScript string literals:
             - Backslashes (must be first to avoid double-escaping)

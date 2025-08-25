@@ -207,9 +207,9 @@ cli_output_path: "src/my_package/cli.py"  # Required - prevents files in project
 
 ### Template System
 
-The framework supports both legacy and Universal Template Systems:
+The framework uses Universal Template System with fallback support:
 
-**Legacy Templates:** Language-specific Jinja2 templates with custom filters:
+**Fallback Templates:** Language-specific Jinja2 templates with custom filters:
 - `align_examples`: Aligns CLI examples
 - `format_multiline`: Handles multi-line text in help
 - `escape_docstring`: Escapes strings for Python docstrings

@@ -13,9 +13,12 @@ Universal Template System, generating Click-based CLI implementations.
 
 
 import re
-
-
 import tempfile
+
+try:
+    from ...__version__ import __version__ as _version
+except ImportError:
+    _version = "3.0.0-alpha.1"  # Fallback version
 
 
 from datetime import datetime
@@ -55,6 +58,10 @@ class PythonRenderer(LanguageRenderer):
     - Hook system integration
 
     """
+    
+    def _get_version(self) -> str:
+        """Get current version for generator metadata."""
+        return _version
     
     def __init__(self, consolidate: bool = False):
         """Initialize Python renderer with optional consolidation mode."""
@@ -214,7 +221,7 @@ class PythonRenderer(LanguageRenderer):
 
                 "timestamp": datetime.now().isoformat(),
 
-                "generator_version": "2.0.0-beta.2",
+                "generator_version": self._get_version(),
 
                 "package_name": context["project"]["package_name"].replace("-", "_"),
 

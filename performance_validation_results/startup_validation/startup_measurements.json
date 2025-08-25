@@ -1,0 +1,251 @@
+{
+  "goobits_current": {
+    "test_name": "goobits_current",
+    "language": "python",
+    "configuration": "goobits_current",
+    "target_ms": 110.0,
+    "measurements": [
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --version",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 132.96045898459852,
+        "success": true,
+        "stdout": "goobits-cli 2.0.0\n",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 0,
+        "timestamp": 1756103606.2208338,
+        "metadata": {
+          "test_command": "--version"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --version",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 129.6810150379315,
+        "success": true,
+        "stdout": "goobits-cli 2.0.0\n",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 1,
+        "timestamp": 1756103606.3505428,
+        "metadata": {
+          "test_command": "--version"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --version",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 126.31604599300772,
+        "success": true,
+        "stdout": "goobits-cli 2.0.0\n",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 2,
+        "timestamp": 1756103606.4768863,
+        "metadata": {
+          "test_command": "--version"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --version",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 130.32871508039534,
+        "success": true,
+        "stdout": "goobits-cli 2.0.0\n",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 3,
+        "timestamp": 1756103606.6072388,
+        "metadata": {
+          "test_command": "--version"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --version",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 122.03807092737406,
+        "success": true,
+        "stdout": "goobits-cli 2.0.0\n",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 4,
+        "timestamp": 1756103606.7293034,
+        "metadata": {
+          "test_command": "--version"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 128.33773193415254,
+        "success": true,
+        "stdout": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\n\n\n\nUnified CLI for Goobits projects\n\n\n\n\n\n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 --version                     Show version and exit                          \u2502\n\n\u2502 --install-completion          Install completion for the current shell.      \u2502\n\n\u2502 --show-completion             Show completion for the current shell, to copy \u2502\n\n\u2502                               it or customize the installation.              \u2502\n\n\u2502 --help                        Show this message and exit.                    \u2502\n\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n\u256d\u2500 Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 build       Build CLI and setup scripts from goobits.yaml configuration.    \u2502\n\n\u2502 init        Create initial goobits.yaml template.                            \u2502\n\n\u2502 migrate     Migrate YAML configurations to 3.0.0 format.              ",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 0,
+        "timestamp": 1756103606.85767,
+        "metadata": {
+          "test_command": "--help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 126.72931607812643,
+        "success": true,
+        "stdout": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\n\n\n\nUnified CLI for Goobits projects\n\n\n\n\n\n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 --version                     Show version and exit                          \u2502\n\n\u2502 --install-completion          Install completion for the current shell.      \u2502\n\n\u2502 --show-completion             Show completion for the current shell, to copy \u2502\n\n\u2502                               it or customize the installation.              \u2502\n\n\u2502 --help                        Show this message and exit.                    \u2502\n\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n\u256d\u2500 Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 build       Build CLI and setup scripts from goobits.yaml configuration.    \u2502\n\n\u2502 init        Create initial goobits.yaml template.                            \u2502\n\n\u2502 migrate     Migrate YAML configurations to 3.0.0 format.              ",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 1,
+        "timestamp": 1756103606.9844232,
+        "metadata": {
+          "test_command": "--help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 128.80499090533704,
+        "success": true,
+        "stdout": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\n\n\n\nUnified CLI for Goobits projects\n\n\n\n\n\n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 --version                     Show version and exit                          \u2502\n\n\u2502 --install-completion          Install completion for the current shell.      \u2502\n\n\u2502 --show-completion             Show completion for the current shell, to copy \u2502\n\n\u2502                               it or customize the installation.              \u2502\n\n\u2502 --help                        Show this message and exit.                    \u2502\n\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n\u256d\u2500 Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 build       Build CLI and setup scripts from goobits.yaml configuration.    \u2502\n\n\u2502 init        Create initial goobits.yaml template.                            \u2502\n\n\u2502 migrate     Migrate YAML configurations to 3.0.0 format.              ",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 2,
+        "timestamp": 1756103607.1132529,
+        "metadata": {
+          "test_command": "--help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 126.06352905277163,
+        "success": true,
+        "stdout": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\n\n\n\nUnified CLI for Goobits projects\n\n\n\n\n\n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 --version                     Show version and exit                          \u2502\n\n\u2502 --install-completion          Install completion for the current shell.      \u2502\n\n\u2502 --show-completion             Show completion for the current shell, to copy \u2502\n\n\u2502                               it or customize the installation.              \u2502\n\n\u2502 --help                        Show this message and exit.                    \u2502\n\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n\u256d\u2500 Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 build       Build CLI and setup scripts from goobits.yaml configuration.    \u2502\n\n\u2502 init        Create initial goobits.yaml template.                            \u2502\n\n\u2502 migrate     Migrate YAML configurations to 3.0.0 format.              ",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 3,
+        "timestamp": 1756103607.2393403,
+        "metadata": {
+          "test_command": "--help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main --help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 130.11738006025553,
+        "success": true,
+        "stdout": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\n\n\n\nUnified CLI for Goobits projects\n\n\n\n\n\n\u256d\u2500 Options \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 --version                     Show version and exit                          \u2502\n\n\u2502 --install-completion          Install completion for the current shell.      \u2502\n\n\u2502 --show-completion             Show completion for the current shell, to copy \u2502\n\n\u2502                               it or customize the installation.              \u2502\n\n\u2502 --help                        Show this message and exit.                    \u2502\n\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n\n\u256d\u2500 Commands \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\n\u2502 build       Build CLI and setup scripts from goobits.yaml configuration.    \u2502\n\n\u2502 init        Create initial goobits.yaml template.                            \u2502\n\n\u2502 migrate     Migrate YAML configurations to 3.0.0 format.              ",
+        "stderr": "",
+        "return_code": 0,
+        "iteration": 4,
+        "timestamp": 1756103607.3694832,
+        "metadata": {
+          "test_command": "--help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 132.29478301946074,
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\nTry 'python -m goobits_cli.main --help' for help.\n\u256d\u2500 Error \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 No such command 'help'.                                                      \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+        "return_code": 2,
+        "iteration": 0,
+        "timestamp": 1756103607.5018024,
+        "metadata": {
+          "test_command": "help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 132.95954302884638,
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\nTry 'python -m goobits_cli.main --help' for help.\n\u256d\u2500 Error \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 No such command 'help'.                                                      \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+        "return_code": 2,
+        "iteration": 1,
+        "timestamp": 1756103607.6347835,
+        "metadata": {
+          "test_command": "help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 134.67618194408715,
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\nTry 'python -m goobits_cli.main --help' for help.\n\u256d\u2500 Error \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 No such command 'help'.                                                      \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+        "return_code": 2,
+        "iteration": 2,
+        "timestamp": 1756103607.7694843,
+        "metadata": {
+          "test_command": "help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 128.1305819284171,
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\nTry 'python -m goobits_cli.main --help' for help.\n\u256d\u2500 Error \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 No such command 'help'.                                                      \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+        "return_code": 2,
+        "iteration": 3,
+        "timestamp": 1756103607.8976376,
+        "metadata": {
+          "test_command": "help"
+        }
+      },
+      {
+        "command": "/usr/bin/python3 -m goobits_cli.main help",
+        "language": "python",
+        "configuration": "goobits_current",
+        "execution_time_ms": 132.21204793080688,
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...\nTry 'python -m goobits_cli.main --help' for help.\n\u256d\u2500 Error \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256e\n\u2502 No such command 'help'.                                                      \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\n",
+        "return_code": 2,
+        "iteration": 4,
+        "timestamp": 1756103608.0298722,
+        "metadata": {
+          "test_command": "help"
+        }
+      }
+    ],
+    "average_ms": 128.13772540539503,
+    "median_ms": 128.5713614197448,
+    "min_ms": 122.03807092737406,
+    "max_ms": 132.96045898459852,
+    "std_dev_ms": 3.012113031087592,
+    "percentile_95_ms": 132.96045898459852,
+    "percentile_99_ms": 132.96045898459852,
+    "success_rate": 0.6666666666666666,
+    "meets_target": false,
+    "optimization_score": 79.52986319656323,
+    "recommendations": [
+      "Startup time exceeds target by 18.14ms. Consider optimization strategies.",
+      "Low startup success rate. Check for intermittent errors or dependency issues.",
+      "Python: Consider using importlib for lazy imports and __pycache__ optimization.",
+      "Moderate optimization score. Fine-tune initialization process."
+    ]
+  }
+}

@@ -14,8 +14,12 @@ Node.js/JavaScript code with proper ES module support.
 
 
 
-
 import re
+
+try:
+    from ...__version__ import __version__ as _version
+except ImportError:
+    _version = "3.0.0-alpha.1"  # Fallback version
 
 
 from typing import Dict, Any, List
@@ -48,6 +52,10 @@ class NodeJSRenderer(LanguageRenderer):
 
     
 
+    def _get_version(self) -> str:
+        """Get current version for generator metadata."""
+        return _version
+    
     def __init__(self):
 
         """Initialize the Node.js renderer with custom filters and context."""
@@ -203,7 +211,7 @@ class NodeJSRenderer(LanguageRenderer):
 
             "timestamp": datetime.now().isoformat(),
 
-            "generator_version": "2.0.0-beta.2",
+            "generator_version": self._get_version(),
 
             "package_name": context["project"].get("package_name", "cli"),
 

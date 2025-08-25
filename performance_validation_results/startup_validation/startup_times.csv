@@ -1,0 +1,16 @@
+config,language,iteration,command,time_ms,success,meets_target
+goobits_current,python,0,"/usr/bin/python3 -m goobits_cli.main --version",132.96045898459852,True,False
+goobits_current,python,1,"/usr/bin/python3 -m goobits_cli.main --version",129.6810150379315,True,False
+goobits_current,python,2,"/usr/bin/python3 -m goobits_cli.main --version",126.31604599300772,True,False
+goobits_current,python,3,"/usr/bin/python3 -m goobits_cli.main --version",130.32871508039534,True,False
+goobits_current,python,4,"/usr/bin/python3 -m goobits_cli.main --version",122.03807092737406,True,False
+goobits_current,python,0,"/usr/bin/python3 -m goobits_cli.main --help",128.33773193415254,True,False
+goobits_current,python,1,"/usr/bin/python3 -m goobits_cli.main --help",126.72931607812643,True,False
+goobits_current,python,2,"/usr/bin/python3 -m goobits_cli.main --help",128.80499090533704,True,False
+goobits_current,python,3,"/usr/bin/python3 -m goobits_cli.main --help",126.06352905277163,True,False
+goobits_current,python,4,"/usr/bin/python3 -m goobits_cli.main --help",130.11738006025553,True,False
+goobits_current,python,0,"/usr/bin/python3 -m goobits_cli.main help",132.29478301946074,False,False
+goobits_current,python,1,"/usr/bin/python3 -m goobits_cli.main help",132.95954302884638,False,False
+goobits_current,python,2,"/usr/bin/python3 -m goobits_cli.main help",134.67618194408715,False,False
+goobits_current,python,3,"/usr/bin/python3 -m goobits_cli.main help",128.1305819284171,False,False
+goobits_current,python,4,"/usr/bin/python3 -m goobits_cli.main help",132.21204793080688,False,False

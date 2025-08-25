@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "goobits-cli"
-version = "2.0.0"
+version = "3.0.0-alpha.1"
 description = "Build professional command-line tools with YAML configuration"
 readme = "README.md"
 keywords = ["cli", "yaml", "code-generation", "cli-framework", "command-line", "multi-language"]
