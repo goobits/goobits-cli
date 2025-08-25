@@ -25,7 +25,7 @@ def _get_version():
     global _version
     if _version is None:
         try:
-            from ...__version__ import __version__ as v
+            from ... import __version__ as v
             _version = v
         except ImportError:
             _version = "3.0.0-alpha.1"

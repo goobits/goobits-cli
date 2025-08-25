@@ -24,7 +24,7 @@ from typing import Dict, Any, List
 import jinja2
 
 try:
-    from ...__version__ import __version__ as _version
+    from ... import __version__ as _version
 except ImportError:
     _version = "3.0.0-alpha.1"  # Fallback version
 

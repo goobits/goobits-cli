@@ -18,7 +18,7 @@ from datetime import datetime
 import re
 
 try:
-    from ...__version__ import __version__ as _version
+    from ... import __version__ as _version
 except ImportError:
     _version = "3.0.0-alpha.1"  # Fallback version
 
