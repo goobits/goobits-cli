@@ -33,10 +33,10 @@ pip install -e .[dev,test]
 mkdir my-cli && cd my-cli
 
 # Generate initial configuration
-goobits init
+goobits init my-cli
 
 # Build CLI and setup scripts
-goobits build
+goobits build goobits.yaml
 
 # Install for development
 ./setup.sh install --dev
@@ -48,19 +48,25 @@ goobits build
 
 **Generated CLI** (`goobits` command):
 
-- `goobits build [config_path]` - Generate CLI from goobits.yaml
+- `goobits build <config_path>` - Generate CLI from goobits.yaml
   - `--output-dir`: Output directory for generated files
   - `--output`: Output filename for generated CLI
   - `--backup`: Create .bak files when overwriting
   - `--universal-templates`: Use Universal Template System (production-ready)
 
-- `goobits init [project_name]` - Create initial goobits.yaml
+- `goobits init <project_name>` - Create initial goobits.yaml
   - `--template`: Choose template (basic, advanced, api-client, text-processor)
   - `--force`: Overwrite existing configuration
 
 - `goobits serve <directory>` - Serve local PyPI-compatible package index
   - `--host`: Server host (default: localhost)
   - `--port`: Server port (default: 8080)
+
+- `goobits upgrade` - Upgrade goobits-cli to latest version
+  - `--check`: Check for updates without installing
+  - `--version`: Install specific version
+  - `--pre`: Include pre-release versions
+  - `--dry-run`: Show what would be done without doing it
 
 **Development Commands** (available via `python -m goobits_cli.main`):
 
@@ -72,7 +78,7 @@ goobits build
   - `--dry-run`: Show changes without applying
   - `--pattern`: File pattern for directory migration (default: *.yaml)
 
-- `python -m goobits_cli.main upgrade` - Upgrade goobits-cli to the latest version
+- `python -m goobits_cli.main upgrade` - Upgrade goobits-cli (advanced options)
   - `--source`: Upgrade source (pypi, git, local)
   - `--version`: Specific version to install
 
@@ -112,7 +118,7 @@ cli:
 
 ### Hook Implementation
 
-Implement business logic in language-specific hook files:
+Create and implement business logic in language-specific hook files (not auto-generated):
 
 **Python** (`app_hooks.py`):
 ```python

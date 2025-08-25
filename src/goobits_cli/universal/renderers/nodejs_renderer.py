@@ -393,7 +393,7 @@ class NodeJSRenderer(LanguageRenderer):
 
             "package_config": "package.json",
 
-            "bin_entry": "bin/index.js",
+            "bin_entry": "bin/cli.js",
 
             "postinstall_script": "scripts/postinstall.js",
 

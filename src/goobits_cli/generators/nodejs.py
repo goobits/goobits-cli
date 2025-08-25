@@ -606,11 +606,9 @@ class NodeJSGenerator(BaseGenerator):
 
             for file_path, content in generated_files.items():
 
-                # Extract relative filename for compatibility
+                # Store full relative path (not just filename) for proper file access
 
-                relative_path = Path(file_path).name
-
-                self._generated_files[relative_path] = content
+                self._generated_files[file_path] = content
 
             
 

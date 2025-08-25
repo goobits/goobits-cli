@@ -1022,6 +1022,14 @@ pub fn setup_logging() -> io::Result<()> {
     
     let environment = env::var("ENVIRONMENT").unwrap_or_else(|_| "development".to_string());
     
+    // Create startup message before moving log_output
+    let startup_context = json!({
+        "level": log_level.to_string(),
+        "output": format!("{:?}", log_output),
+        "environment": environment
+    });
+    let startup_map: HashMap<String, Value> = startup_context.as_object().unwrap().clone().into_iter().collect();
+    
     let config = LoggerConfig {
         level: log_level,
         output: log_output,
@@ -1034,11 +1042,7 @@ pub fn setup_logging() -> io::Result<()> {
     })?;
     
     // Log startup message
-    info("logger", "Logging initialized", Some(&json!({
-        "level": log_level.to_string(),
-        "output": format!("{:?}", log_output),
-        "environment": environment
-    }).as_object().unwrap().clone()));
+    info("logger", "Logging initialized", Some(&startup_map));
     
     Ok(())
 }

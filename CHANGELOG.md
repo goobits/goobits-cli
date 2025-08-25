@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README development commands section reordered with `validate` command listed first as it's most commonly used
 - pyproject.toml testpaths now correctly points to `src/tests/` instead of `tests/`
 - CODEMAP.md generator file count corrected from "76 Python files" to "4 generator files + __init__.py"
+- Completed comprehensive documentation accuracy review - all CLI commands, API references, configuration examples, and installation instructions verified against codebase
+- README Quick Start examples corrected to include required arguments (`goobits init <project_name>` and `goobits build <config_path>`)
+- README command documentation updated to show `upgrade` command exists in both generated CLI and development CLI
+- README hook implementation section clarified that hook files are not auto-generated and must be created manually
+- README command arguments changed from optional `[arg]` to required `<arg>` notation where appropriate
 
 ### Changed
 - Documentation sync and accuracy improvements across all markdown files

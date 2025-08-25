@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 For rapid project understanding, see **CODEMAP.md** - a comprehensive project map designed for LLM quick comprehension.
 
 **Note**: The framework has two CLI interfaces:
-- **Generated CLI** (`goobits`): Built from goobits.yaml with 3 core commands (build, init, serve)
+- **Generated CLI** (`goobits`): Built from goobits.yaml with 4 core commands (build, init, serve, upgrade)
 - **Development CLI** (`python -m goobits_cli.main`): Full framework interface with additional commands (migrate, validate, upgrade)
 
 ## Project Overview
@@ -23,11 +23,11 @@ Goobits CLI Framework is a **production-ready multi-language** CLI generator tha
 ```bash
 # Use the virtual environment when running commands, not the global python (see README for setup details)
 
-# Build the CLI from goobits.yaml (self-hosting)
-goobits build
+# Build the CLI from goobits.yaml (self-hosting) - config_path required due to hook signature
+goobits build goobits.yaml
 
 # Build with Universal Template System (production ready)
-goobits build --universal-templates
+goobits build goobits.yaml --universal-templates
 
 # Install in development mode (includes dev dependencies, changes reflected immediately)
 pip install -e .[dev,test]
@@ -254,8 +254,8 @@ language: rust        # Rust with Clap for high performance
 ### Adding a New Command
 
 1. Update the CLI section in `goobits.yaml`
-2. Run `goobits build`
-3. Implement the hook in your language-specific hook file:
+2. Run `goobits build goobits.yaml`
+3. Create and implement the hook in your language-specific hook file (not auto-generated):
    - Python: `app_hooks.py`
    - Node.js: `src/hooks.js`
    - TypeScript: `src/hooks.ts`

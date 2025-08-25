@@ -194,22 +194,21 @@ def has_hook(hook_name: str) -> bool:
  * Users should implement hook functions in hooks.js to provide business logic.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 class HookManager {
     constructor(hooksModulePath = './hooks.js') {
         this.hooksModulePath = hooksModulePath;
         this.hooks = {};
-        this.loadHooks();
+        // Don't call loadHooks in constructor since it's now async
     }
 
-    loadHooks() {
+    async loadHooks() {
         try {
-            // Clear require cache to allow reloading
-            delete require.cache[require.resolve(this.hooksModulePath)];
-            
-            const hooksModule = require(this.hooksModulePath);
+            // For ES modules, we can use dynamic import with a timestamp for cache busting
+            const timestamp = Date.now();
+            const hooksModule = await import(`${this.hooksModulePath}?t=${timestamp}`);
             this.hooks = {};
             
             // Cache all exported hook functions
@@ -280,8 +279,8 @@ class HookManager {
  */
 
 // Import any modules you need here
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 {%- for command in cli.root_command.subcommands %}
 
@@ -297,7 +296,7 @@ const path = require('path');
 {%- endfor %}
  * @returns {{ '{' }}Promise<void>{{ '}' }}
  */
-async function {{ command.hook_name }}({% for arg in command.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.arguments and command.options %}, {% endif %}{% if command.options %}options{% endif %}) {
+export async function {{ command.hook_name }}({% for arg in command.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% if command.arguments and command.options %}, {% endif %}{% if command.options %}options{% endif %}) {
     // Add your business logic here
     console.log('Hook {{ command.hook_name }} called');
     {%- if command.arguments %}
@@ -312,13 +311,6 @@ async function {{ command.hook_name }}({% for arg in command.arguments %}{{ arg.
 }
 
 {%- endfor %}
-
-// Export all hook functions
-module.exports = {
-{%- for command in cli.root_command.subcommands %}
-    {{ command.hook_name }},
-{%- endfor %}
-};
 
 // Add any utility functions or classes here
 `;
@@ -342,22 +334,25 @@ class HookExecutionError extends Error {
 // Global hook manager instance
 let _hookManager = null;
 
-function getHookManager() {
+async function getHookManager() {
     if (!_hookManager) {
         _hookManager = new HookManager();
+        await _hookManager.loadHooks();
     }
     return _hookManager;
 }
 
 async function executeHook(hookName, ...args) {
-    return getHookManager().executeHook(hookName, ...args);
+    const manager = await getHookManager();
+    return manager.executeHook(hookName, ...args);
 }
 
-function hasHook(hookName) {
-    return getHookManager().hasHook(hookName);
+async function hasHook(hookName) {
+    const manager = await getHookManager();
+    return manager.hasHook(hookName);
 }
 
-module.exports = {
+export {
     HookManager,
     HookNotFoundError,
     HookExecutionError,
