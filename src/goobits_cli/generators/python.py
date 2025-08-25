@@ -200,8 +200,13 @@ class PythonGenerator(BaseGenerator):
             (not config_path.suffix and ('pytest' in config_filename or config_filename.endswith('_test')))):
             
             # For E2E tests, use the simpler legacy approach which is more reliable
-            # Generate CLI content using legacy fallback (which works correctly with test configs)
-            cli_content = self._minimal_legacy_fallback(config, "test.yaml", version)
+            # Generate CLI content using universal templates for E2E tests
+            try:
+                cli_content = self._generate_with_universal_templates(config, "test.yaml", version)
+            except Exception as e:
+                error_msg = f"E2E test generation failed: {type(e).__name__}: {e}\nThis may indicate an issue with the test configuration or universal templates."
+                typer.echo(error_msg, err=True)
+                raise RuntimeError(f"E2E test CLI generation failed: {e}") from e
             
             # Write the CLI file directly to the output directory (test compatibility)
             output_path = Path(config_filename)
@@ -412,7 +417,16 @@ class PythonGenerator(BaseGenerator):
 
             self.use_universal_templates = False
 
-            return self._minimal_legacy_fallback(config, config_filename, version)
+            # Universal Templates are now the primary system
+            error_msg = f"""❌ Python CLI Generation Error: Universal Templates are required
+            
+🔧 Legacy fallbacks have been removed for better reliability.
+Universal Templates should handle all Python CLI generation needs.
+            
+💬 Please report this error if encountered."""
+            
+            typer.echo(error_msg, err=True)
+            raise RuntimeError("Python generator reached unexpected fallback path")
 
     
 

@@ -338,8 +338,10 @@ class RustGenerator(BaseGenerator):
         if self.use_universal_templates:
             return self._generate_with_universal_templates(config, config_filename, version)
         
-        # Fall back to legacy implementation
-        return self._generate_legacy(config, config_filename, version)
+        # Universal Templates are now the primary system for Rust
+        error_msg = "Rust generator reached unexpected fallback - Universal Templates should handle all generation"
+        typer.echo(error_msg, err=True)
+        raise RuntimeError("Rust generator fallback should not be reached")
 
     
 
@@ -508,7 +510,16 @@ class RustGenerator(BaseGenerator):
 
             self.use_universal_templates = False
 
-            return self._generate_legacy(config, config_filename, version)
+            # Rust Universal Templates failed - provide helpful error
+            error_msg = f"""❌ Rust Universal Templates failed: {type(e).__name__}: {e}
+            
+🔧 Troubleshooting:
+1. Check Rust configuration syntax
+2. Ensure all required fields are present  
+3. Try with --debug flag for detailed logs"""
+            
+            typer.echo(error_msg, err=True)
+            raise RuntimeError(f"Rust CLI generation failed: {e}") from e
 
     
 

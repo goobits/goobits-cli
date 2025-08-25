@@ -466,13 +466,18 @@ class NodeJSGenerator(BaseGenerator):
             'tmp' in config_filename or 'pytest' in config_filename or
             Path(config_filename).is_dir()):
             
-            # For E2E tests, use the legacy approach which is more reliable
-            # Write files directly to the output directory (test compatibility)
+            # For E2E tests, write files directly to output directory (test compatibility)
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
             
-            # Generate CLI content using legacy method (which works correctly with test configs)
-            cli_content = self._generate_legacy(config, "test.yaml", version)
+            # Generate CLI content using universal templates (primary system)
+            try:
+                cli_content = self._generate_with_universal_templates(config, "test.yaml", version)
+            except Exception as e:
+                # If universal templates fail in E2E tests, provide helpful error
+                error_msg = f"E2E test generation failed: {type(e).__name__}: {e}\nThis may indicate an issue with the test configuration or universal templates."
+                typer.echo(error_msg, err=True)
+                raise RuntimeError(f"E2E test CLI generation failed: {e}") from e
             
             # Also generate package.json for Node.js
             all_files = self.generate_all_files(config, "test.yaml", version, str(output_path))
@@ -497,9 +502,19 @@ class NodeJSGenerator(BaseGenerator):
 
         
 
-        # Fall back to legacy implementation
-
-        return self._generate_legacy(config, config_filename, version)
+        # Universal Templates should be the primary path
+        # If we reach here, it means universal templates are disabled
+        error_msg = f"""❌ CLI Generation Error: Universal Templates are disabled
+        
+🔧 To fix this:
+1. Universal Templates are now the primary generation system
+2. Re-enable with: generator.use_universal_templates = True  
+3. Legacy fallbacks have been removed for better reliability
+        
+💬 If you encounter this error, please report it as it indicates an unexpected code path."""
+        
+        typer.echo(error_msg, err=True)
+        raise RuntimeError("Universal Templates are disabled - this should not happen in normal operation")
 
     
 
@@ -655,15 +670,19 @@ class NodeJSGenerator(BaseGenerator):
 
         except Exception as e:
 
-            # Fall back to legacy mode if universal templates fail
-
-            typer.echo(f"⚠️  Universal Templates failed ({type(e).__name__}: {e}), falling back to legacy mode", err=True)
-
-            # Disable universal templates for subsequent calls to avoid repeated failures
-
-            self.use_universal_templates = False
-
-            return self._generate_legacy(config, config_filename, version)
+            # Universal Templates failed - provide helpful error message
+            error_msg = f"""❌ Universal Template System failed: {type(e).__name__}: {e}
+            
+🔧 Troubleshooting suggestions:
+1. Check your YAML configuration syntax
+2. Ensure all required fields are present  
+3. Try regenerating with `goobits build --debug` for detailed logs
+4. Report this issue if the problem persists
+            
+💡 Universal Templates are now the primary system. Legacy fallbacks have been removed for better reliability."""
+            
+            typer.echo(error_msg, err=True)
+            raise RuntimeError(f"CLI generation failed: {type(e).__name__}: {e}") from e
 
     
 
@@ -1116,9 +1135,14 @@ export default cli;
 
         
 
-        # Legacy implementation - generate all files using legacy system
-
-        return self._generate_all_files_legacy(config, config_filename, version, target_directory)
+        # Universal Templates are now the primary system
+        error_msg = f"""❌ generate_all_files fallback reached - this should not happen
+        
+🔧 This indicates the universal template system path was not taken.
+Please report this as a bug if you encounter this message."""
+        
+        typer.echo(error_msg, err=True)
+        raise RuntimeError("generate_all_files fallback should not be reached with universal templates")
 
     
 

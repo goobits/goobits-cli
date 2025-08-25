@@ -297,7 +297,13 @@ class TypeScriptGenerator(NodeJSGenerator):
             output_path.mkdir(parents=True, exist_ok=True)
             
             # Generate CLI content using legacy method (which works correctly with test configs)
-            cli_content = self._generate_legacy_typescript(config, "test.yaml", version)
+            # Generate CLI content using universal templates for E2E tests
+            try:
+                cli_content = self._generate_with_universal_templates(config, "test.yaml", version)
+            except Exception as e:
+                error_msg = f"TypeScript E2E test generation failed: {type(e).__name__}: {e}"
+                typer.echo(error_msg, err=True)
+                raise RuntimeError(f"TypeScript E2E test CLI generation failed: {e}") from e
             
             # Also generate additional TypeScript files
             all_files = self.generate_all_files(config, "test.yaml", version, str(output_path))
@@ -322,9 +328,10 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         
 
-        # Fall back to TypeScript-specific legacy implementation
-
-        return self._generate_legacy_typescript(config, config_filename, version)
+        # Universal Templates are now the primary system for TypeScript
+        error_msg = "TypeScript generator reached unexpected fallback - Universal Templates should handle all generation"
+        typer.echo(error_msg, err=True)
+        raise RuntimeError("TypeScript generator fallback should not be reached")
 
     
 
@@ -497,7 +504,16 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             self.use_universal_templates = False
 
-            return self._generate_legacy_typescript(config, config_filename, version)
+            # TypeScript Universal Templates failed - provide helpful error
+            error_msg = f"""❌ TypeScript Universal Templates failed: {type(e).__name__}: {e}
+            
+🔧 Troubleshooting:
+1. Check TypeScript configuration syntax
+2. Ensure all required fields are present
+3. Try with --debug flag for detailed logs"""
+            
+            typer.echo(error_msg, err=True)
+            raise RuntimeError(f"TypeScript CLI generation failed: {e}") from e
 
     
 
