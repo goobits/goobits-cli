@@ -13,14 +13,14 @@ const program = new Command();
 program
   .name('demo_ts')
   .description('TypeScript CLI demonstration')
-  .version('1.0.0');
-// greet command
+  .version('1.0.0');// Global option: interactive
+program.option('-i, --interactive <value>', '');// greet command
 program
   .command('greet')
-  .description('')  .option('-s, --style <value>', '')  .option('-c, --count <value>', '')  .option('-u, --uppercase', '')  .option('-l, --language <value>', '')  .action(async (options) => {
+  .description('Greet someone with style')  .argument('<name>', 'Name to greet')  .argument('[message]', 'Custom greeting message')  .option('-s, --style <value>', 'Greeting style')  .option('-c, --count <value>', 'Repeat greeting N times')  .option('-u, --uppercase', 'Convert to uppercase')  .option('-l, --language <value>', 'Language code')  .action(async (name, message, options) => {
     const args = {
       commandName: 'greet',
-      rawArgs: options,    };
+      rawArgs: options,      name,      message,    };
     
     try {
       const hookFunction = hooks.onGreet;
@@ -33,11 +33,10 @@ program
       console.error(`Error executing greet:`, error.message);
       process.exit(1);
     }
-  });
-// info command
+  });// info command
 program
   .command('info')
-  .description('')  .option('-f, --format <value>', '')  .option('-v, --verbose', '')  .option('-s, --sections <value>', '')  .action(async (options) => {
+  .description('Display system and environment information')  .option('-f, --format <value>', 'Output format')  .option('-v, --verbose', 'Show detailed information')  .option('-s, --sections <value>', 'Comma-separated sections to show')  .action(async (options) => {
     const args = {
       commandName: 'info',
       rawArgs: options,    };

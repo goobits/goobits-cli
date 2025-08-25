@@ -128,7 +128,7 @@ cli:
           desc: "💾 Create backup files (.bak) when overwriting existing files"
         - name: "universal-templates"
           type: "flag"
-          desc: "🧪 Use Universal Template System (experimental)"
+          desc: "🚀 Use Universal Template System (production-ready)"
     
     init:
       desc: "Create initial goobits.yaml template"

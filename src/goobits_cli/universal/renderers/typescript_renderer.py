@@ -235,6 +235,7 @@ class TypeScriptRenderer(LanguageRenderer):
             'camelCase': self._camel_case_filter,
 
             'PascalCase': self._pascal_case_filter,
+            'pascal_case': self._pascal_case_filter,
 
             'ts_safe_name': self._ts_safe_name_filter,
 

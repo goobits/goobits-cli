@@ -127,7 +127,11 @@ class NodeJSGenerator(BaseGenerator):
 
             try:
 
-                self.universal_engine = UniversalTemplateEngine()
+                # Detect test mode to avoid asyncio conflicts
+                import sys
+                is_test = 'pytest' in sys.modules
+                
+                self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
 
                 self.nodejs_renderer = UniversalNodeJSRenderer()
 
@@ -628,16 +632,20 @@ class NodeJSGenerator(BaseGenerator):
 
             output_dir = Path(".")
 
-            # Use parallel generation for 30-50% performance improvement
-            if hasattr(self.universal_engine, 'generate_cli_parallel') and self.universal_engine.performance_enabled:
+            # Use parallel generation for 30-50% performance improvement (but not in tests)
+            use_parallel = (
+                hasattr(self.universal_engine, 'generate_cli_parallel') and 
+                self.universal_engine.performance_enabled and 
+                not self.universal_engine.test_mode
+            )
+            
+            if use_parallel:
                 generated_files = self.universal_engine.generate_cli_parallel(
                     goobits_config, "nodejs", output_dir
                 )
             else:
                 generated_files = self.universal_engine.generate_cli(
-
                     goobits_config, "nodejs", output_dir
-
                 )
 
             

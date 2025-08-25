@@ -4,7 +4,7 @@
 //!
 //! This library provides the core functionality for the demo CLI tool.
 
-#![allow(missing_docs)]
+#![warn(missing_docs)]
 #![warn(clippy::all)]
 
 /// Error types and handling
@@ -25,6 +25,7 @@ pub mod cli;
 // Re-export main types for convenience
 pub use errors::{CliError, ExitCode, CliResult};
 pub use config::Config;
+pub use hooks::HookManager;
 
 /// Version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

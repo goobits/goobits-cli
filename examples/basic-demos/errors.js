@@ -2,7 +2,7 @@
  * Error handling utilities for Demo Node.js CLI
  */
 
-const util = require('util');
+import util from 'util';
 
 // Standard exit codes
 const ExitCode = {
@@ -157,7 +157,7 @@ function setErrorHandler(handler) {
     _errorHandler = handler;
 }
 
-module.exports = {
+export {
     ExitCode,
     CliError,
     UsageError,

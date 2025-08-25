@@ -21,8 +21,8 @@ pipx install goobits-cli  # Recommended for CLI tools
 
 ### From Source
 ```bash
-git clone https://github.com/DataBassGit/goobits
-cd goobits
+git clone https://github.com/goobits/goobits-cli
+cd goobits-cli
 pip install -e .[dev,test]
 ```
 
@@ -46,10 +46,13 @@ goobits build
 
 ### Core Commands
 
+**Generated CLI** (`goobits` command):
+
 - `goobits build [config_path]` - Generate CLI from goobits.yaml
   - `--output-dir`: Output directory for generated files
-  - `--universal-templates`: Use Universal Template System
+  - `--output`: Output filename for generated CLI
   - `--backup`: Create .bak files when overwriting
+  - `--universal-templates`: Use Universal Template System (production-ready)
 
 - `goobits init [project_name]` - Create initial goobits.yaml
   - `--template`: Choose template (basic, advanced, api-client, text-processor)
@@ -59,9 +62,19 @@ goobits build
   - `--host`: Server host (default: localhost)
   - `--port`: Server port (default: 8080)
 
-- `goobits migrate [config_path]` - Migrate YAML configurations to 3.0.0 format
+**Development Commands** (available via `python -m goobits_cli.main`):
 
-- `goobits upgrade` - Upgrade goobits-cli to the latest version
+- `python -m goobits_cli.main validate [config_path]` - Validate goobits.yaml configuration
+  - `--verbose`: Show detailed validation information
+
+- `python -m goobits_cli.main migrate <path>` - Migrate YAML configurations to 3.0.0 format
+  - `--backup/--no-backup`: Create backup files (default: true)
+  - `--dry-run`: Show changes without applying
+  - `--pattern`: File pattern for directory migration (default: *.yaml)
+
+- `python -m goobits_cli.main upgrade` - Upgrade goobits-cli to the latest version
+  - `--source`: Upgrade source (pypi, git, local)
+  - `--version`: Specific version to install
 
 ### Configuration Example
 
@@ -69,6 +82,7 @@ goobits build
 # goobits.yaml
 package_name: my-awesome-cli
 command_name: mycli
+display_name: "My Awesome CLI"
 description: "My awesome CLI tool"
 language: python  # or nodejs, typescript, rust
 
@@ -81,6 +95,9 @@ installation:
     python: ["dev", "test"]
 
 cli:
+  name: "My Awesome CLI"
+  tagline: "An awesome command-line tool"
+  version: "1.0.0"
   commands:
     greet:
       desc: "Greet someone"
@@ -157,10 +174,8 @@ pub fn on_greet(matches: &ArgMatches) -> Result<()> {
 ## Advanced Features
 
 ### Universal Template System
-```bash
-goobits build --universal-templates
-```
-Single template generates consistent CLIs across all languages.
+
+The Universal Template System provides consistent CLI generation across all supported languages from a single template. Enable with the `--universal-templates` flag.
 
 ### Interactive Mode
 Generated CLIs support interactive REPL:
@@ -189,11 +204,12 @@ pytest src/tests/
 # Run with coverage
 pytest --cov=goobits_cli src/tests/
 
-# Type checking
+# Type checking (requires dev dependencies)
 mypy src/goobits_cli/
 
-# Linting
-ruff check src/
+# Linting (requires dev dependencies)
+black --check src/
+flake8 src/
 ```
 
 ### Building Self-Hosted CLI
@@ -218,4 +234,4 @@ DataBassGit
 
 ---
 
-Built with ❤️ using [Goobits CLI Framework](https://github.com/DataBassGit/goobits)
+Built with ❤️ using [Goobits CLI Framework](https://github.com/goobits/goobits-cli)

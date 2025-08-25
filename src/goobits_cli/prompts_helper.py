@@ -74,6 +74,18 @@ class PromptsHelper:
         self.use_questionary = HAS_QUESTIONARY
 
         self.use_rich = HAS_RICH_PROMPT
+        
+        # Initialize predictive prompting if available
+        try:
+            from .universal.performance.predictive_prompts import (
+                get_prompt_manager, PromptConfig, record_prompt_shown, get_prepared_prompt
+            )
+            self.predictive_enabled = True
+            self.prompt_manager = get_prompt_manager()
+            self.record_prompt = record_prompt_shown
+            self.get_prepared = get_prepared_prompt
+        except ImportError:
+            self.predictive_enabled = False
 
     
 
@@ -200,6 +212,11 @@ class PromptsHelper:
     ) -> str:
 
         """Prompt for selection from a list of choices"""
+        
+        # Record this prompt for predictive learning
+        if self.predictive_enabled:
+            context = {'type': 'select', 'choices_count': len(choices)}
+            self.record_prompt('select_prompt', context)
 
         if self.use_questionary:
 

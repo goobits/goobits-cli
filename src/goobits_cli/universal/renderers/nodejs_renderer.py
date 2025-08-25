@@ -261,6 +261,8 @@ class NodeJSRenderer(LanguageRenderer):
 
             "camelCase": self._camel_case_filter,  # Alias for test compatibility
 
+            "PascalCase": self._pascal_case_filter,
+
             "js_require": self._js_require_filter,
 
             "commander_option": self._commander_option_filter,
@@ -1074,6 +1076,15 @@ class NodeJSRenderer(LanguageRenderer):
         # First part stays lowercase, rest are capitalized
 
         return parts[0].lower() + ''.join(word.capitalize() for word in parts[1:])
+
+    
+
+    def _pascal_case_filter(self, name: str) -> str:
+        """Convert name to PascalCase by capitalizing the first letter of camelCase."""
+        camel_case = self._camel_case_filter(name)
+        if not camel_case:
+            return ""
+        return camel_case[0].upper() + camel_case[1:]
 
     
 

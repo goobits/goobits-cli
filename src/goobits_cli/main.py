@@ -76,6 +76,8 @@ import json
 import shutil
 
 import subprocess
+# Use cached subprocess for better performance
+from .universal.performance.subprocess_cache import run_cached
 
 from pathlib import Path
 
@@ -1373,9 +1375,13 @@ description: "A CLI tool built with Goobits"
 
 
 
-# Language selection (python, nodejs, or typescript)
+# Language selection (python, nodejs, typescript, or rust)
 
 language: python
+
+# CLI generation configuration
+cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_hooks: "app_hooks.py"
 
 
 
@@ -1443,9 +1449,13 @@ description: "An advanced CLI tool built with Goobits"
 
 
 
-# Language selection (python, nodejs, or typescript)
+# Language selection (python, nodejs, typescript, or rust)
 
 language: python
+
+# CLI generation configuration
+cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_hooks: "app_hooks.py"
 
 
 
@@ -1593,9 +1603,13 @@ description: "API client CLI tool built with Goobits"
 
 
 
-# Language selection (python, nodejs, or typescript)
+# Language selection (python, nodejs, typescript, or rust)
 
 language: python
+
+# CLI generation configuration
+cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_hooks: "app_hooks.py"
 
 
 
@@ -1731,9 +1745,13 @@ description: "Text processing CLI tool built with Goobits"
 
 
 
-# Language selection (python, nodejs, or typescript)
+# Language selection (python, nodejs, typescript, or rust)
 
 language: python
+
+# CLI generation configuration
+cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_hooks: "app_hooks.py"
 
 
 
@@ -2009,7 +2027,7 @@ def upgrade(
 
     try:
 
-        result = subprocess.run(["pipx", "--version"], capture_output=True, text=True, check=True)
+        result = run_cached(["pipx", "--version"], capture_output=True, text=True, check=True)
 
         typer.echo(f"Using pipx version: {result.stdout.strip()}")
 
@@ -2105,7 +2123,7 @@ def upgrade(
 
     try:
 
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        result = run_cached(cmd, capture_output=True, text=True, check=True)
 
         
 
@@ -2119,7 +2137,7 @@ def upgrade(
 
         try:
 
-            version_result = subprocess.run(["goobits", "--version"], capture_output=True, text=True, check=True)
+            version_result = run_cached(["goobits", "--version"], capture_output=True, text=True, check=True)
 
             new_version = version_result.stdout.strip().split()[-1]
 

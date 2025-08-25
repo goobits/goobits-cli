@@ -43,7 +43,7 @@ class ParallelIOManager:
         self.max_workers = max_workers
         self.use_async = use_async
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
-        self._semaphore = asyncio.Semaphore(max_workers)
+        self._semaphore = None  # Initialize later when needed
         
     async def write_files_parallel(self, files: List[Tuple[Path, str]]) -> List[bool]:
         """
@@ -72,6 +72,10 @@ class ParallelIOManager:
     
     async def _write_file_async(self, path: Path, content: str) -> bool:
         """Write a single file asynchronously."""
+        # Ensure semaphore exists for current event loop
+        if self._semaphore is None:
+            self._semaphore = asyncio.Semaphore(self.max_workers)
+        
         async with self._semaphore:
             try:
                 # Ensure directory exists
@@ -147,6 +151,10 @@ class ParallelIOManager:
     
     async def _read_file_async(self, path: Path) -> Optional[str]:
         """Read a single file asynchronously."""
+        # Ensure semaphore exists for current event loop
+        if self._semaphore is None:
+            self._semaphore = asyncio.Semaphore(self.max_workers)
+        
         async with self._semaphore:
             try:
                 if not path.exists():
@@ -236,6 +244,10 @@ class ParallelIOManager:
         context: Dict[str, Any]
     ) -> str:
         """Process a single template asynchronously."""
+        # Ensure semaphore exists for current event loop
+        if self._semaphore is None:
+            self._semaphore = asyncio.Semaphore(self.max_workers)
+        
         async with self._semaphore:
             try:
                 # If processor is async

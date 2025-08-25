@@ -37,8 +37,8 @@ Please be respectful and constructive in all interactions. We aim to maintain a 
 
 ```bash
 # Clone the repository
-git clone https://github.com/DataBassGit/goobits
-cd goobits
+git clone https://github.com/goobits/goobits-cli
+cd goobits-cli
 
 # Create virtual environment
 python3 -m venv venv
@@ -51,7 +51,8 @@ pip install -e .[dev,test]
 pytest
 
 # Run linting
-ruff check src/
+black --check src/
+flake8 src/
 
 # Type checking
 mypy src/goobits_cli/
@@ -95,11 +96,11 @@ pytest --cov=goobits_cli
 ### Formatting
 
 ```bash
-# Format checking with ruff
-ruff format src/
+# Format code with black
+black src/
 
-# Check with ruff
-ruff check src/
+# Check with flake8
+flake8 src/
 
 # Type checking
 mypy src/goobits_cli/
@@ -159,8 +160,8 @@ Releases are managed by maintainers:
 
 1. Update version in `pyproject.toml`
 2. Update CHANGELOG.md
-4. Create git tag
-5. Build and publish to PyPI
+3. Create git tag
+4. Build and publish to PyPI
 
 ## Language-Specific Contributions
 
@@ -195,7 +196,7 @@ When contributing to the Universal Template System:
 
 ## Performance Considerations
 
-- Run performance benchmarks: `python performance/performance_suite.py`
+- Run performance benchmarks: `python performance/benchmark_suite.py`
 - Target: <100ms startup time
 - Keep memory usage minimal
 - Use lazy loading where appropriate

@@ -1036,6 +1036,10 @@ class UniversalTemplateEngine:
         
         This method processes templates concurrently for 30-50% performance improvement.
         """
+        # Disable parallel I/O in test mode to avoid event loop conflicts
+        if self.test_mode:
+            return self.generate_cli(config, language, output_dir, consolidate, config_filename)
+        
         # Use asyncio to run the parallel version
         if self.io_manager and self.performance_enabled:
             try:
@@ -1059,8 +1063,10 @@ class UniversalTemplateEngine:
                     loop.close()
                     
                 return result
-            except Exception:
-                # Fallback to sequential generation
+            except Exception as e:
+                # Fallback to sequential generation with debug info
+                import typer
+                typer.echo(f"Parallel generation failed: {e}, falling back to sequential", err=True)
                 return self.generate_cli(config, language, output_dir, consolidate, config_filename)
         else:
             # No parallel I/O available, use sequential

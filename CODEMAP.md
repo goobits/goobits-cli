@@ -11,7 +11,7 @@ PROJECT SUMMARY
   Framework:    typer (framework CLI), rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
   
-  Total Files:  5 generator files, 53 test files
+  Total Files:  4 generator files + __init__.py, 53 test files
   Total LOC:    ~60,000+ lines of Python code
 
 ================================================================================
@@ -44,7 +44,7 @@ Key Patterns:
 │   ├── main.py               [CLI entry point - build/init/serve]
 │   ├── builder.py            [Routes to language generators]
 │   ├── schemas.py            [YAML config validation (Pydantic)]
-│   ├── generators/ [4]       [Language-specific generators]
+│   ├── generators/ [5]       [4 Language-specific generators + __init__.py]
 │   │   ├── python.py        [Python/Click generator]
 │   │   ├── nodejs.py        [Node.js/Commander generator]
 │   │   ├── typescript.py    [TypeScript generator]
@@ -193,7 +193,7 @@ Development:
 
 • Self-hosting: goobits generates its own CLI from goobits.yaml
 • All 4 languages work end-to-end with production quality
-• Universal template system is now the default generation method
+• Universal template system available via --universal-templates flag
 • Performance: Generated CLIs <100ms startup target met
 • Interactive mode available for all generated CLIs
 • Rust support fully operational with Clap framework

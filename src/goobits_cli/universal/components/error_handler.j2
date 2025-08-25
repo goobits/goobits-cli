@@ -155,7 +155,7 @@ def set_error_handler(handler: ErrorHandler) -> None:
  * Error handling utilities for {{ project.name }}
  */
 
-const util = require('util');
+import util from 'util';
 
 // Standard exit codes
 const ExitCode = {
@@ -310,7 +310,7 @@ function setErrorHandler(handler) {
     _errorHandler = handler;
 }
 
-module.exports = {
+export {
     ExitCode,
     CliError,
     UsageError,

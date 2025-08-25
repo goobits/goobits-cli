@@ -24,15 +24,18 @@ fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
 fn main() {
     let app = Command::new("")
         .version("None")
-        .about("None")
-        .arg_required_else_help(true)
-        .arg(
+        .about("Rust CLI demonstration")
+        .arg_required_else_help(true)        .arg(
             Arg::new("verbose")
                 .long("verbose")
                 .short('v')
                 .help("Enable verbose error output and debugging information")
                 .action(clap::ArgAction::SetTrue)
-        )        // Built-in upgrade subcommand
+        )        .arg(
+            Arg::new("interactive")
+                .long("interactive")                .short('i')
+                .help("None")                .action(clap::ArgAction::SetTrue)        )
+        // Built-in upgrade subcommand
         .subcommand(
             Command::new("upgrade")
                 .about("Upgrade Demo Rust CLI to the latest version")

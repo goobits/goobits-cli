@@ -8,12 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
-- README configuration example now includes required `display_name`, `cli.name`, and `cli.tagline` fields
+- README configuration example now includes required `cli.version` field to match schema requirements
+- README development commands section reordered with `validate` command listed first as it's most commonly used
 - pyproject.toml testpaths now correctly points to `src/tests/` instead of `tests/`
-- CODEMAP.md generator file count corrected from "76 Python files" to "5 generator files"
+- CODEMAP.md generator file count corrected from "76 Python files" to "4 generator files + __init__.py"
 
 ### Changed
-- Documentation sync and accuracy improvements
+- Documentation sync and accuracy improvements across all markdown files
+- Corrected Universal Template System description from "default" to "optional via --universal-templates flag"
+- Fixed README description of --universal-templates from "experimental" to "production-ready" to match goobits.yaml
+
+### Known Issues  
+- Performance tests failing due to missing universal_engine attribute in generators
+- Generated CLI version shows "v2.0.0" while pyproject.toml shows "3.0.0-alpha.1"
 
 ## [3.0.0-alpha.1] - 2024-12
 
@@ -38,7 +45,7 @@ This release delivers full multi-language support with unlimited nested commands
 - **Node.js dependency resolution** error messages
 - **TypeScript compilation** configuration
 - **Rust unused variable warnings** in generated code
-- **Test suite stability** - comprehensive test coverage across 35 test files (53 total Python files in test suite)
+- **Test suite stability** - comprehensive test coverage across 53 test files
 
 ## [1.x] - Previous Versions
 

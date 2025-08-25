@@ -25,7 +25,6 @@ struct CompletionOption {
 #[derive(Clone)]
 struct CompletionArgument {
     name: String,
-    #[allow(dead_code)]
     description: String,
 }
 
