@@ -1,0 +1,285 @@
+{# User Hooks Template Generator
+   
+   This template generates a template file showing users how to implement
+   their hook functions with the correct naming and structure.
+   
+   Variables expected:
+   - language: Target language
+   - project: Project metadata
+   - cli: CLI schema with commands
+#}
+
+{%- if language == 'nodejs' -%}
+/**
+ * Hook implementations for {{ project.name }}
+ * 
+ * This file contains the business logic for your CLI commands.
+ * Implement the hook functions below to handle your CLI commands.
+ * 
+ * IMPORTANT: Hook names must use snake_case with 'on_' prefix
+ * Example:
+ * - Command 'hello' -> Hook function 'on_hello'
+ * - Command 'hello-world' -> Hook function 'on_hello_world'
+ */
+
+// Import any modules you need here
+import fs from 'fs';
+import path from 'path';
+
+{%- for cmd in cli.root_command.subcommands if cmd.subcommands is not defined or not cmd.subcommands %}
+
+/**
+ * {{ cmd.description }}
+{%- for arg in cmd.arguments %}
+ * @param {{ '{' }}{{ cmd.arguments | selectattr('name', 'equalto', arg.name) | map(attribute='type') | first | default('string') }}{{ '}' }} {{ arg.name }} - {{ arg.description }}
+{%- endfor %}
+{%- if cmd.options %}
+ * @param {{ '{' }}Object{{ '}' }} options - Command options
+{%- for option in cmd.options %}
+ * @param {{ '{' }}{{ option.type | default('string') }}{{ '}' }} options.{{ option.name | replace('-', '_') }} - {{ option.description }}
+{%- endfor %}
+{%- endif %}
+ * @returns {{ '{' }}Promise<number>{{ '}' }} - Exit code (0 for success)
+ */
+async function on_{{ cmd.name | replace('-', '_') }}({% for arg in cmd.arguments %}{{ arg.name }}{% if not loop.last or cmd.options %}, {% endif %}{% endfor %}{% if cmd.options %}options{% endif %}) {
+    // Add your business logic here
+    console.log('Hook on_{{ cmd.name | replace('-', '_') }} called');
+    {%- if cmd.arguments %}
+    console.log('Arguments:', { {% for arg in cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} });
+    {%- endif %}
+    {%- if cmd.options %}
+    console.log('Options:', options);
+    {%- endif %}
+    
+    // Return 0 for success, non-zero for error
+    return 0;
+}
+{%- endfor %}
+
+{%- for cmd in cli.root_command.subcommands if cmd.subcommands is defined and cmd.subcommands %}
+{%- if cmd.subcommands is mapping %}
+{%- for subcmd_name, subcmd in cmd.subcommands.items() %}
+
+/**
+ * {{ subcmd.description | default(subcmd.desc) | default('No description') }}
+{%- for arg in subcmd.arguments %}
+ * @param {{ '{' }}{{ subcmd.arguments | selectattr('name', 'equalto', arg.name) | map(attribute='type') | first | default('string') }}{{ '}' }} {{ arg.name }} - {{ arg.description }}
+{%- endfor %}
+{%- if subcmd.options %}
+ * @param {{ '{' }}Object{{ '}' }} options - Command options
+{%- for option in subcmd.options %}
+ * @param {{ '{' }}{{ option.type | default('string') }}{{ '}' }} options.{{ option.name | replace('-', '_') }} - {{ option.description }}
+{%- endfor %}
+{%- endif %}
+ * @returns {{ '{' }}Promise<number>{{ '}' }} - Exit code (0 for success)
+ */
+async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd_name | replace('-', '_') }}({% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last or subcmd.options %}, {% endif %}{% endfor %}{% if subcmd.options %}options{% endif %}) {
+    // Add your business logic here
+    console.log('Hook on_{{ cmd.name | replace('-', '_') }}_{{ subcmd_name | replace('-', '_') }} called');
+    {%- if subcmd.arguments %}
+    console.log('Arguments:', { {% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} });
+    {%- endif %}
+    {%- if subcmd.options %}
+    console.log('Options:', options);
+    {%- endif %}
+    
+    // Return 0 for success, non-zero for error
+    return 0;
+}
+{%- endfor %}
+{%- else %}
+{%- for subcmd in cmd.subcommands %}
+
+/**
+ * {{ subcmd.description | default(subcmd.desc) | default('No description') }}
+{%- for arg in subcmd.arguments %}
+ * @param {{ '{' }}{{ subcmd.arguments | selectattr('name', 'equalto', arg.name) | map(attribute='type') | first | default('string') }}{{ '}' }} {{ arg.name }} - {{ arg.description }}
+{%- endfor %}
+{%- if subcmd.options %}
+ * @param {{ '{' }}Object{{ '}' }} options - Command options
+{%- for option in subcmd.options %}
+ * @param {{ '{' }}{{ option.type | default('string') }}{{ '}' }} options.{{ option.name | replace('-', '_') }} - {{ option.description }}
+{%- endfor %}
+{%- endif %}
+ * @returns {{ '{' }}Promise<number>{{ '}' }} - Exit code (0 for success)
+ */
+async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }}({% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last or subcmd.options %}, {% endif %}{% endfor %}{% if subcmd.options %}options{% endif %}) {
+    // Add your business logic here
+    console.log('Hook on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }} called');
+    {%- if subcmd.arguments %}
+    console.log('Arguments:', { {% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} });
+    {%- endif %}
+    {%- if subcmd.options %}
+    console.log('Options:', options);
+    {%- endif %}
+    
+    // Return 0 for success, non-zero for error
+    return 0;
+}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+
+// Export all hook functions
+export {
+{%- for cmd in cli.root_command.subcommands if cmd.subcommands is not defined or not cmd.subcommands %}
+    on_{{ cmd.name | replace('-', '_') }},
+{%- endfor %}
+{%- for cmd in cli.root_command.subcommands if cmd.subcommands is defined and cmd.subcommands %}
+{%- if cmd.subcommands is mapping %}
+{%- for subcmd_name, subcmd in cmd.subcommands.items() %}
+    on_{{ cmd.name | replace('-', '_') }}_{{ subcmd_name | replace('-', '_') }},
+{%- endfor %}
+{%- else %}
+{%- for subcmd in cmd.subcommands %}
+    on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }},
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+};
+
+{%- elif language == 'typescript' -%}
+/**
+ * Hook implementations for {{ project.name }}
+ * 
+ * This file contains the business logic for your CLI commands.
+ * Implement the hook functions below to handle your CLI commands.
+ * 
+ * IMPORTANT: Hook names must use snake_case with 'on_' prefix
+ * Example:
+ * - Command 'hello' -> Hook function 'on_hello'
+ * - Command 'hello-world' -> Hook function 'on_hello_world'
+ */
+
+// Import any modules you need here
+import * as fs from 'fs';
+import * as path from 'path';
+
+{%- for cmd in cli.root_command.subcommands if cmd.subcommands is not defined or not cmd.subcommands %}
+
+/**
+ * {{ cmd.description }}
+{%- for arg in cmd.arguments %}
+ * @param {{ arg.name }} {{ arg.description }}
+{%- endfor %}
+{%- if cmd.options %}
+ * @param options Command options
+{%- for option in cmd.options %}
+ * @param options.{{ option.name | replace('-', '_') }} {{ option.description }}
+{%- endfor %}
+{%- endif %}
+ * @returns Promise<number> - Exit code (0 for success)
+ */
+export async function on_{{ cmd.name | replace('-', '_') }}(
+{%- for arg in cmd.arguments %}
+    {{ arg.name }}: {% if arg.multiple %}string[]{% else %}string{% endif %}{% if not loop.last or cmd.options %},{% endif %}
+{%- endfor %}
+{%- if cmd.options %}
+    options: {
+{%- for option in cmd.options %}
+        {{ option.name | replace('-', '_') }}?: {% if option.type == 'boolean' %}boolean{% elif option.type == 'integer' %}number{% elif option.type == 'float' %}number{% else %}string{% endif %};
+{%- endfor %}
+    }
+{%- endif %}
+): Promise<number> {
+    // Add your business logic here
+    console.log('Hook on_{{ cmd.name | replace('-', '_') }} called');
+    {%- if cmd.arguments %}
+    console.log('Arguments:', { {% for arg in cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} });
+    {%- endif %}
+    {%- if cmd.options %}
+    console.log('Options:', options);
+    {%- endif %}
+    
+    // Return 0 for success, non-zero for error
+    return 0;
+}
+{%- endfor %}
+
+{%- for cmd in cli.root_command.subcommands if cmd.subcommands is defined and cmd.subcommands %}
+{%- if cmd.subcommands is mapping %}
+{%- for subcmd_name, subcmd in cmd.subcommands.items() %}
+
+/**
+ * {{ subcmd.description | default(subcmd.desc) | default('No description') }}
+{%- for arg in subcmd.arguments %}
+ * @param {{ arg.name }} {{ arg.description }}
+{%- endfor %}
+{%- if subcmd.options %}
+ * @param options Command options
+{%- for option in subcmd.options %}
+ * @param options.{{ option.name | replace('-', '_') }} {{ option.description }}
+{%- endfor %}
+{%- endif %}
+ * @returns Promise<number> - Exit code (0 for success)
+ */
+export async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd_name | replace('-', '_') }}(
+{%- for arg in subcmd.arguments %}
+    {{ arg.name }}: {% if arg.multiple %}string[]{% else %}string{% endif %}{% if not loop.last or subcmd.options %},{% endif %}
+{%- endfor %}
+{%- if subcmd.options %}
+    options: {
+{%- for option in subcmd.options %}
+        {{ option.name | replace('-', '_') }}?: {% if option.type == 'boolean' %}boolean{% elif option.type == 'integer' %}number{% elif option.type == 'float' %}number{% else %}string{% endif %};
+{%- endfor %}
+    }
+{%- endif %}
+): Promise<number> {
+    // Add your business logic here
+    console.log('Hook on_{{ cmd.name | replace('-', '_') }}_{{ subcmd_name | replace('-', '_') }} called');
+    {%- if subcmd.arguments %}
+    console.log('Arguments:', { {% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} });
+    {%- endif %}
+    {%- if subcmd.options %}
+    console.log('Options:', options);
+    {%- endif %}
+    
+    // Return 0 for success, non-zero for error
+    return 0;
+}
+{%- endfor %}
+{%- else %}
+{%- for subcmd in cmd.subcommands %}
+
+/**
+ * {{ subcmd.description | default(subcmd.desc) | default('No description') }}
+{%- for arg in subcmd.arguments %}
+ * @param {{ arg.name }} {{ arg.description }}
+{%- endfor %}
+{%- if subcmd.options %}
+ * @param options Command options
+{%- for option in subcmd.options %}
+ * @param options.{{ option.name | replace('-', '_') }} {{ option.description }}
+{%- endfor %}
+{%- endif %}
+ * @returns Promise<number> - Exit code (0 for success)
+ */
+export async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }}(
+{%- for arg in subcmd.arguments %}
+    {{ arg.name }}: {% if arg.multiple %}string[]{% else %}string{% endif %}{% if not loop.last or subcmd.options %},{% endif %}
+{%- endfor %}
+{%- if subcmd.options %}
+    options: {
+{%- for option in subcmd.options %}
+        {{ option.name | replace('-', '_') }}?: {% if option.type == 'boolean' %}boolean{% elif option.type == 'integer' %}number{% elif option.type == 'float' %}number{% else %}string{% endif %};
+{%- endfor %}
+    }
+{%- endif %}
+): Promise<number> {
+    // Add your business logic here
+    console.log('Hook on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }} called');
+    {%- if subcmd.arguments %}
+    console.log('Arguments:', { {% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %} });
+    {%- endif %}
+    {%- if subcmd.options %}
+    console.log('Options:', options);
+    {%- endif %}
+    
+    // Return 0 for success, non-zero for error
+    return 0;
+}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
+
+{%- endif -%}

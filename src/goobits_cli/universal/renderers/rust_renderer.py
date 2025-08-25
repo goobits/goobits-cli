@@ -271,6 +271,8 @@ class RustRenderer(LanguageRenderer):
 
         
 
+        cli_name = ir.get("cli", {}).get("root_command", {}).get("name", "cli").replace("-", "_")
+
         output = {
 
             "command_handler": "src/main.rs",
@@ -302,6 +304,9 @@ class RustRenderer(LanguageRenderer):
         }
 
         
+        # Add interactive mode if enabled
+        if self._has_interactive_features(ir):
+            output["interactive_mode"] = f"src/{cli_name}_interactive.rs"
 
         return output
 
@@ -952,3 +957,13 @@ class RustRenderer(LanguageRenderer):
         features = cli_data.get('features', {})
 
         return features.get('completion', {}).get('enabled', False)
+
+    def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
+
+        """Check if CLI has interactive mode features."""
+
+        features = cli_schema.get("features", {})
+
+        interactive_mode = features.get("interactive_mode", {})
+
+        return interactive_mode.get("enabled", False)

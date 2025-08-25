@@ -21,7 +21,6 @@
 
 use clap::{Arg, Command, ArgMatches, value_parser};
 use anyhow::Result;
-use crate::hooks::HookManager;
 use crate::errors::{CliError, ExitCode};
 
 /// Build the main CLI application
@@ -97,14 +96,14 @@ pub fn build_cli() -> Command {
 }
 
 /// Execute a CLI command using the hook system
-pub fn execute_command(matches: &ArgMatches, hook_manager: &HookManager) -> Result<()> {
+/// Note: This is a stub function as hook execution is handled in main.rs
+pub fn execute_command(matches: &ArgMatches) -> Result<()> {
     match matches.subcommand() {
         {% if cli.commands -%}
         {%- for command_name, command in cli.commands.items() %}
-        Some(("{{ command_name }}", sub_matches)) => {
-            let hook_name = "on_{{ command_name | replace('-', '_') }}";
-            hook_manager.execute_hook(hook_name, sub_matches)
-                .map_err(|e| CliError::new(format!("Failed to execute {}: {}", hook_name, e), ExitCode::GeneralError))?;
+        Some(("{{ command_name }}", _sub_matches)) => {
+            // Hook execution is handled directly in main.rs
+            // This function is provided for CLI structure definition only
         }
         {%- endfor %}
         {%- endif %}

@@ -343,7 +343,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
             'command_handler': 'cli.ts',
 
-            'hook_system': 'src/hooks.ts',
+            'hooks_template': 'src/hooks.ts',
 
             'config_manager': 'lib/config.ts',
 
@@ -423,7 +423,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
         # Add interactive mode if enabled
 
-        if self._has_interactive_features(ir.get("cli", {})):
+        if self._has_interactive_features(ir):
 
             output["interactive_mode"] = f"{cli_name}_interactive.ts"
 

@@ -2,16 +2,17 @@
  * Hook implementations for the test CLI (Node.js/TypeScript)
  */
 
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
+import fs from 'fs';
+import path from 'path';
+import readline from 'readline';
 
-async function onHello({ name, greeting = "Hello" }) {
+async function on_hello(name, options = {}) {
+    const { greeting = "Hello" } = options;
     console.log(`${greeting} ${name}`);
     return 0;
 }
 
-async function onConfigGet({ key }) {
+async function on_config_get(key, options = {}) {
     const defaultConfig = {
         theme: process.env.TEST_CLI_THEME || "default",
         api_key: "",
@@ -27,12 +28,12 @@ async function onConfigGet({ key }) {
     }
 }
 
-async function onConfigSet({ key, value }) {
+async function on_config_set(key, value, options = {}) {
     console.log(`Setting ${key} to ${value}`);
     return 0;
 }
 
-async function onConfigList() {
+async function on_config_list(options = {}) {
     const defaultConfig = {
         theme: "default",
         api_key: "",
@@ -45,7 +46,8 @@ async function onConfigList() {
     return 0;
 }
 
-async function onConfigReset({ force }) {
+async function on_config_reset(options = {}) {
+    const { force } = options;
     if (!force) {
         const rl = readline.createInterface({
             input: process.stdin,
@@ -70,19 +72,21 @@ async function onConfigReset({ force }) {
     return 0;
 }
 
-async function onFail({ code = 1 }) {
+async function on_fail(options = {}) {
+    const { code = 1 } = options;
     console.error(`Error: Command failed with exit code ${code}`);
     return code;
 }
 
-async function onEcho({ words }) {
+async function on_echo(words, options = {}) {
     if (words && words.length > 0) {
         console.log(words.join(' '));
     }
     return 0;
 }
 
-async function onFileCreate({ path: filePath, content }) {
+async function on_file_create(filePath, options = {}) {
+    const { content } = options;
     try {
         const dir = path.dirname(filePath);
         await fs.promises.mkdir(dir, { recursive: true });
@@ -105,7 +109,7 @@ async function onFileCreate({ path: filePath, content }) {
     }
 }
 
-async function onFileDelete({ path: filePath }) {
+async function on_file_delete(filePath, options = {}) {
     try {
         await fs.promises.unlink(filePath);
         console.log(`Deleted file: ${filePath}`);
@@ -122,14 +126,14 @@ async function onFileDelete({ path: filePath }) {
     }
 }
 
-module.exports = {
-    onHello,
-    onConfigGet,
-    onConfigSet,
-    onConfigList,
-    onConfigReset,
-    onFail,
-    onEcho,
-    onFileCreate,
-    onFileDelete
+export {
+    on_hello,
+    on_config_get,
+    on_config_set,
+    on_config_list,
+    on_config_reset,
+    on_fail,
+    on_echo,
+    on_file_create,
+    on_file_delete
 };

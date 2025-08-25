@@ -379,7 +379,9 @@ class NodeJSRenderer(LanguageRenderer):
 
             "command_handler": "cli.js",
 
-            "hook_system": "src/hooks.js", 
+            # Don't generate hook_system - user provides their own hooks.js
+            # Instead generate a template showing the correct format
+            "hooks_template": "src/hooks.js", 
 
             "config_manager": "lib/config.js",
 
@@ -407,13 +409,11 @@ class NodeJSRenderer(LanguageRenderer):
 
         
 
-        # Add interactive mode if enabled (use enhanced version for Node.js)
+        # Add interactive mode if enabled (unified template approach)
 
-        if self._has_interactive_features(ir.get("cli", {})):
+        if self._has_interactive_features(ir):
 
             output["interactive_mode"] = f"{cli_name}_interactive.js"
-
-            output["interactive_mode_enhanced"] = f"{cli_name}_interactive_enhanced.js"
 
         
 
@@ -549,7 +549,7 @@ class NodeJSRenderer(LanguageRenderer):
 
         # Add enhanced interactive mode dependencies if interactive features are enabled
 
-        if self._has_interactive_features(ir.get("cli", {})):
+        if self._has_interactive_features(ir):
 
             dependencies.update({
 
@@ -631,7 +631,7 @@ class NodeJSRenderer(LanguageRenderer):
 
         # Add enhanced interactive mode imports if interactive features are enabled
 
-        if self._has_interactive_features(ir.get("cli", {})):
+        if self._has_interactive_features(ir):
 
             imports.extend([
 

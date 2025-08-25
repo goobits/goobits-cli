@@ -1161,6 +1161,21 @@ pub fn remove_context_keys(keys: &[&str]) {
     });
 }
 
+/// Create a command context for logging
+pub fn create_command_context(command: &str, args: &[&str]) -> LogContext {
+    let mut context = HashMap::new();
+    context.insert("command".to_string(), json!(command));
+    if !args.is_empty() {
+        context.insert("args".to_string(), json!(args));
+    }
+    context
+}
+
+/// Log an error with context
+pub fn log_error(context: &str, err: &anyhow::Error) {
+    error(context, &format!("{:#}", err), None);
+}
+
 /// Convenience macro for logging with automatic module detection
 #[macro_export]
 macro_rules! log {
