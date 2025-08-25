@@ -1,0 +1,23 @@
+{# Test setup for TypeScript CLI testing #}
+{% if language == "typescript" %}
+import { jest } from '@jest/globals';
+
+// Mock console methods for cleaner test output
+global.console = {
+  ...console,
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
+};
+
+// Setup test environment
+process.env.NODE_ENV = 'test';
+
+// Export test utilities
+export const mockConsole = global.console;
+export const resetMocks = () => {
+  jest.clearAllMocks();
+};
+{% endif %}

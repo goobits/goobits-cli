@@ -1,0 +1,22 @@
+{# Jest configuration for TypeScript testing #}
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  roots: ['<rootDir>/test'],
+  testMatch: ['**/*.test.ts'],
+  collectCoverageFrom: [
+    '**/*.ts',
+    '!**/*.d.ts',
+    '!**/node_modules/**',
+    '!**/dist/**',
+    '!**/test/**'
+  ],
+  setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        esModuleInterop: true
+      }
+    }
+  }
+};

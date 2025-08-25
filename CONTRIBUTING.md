@@ -37,8 +37,8 @@ Please be respectful and constructive in all interactions. We aim to maintain a 
 
 ```bash
 # Clone the repository
-git clone https://github.com/goobits/goobits-cli.git
-cd goobits-cli
+git clone https://github.com/DataBassGit/goobits
+cd goobits
 
 # Create virtual environment
 python3 -m venv venv
@@ -50,9 +50,11 @@ pip install -e .[dev,test]
 # Run tests
 pytest
 
-# Run linting (requires dev dependencies)
-# ruff check src/
-# mypy src/goobits_cli/
+# Run linting
+ruff check src/
+
+# Type checking
+mypy src/goobits_cli/
 ```
 
 ## Testing
@@ -93,8 +95,8 @@ pytest --cov=goobits_cli
 ### Formatting
 
 ```bash
-# Auto-format with Black
-black src/
+# Format checking with ruff
+ruff format src/
 
 # Check with ruff
 ruff check src/
@@ -156,8 +158,7 @@ Update README.md when:
 Releases are managed by maintainers:
 
 1. Update version in `pyproject.toml`
-2. Update version in `src/goobits_cli/__init__.py`
-3. Update CHANGELOG.md
+2. Update CHANGELOG.md
 4. Create git tag
 5. Build and publish to PyPI
 

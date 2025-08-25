@@ -15,20 +15,31 @@ Node.js/JavaScript code with proper ES module support.
 
 
 import re
-
-try:
-    from ...__version__ import __version__ as _version
-except ImportError:
-    _version = "3.0.0-alpha.1"  # Fallback version
-
-
 from typing import Dict, Any, List
-
 from datetime import datetime
 
-import jinja2
+# Lazy import for version to avoid early import overhead
+_version = None
 
+def _get_version():
+    global _version
+    if _version is None:
+        try:
+            from ...__version__ import __version__ as v
+            _version = v
+        except ImportError:
+            _version = "3.0.0-alpha.1"
+    return _version
 
+# Lazy import Jinja2 to avoid startup overhead
+_jinja2 = None
+
+def _get_jinja2():
+    global _jinja2
+    if _jinja2 is None:
+        import jinja2 as j2
+        _jinja2 = j2
+    return _jinja2
 
 from ..template_engine import LanguageRenderer
 
@@ -54,13 +65,14 @@ class NodeJSRenderer(LanguageRenderer):
 
     def _get_version(self) -> str:
         """Get current version for generator metadata."""
-        return _version
+        return _get_version()
     
     def __init__(self):
 
         """Initialize the Node.js renderer with custom filters and context."""
-
+        # Delay Jinja2 environment creation until needed
         self._jinja_env = None
+        self._jinja2_module = None
 
         
 
@@ -300,11 +312,12 @@ class NodeJSRenderer(LanguageRenderer):
         """
 
         # Create Jinja environment if not exists
-
         if self._jinja_env is None:
-
-            self._jinja_env = jinja2.Environment(
-                loader=jinja2.BaseLoader(),
+            # Lazy load Jinja2
+            if self._jinja2_module is None:
+                self._jinja2_module = _get_jinja2()
+            self._jinja_env = self._jinja2_module.Environment(
+                loader=self._jinja2_module.BaseLoader(),
                 autoescape=False,
                 trim_blocks=True,
                 lstrip_blocks=True,

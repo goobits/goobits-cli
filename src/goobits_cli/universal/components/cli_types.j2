@@ -1,0 +1,31 @@
+{# TypeScript type definitions for CLI #}
+{% if language == "typescript" %}
+// Type definitions for {{ project.name }} CLI
+export interface CLIOptions {
+  verbose?: boolean;
+  debug?: boolean;
+  quiet?: boolean;
+  config?: string;
+}
+
+export interface CommandContext {
+  name: string;
+  args: string[];
+  options: CLIOptions;
+}
+
+{% for command in cli.root_command.subcommands %}
+export interface {{ command.name | PascalCase }}Options {
+  {% for option in command.options %}
+  {{ option.name | camelCase }}?: {{ option.type | ts_type }};
+  {% endfor %}
+}
+
+{% endfor %}
+
+export type HookFunction = (context: CommandContext) => Promise<void> | void;
+
+export interface HookRegistry {
+  [key: string]: HookFunction;
+}
+{% endif %}

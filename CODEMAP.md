@@ -11,8 +11,8 @@ PROJECT SUMMARY
   Framework:    typer (framework CLI), rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
   
-  Total Files:  400+ files across core, templates, and tests
-  Total LOC:    ~15,000+ lines including templates
+  Total Files:  76 Python files in core, 35 test files
+  Total LOC:    ~60,000+ lines of Python code
 
 ================================================================================
 
@@ -40,7 +40,7 @@ Key Patterns:
 ----------------------
 
 [root]/
-├── src/goobits_cli/           [Core framework - 8.8K+ LOC]
+├── src/goobits_cli/           [Core framework - 60K+ LOC]
 │   ├── main.py               [CLI entry point - build/init/serve]
 │   ├── builder.py            [Routes to language generators]
 │   ├── schemas.py            [YAML config validation (Pydantic)]
@@ -62,14 +62,13 @@ Key Patterns:
 │   │   ├── performance/     [Performance monitoring]
 │   │   └── completion/      [Dynamic completion system]
 │   └── shared/              [Cross-language utilities]
-├── src/tests/ [29]          [Comprehensive test suite]
+├── src/tests/               [Comprehensive test suite - 35 test files]
 │   ├── unit/                [Unit tests by component]
 │   ├── integration/         [Cross-language integration]
 │   ├── e2e/                 [End-to-end CLI testing]
 │   └── performance/         [Real performance benchmarks]
 ├── performance/             [Performance validation suite]
 ├── docs/                    [Architecture & usage guides]
-├── shared/                  [Shared schemas & components]
 └── goobits.yaml            [Self-hosting configuration]
 
 ================================================================================
@@ -133,7 +132,8 @@ DEVELOPMENT:
 Generated CLIs Use:
   • Python: rich-click, pydantic, rich (terminal UI)
   • Node.js: commander, chalk, inquirer
-  • TypeScript: clap-like libs, type definitions
+  • TypeScript: commander, type definitions
+  • Rust: clap, anyhow, colored
 
 ================================================================================
 
@@ -172,9 +172,7 @@ Naming Conventions:
 CLI Commands:
   • Generate:    goobits build [config.yaml]
   • Initialize:  goobits init
-  • Serve PyPI:  goobits serve
-  • Upgrade:     goobits upgrade
-  • Standard:    goobits build [config.yaml]
+  • Serve PyPI:  goobits serve <directory>
 
 Development:
   • Install:     ./setup.sh install --dev
@@ -194,7 +192,7 @@ Development:
 • Performance: Generated CLIs <100ms startup target met
 • Interactive mode available for all generated CLIs
 • Rust support fully operational with Clap framework
-• Test coverage: 696 tests, all passing
+• Test coverage: 35 test files, comprehensive coverage
 • Generated CLIs use hook system: hooks.py/js/ts/rs for logic
 
 ================================================================================
