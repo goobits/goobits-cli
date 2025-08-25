@@ -1,0 +1,54 @@
+{#
+Universal Component: package.json template for Node.js/TypeScript packages
+
+This template generates the package.json file for Node.js CLI packages,
+including proper dependencies, scripts, and metadata.
+
+Template Variables Expected:
+  - project: Project configuration  
+  - cli: CLI configuration
+  - nodejs: Node.js specific context
+#}
+{
+  "name": "{{ project.package_name }}",
+  "version": "{{ project.version }}",
+  "description": "{{ project.description }}",
+  "main": "{{ nodejs.main_entry | default('index.js') }}",
+  "type": "module",
+  "bin": {
+    "{{ project.command_name }}": "./{{ nodejs.bin_entry | default('bin/index.js') }}"
+  },
+  "scripts": {
+    "start": "node {{ nodejs.main_entry | default('index.js') }}",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["cli"{{ ', "' + project.keywords | join('", "') + '"' if project.keywords }}],
+  "author": "{{ project.author | default('') }}",
+  "license": "{{ project.license | default('MIT') }}",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "chalk": "^5.3.0"
+    {%- if nodejs.package_config.dependencies %}
+    {%- for dep, version in nodejs.package_config.dependencies.items() %}
+    ,"{{ dep }}": "{{ version }}"
+    {%- endfor %}
+    {%- endif %}
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+  {%- if project.repository %},
+  "repository": {
+    "type": "git",
+    "url": "{{ project.repository }}"
+  }
+  {%- endif %}
+  {%- if project.homepage %},
+  "homepage": "{{ project.homepage }}"
+  {%- endif %}
+  {%- if project.bugs_url %},
+  "bugs": {
+    "url": "{{ project.bugs_url }}"
+  }
+  {%- endif %}
+}

@@ -31,7 +31,7 @@ class TestTypeScriptGenerator:
             commands={}
         ))
         
-        generator = TypeScriptGenerator(use_universal_templates=False)
+        generator = TypeScriptGenerator(use_universal_templates=True)
         
         # Test that generation doesn't raise exceptions
         try:
@@ -54,7 +54,7 @@ class TestTypeScriptGenerator:
             }
         ))
         
-        generator = TypeScriptGenerator(use_universal_templates=False)
+        generator = TypeScriptGenerator(use_universal_templates=True)
         
         # Test generation with commands
         try:

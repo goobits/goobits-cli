@@ -32,7 +32,7 @@ class TestPythonGenerator:
             commands={}
         ))
         
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator(use_universal_templates=True)
         
         # Test that generation doesn't raise exceptions
         try:
@@ -55,7 +55,7 @@ class TestPythonGenerator:
             }
         ))
         
-        generator = PythonGenerator(use_universal_templates=False)
+        generator = PythonGenerator(use_universal_templates=True)
         
         # Test generation with commands
         try:

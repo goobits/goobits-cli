@@ -360,7 +360,7 @@ class NodeJSRenderer(LanguageRenderer):
 
         output = {
 
-            "command_handler": "cli.js",
+            "main_entry": "cli.js",
 
             "hook_system": "src/hooks.js", 
 
@@ -374,11 +374,11 @@ class NodeJSRenderer(LanguageRenderer):
 
             "package_config": "package.json",
 
-            "main_entry": "index.js",
-
-            "bin_entry": "bin/cli.js",
+            "bin_entry": "bin/index.js",
 
             "postinstall_script": "scripts/postinstall.js",
+
+            "setup_script": "setup.sh",
 
             "readme": "README.md",
 
