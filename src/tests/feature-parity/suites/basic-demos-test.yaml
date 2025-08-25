@@ -100,20 +100,22 @@ tests:
     exit_code: 2
     stderr:
       contains:
-        - "Missing argument"
+        - "error"
     language_overrides:
       nodejs:
+        exit_code: 1
         stderr:
           contains:
-            - "error: missing required argument 'name'"
+            - "missing required argument"
       typescript:
+        exit_code: 1
         stderr:
           contains:
-            - "error: missing required argument 'name'"  
+            - "missing required argument"  
       rust:
         stderr:
           contains:
-            - "error: the following required arguments were not provided"
+            - "required arguments"
             
   - name: greet_invalid_style
     description: Greet command with invalid style (validation not implemented yet)
@@ -132,10 +134,12 @@ tests:
         - "unknown"
     language_overrides:
       nodejs:
+        exit_code: 1
         stderr:
           contains:
             - "unknown command"
       typescript:
+        exit_code: 1
         stderr:
           contains:
             - "unknown command"

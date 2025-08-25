@@ -7,7 +7,17 @@
  * Handle greet command
  */
 export async function onGreet(args) {
-    const { name, message = "Hello", style = "casual", count = 1, uppercase = false, language = "en" } = args;
+    // Handle both Node.js (direct args) and TypeScript (context object) formats
+    let name, message = "Hello", style = "casual", count = 1, uppercase = false, language = "en";
+    
+    if (args.args && args.options) {
+        // TypeScript format: { commandName, args: { name, message }, options: { style, count, etc } }
+        ({ name, message = "Hello" } = args.args);
+        ({ style = "casual", count = 1, uppercase = false, language = "en" } = args.options);
+    } else {
+        // Node.js format: direct destructuring
+        ({ name, message = "Hello", style = "casual", count = 1, uppercase = false, language = "en" } = args);
+    }
     
     let greeting = `${message}, ${name}`;
     
@@ -39,7 +49,16 @@ export async function onGreet(args) {
  * Handle info command
  */
 export async function onInfo(args) {
-    const { format = "text", verbose = false, sections = "all" } = args;
+    // Handle both Node.js (direct args) and TypeScript (context object) formats
+    let format = "text", verbose = false, sections = "all";
+    
+    if (args.args && args.options) {
+        // TypeScript format: { commandName, args: {}, options: { format, verbose, etc } }
+        ({ format = "text", verbose = false, sections = "all" } = args.options);
+    } else {
+        // Node.js format: direct destructuring
+        ({ format = "text", verbose = false, sections = "all" } = args);
+    }
     
     const info = {
         title: "🟢 Node.js CLI Information",

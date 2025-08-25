@@ -1,23 +1,27 @@
-#!/usr/bin/env rust
 //! Hook implementations for Rust CLI demo
 
-use clap::ArgMatches;
-use anyhow::Result;
-use std::env;
+use std::error::Error;
 
 /// Handle greet command
-pub fn on_greet(matches: &ArgMatches) -> Result<()> {
-    let name = matches.get_one::<String>("name").unwrap();
-    let message = matches.get_one::<String>("message").unwrap_or(&"Hello".to_string());
-    let style = matches.get_one::<String>("style").unwrap_or(&"casual".to_string());
-    let count = *matches.get_one::<i32>("count").unwrap_or(&1);
-    let uppercase = matches.get_flag("uppercase");
-    let _language = matches.get_one::<String>("language").unwrap_or(&"en".to_string());
+pub fn on_greet(
+    name: &str, 
+    message: &str, 
+    style: Option<&str>, 
+    count: Option<i32>, 
+    uppercase: bool, 
+    language: Option<&str>, 
+    _verbose: bool, 
+    _config: Option<&str>
+) -> Result<(), Box<dyn Error>> {
+    let message = if message.is_empty() { "Hello" } else { message };
+    let style = style.unwrap_or("casual");
+    let count = count.unwrap_or(1);
+    let _language = language.unwrap_or("en");
     
     let mut greeting = format!("{}, {}", message, name);
     
     // Handle style variations
-    greeting = match style.as_str() {
+    greeting = match style {
         "formal" => format!("{}.", greeting),
         "excited" => format!("{}!!!", greeting),
         _ => format!("{}!", greeting), // casual
@@ -37,26 +41,31 @@ pub fn on_greet(matches: &ArgMatches) -> Result<()> {
 }
 
 /// Handle info command  
-pub fn on_info(matches: &ArgMatches) -> Result<()> {
-    let format = matches.get_one::<String>("format").unwrap_or(&"text".to_string());
-    let verbose = matches.get_flag("verbose");
-    let _sections = matches.get_one::<String>("sections").unwrap_or(&"all".to_string());
+pub fn on_info(
+    format: Option<&str>, 
+    verbose: bool, 
+    sections: Option<&str>, 
+    _global_verbose: bool, 
+    _config: Option<&str>
+) -> Result<(), Box<dyn Error>> {
+    let format = format.unwrap_or("text");
+    let _sections = sections.unwrap_or("all");
     
     if format == "json" {
         println!("{{");
         println!("  \"rust_version\": \"{}\",", env!("CARGO_PKG_VERSION"));
-        println!("  \"platform\": \"{}\",", env::consts::OS);
-        println!("  \"architecture\": \"{}\"", env::consts::ARCH);
+        println!("  \"platform\": \"{}\",", std::env::consts::OS);
+        println!("  \"architecture\": \"{}\"", std::env::consts::ARCH);
         println!("}}");
     } else {
         println!("🦀 Rust CLI Information");
         println!("{}", "-".repeat(30));
         println!("Rust Version: {}", env!("CARGO_PKG_VERSION"));
-        println!("Platform: {}", env::consts::OS);
-        println!("Architecture: {}", env::consts::ARCH);
+        println!("Platform: {}", std::env::consts::OS);
+        println!("Architecture: {}", std::env::consts::ARCH);
         
         if verbose {
-            println!("Target: {}", env::consts::FAMILY);
+            println!("Target: {}", std::env::consts::FAMILY);
         }
     }
     

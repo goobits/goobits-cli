@@ -109,9 +109,11 @@ class ParityTestRunner:
         elif language in ["nodejs", "typescript"]:
             hook_source = config_path.parent / "hooks.js"
             if hook_source.exists():
+                # Copy to the root directory as app_hooks.js (what the CLI looks for)
+                shutil.copy(hook_source, output_dir / language / "app_hooks.js")
+                # Also copy to src/hooks.js to replace generated template
                 src_dir = output_dir / language / "src"
                 src_dir.mkdir(parents=True, exist_ok=True)
-                # Replace the generated placeholder hooks
                 shutil.copy(hook_source, src_dir / "hooks.js")
         elif language == "rust":
             hook_source = config_path.parent / "hooks.rs"
