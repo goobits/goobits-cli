@@ -571,7 +571,13 @@ def {{ '_'.join(cmd.path).replace('-', '_') }}_cmd(ctx{% for arg in cmd.argument
         # Add positional arguments as kwargs if function expects them
         {% for arg in cmd.arguments if cmd.arguments %}
         if '{{ arg.name.lower() }}' in expected_params or accepts_kwargs:
+            {% if not arg.required %}
+            # Only pass optional argument if it's not None, allowing function defaults to be used
+            if {{ arg.name.lower() }} is not None:
+                call_kwargs['{{ arg.name.lower() }}'] = {{ arg.name.lower() }}
+            {% else %}
             call_kwargs['{{ arg.name.lower() }}'] = {{ arg.name.lower() }}
+            {% endif %}
         {% endfor %}
         
         # Add options that the function expects or if it accepts **kwargs
@@ -700,7 +706,7 @@ const program = new Command();
 
 program
     .name('{{ cli.name }}')
-    .description('{{ ((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
+    .description('{{ ((cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
     .option('-v, --verbose', 'Enable verbose error output and debugging information', false);
 
@@ -924,7 +930,7 @@ const program = new Command();
 
 program
     .name('{{ cli.name }}')
-    .description('{{ ((cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
+    .description('{{ ((cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
     .option('-v, --verbose', 'Enable verbose error output and debugging information', false);
 

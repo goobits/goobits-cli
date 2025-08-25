@@ -335,7 +335,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                     command_name=getattr(config, 'command_name', config.cli.name),
 
-                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
+                    description=getattr(config.cli, 'tagline', getattr(config, 'description', config.cli.description)),
 
                     cli=config,
 
@@ -1646,7 +1646,9 @@ The compiled JavaScript files are in the `dist/` directory.
 
         command_name = context['command_name'] or package_name
 
-        description = context['description'] or 'A CLI tool'
+        # Get CLI tagline or fallback to description
+        cli = context.get('cli', {})
+        description = cli.get('tagline', context.get('description', 'A CLI tool'))
 
         version = context['version']
 

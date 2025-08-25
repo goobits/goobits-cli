@@ -1110,7 +1110,12 @@ class RustGenerator(BaseGenerator):
 
         command_name = context['command_name'] or package_name
 
-        description = context.get('description', 'A CLI tool')
+        # Get the CLI tagline or fallback to description
+        cli = context.get('cli')
+        if cli and hasattr(cli, 'tagline') and cli.tagline:
+            description = cli.tagline
+        else:
+            description = context.get('description', 'A CLI tool')
 
         version = context['version']
 

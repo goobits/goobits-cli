@@ -357,8 +357,8 @@ program
 
 // Add custom help formatting
 program.addHelpText('after', `
-{% if cli.description %}
-{{ cli.description }}
+{% if cli.tagline %}
+{{ cli.tagline }}
 {% endif %}
 
 {% if cli.header_sections %}
