@@ -3,7 +3,7 @@ package_name: demo-typescript-cli
 command_name: demo_ts
 display_name: "Demo TypeScript CLI"
 description: "A sample TypeScript CLI built with Goobits"
-version: "1.0.0"
+version: "3.0.0-alpha.1"
 language: typescript
 author: "Demo User"
 email: "demo@example.com"

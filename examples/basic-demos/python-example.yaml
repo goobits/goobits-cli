@@ -3,7 +3,7 @@ package_name: demo-python-cli
 command_name: demo_py
 display_name: "Demo Python CLI"
 description: "A sample Python CLI built with Goobits"
-version: "1.0.0"
+version: "3.0.0-alpha.1"
 language: python
 author: "Demo User"
 email: "demo@example.com"

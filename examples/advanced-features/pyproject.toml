@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nested-demo"
-version = "1.0.0"
+version = "3.0.0-alpha.1"
 description = "Demonstration of deep nested command capabilities"
 readme = "README.md"
 keywords = []

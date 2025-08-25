@@ -13,7 +13,7 @@ const program = new Command();
 program
   .name('testts')
   .description('Test TS compilation')
-  .version('1.0.0');// Global option: interactive
+  .version('3.0.0-alpha.1');// Global option: interactive
 program.option('-i, --interactive <value>', '');// hello command
 program
   .command('hello')

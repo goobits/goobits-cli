@@ -9,7 +9,7 @@ language: python
 
 cli:
   name: demo
-  version: "1.0.0"
+  version: "3.0.0-alpha.1"
   tagline: "Deep nesting demo"
   
   commands:

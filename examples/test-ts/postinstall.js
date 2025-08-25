@@ -94,7 +94,7 @@ function createConfigDirectory() {
         const configFile = path.join(configDir, 'config.json');
         if (!fs.existsSync(configFile)) {
             const defaultConfig = {
-                version: '1.0.0',
+                version: '3.0.0-alpha.1',
 // Default configuration will be added here            };
             
             fs.writeFileSync(configFile, JSON.stringify(defaultConfig, null, 2));

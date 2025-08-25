@@ -3,7 +3,7 @@ package_name: demo-rust-cli
 command_name: demo_rust
 display_name: "Demo Rust CLI"
 description: "A sample Rust CLI built with Goobits"
-version: "1.0.0"
+version: "3.0.0-alpha.1"
 language: rust
 author: "Demo User"
 email: "demo@example.com"
