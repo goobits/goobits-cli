@@ -337,7 +337,13 @@ def main(ctx, verbose{% if cli.root_command.options %}{% for option in cli.root_
     """{{ cli.tagline | default(cli.description if cli.description is defined else (project.description if project.description is defined else 'No description')) }}
 
     \b
+    {%- if cli.description is defined and project.description is defined and cli.description != project.description %}
+    [italic #B3B8C0]{{ cli.description }}[/italic #B3B8C0]
+    
+    [italic #B3B8C0]{{ project.description }}[/italic #B3B8C0]
+    {%- else %}
     [italic #B3B8C0]{{ cli.description if cli.description is defined else (project.description if project.description is defined else 'Transform simple YAML configuration into rich terminal applications.') }}[/italic #B3B8C0]
+    {%- endif %}
     
 {% if cli.header_sections %}{% for section in cli.header_sections %}
     [bold yellow]{{ section.title }}[/bold yellow]

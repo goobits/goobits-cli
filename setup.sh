@@ -65,11 +65,11 @@ else
 fi
 
 # Project-specific configuration
-readonly PACKAGE_NAME="goobits-cli"
-readonly COMMAND_NAME="goobits"
-readonly DISPLAY_NAME="Goobits CLI Framework"
-readonly DESCRIPTION="Build professional command-line tools with YAML configuration"
-readonly PYPI_NAME="goobits-cli"
+readonly PACKAGE_NAME="my-awesome-cli"
+readonly COMMAND_NAME="awesome"
+readonly DISPLAY_NAME="My Awesome CLI"
+readonly DESCRIPTION="A CLI that does awesome things"
+readonly PYPI_NAME="my-awesome-cli"
 readonly DEVELOPMENT_PATH="."
 readonly REQUIRED_VERSION="3.8"
 readonly MAXIMUM_VERSION="3.13"
@@ -77,7 +77,7 @@ readonly CHECK_API_KEYS="False"
 readonly CHECK_DISK_SPACE="True"
 readonly REQUIRED_MB="100"
 readonly SHELL_INTEGRATION="False"
-readonly SHELL_ALIAS="goobits"
+readonly SHELL_ALIAS="awesome"
 
 # Dependencies (legacy format for backward compatibility)
 readonly REQUIRED_DEPS=()
@@ -665,10 +665,8 @@ install_with_pipx() {
         tree_node "info" "Installing in development mode" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
-        # Install system dependencies BEFORE Python packages
-        install_system_dependencies
 
-        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH[dev,test]" --force) &
+        (cd "$PROJECT_DIR" && pipx install --editable "$DEVELOPMENT_PATH" --force) &
         local install_pid=$!
 
         tree_sub_node "progress" "Creating development environment..."
@@ -687,10 +685,8 @@ install_with_pipx() {
         tree_node "info" "Installing from PyPI" "$(update_progress)"
         tree_sub_node "info" "Using pipx for isolated environment"
 
-        # Install system dependencies BEFORE Python packages
-        install_system_dependencies
 
-        pipx install "$PYPI_NAME[dev,test]" --force &
+        pipx install "$PYPI_NAME" --force &
         local install_pid=$!
 
         tree_sub_node "progress" "Downloading and installing package..."
@@ -713,12 +709,10 @@ install_with_pip() {
 
     tree_sub_node "warning" "Using pip instead of pipx (not recommended)"
 
-    # Install system dependencies BEFORE Python packages
-    install_system_dependencies
 
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
-        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[dev,test]" --user) &
+        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -732,7 +726,7 @@ install_with_pip() {
         fi
     else
         tree_sub_node "progress" "Installing from PyPI with pip..."
-        python3 -m pip install "$PYPI_NAME[dev,test]" --user &
+        python3 -m pip install "$PYPI_NAME" --user &
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -774,7 +768,7 @@ upgrade_package() {
         tree_sub_node "progress" "Upgrading with pip..."
 
         # Capture pip output to prevent it from breaking tree structure
-        python3 -m pip install --upgrade "$PYPI_NAME[dev,test]" --user >/dev/null 2>&1 &
+        python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
         show_spinner $!
         wait $!
         local exit_code=$?
@@ -814,39 +808,19 @@ uninstall_package() {
 # Message display functions
 show_install_success_message() {
     echo
-    echo "🎉 Goobits CLI Framework has been installed successfully!
-
-Get started with:
-  mkdir my-awesome-cli && cd my-awesome-cli
-  goobits init        # Create initial goobits.yaml
-  goobits build       # Generate CLI and setup scripts
-  ./setup.sh install --dev
-
-Visit https://github.com/goobits/goobits-cli for documentation.
-"
+    echo "Installation completed successfully!"
     echo
 }
 
 show_dev_success_message() {
     echo
-    echo "🚀 Goobits CLI Framework installed in development mode!
-✅ Your changes to the framework will be reflected immediately.
-
-Development workflow:
-  - Edit source code in src/goobits_cli/
-  - Test immediately with: goobits build
-  - Run tests with: python -m pytest
-  
-💡 Framework changes take effect without reinstalling!
-"
+    echo "Development installation completed successfully!"
     echo
 }
 
 show_upgrade_success_message() {
     echo
-    echo "🆙 Goobits CLI Framework has been upgraded successfully!
-Check out the latest features with: goobits --version
-"
+    echo "Upgrade completed successfully!"
     echo
 }
 
@@ -856,62 +830,6 @@ show_uninstall_success_message() {
     echo
 }
 
-# System dependencies installation (before Python packages)
-install_system_dependencies() {
-    if command -v apt-get >/dev/null 2>&1; then
-        # Check which packages are missing
-        local missing_packages=()
-        
-        if ! dpkg -l | grep -q "^ii.*git" 2>/dev/null; then
-            missing_packages+=("git")
-        else
-            tree_sub_node "success" "✓ Already installed: git"
-        fi
-        if ! dpkg -l | grep -q "^ii.*python3-dev" 2>/dev/null; then
-            missing_packages+=("python3-dev")
-        else
-            tree_sub_node "success" "✓ Already installed: python3-dev"
-        fi
-        if ! dpkg -l | grep -q "^ii.*curl" 2>/dev/null; then
-            missing_packages+=("curl")
-        else
-            tree_sub_node "success" "✓ Already installed: curl"
-        fi
-        if ! dpkg -l | grep -q "^ii.*wget" 2>/dev/null; then
-            missing_packages+=("wget")
-        else
-            tree_sub_node "success" "✓ Already installed: wget"
-        fi
-        if ! dpkg -l | grep -q "^ii.*pipx" 2>/dev/null; then
-            missing_packages+=("pipx")
-        else
-            tree_sub_node "success" "✓ Already installed: pipx"
-        fi
-        
-        # Only prompt for sudo if there are missing packages
-        if [[ ${#missing_packages[@]} -gt 0 ]]; then
-            tree_sub_node "info" "Installing system packages: ${missing_packages[*]} (requires sudo)..."
-            
-            # Update package list first if we're installing anything
-            if ! sudo apt-get update >/dev/null 2>&1; then
-                tree_sub_node "warning" "Failed to update package list"
-            fi
-            
-            # Install each missing package
-            for pkg in "${missing_packages[@]}"; do
-                if sudo apt-get install -y "$pkg" >/dev/null 2>&1; then
-                    tree_sub_node "success" "Installed apt package: $pkg"
-                else
-                    tree_sub_node "warning" "Failed to install apt package: $pkg"
-                fi
-            done
-        else
-            tree_sub_node "success" "All system packages already installed"
-        fi
-    else
-        tree_sub_node "info" "apt-get not found - manual installation required for: git, python3-dev, curl, wget, pipx"
-    fi
-}
 
 
 # Shell integration

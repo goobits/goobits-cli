@@ -258,6 +258,23 @@ goobits init --template advanced
 # Available templates: basic, advanced, api-client, text-processor
 ```
 
+### Migrate Command
+
+```bash
+# Migrate YAML configurations to current format
+goobits migrate
+
+# Migrate specific file
+goobits migrate old-config.yaml
+```
+
+### Upgrade Command
+
+```bash
+# Upgrade goobits-cli to the latest version
+goobits upgrade
+```
+
 
 ## 🔧 Configuration Options
 
@@ -401,7 +418,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 🙏 Acknowledgments
 
 Built with love using:
-- [Click](https://click.palletsprojects.com/) (Python CLI framework)
+- [Typer](https://typer.tiangolo.com/) (Framework's own CLI)
+- [Rich-Click](https://github.com/ewels/rich-click) (Generated Python CLIs)
 - [Commander.js](https://github.com/tj/commander.js/) (Node.js CLI framework)
 - [Clap](https://github.com/clap-rs/clap) (Rust CLI framework)
 - [Rich](https://github.com/Textualize/rich) (Terminal formatting)

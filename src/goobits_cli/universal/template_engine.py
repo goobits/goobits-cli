@@ -1058,7 +1058,7 @@ class UniversalTemplateEngine:
 
                 "name": _safe_get_attr(config, 'display_name', _safe_get_attr(config, 'command_name')),
 
-                "description": _safe_get_attr(cli_config, 'tagline', _safe_get_attr(config, "description")) if cli_config else _safe_get_attr(config, "description"),
+                "description": _safe_get_attr(config, "description"),
 
                 "version": (lambda v: v if v is not None else '1.0.0')(_safe_get_attr(_safe_get_attr(config, 'cli', {}), 'version', '1.0.0')) if _safe_get_attr(config, 'cli') else '1.0.0',
 

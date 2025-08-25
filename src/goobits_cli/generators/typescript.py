@@ -5,6 +5,7 @@
 from pathlib import Path
 
 from typing import Dict, List, Optional, Union
+from datetime import datetime
 
 # Lazy imports for heavy dependencies
 TemplateNotFound = None
@@ -194,8 +195,36 @@ class TypeScriptGenerator(NodeJSGenerator):
             """Escape backtick characters for safe template rendering."""
             return text.replace('`', '\\`')
 
+        def js_string(value: str) -> str:
+            """
+            Escape string for JavaScript/TypeScript while preserving Unicode characters (legacy template compatibility).
+            
+            Only escapes necessary characters for JavaScript/TypeScript string literals:
+            - Backslashes (must be first to avoid double-escaping)
+            - Quote characters that would break string literals
+            - Control characters that would break JavaScript parsing
+            
+            Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
+            since JavaScript/TypeScript natively supports UTF-8.
+            """
+            if not isinstance(value, str):
+                return str(value)
+            
+            # Only escape characters that would break JavaScript/TypeScript syntax
+            # Order matters: backslash first to avoid double-escaping
+            escaped = value.replace('\\', '\\\\')  # Escape backslashes first
+            escaped = escaped.replace('"', '\\"')  # Escape double quotes
+            escaped = escaped.replace("'", "\\'")  # Escape single quotes
+            escaped = escaped.replace('\n', '\\n')  # Escape newlines
+            escaped = escaped.replace('\r', '\\r')  # Escape carriage returns
+            escaped = escaped.replace('\t', '\\t')  # Escape tabs
+            
+            # Do NOT escape Unicode characters - they should be preserved
+            return escaped
+
         self.env.filters['json_stringify'] = json_stringify_wrapper
         self.env.filters['escape_backticks'] = escape_backticks
+        self.env.filters['js_string'] = js_string
 
         self.env.filters['camelCase'] = self._to_camel_case
 
@@ -550,6 +579,8 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             'keywords': metadata.get('keywords', []),
 
+            'datetime': datetime,
+
         }
 
         
@@ -679,6 +710,27 @@ class TypeScriptGenerator(NodeJSGenerator):
         else:
 
             return json.dumps(x, indent=2)
+
+    def _escape_js_string(self, value: str) -> str:
+        """
+        Escape string for JavaScript/TypeScript while preserving Unicode characters.
+        
+        Helper method for the fallback code generation to properly handle Unicode text.
+        """
+        if not isinstance(value, str):
+            return str(value)
+        
+        # Only escape characters that would break JavaScript/TypeScript syntax
+        # Order matters: backslash first to avoid double-escaping
+        escaped = value.replace('\\', '\\\\')  # Escape backslashes first
+        escaped = escaped.replace('"', '\\"')  # Escape double quotes
+        escaped = escaped.replace("'", "\\'")  # Escape single quotes
+        escaped = escaped.replace('\n', '\\n')  # Escape newlines
+        escaped = escaped.replace('\r', '\\r')  # Escape carriage returns
+        escaped = escaped.replace('\t', '\\t')  # Escape tabs
+        
+        # Do NOT escape Unicode characters - they should be preserved
+        return escaped
 
     
 
@@ -1694,7 +1746,7 @@ program
 
   .name('{command_name}')
 
-  .description('{description}')
+  .description('{self._escape_js_string(description)}')
 
   .version('{version}');
 

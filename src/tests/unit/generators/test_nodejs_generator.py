@@ -568,24 +568,30 @@ class TestNodeJSE2EWorkflows:
         # Generate CLI
         output_files = generate_cli(config, "syntax.yaml")
         
-        # Write CLI to temporary file
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as f:
-            f.write(output_files['cli.js'])
-            temp_cli_path = f.name
+        # Create temporary directory with both CLI and package.json
+        temp_dir = tempfile.mkdtemp()
+        temp_cli_path = os.path.join(temp_dir, 'cli.js')
+        temp_package_path = os.path.join(temp_dir, 'package.json')
         
         try:
+            # Write both CLI and package.json files
+            with open(temp_cli_path, 'w') as f:
+                f.write(output_files['cli.js'])
+            with open(temp_package_path, 'w') as f:
+                f.write(output_files['package.json'])
+            
             # Test Node.js syntax validation
             result = subprocess.run(
                 ['node', '-c', temp_cli_path],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=10,
+                cwd=temp_dir  # Set working directory so Node.js can find package.json
             )
             
             # Should not have syntax errors
             assert result.returncode == 0, f"Generated CLI has syntax errors: {result.stderr}"
             
         finally:
-            # Clean up temporary file
-            if os.path.exists(temp_cli_path):
-                os.unlink(temp_cli_path)
+            # Clean up temporary files
+            shutil.rmtree(temp_dir, ignore_errors=True)

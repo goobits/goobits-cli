@@ -295,19 +295,15 @@ class NodeJSGenerator(BaseGenerator):
 
             
 
-            if filepath == "index.js" and os.path.exists(check_path):
+            if filepath == "cli.js" and os.path.exists(check_path):
 
-                # index.js exists, generate cli.js instead
+                # cli.js exists, warn but still generate (user can choose to overwrite)
 
-                new_filepath = "cli.js"
+                warnings.append("⚠️  Existing cli.js detected. Generated CLI will overwrite it.")
 
-                adjusted_files[new_filepath] = content
-                
-                conflict_info['main_entry_file_renamed'] = {'from': 'index.js', 'to': 'cli.js'}
+                warnings.append("   Back up your existing cli.js if it contains custom code.")
 
-                warnings.append("⚠️  Existing index.js detected. Generated cli.js instead.")
-
-                warnings.append("   Import cli.js in your index.js with: import { cli } from './cli.js'; cli();")
+                adjusted_files[filepath] = content
 
             elif filepath == "package.json" and os.path.exists(check_path):
 
@@ -641,7 +637,7 @@ class NodeJSGenerator(BaseGenerator):
 
             main_file = next((content for path, content in generated_files.items() 
 
-                            if "index.js" in path or "cli.js" in path), "")
+                            if "cli.js" in path or "index.js" in path), "")
 
             
 
@@ -734,11 +730,9 @@ class NodeJSGenerator(BaseGenerator):
                 completion_features = config_dict['features']['completion_system']
 
 
-        # Determine main entry file name based on conflict detection
+        # Use cli.js as the main entry file by default (matches tests and get_output_files)
         import os
-        main_entry_file = "index.js"
-        if os.path.exists("index.js"):
-            main_entry_file = "cli.js"
+        main_entry_file = "cli.js"
 
         # Prepare context for template rendering
 
@@ -848,7 +842,7 @@ class NodeJSGenerator(BaseGenerator):
 
         return [
 
-            "index.js",
+            "cli.js",
 
             "src/hooks.js",
 
@@ -859,8 +853,6 @@ class NodeJSGenerator(BaseGenerator):
             "README.md",
 
             ".gitignore",
-
-            "cli.js",
 
             "bin/cli.js",
 
@@ -900,7 +892,7 @@ class NodeJSGenerator(BaseGenerator):
 
         """Get the default output path for Node.js CLI."""
 
-        return "index.js"  # Main entry point for ES modules
+        return "cli.js"  # Main entry point for generated CLI
 
     
 
@@ -1211,11 +1203,9 @@ export default cli;
                 completion_features = config_dict['features']['completion_system']
 
 
-        # Determine main entry file name based on conflict detection
+        # Use cli.js as the main entry file by default (matches tests and get_output_files)
         import os
-        main_entry_file = "index.js"
-        if os.path.exists("index.js"):
-            main_entry_file = "cli.js"
+        main_entry_file = "cli.js"
 
         # Prepare context for template rendering
 
@@ -1269,17 +1259,22 @@ export default cli;
 
         
 
-        # Generate main index.js file - CLI entry point
+        # Generate main cli.js file - CLI entry point
 
         try:
 
-            template = self.env.get_template("index.js.j2")
+            template = self.env.get_template("cli.js.j2")
 
-            files['index.js'] = template.render(**context)
+            files['cli.js'] = template.render(**context)
 
         except TemplateNotFound:
 
-            files['index.js'] = self._generate_fallback_code(context)
+            # Fall back to index.js template if cli.js template doesn't exist
+            try:
+                template = self.env.get_template("index.js.j2")
+                files['cli.js'] = template.render(**context)
+            except TemplateNotFound:
+                files['cli.js'] = self._generate_fallback_code(context)
 
         
 
@@ -1624,7 +1619,7 @@ if [ $? -eq 0 ]; then
 
     echo "✅ Setup successful!"
 
-    echo "📍 CLI location: {context.get('main_entry_file', 'index.js')}"
+    echo "📍 CLI location: {context.get('main_entry_file', 'cli.js')}"
 
     echo ""
 
@@ -1636,7 +1631,7 @@ if [ $? -eq 0 ]; then
 
     echo "To run locally:"
 
-    echo "   node {context.get('main_entry_file', 'index.js')} --help"
+    echo "   node {context.get('main_entry_file', 'cli.js')} --help"
 
 else
 
@@ -1656,7 +1651,7 @@ fi
 
         # Use minimal fallback approach only
 
-        main_entry_file = context.get('main_entry_file', 'index.js')
+        main_entry_file = context.get('main_entry_file', 'cli.js')
 
         
 
@@ -1868,7 +1863,7 @@ npm install
 
 # Run locally
 
-node index.js --help
+node cli.js --help
 
 ```
 
