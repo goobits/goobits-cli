@@ -692,7 +692,7 @@ class NodeJSGenerator(BaseGenerator):
 
         # Determine main entry file name based on conflict detection
         import os
-        main_entry_file = "cli.js"
+        main_entry_file = "index.js"
         if os.path.exists("index.js"):
             main_entry_file = "cli.js"
 
@@ -856,7 +856,7 @@ class NodeJSGenerator(BaseGenerator):
 
         """Get the default output path for Node.js CLI."""
 
-        return "cli.js"  # Main entry point for ES modules
+        return "index.js"  # Main entry point for ES modules
 
     
 
@@ -1169,7 +1169,7 @@ export default cli;
 
         # Determine main entry file name based on conflict detection
         import os
-        main_entry_file = "cli.js"
+        main_entry_file = "index.js"
         if os.path.exists("index.js"):
             main_entry_file = "cli.js"
 
@@ -1225,17 +1225,17 @@ export default cli;
 
         
 
-        # Generate main CLI entry point file
+        # Generate main index.js file - CLI entry point
 
         try:
 
             template = self.env.get_template("index.js.j2")
 
-            files[main_entry_file] = template.render(**context)
+            files['index.js'] = template.render(**context)
 
         except TemplateNotFound:
 
-            files[main_entry_file] = self._generate_fallback_code(context)
+            files['index.js'] = self._generate_fallback_code(context)
 
         
 
