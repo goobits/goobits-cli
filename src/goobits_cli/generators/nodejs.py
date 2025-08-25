@@ -9,9 +9,26 @@ from pathlib import Path
 from typing import List, Optional, Union, Dict
 from datetime import datetime
 
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+# Lazy imports for heavy dependencies
+Environment = None
+FileSystemLoader = None
+TemplateNotFound = None
+typer = None
 
-import typer
+def _lazy_imports():
+    """Load heavy dependencies only when needed."""
+    global Environment, FileSystemLoader, TemplateNotFound, typer
+    
+    if Environment is None:
+        from jinja2 import Environment as _Environment
+        from jinja2 import FileSystemLoader as _FileSystemLoader
+        from jinja2 import TemplateNotFound as _TemplateNotFound
+        Environment = _Environment
+        FileSystemLoader = _FileSystemLoader
+        TemplateNotFound = _TemplateNotFound
+    if typer is None:
+        import typer as _typer
+        typer = _typer
 
 
 
@@ -93,13 +110,12 @@ class NodeJSGenerator(BaseGenerator):
 
         """Initialize the Node.js generator with Jinja2 environment.
 
-        
-
         Args:
 
             use_universal_templates: If True, use Universal Template System
 
         """
+        _lazy_imports()  # Initialize lazy imports when generator is created
 
         self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
 

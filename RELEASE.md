@@ -18,35 +18,35 @@
 
 Edit `pyproject.toml`:
 ```toml
-version = "1.0.0"  # Update to new version
+version = "2.0.0"  # Update to new version
 ```
 
 ### 2. Update Changelog
 
 Add release notes to `CHANGELOG.md`:
 ```markdown
-## [1.0.0] - 2024-XX-XX
+## [2.0.0] - 2024-XX-XX
 ### Added
-- Initial production release
-- Multi-language CLI generation (Python, Node.js, TypeScript, Rust)
-- Universal template system
-- Enhanced error messages
-- Validation command
+- Unlimited nested commands support
+- Full Rust support with Clap framework
+- Universal Template System for all languages
+- Interactive mode and shell completions
+- Performance optimizations (<100ms startup)
 ```
 
 ### 3. Commit Changes
 
 ```bash
 git add pyproject.toml CHANGELOG.md
-git commit -m "Release v1.0.0"
+git commit -m "Release v2.0.0"
 git push origin main
 ```
 
 ### 4. Create and Push Tag
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v2.0.0
+git push origin v2.0.0
 ```
 
 This will trigger the GitHub Actions workflow which will:
@@ -59,7 +59,7 @@ This will trigger the GitHub Actions workflow which will:
 
 After ~5 minutes, verify the release:
 ```bash
-pip install goobits-cli==1.0.0
+pip install goobits-cli==2.0.0
 goobits --version
 ```
 
@@ -103,7 +103,7 @@ twine upload dist/*
 3. Start development on next version:
    ```bash
    # Update version in pyproject.toml to next dev version
-   version = "1.1.0.dev0"
+   version = "2.1.0.dev0"
    ```
 
 ## Troubleshooting

@@ -1,6 +1,5 @@
 use std::fmt;
 use std::process;
-use std::any::Any;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ExitCode {
@@ -84,6 +83,7 @@ pub fn file_not_found_error(message: String) -> CliError {
 }
 
 pub struct ErrorHandler {
+    #[allow(dead_code)]
     debug: bool,
     verbose: bool,
 }
@@ -168,10 +168,13 @@ static mut ERROR_HANDLER_INIT: std::sync::Once = std::sync::Once::new();
 
 pub fn get_error_handler() -> &'static ErrorHandler {
     unsafe {
-        ERROR_HANDLER_INIT.call_once(|| {
-            ERROR_HANDLER = Some(ErrorHandler::new(false, false));
-        });
-        ERROR_HANDLER.as_ref().unwrap()
+        #[allow(static_mut_refs)]
+        {
+            ERROR_HANDLER_INIT.call_once(|| {
+                ERROR_HANDLER = Some(ErrorHandler::new(false, false));
+            });
+            ERROR_HANDLER.as_ref().unwrap()
+        }
     }
 }
 

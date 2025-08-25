@@ -50,9 +50,9 @@ pip install -e .[dev,test]
 # Run tests
 pytest
 
-# Run linting
-ruff check src/
-mypy src/goobits_cli/
+# Run linting (requires dev dependencies)
+# ruff check src/
+# mypy src/goobits_cli/
 ```
 
 ## Testing

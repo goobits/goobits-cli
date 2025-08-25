@@ -1,15 +1,15 @@
-# Demo TypeScript CLI
+# Demo Rust CLI
 
-A sample TypeScript CLI built with Goobits
+A sample Rust CLI built with Goobits
 
-> TypeScript CLI demonstration
+> Rust CLI demonstration
 
 ## Installation
 
 ### From Package Manager (Recommended)
 
 ```bash
-npm install -g demo-typescript-cli
+cargo install demo-rust-cli
 ```
 
 ### From Source
@@ -18,7 +18,7 @@ Clone this repository and build from source:
 
 ```bash
 git clone 
-cd demo-typescript-cli
+cd demo-rust-cli
 ./setup.sh --dev
 ```
 
@@ -34,21 +34,21 @@ For development with live updates:
 
 ### Basic Commands
 
-#### `demo_ts greet`
+#### `demo_rust greet`
 Greet someone with style
 
 ```bash
-demo_ts greet <name> [message] [OPTIONS]```
+demo_rust greet <name> [message] [OPTIONS]```
 
 **Arguments:**
 - `name`: Name to greet- `message`: Custom greeting message
 **Options:**
 - `-s, --style <str>`: Greeting style (default: casual)- `-c, --count <int>`: Repeat greeting N times (default: 1)- `-u, --uppercase`: Convert to uppercase- `-l, --language <str>`: Language code (default: en)
-#### `demo_ts info`
+#### `demo_rust info`
 Display system and environment information
 
 ```bash
-demo_ts info [OPTIONS]```
+demo_rust info [OPTIONS]```
 
 
 **Options:**
@@ -72,33 +72,29 @@ When `--verbose` is enabled, the CLI provides:
 
 ```bash
 # Show help
-demo_ts --help
+demo_rust --help
 
 # Show version
-demo_ts --version
+demo_rust --version
 
 # Enable verbose output for detailed error messages
-demo_ts --verbose greet
+demo_rust --verbose greet
 
 # Short form of verbose flag
-demo_ts -v greet
+demo_rust -v greet
 
 # Example greet command
-demo_ts greet "example_name"
+demo_rust greet "example_name"
 # Same command with verbose output
-demo_ts --verbose greet "example_name"
+demo_rust --verbose greet "example_name"
 # Error handling examples
-demo_ts invalid-command              # Standard error message
-demo_ts --verbose invalid-command   # Detailed error with stack trace
+demo_rust invalid-command              # Standard error message
+demo_rust --verbose invalid-command   # Detailed error with stack trace
 ```
 
 ## Configuration
 
-Configuration locations:
-
-- **Linux**: `~/.config/demo-typescript-cli/`
-- **macOS**: `~/Library/Application Support/demo-typescript-cli/`
-- **Windows**: `%APPDATA%\demo-typescript-cli\`
+The CLI stores configuration in `~/.config/demo-rust-cli/config.yaml`.
 
 You can edit this file directly or use the CLI to manage settings.
 
@@ -116,12 +112,12 @@ You can also control verbose mode using environment variables:
 
 ```bash
 # Enable verbose mode for all commands
-export DEMO_TS_VERBOSE=true
-demo_ts greet
+export DEMO_RUST_VERBOSE=true
+demo_rust greet
 
 # Disable verbose mode (overrides config)
-export DEMO_TS_VERBOSE=false
-demo_ts greet
+export DEMO_RUST_VERBOSE=false
+demo_rust greet
 ```
 
 ## Development
@@ -129,34 +125,31 @@ demo_ts greet
 ### Building
 
 ```bash
-# Install dependencies
-npm install
+# Debug build
+cargo build
 
-# Build (if TypeScript)
-npm run build
-
-# Run tests
-npm test
+# Release build
+cargo build --release
 ```
 
 ### Testing
 
 ```bash
 # Run all tests
-npm test
+cargo test
 
-# Run with coverage
-npm run test:coverage
+# Run tests with output
+cargo test -- --nocapture
 ```
 
 ### Running
 
 ```bash
-# Run from source (development)
-node cli.js --help
+# Run from source (debug)
+cargo run -- --help
 
-# Or using npm link
-npm link && demo_ts --help
+# Run specific command
+cargo run -- greet --help
 ```
 
 ## Shell Completions
@@ -176,7 +169,7 @@ This creates completion files in the `completions/` directory for:
 
 **Bash:**
 ```bash
-source completions/demo_ts.bash
+source completions/demo_rust.bash
 ```
 
 **Zsh:**
@@ -188,27 +181,28 @@ autoload -U compinit && compinit
 
 **Fish:**
 ```bash
-cp completions/demo_ts.fish ~/.config/fish/completions/
+cp completions/demo_rust.fish ~/.config/fish/completions/
 ```
 
 ## Architecture
 
 This CLI is built using:
 
-- **[Commander.js](https://github.com/tj/commander.js/)**: Complete solution for command-line interfaces
-- **[TypeScript](https://www.typescriptlang.org/)**: Typed superset of JavaScript
-- **[Inquirer.js](https://github.com/SBoudrias/Inquirer.js/)**: Interactive command-line prompts
+- **[Clap](https://docs.rs/clap/)**: Command-line argument parsing with derive macros
+- **[Anyhow](https://docs.rs/anyhow/)**: Flexible error handling
+- **[Serde](https://docs.rs/serde/)**: Serialization/deserialization for configuration
+- **[Tokio](https://docs.rs/tokio/)**: Async runtime (optional feature)
 
 ### Project Structure
 
 ```
-├── cli.ts           # CLI entry point
-├── package.json         # NPM package configuration
-├── src/
-│   ├── hooks.ts       # User-defined business logic
-│   ├── config.ts      # Configuration management
-│   └── utils.ts       # Utility functions
-└── completions/         # Shell completion scripts
+src/
+├── main.rs          # CLI entry point and command definitions
+├── lib.rs           # Library exports and core functionality  
+├── config.rs        # Configuration management
+├── commands.rs      # Command implementations
+├── hooks.rs         # User-defined business logic
+└── utils.rs         # Utility functions
 ```
 
 ## Contributing

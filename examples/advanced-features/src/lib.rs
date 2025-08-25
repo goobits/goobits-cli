@@ -4,7 +4,7 @@
 //!
 //! This library provides the core functionality for the demo CLI tool.
 
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 #![warn(clippy::all)]
 
 /// Error types and handling

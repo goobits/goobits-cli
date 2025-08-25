@@ -1,87 +1,112 @@
 /**
- * Hook implementations for Node.js CLI demo
+
+ * Hook functions for Demo Node.js CLI
+
+ * Auto-generated from nodejs-example.yaml
+
+ * 
+
+ * Implement your business logic in these hook functions.
+
+ * Each command will call its corresponding hook function.
+
  */
 
-async function onGreet(args) {
-    // Handle both Node.js (direct args) and TypeScript (context object) formats
-    let name, message = "Hello", style = "casual", count = 1, uppercase = false, language = "en";
+
+
+/**
+
+ * Hook function for 'greet' command
+
+ * @param {Object} args - Command arguments and options
+
+ * @returns {Promise<void>}
+
+ */
+
+export async function onGreet(args) {
+
+    // TODO: Implement your 'greet' command logic here
+
+    console.log('🚀 Executing greet command...');
+
+    console.log('   Command:', args.commandName);
+
     
-    if (args.args && args.options) {
-        // TypeScript format: { commandName, args: { name, message }, options: { style, count, etc } }
-        ({ name, message = "Hello" } = args.args);
-        ({ style = "casual", count = 1, uppercase = false, language = "en" } = args.options);
-    } else {
-        // Node.js format: direct destructuring
-        ({ name, message = "Hello", style = "casual", count = 1, uppercase = false, language = "en" } = args);
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
     }
+
     
-    let greeting = `${message}, ${name}`;
-    
-    if (uppercase) {
-        greeting = greeting.toUpperCase();
-    }
-    
-    // Handle style variations
-    switch (style) {
-        case "formal":
-            greeting += ".";
-            break;
-        case "excited":
-            greeting += "!!!";
-            break;
-        default: // casual
-            greeting += "!";
-    }
-    
-    // Repeat greeting based on count
-    for (let i = 0; i < count; i++) {
-        console.log(greeting);
-    }
-    
-    console.log(`Welcome to the CLI demo, ${name}!`);
+
+    console.log('✅ greet command completed successfully!');
+
 }
 
-async function onInfo(args) {
-    // Handle both Node.js (direct args) and TypeScript (context object) formats
-    let format = "text", verbose = false, sections = "all";
+
+
+/**
+
+ * Hook function for 'info' command
+
+ * @param {Object} args - Command arguments and options
+
+ * @returns {Promise<void>}
+
+ */
+
+export async function onInfo(args) {
+
+    // TODO: Implement your 'info' command logic here
+
+    console.log('🚀 Executing info command...');
+
+    console.log('   Command:', args.commandName);
+
     
-    if (args.args && args.options) {
-        // TypeScript format: { commandName, args: {}, options: { format, verbose, etc } }
-        ({ format = "text", verbose = false, sections = "all" } = args.options);
-    } else {
-        // Node.js format: direct destructuring
-        ({ format = "text", verbose = false, sections = "all" } = args);
+
+    // Example: access raw arguments
+
+    if (args.rawArgs) {
+
+        Object.entries(args.rawArgs).forEach(([key, value]) => {
+
+            console.log(`   ${key}: ${value}`);
+
+        });
+
     }
+
     
-    const info = {
-        title: "=== CLI Information ===",
-        separator: "=====================",
-        node_version: `Node Version: ${process.version}`,
-        platform: `Platform: ${process.platform}`,
-        architecture: `Architecture: ${process.arch}`,
-        memory: `Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)} MB`
-    };
-    
-    if (format === "json") {
-        console.log(JSON.stringify({
-            node_version: process.version,
-            platform: process.platform,
-            architecture: process.arch,
-            memory_mb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024)
-        }, null, 2));
-    } else {
-        console.log(info.title);
-        console.log(info.separator);
-        console.log(info.node_version);
-        console.log(info.platform);
-        console.log(info.architecture);
-        if (verbose) {
-            console.log(info.memory);
-        }
-    }
+
+    console.log('✅ info command completed successfully!');
+
 }
 
-module.exports = {
-    onGreet,
-    onInfo
-};
+
+
+/**
+
+ * Default hook for unhandled commands
+
+ * @param {Object} args - Command arguments
+
+ * @throws {Error} When no hook implementation is found
+
+ */
+
+export async function onUnknownCommand(args) {
+
+    throw new Error(`No hook implementation found for command: ${args.commandName}`);
+
+}
+

@@ -72,10 +72,15 @@ async function main() {
   // Import and run the main CLI
   try {
     const mainPath = join(__dirname, '..', 'cli.js');
-    const { cliEntry } = await import(mainPath);
+    const cliModule = await import(mainPath);
     
-    // Run the CLI
-    await cliEntry();
+    // Run the CLI (try both named export and default)
+    const cliFunc = cliModule.cli || cliModule.default;
+    if (typeof cliFunc === 'function') {
+      await cliFunc();
+    } else {
+      throw new Error('CLI module does not export a valid function')
+    }
   } catch (error) {
     // Use advanced error handling if available
     if (errorHandler) {

@@ -6,8 +6,26 @@ from pathlib import Path
 
 from typing import Dict, List, Optional, Union
 
-from jinja2 import TemplateNotFound, Environment, DictLoader
-import typer
+# Lazy imports for heavy dependencies
+TemplateNotFound = None
+Environment = None
+DictLoader = None
+typer = None
+
+def _lazy_imports():
+    """Load heavy dependencies only when needed."""
+    global TemplateNotFound, Environment, DictLoader, typer
+    
+    if Environment is None:
+        from jinja2 import TemplateNotFound as _TemplateNotFound
+        from jinja2 import Environment as _Environment
+        from jinja2 import DictLoader as _DictLoader
+        TemplateNotFound = _TemplateNotFound
+        Environment = _Environment
+        DictLoader = _DictLoader
+    if typer is None:
+        import typer as _typer
+        typer = _typer
 
 
 
@@ -69,13 +87,12 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         """Initialize the TypeScript generator with TypeScript-specific templates.
 
-        
-
         Args:
 
             use_universal_templates: If True, use Universal Template System
 
         """
+        _lazy_imports()  # Initialize lazy imports when generator is created
 
         # Pass universal templates flag to parent
 

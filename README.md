@@ -58,15 +58,14 @@ cli:
   commands:
     greet:
       desc: "Greet someone"
-      help: "Greets a person with their name"
-      arguments:
+      args:
         - name: name
-          help: "Name of the person to greet"
+          desc: "Name of the person to greet"
           type: string
           required: true
       options:
         - name: --excited
-          help: "Add excitement to the greeting"
+          desc: "Add excitement to the greeting"
           type: boolean
           default: false
 ```
@@ -127,13 +126,7 @@ export async function onGreet({ name, excited }: GreetArgs): Promise<void> {
 
 **Rust** (`src/hooks.rs`):
 ```rust
-use clap::ArgMatches;
-use anyhow::Result;
-
-pub fn on_greet(matches: &ArgMatches) -> Result<()> {
-    let name = matches.get_one::<String>("name").unwrap();
-    let excited = matches.get_flag("excited");
-    
+pub fn on_greet(name: &str, excited: bool, _verbose: bool, _config: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let mut greeting = format!("Hello, {}!", name);
     if excited {
         greeting.push_str(" 🎉");
@@ -179,50 +172,46 @@ cli:
   commands:
     convert:
       desc: "Convert file formats"
-      help: "Convert files between different formats"
-      arguments:
+      args:
         - name: input
-          help: "Input file path"
+          desc: "Input file path"
           type: string
           required: true
         - name: output
-          help: "Output file path"
+          desc: "Output file path"
           type: string
           required: true
       options:
         - name: --format
-          help: "Output format"
+          desc: "Output format"
           type: choice
           choices: ["json", "yaml", "xml", "csv"]
           default: "json"
         - name: --pretty
-          help: "Pretty-print output"
+          desc: "Pretty-print output"
           type: boolean
           default: false
     
     compress:
       desc: "Compress files"
-      help: "Compress files using various algorithms"
-      arguments:
+      args:
         - name: files
-          help: "Files to compress"
+          desc: "Files to compress"
           type: string
           nargs: "+"
           required: true
       options:
         - name: --algorithm
           short: -a
-          help: "Compression algorithm"
+          desc: "Compression algorithm"
           type: choice
           choices: ["gzip", "bzip2", "xz", "zip"]
           default: "gzip"
         - name: --level
           short: -l
-          help: "Compression level (1-9)"
+          desc: "Compression level (1-9)"
           type: integer
           default: 6
-          min: 1
-          max: 9
 ```
 
 Generate and run:
@@ -269,15 +258,6 @@ goobits init --template advanced
 # Available templates: basic, advanced, api-client, text-processor
 ```
 
-### Validation
-
-```bash
-# Validate YAML without generating files
-goobits validate
-
-# Validate a specific config file
-goobits validate my-config.yaml
-```
 
 ## 🔧 Configuration Options
 
@@ -300,7 +280,7 @@ commands:
     
   with_args:
     desc: "Command with arguments"
-    arguments:
+    args:
       - name: file
         type: string
         required: true
@@ -355,8 +335,8 @@ Generate shell completions for your CLI:
 # During installation
 ./setup.sh --completions
 
-# Manual generation (Python)
-awesome --install-completion
+# Completions are generated during build
+# and installed via setup.sh
 
 # The setup script handles completions for other languages
 ```
@@ -399,8 +379,8 @@ For detailed error messages:
 export GOOBITS_DEBUG=1
 goobits build
 
-# Or use verbose flag (if implemented)
-goobits build --verbose
+# Or use verbose flag
+goobits --verbose build
 ```
 
 ## 📖 Documentation
@@ -428,11 +408,11 @@ Built with love using:
 
 ## 🚦 Project Status
 
-**Current Version**: 2.0.0 (Production Ready)
+**Production Ready**
 - ✅ All 4 languages fully supported
 - ✅ Universal template system operational
 - ✅ Performance targets met (<100ms startup)
-- ✅ Comprehensive test coverage (99.7%)
+- ✅ Comprehensive test coverage (696 tests)
 
 ---
 

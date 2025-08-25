@@ -8,11 +8,22 @@ from pathlib import Path
 
 from typing import List, Optional, Union, Dict, Any
 
-import typer
+# Lazy imports for heavy dependencies
+typer = None
+Environment = None
+DictLoader = None
 
-from jinja2 import Environment, DictLoader
-
-
+def _lazy_imports():
+    """Load heavy dependencies only when needed."""
+    global typer, Environment, DictLoader
+    
+    if typer is None:
+        import typer as _typer
+        typer = _typer
+    if Environment is None:
+        from jinja2 import Environment as _Environment, DictLoader as _DictLoader
+        Environment = _Environment
+        DictLoader = _DictLoader
 
 from . import BaseGenerator, GeneratorError, ConfigurationError, TemplateError, DependencyError, ValidationError, _safe_to_dict
 
@@ -74,6 +85,7 @@ class PythonGenerator(BaseGenerator):
     
 
     def __init__(self, use_universal_templates: bool = True, consolidate: bool = True):
+        _lazy_imports()  # Initialize lazy imports when generator is created
 
         """Initialize the Python generator with Universal Template System.
 

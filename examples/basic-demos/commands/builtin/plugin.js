@@ -254,7 +254,13 @@ export class ${toPascalCase(pluginName)}Plugin {
   constructor(program) {
     this.program = program;
     this.name = '${pluginName}';
-    this.version = '1.0.0';
+    // Read version from package.json if available
+    try {
+      const pkg = require('./package.json');
+      this.version = pkg.version || '1.0.0';
+    } catch {
+      this.version = '1.0.0';
+    }
   }
 
   register(program) {

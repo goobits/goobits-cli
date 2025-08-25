@@ -34,8 +34,8 @@ function createCLI() {
     .command('greet')
     .description('Greet someone with style');
 
-  greetCommand.argument('<name>', 'Name to greet');
-  greetCommand.argument('[message]', 'Custom greeting message');
+  greetCommand.argument('<NAME>', 'Name to greet');
+  greetCommand.argument('[MESSAGE]', 'Custom greeting message');
 
   greetCommand.option('--style, -s <style>', 'Greeting style', "casual");
   greetCommand.option('--count, -c <count>', 'Repeat greeting N times', 1);
@@ -47,7 +47,7 @@ function createCLI() {
       // Try to load hooks
       let hooks = {};
       try {
-        hooks = require('../dist/src/hooks');
+        hooks = require('../src/hooks');
       } catch (e) {
         console.warn('Warning: hooks module not found');
       }
@@ -85,7 +85,7 @@ function createCLI() {
       // Try to load hooks
       let hooks = {};
       try {
-        hooks = require('../dist/src/hooks');
+        hooks = require('../src/hooks');
       } catch (e) {
         console.warn('Warning: hooks module not found');
       }

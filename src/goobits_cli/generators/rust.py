@@ -14,9 +14,26 @@ import threading
 
 from functools import wraps
 
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound
+# Lazy imports for heavy dependencies
+Environment = None
+FileSystemLoader = None
+TemplateNotFound = None
+typer = None
 
-import typer
+def _lazy_imports():
+    """Load heavy dependencies only when needed."""
+    global Environment, FileSystemLoader, TemplateNotFound, typer
+    
+    if Environment is None:
+        from jinja2 import Environment as _Environment
+        from jinja2 import FileSystemLoader as _FileSystemLoader
+        from jinja2 import TemplateNotFound as _TemplateNotFound
+        Environment = _Environment
+        FileSystemLoader = _FileSystemLoader
+        TemplateNotFound = _TemplateNotFound
+    if typer is None:
+        import typer as _typer
+        typer = _typer
 
 
 
@@ -98,19 +115,23 @@ def render_with_timeout(timeout=30):
         def wrapper(*args, **kwargs):
             result = [None]
             exception = [None]
+            completed = threading.Event()
             
             def target():
                 try:
                     result[0] = func(*args, **kwargs)
                 except Exception as e:
                     exception[0] = e
+                finally:
+                    completed.set()
             
             thread = threading.Thread(target=target)
             thread.daemon = True
             thread.start()
-            thread.join(timeout=timeout)
             
-            if thread.is_alive():
+            # Wait for completion or timeout
+            if not completed.wait(timeout=timeout):
+                # Thread is still running after timeout
                 raise TemplateError(
                     f"Template rendering operation timed out after {timeout} seconds",
                     template_name=getattr(func, '__name__', 'unknown')
@@ -134,13 +155,12 @@ class RustGenerator(BaseGenerator):
 
         """Initialize the Rust generator with Jinja2 environment.
 
-        
-
         Args:
 
             use_universal_templates: If True, use Universal Template System
 
         """
+        _lazy_imports()  # Initialize lazy imports when generator is created
 
         self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
 

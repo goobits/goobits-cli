@@ -470,11 +470,24 @@ class {{ project.name | replace('-', '') | title }}Interactive {
     }
     
     async evaluateExpression(expression) {
-        // Support JavaScript expression evaluation
+        // Support JavaScript expression evaluation in sandboxed environment
         if (expression.startsWith('js:')) {
             const jsCode = expression.substring(3).trim();
             try {
-                const result = eval(jsCode);
+                // Use vm module for sandboxed execution instead of eval
+                const vm = require('vm');
+                const sandbox = {
+                    console: console,
+                    JSON: JSON,
+                    Math: Math,
+                    Date: Date,
+                    // Add other safe globals as needed
+                };
+                const context = vm.createContext(sandbox);
+                const result = vm.runInContext(jsCode, context, {
+                    timeout: 1000, // 1 second timeout
+                    displayErrors: true
+                });
                 if (result !== undefined) {
                     console.log(chalk.green(`=> ${JSON.stringify(result, null, 2)}`));
                 }
@@ -488,8 +501,22 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         // Support async expressions
         if (expression.startsWith('await ')) {
             try {
+                // Use vm module for sandboxed async execution
+                const vm = require('vm');
+                const sandbox = {
+                    console: console,
+                    JSON: JSON,
+                    Math: Math,
+                    Date: Date,
+                    Promise: Promise,
+                    // Add other safe globals as needed
+                };
+                const context = vm.createContext(sandbox);
                 const asyncCode = `(async () => { return ${expression}; })()`;
-                const result = await eval(asyncCode);
+                const result = await vm.runInContext(asyncCode, context, {
+                    timeout: 1000, // 1 second timeout
+                    displayErrors: true
+                });
                 if (result !== undefined) {
                     console.log(chalk.green(`=> ${JSON.stringify(result, null, 2)}`));
                 }

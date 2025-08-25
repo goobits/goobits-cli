@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -96,9 +95,11 @@ static mut CONFIG_INIT: std::sync::Once = std::sync::Once::new();
 
 pub fn get_config() -> &'static ConfigManager {
     unsafe {
+        #[allow(static_mut_refs)]
         CONFIG_INIT.call_once(|| {
             CONFIG_MANAGER = Some(ConfigManager::new(None).expect("Failed to initialize config"));
         });
+        #[allow(static_mut_refs)]
         CONFIG_MANAGER.as_ref().unwrap()
     }
 }

@@ -638,7 +638,9 @@ class EnhancedInteractive:
 
         """Clear the screen."""
 
-        os.system('clear' if os.name == 'posix' else 'cls')
+        import subprocess
+        # Use subprocess for safer command execution
+        subprocess.run(['clear'] if os.name == 'posix' else ['cls'], shell=False)
 
     
 
