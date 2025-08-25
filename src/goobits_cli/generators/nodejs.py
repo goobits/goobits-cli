@@ -1,13 +1,33 @@
-"""Node.js CLI generator implementation."""
+"""Node.js CLI generator implementation.
 
+This module provides the NodeJSGenerator class for generating Node.js CLI applications
+from YAML configuration using the Universal Template System. It creates comprehensive
+Node.js CLIs with Commander.js framework integration and advanced feature support.
 
+Key Features:
+    - Universal Template System integration for consistent multi-language generation
+    - Commander.js framework-based CLI generation with ES modules support
+    - Interactive mode support with lazy loading optimization
+    - Shell completion system integration (bash, zsh, fish)
+    - Plugin system support for extensibility
+    - Comprehensive error handling and file conflict detection
+    - E2E test compatibility with directory-based generation
+    - Automatic package.json generation with dependency management
+
+Generated Structure:
+    - cli.js: Main CLI entry point
+    - src/hooks.js: Business logic hook functions
+    - package.json: NPM package configuration
+    - setup.sh: Installation script with Node.js/npm checks
+    - README.md: Auto-generated documentation
+    - .gitignore: Node.js-specific ignore patterns
+    - Various lib/ files for enhanced functionality
+"""
 
 import json
-
-from pathlib import Path
-
-from typing import List, Optional, Union, Dict
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 # Lazy imports for heavy dependencies
 Environment = None
@@ -30,70 +50,44 @@ def _lazy_imports():
         import typer as _typer
         typer = _typer
 
-
-
+# Base generator imports
 from . import BaseGenerator
-
 from ..schemas import ConfigSchema, GoobitsConfigSchema
-
 from ..formatter import align_header_items, format_icon_spacing, align_setup_steps
 
-
-
 # Universal Template System imports
-
 try:
-
     from ..universal.template_engine import UniversalTemplateEngine
-
     from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
-
     from ..universal.interactive import integrate_interactive_mode
-
-    from ..universal.completion import integrate_completion_system, get_completion_files_for_language
-
+    from ..universal.completion import (
+        integrate_completion_system,
+        get_completion_files_for_language,
+    )
     from ..universal.plugins import integrate_plugin_system
-
+    
     UNIVERSAL_TEMPLATES_AVAILABLE = True
-
 except ImportError:
-
     UNIVERSAL_TEMPLATES_AVAILABLE = False
-
     UniversalTemplateEngine = None
-
     UniversalNodeJSRenderer = None
-
     integrate_interactive_mode = None
-
     integrate_completion_system = None
-
     get_completion_files_for_language = None
-
     integrate_plugin_system = None
 
-
-
-# Phase 2 shared components (to be created)
-
+# Phase 2 shared components
+# TODO: Uncomment when validation framework is available
 # from ..shared.components.validation_framework import ValidationRunner, ValidationMode
-
 # from ..shared.components.validators import (
-
 #     CommandValidator, ArgumentValidator, OptionValidator,
-
 #     ConfigurationValidator, HookValidator
-
 # )
 
 try:
-
     from ..shared.components.doc_generator import DocumentationGenerator
-
 except ImportError:
-
     # Phase 2 components not yet available
-
     DocumentationGenerator = None
 
 
@@ -101,92 +95,58 @@ except ImportError:
 
 
 class NodeJSGenerator(BaseGenerator):
-
     """CLI code generator for Node.js using Commander.js framework."""
 
-    
-
     def __init__(self, use_universal_templates: bool = True):
-
-        """Initialize the Node.js generator with Jinja2 environment.
+        """Initialize the Node.js generator with Universal Template System.
 
         Args:
-
             use_universal_templates: If True, use Universal Template System
-
         """
         _lazy_imports()  # Initialize lazy imports when generator is created
 
         self.use_universal_templates = use_universal_templates and UNIVERSAL_TEMPLATES_AVAILABLE
 
-        
-
         # Initialize Universal Template System if requested
-
         if self.use_universal_templates:
-
             try:
-
                 # Detect test mode to avoid asyncio conflicts
                 import sys
                 is_test = 'pytest' in sys.modules
                 
                 self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
-
                 self.nodejs_renderer = UniversalNodeJSRenderer()
-
                 self.universal_engine.register_renderer("nodejs", self.nodejs_renderer)
-
             except Exception as e:
-
                 typer.echo(f"⚠️  Failed to initialize Universal Template System: {e}", err=True)
-
                 typer.echo("   Falling back to legacy template system", err=True)
-
                 self.use_universal_templates = False
-
                 self.universal_engine = None
-
                 self.nodejs_renderer = None
 
-        
-
         # Set up Jinja2 environment for Node.js templates
-
         template_dir = Path(__file__).parent.parent / "templates" / "nodejs"
-
         fallback_dir = Path(__file__).parent.parent / "templates"
 
-        
-
         # Try nodejs subdirectory first, fallback to main templates
-
         if template_dir.exists():
-
             self.env = Environment(
                 loader=FileSystemLoader([template_dir, fallback_dir]),
                 trim_blocks=True,
                 lstrip_blocks=True
             )
-
         else:
-
             # If nodejs subdirectory doesn't exist, use main templates dir
-
             self.env = Environment(
                 loader=FileSystemLoader(fallback_dir),
                 trim_blocks=True,
                 lstrip_blocks=True
             )
-
             self.template_missing = True
 
-        
-
         # Initialize shared components (Phase 2)
-
+        # TODO: Uncomment when validation framework is available
         # self.validation_runner = ValidationRunner()
-
         self.doc_generator = None  # Will be initialized per generation with config
 
         
@@ -242,20 +202,15 @@ class NodeJSGenerator(BaseGenerator):
             # Do NOT escape Unicode characters - they should be preserved
             return escaped
 
+        # Register custom filters
         self.env.filters['json_stringify'] = json_stringify
         self.env.filters['escape_backticks'] = escape_backticks
         self.env.filters['js_string'] = js_string
-
         self.env.filters['align_header_items'] = align_header_items
-
         self.env.filters['format_icon_spacing'] = format_icon_spacing
-
         self.env.filters['align_setup_steps'] = align_setup_steps
 
-        
-
         # Initialize generated files storage
-
         self._generated_files = {}
 
     
@@ -438,38 +393,34 @@ class NodeJSGenerator(BaseGenerator):
 
     
 
-    def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
-
-                 config_filename: str, version: Optional[str] = None) -> str:
-
-        """
-
-        Generate Node.js CLI code from configuration.
-
-        
+    def generate(
+        self, 
+        config: Union[ConfigSchema, GoobitsConfigSchema], 
+        config_filename: str, 
+        version: Optional[str] = None
+    ) -> str:
+        """Generate Node.js CLI code from configuration.
 
         Args:
-
             config: The configuration object
-
             config_filename: Name of the configuration file OR output directory path (for E2E test compatibility)
-
             version: Optional version string
 
-            
-
         Returns:
-
             Generated Node.js CLI code
-
         """
 
         # Check if config_filename looks like a directory path (E2E test compatibility)
         # E2E tests call generator.generate(config, str(tmp_path)) expecting files to be written
-        if (config_filename.startswith('/') or config_filename.startswith('./') or 
-            'tmp' in config_filename or 'pytest' in config_filename or
-            Path(config_filename).is_dir()):
-            
+        is_e2e_test_path = (
+            config_filename.startswith('/') or 
+            config_filename.startswith('./') or 
+            'tmp' in config_filename or 
+            'pytest' in config_filename or
+            Path(config_filename).is_dir()
+        )
+        
+        if is_e2e_test_path:
             # For E2E tests, write files directly to output directory (test compatibility)
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
@@ -479,7 +430,10 @@ class NodeJSGenerator(BaseGenerator):
                 cli_content = self._generate_with_universal_templates(config, "test.yaml", version)
             except Exception as e:
                 # If universal templates fail in E2E tests, provide helpful error
-                error_msg = f"E2E test generation failed: {type(e).__name__}: {e}\nThis may indicate an issue with the test configuration or universal templates."
+                error_msg = (
+                    f"E2E test generation failed: {type(e).__name__}: {e}\n"
+                    "This may indicate an issue with the test configuration or universal templates."
+                )
                 typer.echo(error_msg, err=True)
                 raise RuntimeError(f"E2E test CLI generation failed: {e}") from e
             
@@ -499,23 +453,19 @@ class NodeJSGenerator(BaseGenerator):
             return cli_content
 
         # Use Universal Template System if enabled
-
         if self.use_universal_templates:
-
             return self._generate_with_universal_templates(config, config_filename, version)
-
-        
 
         # Universal Templates should be the primary path
         # If we reach here, it means universal templates are disabled
-        error_msg = f"""❌ CLI Generation Error: Universal Templates are disabled
-        
-🔧 To fix this:
-1. Universal Templates are now the primary generation system
-2. Re-enable with: generator.use_universal_templates = True  
-3. Legacy fallbacks have been removed for better reliability
-        
-💬 If you encounter this error, please report it as it indicates an unexpected code path."""
+        error_msg = (
+            "❌ CLI Generation Error: Universal Templates are disabled\n\n"
+            "🔧 To fix this:\n"
+            "1. Universal Templates are now the primary generation system\n"
+            "2. Re-enable with: generator.use_universal_templates = True\n"
+            "3. Legacy fallbacks have been removed for better reliability\n\n"
+            "💬 If you encounter this error, please report it as it indicates an unexpected code path."
+        )
         
         typer.echo(error_msg, err=True)
         raise RuntimeError("Universal Templates are disabled - this should not happen in normal operation")

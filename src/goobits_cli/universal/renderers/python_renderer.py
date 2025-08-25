@@ -1,33 +1,32 @@
 """
-
 Python Language Renderer for Universal Template System
 
-
-
 This module provides Python-specific rendering capabilities for the Goobits
-
 Universal Template System, generating Click-based CLI implementations.
 
+Features:
+- Click framework integration
+- Rich-click for enhanced terminal UI
+- Python naming conventions (snake_case)
+- Type annotations and proper imports
+- Hook system integration
+- File consolidation support
 """
 
 
 
 import re
 import tempfile
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, Any, List
+
+import jinja2
 
 try:
     from ...__version__ import __version__ as _version
 except ImportError:
     _version = "3.0.0-alpha.1"  # Fallback version
-
-
-from datetime import datetime
-
-from pathlib import Path
-
-from typing import Dict, Any, List
-
-import jinja2
 
 
 
@@ -38,33 +37,32 @@ from ..template_engine import LanguageRenderer
 
 
 class PythonRenderer(LanguageRenderer):
-
     """
-
     Python language renderer using Click framework.
-
     
-
     Generates Python CLI implementations with:
-
     - Click decorators for commands, options, and arguments
-
     - Rich-click integration for enhanced terminal UI
-
     - Python naming conventions (snake_case)
-
     - Type annotations and proper imports
-
     - Hook system integration
-
+    - File consolidation support using Shiv
+    
+    This renderer transforms the universal intermediate representation
+    into Python-specific code structures and handles Python-specific
+    concerns like import management and Click decorator generation.
     """
     
     def _get_version(self) -> str:
         """Get current version for generator metadata."""
         return _version
     
-    def __init__(self, consolidate: bool = False):
-        """Initialize Python renderer with optional consolidation mode."""
+    def __init__(self, consolidate: bool = False) -> None:
+        """Initialize Python renderer with optional consolidation mode.
+        
+        Args:
+            consolidate: Enable file consolidation using Shiv
+        """
         self.consolidate = consolidate
 
     
@@ -95,56 +93,43 @@ class PythonRenderer(LanguageRenderer):
 
             "error_handler": "py",
 
-            "hook_system": "py"
+            "hook_system": "py",
+
+            "logger": "py"
 
         }
 
     
 
     def get_template_context(self, ir: Dict[str, Any]) -> Dict[str, Any]:
-
         """
-
         Transform IR into Python-specific template context.
-
         
-
+        This method takes the language-agnostic intermediate representation
+        and transforms it into a Python-specific context with Click decorators,
+        Python naming conventions, and framework-specific configurations.
+        
         Args:
-
             ir: Intermediate representation
-
             
-
         Returns:
-
             Python-specific template context
-
         """
 
         # Start with the base IR and add defensive defaults
-
         context = ir.copy()
-
         
-
         # Ensure installation field has defensive defaults
-
         if "installation" not in context:
-
             context["installation"] = {}
 
         
 
         # Preserve extras while setting defensive defaults
-
         original_installation = context["installation"]
-
         context["installation"] = {
-
             "pypi_name": original_installation.get("pypi_name", context.get("project", {}).get("package_name", "cli_app")),
-
             **original_installation
-
         }
 
         
@@ -309,17 +294,14 @@ class PythonRenderer(LanguageRenderer):
     
 
     def get_custom_filters(self) -> Dict[str, callable]:
-
         """
-
         Return Python-specific Jinja2 filters.
-
         
-
+        These filters handle Python-specific transformations like
+        type conversion, naming conventions, and Click decorator generation.
+        
         Returns:
-
             Dictionary of filter functions
-
         """
 
         return {
@@ -363,47 +345,30 @@ class PythonRenderer(LanguageRenderer):
     
 
     def render_component(self, component_name: str, template_content: str, 
-
                         context: Dict[str, Any]) -> str:
-
         """
-
         Render a component template for Python.
-
         
-
+        This method processes universal template content through Jinja2
+        with Python-specific filters and context to generate Python code.
+        
         Args:
-
             component_name: Name of the component
-
             template_content: Universal template content
-
             context: Python-specific context
-
             
-
         Returns:
-
             Rendered Python code
-
         """
 
         # Create Jinja2 environment with custom filters and Unicode support
-
         env = jinja2.Environment(
-
             loader=jinja2.BaseLoader(),
-
             trim_blocks=True,
-
             lstrip_blocks=True,
-
             autoescape=False,
-
             # Enable optimized Unicode handling
-
             finalize=lambda x: x if x is not None else ''
-
         )
 
         
@@ -661,6 +626,7 @@ setup(
             "command_handler": cli_path,
             "pyproject_toml": "pyproject.toml",
             "package_init": f"src/{package_name}/__init__.py",
+            "logger": f"src/{package_name}/logger.py",
             # setup.sh is handled by the main build system
         }
 

@@ -98,7 +98,9 @@ class NodeJSRenderer(LanguageRenderer):
 
             "json": "json",
 
-            "md": "markdown"
+            "md": "markdown",
+
+            "logger": "js"
 
         }
 
@@ -384,6 +386,8 @@ class NodeJSRenderer(LanguageRenderer):
             "completion_engine": "completion_engine.js",
 
             "error_handler": "lib/errors.js",
+
+            "logger": "lib/logger.js",
 
             # Additional Node.js specific files
 

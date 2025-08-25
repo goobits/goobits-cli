@@ -1102,19 +1102,23 @@ program.parse();
 use clap::{Arg, Command, ArgMatches};
 use std::process;
 use anyhow::{Result, anyhow};
+use serde_json::json;
 
 mod hooks;
+mod logger;
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 mod {{ cli.name.replace('-', '_') }}_interactive;
 use {{ cli.name.replace('-', '_') }}_interactive::run_interactive;
 {% endif %}
 
+use logger::{setup_logging, info, error, set_context, create_command_context, log_error};
+
 /// Enhanced error handling function
 fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
-    eprintln!("❌ {}: {}", context, error);
+    log_error(context, &error);
     
     if verbose {
-        eprintln!("Details: {:#}", error);
+        error(context, &format!("Details: {:#}", error), None);
     }
     
     // Check for specific error types to provide better exit codes
@@ -1128,6 +1132,14 @@ fn handle_error(error: anyhow::Error, context: &str, verbose: bool) -> ! {
 }
 
 fn main() {
+    // Initialize logging as early as possible
+    if let Err(e) = setup_logging() {
+        eprintln!("Failed to initialize logging: {}", e);
+        process::exit(1);
+    }
+
+    info("main", "Starting {{ cli.name }} CLI", None);
+
     let app = Command::new("{{ cli.name }}")
         .version("{{ cli.version }}")
         .about("{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) }}")
@@ -1254,6 +1266,9 @@ fn main() {
     match matches.subcommand() {
         Some(("upgrade", sub_matches)) => {
             // Built-in upgrade command implementation
+            let context = create_command_context("upgrade", &[]);
+            set_context(context);
+            info("main", "Executing upgrade command", None);
             let package_name = "{{ installation.pypi_name | default(project.package_name) | default(project.name) }}";
             let command_name = "{{ project.command_name | default('cli') }}";
             let display_name = "{{ project.display_name | default(project.name) }}";
@@ -1268,8 +1283,8 @@ fn main() {
             let dry_run = sub_matches.get_flag("dry-run");
             
             if check_only {
-                println!("Checking for updates to {}...", display_name);
-                println!("Update check not yet implemented for Rust. Use without --check to upgrade.");
+                info("upgrade", &format!("Checking for updates to {}...", display_name), None);
+                info("upgrade", "Update check not yet implemented for Rust. Use without --check to upgrade.", None);
                 return;
             }
             
@@ -1291,12 +1306,12 @@ fn main() {
             cmd_args.push(package_name);
             
             if dry_run {
-                println!("Dry run - would execute: cargo {}", cmd_args.join(" "));
+                info("upgrade", &format!("Dry run - would execute: cargo {}", cmd_args.join(" ")), None);
                 return;
             }
             
             // Execute upgrade
-            println!("Upgrading {} with cargo...", display_name);
+            info("upgrade", &format!("Upgrading {} with cargo...", display_name), None);
             
             let output = std::process::Command::new("cargo")
                 .args(&cmd_args)
@@ -1322,11 +1337,15 @@ fn main() {
 {%- for cmd in cli.command_hierarchy.flat_commands if cli.command_hierarchy and cli.command_hierarchy.flat_commands %}
 {% if not cmd.is_group %}
         Some(("{{ ' '.join(cmd.path) }}", sub_matches)) => {
-            // Enhanced error handling for Rust commands
+            // Enhanced error handling for Rust commands with structured logging
+            let context = create_command_context("{{ ' '.join(cmd.path) }}", &[]);
+            set_context(context);
+            info("main", "Executing {{ ' '.join(cmd.path) }} command", None);
+            
             let hook_name = "{{ cmd.hook_name }}";
             match hooks::{{ cmd.hook_name }}(sub_matches) {
                 Ok(_) => {
-                    // Command executed successfully
+                    info("main", "Command {{ ' '.join(cmd.path) }} executed successfully", None);
                 }
                 Err(e) => {
                     let error_context = format!("Command '{{ ' '.join(cmd.path) }}' execution");
@@ -1348,10 +1367,12 @@ fn main() {
 {% endif %}
 {% endfor %}
         _ => {
-            eprintln!("No subcommand provided. Use --help for available commands.");
+            info("main", "No subcommand provided. Use --help for available commands.", None);
             process::exit(1);
         }
     }
+    
+    info("main", "CLI execution completed successfully", None);
 }
 
 {%- endif -%}

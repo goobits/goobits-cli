@@ -26,6 +26,41 @@ import {
   CommandNotFoundError,
   CLIError
 } from './lib/errors.js';
+
+// Structured logging setup (initialized lazily)
+let logger = null;
+
+async function initializeLogger() {
+    if (logger) return logger;
+    
+    try {
+        const loggerModule = await import('./lib/logger.js');
+        logger = loggerModule.getLogger('index');
+    } catch (e) {
+        // Fallback to console if logger not available
+        logger = {
+            debug: (msg, meta) => console.debug(`DEBUG: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            info: (msg, meta) => console.log(`INFO: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            warn: (msg, meta) => console.warn(`WARN: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            error: (msg, meta) => console.error(`ERROR: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            setContext: () => {},
+            clearContext: () => {},
+            updateContext: () => {},
+            getContext: () => ({}),
+            removeContextKeys: () => {}
+        };
+    }
+    
+    return logger;
+}
+
+// Get logger (with lazy initialization)
+async function getLogger() {
+    if (!logger) {
+        logger = await initializeLogger();
+    }
+    return logger;
+}
 {% set npm_packages = [] %}
 {% if installation and installation.extras and installation.extras.npm %}
 {% for pkg in installation.extras.npm %}
@@ -57,9 +92,8 @@ try {
   await config.load();
 } catch (error) {
   // Config module not available or error loading
-  if (process.env.DEBUG) {
-    console.debug('Config module not loaded:', error.message);
-  }
+  const log = await getLogger();
+  log.debug('Config module not loaded', { error: error.message });
   // Don't exit on config load failure during initialization
 }
 
@@ -73,9 +107,8 @@ const getVersion = asyncErrorHandler(async function getVersion() {
     const { default: pkg } = await import(packagePath, { assert: { type: 'json' } });
     return pkg.version;
   } catch (error) {
-    if (process.env.DEBUG) {
-      console.debug('Could not load version from package.json:', error.message);
-    }
+    const log = await getLogger();
+    log.debug('Could not load version from package.json', { error: error.message });
     return '{{ version | default("1.0.0") }}';
   }
 });
@@ -91,7 +124,8 @@ try {
   }
 } catch (error) {
   // No hooks module found, use default behavior
-  console.debug('Hooks module not found:', error.message);
+  const log = await getLogger();
+  log.debug('Hooks module not found', { error: error.message, hookPath: '{{ hooks_path }}' });
 }
 {% else %}
 // No hooks path configured, try default locations
@@ -102,7 +136,8 @@ try {
   }
 } catch (error) {
   // No hooks module found, use default behavior
-  console.debug('Hooks module not found:', error.message);
+  const log = await getLogger();
+  log.debug('Hooks module not found', { error: error.message, hookPath: 'app_hooks.js' });
 }
 {% endif %}
 
@@ -112,9 +147,8 @@ const loadCommands = asyncErrorHandler(async function loadCommands(program) {
   
   try {
     if (!existsSync(commandsDir)) {
-      if (process.env.DEBUG) {
-        console.debug('Commands directory not found:', commandsDir);
-      }
+      const log = await getLogger();
+      log.debug('Commands directory not found', { commandsDir });
       return;
     }
     
@@ -139,15 +173,15 @@ const loadCommands = asyncErrorHandler(async function loadCommands(program) {
         } catch (error) {
           const commandError = new CLIError(`Failed to load command ${file}: ${error.message}`, 'COMMAND_LOAD_ERROR');
           console.error(chalk.red(commandError.getUserMessage()));
-          if (process.env.DEBUG) {
-            console.error(error.stack);
-          }
+          const log = await getLogger();
+          log.debug('Command load error stack trace', { file, stack: error.stack });
         }
       }
     }
     
-    if (process.env.DEBUG && loadedCount > 0) {
-      console.debug(chalk.gray(`Loaded ${loadedCount} command(s) from ${commandsDir}`));
+    if (loadedCount > 0) {
+      const log = await getLogger();
+      log.debug('Commands loaded from directory', { loadedCount, commandsDir });
     }
   } catch (error) {
     throw new CLIError(`Could not load commands directory: ${error.message}`, 'COMMANDS_DIR_ERROR');
@@ -162,17 +196,17 @@ const loadPlugins = asyncErrorHandler(async function loadPlugins(program) {
     const pluginManager = new PluginManager(program);
     
     const loadedCount = await pluginManager.loadAllPlugins();
-    if (loadedCount > 0 && process.env.DEBUG) {
-      console.debug(chalk.gray(`Loaded ${loadedCount} plugin(s)`));
+    if (loadedCount > 0) {
+      const log = await getLogger();
+      log.debug('Plugins loaded via enhanced manager', { loadedCount });
     }
     
     // Store plugin manager on program for later use
     program.pluginManager = pluginManager;
     
   } catch (error) {
-    if (process.env.DEBUG) {
-      console.debug('Enhanced plugin manager not available, falling back to basic loading:', error.message);
-    }
+    const log = await getLogger();
+    log.debug('Enhanced plugin manager not available, falling back to basic loading', { error: error.message });
     
     // Fallback to basic plugin loading
     const pluginDirs = [
@@ -201,37 +235,34 @@ const loadPlugins = asyncErrorHandler(async function loadPlugins(program) {
               if (typeof pluginModule === 'function') {
                 pluginModule(program);
                 totalLoaded++;
-                if (process.env.DEBUG) {
-                  console.debug(chalk.green(`✓ Loaded plugin: ${file}`));
-                }
+                const log = await getLogger();
+                log.debug('Plugin loaded successfully', { plugin: file, type: 'function' });
               } else if (pluginModule.register) {
                 pluginModule.register(program);
                 totalLoaded++;
-                if (process.env.DEBUG) {
-                  console.debug(chalk.green(`✓ Loaded plugin: ${file}`));
-                }
+                const log = await getLogger();
+                log.debug('Plugin loaded successfully', { plugin: file, type: 'register' });
               } else {
                 console.warn(chalk.yellow(`Warning: Plugin ${file} does not export a function or register method`));
               }
             } catch (pluginError) {
               const error = new PluginLoadError(file, pluginError);
               console.error(chalk.red(error.getUserMessage()));
-              if (process.env.DEBUG) {
-                console.error(pluginError.stack);
-              }
+              const log = await getLogger();
+              log.debug('Plugin load error stack trace', { plugin: file, stack: pluginError.stack });
             }
           }
         }
       } catch (dirError) {
         // Plugin directory doesn't exist or can't be read
-        if (process.env.DEBUG) {
-          console.debug(`Could not access plugin directory ${pluginDir}:`, dirError.message);
-        }
+        const log = await getLogger();
+        log.debug('Could not access plugin directory', { pluginDir, error: dirError.message });
       }
     }
     
-    if (process.env.DEBUG && totalLoaded > 0) {
-      console.debug(chalk.gray(`Loaded ${totalLoaded} plugin(s) via fallback loading`));
+    if (totalLoaded > 0) {
+      const log = await getLogger();
+      log.debug('Plugins loaded via fallback loading', { totalLoaded });
     }
   }
 });
@@ -476,11 +507,13 @@ export const cli = asyncErrorHandler(async function cli() {
             console.log(completion);
           }
         } else if (options.debug) {
-          console.error('completion_engine.js not found');
+          const log = await getLogger();
+          log.warn('completion_engine.js not found');
         }
       } catch (error) {
         if (options.debug) {
-          console.error(`Completion error: ${error.message}`);
+          const log = await getLogger();
+          log.error('Completion error', { error: error.message });
         }
         // Silently fail in production to avoid breaking shell completion
       }
@@ -521,7 +554,8 @@ export const cli = asyncErrorHandler(async function cli() {
     const { default: registerPluginCommand } = await import('./commands/builtin/plugin.js');
     registerPluginCommand(program);
   } catch (error) {
-    console.debug('Plugin command not available:', error.message);
+    const log = await getLogger();
+    log.debug('Plugin command not available', { error: error.message });
   }
 
   // Shell completion command
@@ -529,7 +563,8 @@ export const cli = asyncErrorHandler(async function cli() {
     const { default: registerCompletionCommand } = await import('./commands/builtin/completion.js');
     registerCompletionCommand(program);
   } catch (error) {
-    console.debug('Completion command not available:', error.message);
+    const log = await getLogger();
+    log.debug('Completion command not available', { error: error.message });
   }
 
   // Format demo command (optional - for demonstration)
@@ -537,7 +572,8 @@ export const cli = asyncErrorHandler(async function cli() {
     const { default: registerFormatDemoCommand } = await import('./commands/builtin/format-demo.js');
     registerFormatDemoCommand(program);
   } catch (error) {
-    console.debug('Format demo command not available:', error.message);
+    const log = await getLogger();
+    log.debug('Format demo command not available', { error: error.message });
   }
 
   // Define commands from configuration
@@ -602,7 +638,9 @@ export const cli = asyncErrorHandler(async function cli() {
           {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
           {% endfor %}
           // Add config if available
-          config: config
+          config: config,
+          // Add logger for structured logging
+          logger: await getLogger()
         };
         
         try {
@@ -646,7 +684,9 @@ export const cli = asyncErrorHandler(async function cli() {
           {{ option.name | replace('-', '_') }}: command.parent.opts().{{ option.name | replace('-', '_') }},
           {% endfor %}
           // Add config if available
-          config: config
+          config: config,
+          // Add logger for structured logging
+          logger: await getLogger()
         };
         
         try {
@@ -770,7 +810,9 @@ export const cli = asyncErrorHandler(async function cli() {
             {{ option.name | replace('-', '_') }}: command.parent.parent.opts().{{ option.name | replace('-', '_') }},
             {% endfor %}
             // Add config if available
-            config: config
+            config: config,
+            // Add logger for structured logging
+            logger: await getLogger()
           };
           
           try {
@@ -909,10 +951,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   cli().catch(error => {
     // Error handling is already set up in cli() function with asyncErrorHandler
     // This is a fallback for any errors that slip through
-    if (process.env.DEBUG) {
-      console.error('Unhandled CLI Error:', error);
-      console.error(error.stack);
-    }
+    const log = await getLogger();
+    log.error('Unhandled CLI Error', { error: error.message, stack: error.stack });
     process.exit(error.exitCode || 1);
   });
 }

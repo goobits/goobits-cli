@@ -1,0 +1,488 @@
+{#
+Rust Logger Implementation
+==========================
+
+Rust-specific logger using serde_json for structured output and thread-local storage for context.
+
+Features:
+- Thread-safe context management using thread_local storage
+- serde_json for structured logging output
+- Environment variable configuration
+- Container-friendly output routing
+- Strong typing and error handling
+#}
+//! Structured logging infrastructure for {{ project.name if project else cli.name }}.
+//! 
+//! This module provides structured logging with context management and error handling.
+//! Environment variables:
+//! - {{ command_name | upper }}_LOG_LEVEL: Set logging level (debug, info, warn, error) - default: info
+//! - {{ command_name | upper }}_LOG_OUTPUT: Set output destination (console, json, file) - default: console
+//! - LOG_LEVEL: Global logging level fallback
+//! - LOG_OUTPUT: Global output destination fallback
+//! - ENVIRONMENT: Set environment (production/development) - affects format
+
+use std::collections::HashMap;
+use std::env;
+use std::fs::OpenOptions;
+use std::io::{self, Write};
+use std::path::Path;
+use std::sync::Mutex;
+use std::thread_local;
+
+use serde_json::{json, Value};
+use chrono::{DateTime, Utc};
+use once_cell::sync::OnceCell;
+
+/// Log levels supported by the logger
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum LogLevel {
+    Debug = 0,
+    Info = 1,
+    Warn = 2,
+    Error = 3,
+}
+
+impl std::fmt::Display for LogLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LogLevel::Debug => write!(f, "DEBUG"),
+            LogLevel::Info => write!(f, "INFO"),
+            LogLevel::Warn => write!(f, "WARN"),
+            LogLevel::Error => write!(f, "ERROR"),
+        }
+    }
+}
+
+impl std::str::FromStr for LogLevel {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "debug" => Ok(LogLevel::Debug),
+            "info" => Ok(LogLevel::Info),
+            "warn" => Ok(LogLevel::Warn),
+            "error" => Ok(LogLevel::Error),
+            _ => Err(format!("Invalid log level: {}", s)),
+        }
+    }
+}
+
+/// Log output destinations
+#[derive(Debug, Clone)]
+pub enum LogOutput {
+    Console,
+    Json,
+    File(String),
+}
+
+impl std::str::FromStr for LogOutput {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "console" => Ok(LogOutput::Console),
+            "json" => Ok(LogOutput::Json),
+            path if path.starts_with("file:") => {
+                Ok(LogOutput::File(path[5..].to_string()))
+            }
+            _ => Err(format!("Invalid log output: {}", s)),
+        }
+    }
+}
+
+/// Log context type for structured logging
+pub type LogContext = HashMap<String, Value>;
+
+/// Thread-local storage for context
+thread_local! {
+    static LOG_CONTEXT: std::cell::RefCell<LogContext> = std::cell::RefCell::new(HashMap::new());
+}
+
+/// Logger configuration
+pub struct LoggerConfig {
+    pub level: LogLevel,
+    pub output: LogOutput,
+    pub environment: String,
+}
+
+/// Main logger struct
+pub struct Logger {
+    config: LoggerConfig,
+    file_handle: Option<std::fs::File>,
+}
+
+impl Logger {
+    /// Create a new logger with the given configuration
+    pub fn new(config: LoggerConfig) -> io::Result<Self> {
+        let file_handle = match &config.output {
+            LogOutput::File(path) => {
+                // Ensure parent directory exists
+                if let Some(parent) = Path::new(path).parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                Some(OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(path)?)
+            }
+            _ => None,
+        };
+        
+        Ok(Logger {
+            config,
+            file_handle,
+        })
+    }
+    
+    /// Log a message with the given level
+    pub fn log(&mut self, level: LogLevel, module: &str, message: &str, extra: Option<&LogContext>) -> io::Result<()> {
+        // Check if we should log this level
+        if level < self.config.level {
+            return Ok(());
+        }
+        
+        let timestamp = Utc::now();
+        let context = get_context();
+        let is_production = self.config.environment.to_lowercase() == "production" 
+            || self.config.environment.to_lowercase() == "prod";
+        
+        let log_entry = match &self.config.output {
+            LogOutput::Json | LogOutput::File(_) if is_production => {
+                // JSON format for production or explicit JSON output
+                let mut log_data = json!({
+                    "timestamp": timestamp.to_rfc3339(),
+                    "level": level.to_string(),
+                    "module": module,
+                    "message": message,
+                });
+                
+                // Add context if available
+                if !context.is_empty() {
+                    log_data["context"] = json!(context);
+                }
+                
+                // Add extra fields if provided
+                if let Some(extra_fields) = extra {
+                    for (key, value) in extra_fields {
+                        log_data[key] = value.clone();
+                    }
+                }
+                
+                serde_json::to_string(&log_data).unwrap_or_else(|_| "Failed to serialize log data".to_string())
+            }
+            _ => {
+                // Human-readable format for development or console output
+                let context_str = if !context.is_empty() {
+                    let ctx_parts: Vec<String> = context.iter()
+                        .map(|(k, v)| format!("{}={}", k, v))
+                        .collect();
+                    format!(" [{}]", ctx_parts.join(", "))
+                } else {
+                    String::new()
+                };
+                
+                let extra_str = if let Some(extra_fields) = extra {
+                    if !extra_fields.is_empty() {
+                        format!(" {}", serde_json::to_string(extra_fields).unwrap_or_default())
+                    } else {
+                        String::new()
+                    }
+                } else {
+                    String::new()
+                };
+                
+                format!("{} {:8} {{ cli.name if cli else 'app' }}.{}: {}{}{}\n",
+                    timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
+                    level.to_string(),
+                    module,
+                    message,
+                    context_str,
+                    extra_str
+                )
+            }
+        };
+        
+        // Write to appropriate output
+        match &self.config.output {
+            LogOutput::Console => {
+                if level >= LogLevel::Warn {
+                    // Warnings and errors to stderr for container compatibility
+                    io::stderr().write_all(log_entry.as_bytes())?;
+                    if !log_entry.ends_with('\n') {
+                        io::stderr().write_all(b"\n")?;
+                    }
+                } else {
+                    // Info and debug to stdout
+                    io::stdout().write_all(log_entry.as_bytes())?;
+                    if !log_entry.ends_with('\n') {
+                        io::stdout().write_all(b"\n")?;
+                    }
+                }
+            }
+            LogOutput::Json => {
+                // JSON always to stdout
+                io::stdout().write_all(log_entry.as_bytes())?;
+                io::stdout().write_all(b"\n")?;
+            }
+            LogOutput::File(_) => {
+                if let Some(ref mut file) = self.file_handle {
+                    file.write_all(log_entry.as_bytes())?;
+                    if !log_entry.ends_with('\n') {
+                        file.write_all(b"\n")?;
+                    }
+                    file.flush()?;
+                }
+            }
+        }
+        
+        Ok(())
+    }
+}
+
+/// Global logger instance
+static LOGGER: OnceCell<Mutex<Logger>> = OnceCell::new();
+
+/// Initialize structured logging for {{ cli.name if cli else 'the CLI' }}.
+/// 
+/// Environment Variables:
+/// - {{ command_name | upper }}_LOG_LEVEL: Set logging level (debug, info, warn, error) - default: info
+/// - {{ command_name | upper }}_LOG_OUTPUT: Set output destination (console, json, file) - default: console
+/// - LOG_LEVEL: Global logging level fallback
+/// - LOG_OUTPUT: Global output destination fallback  
+/// - ENVIRONMENT: Set environment (production/development) - affects format
+pub fn setup_logging() -> io::Result<()> {
+    // Check app-specific environment variables first, then fall back to global ones
+    let log_level = env::var("{{ command_name | upper }}_LOG_LEVEL")
+        .or_else(|_| env::var("LOG_LEVEL"))
+        .unwrap_or_else(|_| "info".to_string())
+        .parse()
+        .unwrap_or_else(|err| {
+            eprintln!("Warning: Invalid LOG_LEVEL, using info: {}", err);
+            LogLevel::Info
+        });
+    
+    let log_output = env::var("{{ command_name | upper }}_LOG_OUTPUT")
+        .or_else(|_| env::var("LOG_OUTPUT"))
+        .unwrap_or_else(|_| "console".to_string())
+        .parse()
+        .unwrap_or_else(|err| {
+            eprintln!("Warning: Invalid LOG_OUTPUT, using console: {}", err);
+            LogOutput::Console
+        });
+    
+    let environment = env::var("ENVIRONMENT").unwrap_or_else(|_| "development".to_string());
+    
+    let config = LoggerConfig {
+        level: log_level,
+        output: log_output,
+        environment: environment.clone(),
+    };
+    
+    let logger = Logger::new(config)?;
+    LOGGER.set(Mutex::new(logger)).map_err(|_| {
+        io::Error::new(io::ErrorKind::AlreadyExists, "Logger already initialized")
+    })?;
+    
+    // Log startup message
+    let startup_context = json!({
+        "level": log_level.to_string(),
+        "output": format!("{:?}", log_output),
+        "environment": environment
+    });
+    let startup_map: HashMap<String, Value> = startup_context.as_object().unwrap().clone().into_iter().collect();
+    info("logger", "Logging initialized", Some(&startup_map));
+    
+    Ok(())
+}
+
+/// Get a logger function for the specified module
+pub fn get_logger(module_name: &str) -> impl Fn(LogLevel, &str, Option<&LogContext>) + '_ {
+    move |level: LogLevel, message: &str, extra: Option<&LogContext>| {
+        if let Some(logger_mutex) = LOGGER.get() {
+            if let Ok(mut logger) = logger_mutex.lock() {
+                if let Err(e) = logger.log(level, module_name, message, extra) {
+                    eprintln!("Failed to write log: {}", e);
+                }
+            }
+        }
+    }
+}
+
+/// Log a debug message
+pub fn debug(module: &str, message: &str, extra: Option<&LogContext>) {
+    if let Some(logger_mutex) = LOGGER.get() {
+        if let Ok(mut logger) = logger_mutex.lock() {
+            let _ = logger.log(LogLevel::Debug, module, message, extra);
+        }
+    }
+}
+
+/// Log an info message
+pub fn info(module: &str, message: &str, extra: Option<&LogContext>) {
+    if let Some(logger_mutex) = LOGGER.get() {
+        if let Ok(mut logger) = logger_mutex.lock() {
+            let _ = logger.log(LogLevel::Info, module, message, extra);
+        }
+    }
+}
+
+/// Log a warning message
+pub fn warn(module: &str, message: &str, extra: Option<&LogContext>) {
+    if let Some(logger_mutex) = LOGGER.get() {
+        if let Ok(mut logger) = logger_mutex.lock() {
+            let _ = logger.log(LogLevel::Warn, module, message, extra);
+        }
+    }
+}
+
+/// Log an error message
+pub fn error(module: &str, message: &str, extra: Option<&LogContext>) {
+    if let Some(logger_mutex) = LOGGER.get() {
+        if let Ok(mut logger) = logger_mutex.lock() {
+            let _ = logger.log(LogLevel::Error, module, message, extra);
+        }
+    }
+}
+
+/// Set logging context variables that will be included in all log messages within the current thread.
+/// 
+/// # Arguments
+/// * `context_data` - Key-value pairs to add to logging context
+/// 
+/// # Examples
+/// ```rust
+/// use std::collections::HashMap;
+/// use serde_json::json;
+/// 
+/// let mut context = HashMap::new();
+/// context.insert("operation_id".to_string(), json!("op_123"));
+/// context.insert("user".to_string(), json!("admin"));
+/// set_context(context);
+/// 
+/// info("main", "Operation started", None); // Will include context automatically
+/// ```
+pub fn set_context(context_data: LogContext) {
+    LOG_CONTEXT.with(|ctx| {
+        let mut current_context = ctx.borrow_mut();
+        current_context.clear();
+        for (key, value) in context_data {
+            current_context.insert(key, value);
+        }
+    });
+}
+
+/// Clear all logging context variables
+pub fn clear_context() {
+    LOG_CONTEXT.with(|ctx| {
+        ctx.borrow_mut().clear();
+    });
+}
+
+/// Update existing context with new values
+/// 
+/// # Arguments
+/// * `context_data` - Key-value pairs to update in logging context
+pub fn update_context(context_data: LogContext) {
+    LOG_CONTEXT.with(|ctx| {
+        let mut current_context = ctx.borrow_mut();
+        for (key, value) in context_data {
+            current_context.insert(key, value);
+        }
+    });
+}
+
+/// Get current logging context
+pub fn get_context() -> LogContext {
+    LOG_CONTEXT.with(|ctx| ctx.borrow().clone())
+}
+
+/// Remove specific keys from logging context
+/// 
+/// # Arguments
+/// * `keys` - Context keys to remove
+pub fn remove_context_keys(keys: &[&str]) {
+    LOG_CONTEXT.with(|ctx| {
+        let mut current_context = ctx.borrow_mut();
+        for key in keys {
+            current_context.remove(*key);
+        }
+    });
+}
+
+/// Convenience macro for logging with automatic module detection
+#[macro_export]
+macro_rules! log {
+    (debug, $msg:expr) => {
+        $crate::logger::debug(module_path!(), $msg, None)
+    };
+    (debug, $msg:expr, $extra:expr) => {
+        $crate::logger::debug(module_path!(), $msg, Some($extra))
+    };
+    (info, $msg:expr) => {
+        $crate::logger::info(module_path!(), $msg, None)
+    };
+    (info, $msg:expr, $extra:expr) => {
+        $crate::logger::info(module_path!(), $msg, Some($extra))
+    };
+    (warn, $msg:expr) => {
+        $crate::logger::warn(module_path!(), $msg, None)
+    };
+    (warn, $msg:expr, $extra:expr) => {
+        $crate::logger::warn(module_path!(), $msg, Some($extra))
+    };
+    (error, $msg:expr) => {
+        $crate::logger::error(module_path!(), $msg, None)
+    };
+    (error, $msg:expr, $extra:expr) => {
+        $crate::logger::error(module_path!(), $msg, Some($extra))
+    };
+}
+
+/// Log an error with context from anyhow::Error
+pub fn log_error(module: &str, error: &anyhow::Error) {
+    let mut context = HashMap::new();
+    context.insert("error_chain".to_string(), json!(format!("{:#}", error)));
+    error(module, &error.to_string(), Some(&context));
+}
+
+/// Create a logging context for command execution
+pub fn create_command_context(command: &str, args: &[&str]) -> LogContext {
+    let mut context = HashMap::new();
+    context.insert("command".to_string(), json!(command));
+    context.insert("args".to_string(), json!(args));
+    context.insert("execution_id".to_string(), json!(uuid::Uuid::new_v4().to_string()));
+    context
+}
+
+/// Log function entry with parameters
+pub fn log_function_entry(module: &str, function: &str, params: Option<&LogContext>) {
+    let mut context = HashMap::new();
+    context.insert("function".to_string(), json!(function));
+    context.insert("event".to_string(), json!("entry"));
+    
+    if let Some(params) = params {
+        context.extend(params.clone());
+    }
+    
+    debug(module, &format!("Entering function: {}", function), Some(&context));
+}
+
+/// Log function exit with result
+pub fn log_function_exit<T: std::fmt::Debug>(module: &str, function: &str, result: &Result<T, anyhow::Error>) {
+    let mut context = HashMap::new();
+    context.insert("function".to_string(), json!(function));
+    context.insert("event".to_string(), json!("exit"));
+    
+    match result {
+        Ok(value) => {
+            context.insert("success".to_string(), json!(true));
+            context.insert("result".to_string(), json!(format!("{:?}", value)));
+            debug(module, &format!("Exiting function: {} (success)", function), Some(&context));
+        }
+        Err(err) => {
+            context.insert("success".to_string(), json!(false));
+            context.insert("error".to_string(), json!(err.to_string()));
+            warn(module, &format!("Exiting function: {} (error: {})", function, err), Some(&context));
+        }
+    }
+}

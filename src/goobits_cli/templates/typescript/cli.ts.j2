@@ -23,6 +23,41 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { execSync } from 'child_process';
 
+// Structured logging setup (initialized lazily)
+let logger: any = null;
+
+async function initializeLogger(): Promise<any> {
+    if (logger) return logger;
+    
+    try {
+        const loggerModule = await import('./lib/logger.js');
+        logger = loggerModule.getLogger('cli');
+    } catch (e) {
+        // Fallback to console if logger not available
+        logger = {
+            debug: (msg: string, meta?: any) => console.debug(`DEBUG: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            info: (msg: string, meta?: any) => console.log(`INFO: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            warn: (msg: string, meta?: any) => console.warn(`WARN: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            error: (msg: string, meta?: any) => console.error(`ERROR: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            setContext: () => {},
+            clearContext: () => {},
+            updateContext: () => {},
+            getContext: () => ({}),
+            removeContextKeys: () => {}
+        };
+    }
+    
+    return logger;
+}
+
+// Get logger (with lazy initialization)
+async function getLogger(): Promise<any> {
+    if (!logger) {
+        logger = await initializeLogger();
+    }
+    return logger;
+}
+
 // Enhanced Error Classes
 class CLIError extends Error {
     public exitCode: number;
@@ -130,28 +165,28 @@ try {
     configManager = require('./lib/config');
     HAS_CONFIG_MANAGER = true;
 } catch (e) {
-    if (process.env.DEBUG) console.debug('Config manager not available:', (e as Error).message);
+    // Will be logged in initializeHelpers
 }
 
 try {
     progressHelper = require('./lib/progress');
     HAS_PROGRESS_HELPER = true;
 } catch (e) {
-    if (process.env.DEBUG) console.debug('Progress helper not available:', (e as Error).message);
+    // Will be logged in initializeHelpers
 }
 
 try {
     promptsHelper = require('./lib/prompts');
     HAS_PROMPTS_HELPER = true;
 } catch (e) {
-    if (process.env.DEBUG) console.debug('Prompts helper not available:', (e as Error).message);
+    // Will be logged in initializeHelpers
 }
 
 try {
     completionHelper = require('./lib/completion');
     HAS_COMPLETION_HELPER = true;
 } catch (e) {
-    if (process.env.DEBUG) console.debug('Completion helper not available:', (e as Error).message);
+    // Will be logged in initializeHelpers
 }
 
 // Initialize global helpers
@@ -160,39 +195,46 @@ let progress: any = null;
 let prompts: any = null;
 let completion: any = null;
 
-if (HAS_CONFIG_MANAGER) {
-    try {
-        config = configManager.getConfig();
-    } catch (e) {
-        console.warn(`Failed to initialize config manager: ${(e as Error).message}`);
-        HAS_CONFIG_MANAGER = false;
+// Helper initialization (will be called in cliEntry)
+async function initializeHelpers(): Promise<void> {
+    if (HAS_CONFIG_MANAGER) {
+        try {
+            config = configManager.getConfig();
+        } catch (e) {
+            const log = await getLogger();
+            log.warn('Failed to initialize config manager', { error: (e as Error).message });
+            HAS_CONFIG_MANAGER = false;
+        }
     }
-}
 
-if (HAS_PROGRESS_HELPER) {
-    try {
-        progress = progressHelper.getProgressHelper();
-    } catch (e) {
-        console.warn(`Failed to initialize progress helper: ${(e as Error).message}`);
-        HAS_PROGRESS_HELPER = false;
+    if (HAS_PROGRESS_HELPER) {
+        try {
+            progress = progressHelper.getProgressHelper();
+        } catch (e) {
+            const log = await getLogger();
+            log.warn('Failed to initialize progress helper', { error: (e as Error).message });
+            HAS_PROGRESS_HELPER = false;
+        }
     }
-}
 
-if (HAS_PROMPTS_HELPER) {
-    try {
-        prompts = promptsHelper.getPromptsHelper();
-    } catch (e) {
-        console.warn(`Failed to initialize prompts helper: ${(e as Error).message}`);
-        HAS_PROMPTS_HELPER = false;
+    if (HAS_PROMPTS_HELPER) {
+        try {
+            prompts = promptsHelper.getPromptsHelper();
+        } catch (e) {
+            const log = await getLogger();
+            log.warn('Failed to initialize prompts helper', { error: (e as Error).message });
+            HAS_PROMPTS_HELPER = false;
+        }
     }
-}
 
-if (HAS_COMPLETION_HELPER) {
-    try {
-        completion = completionHelper.getCompletionHelper();
-    } catch (e) {
-        console.warn(`Failed to initialize completion helper: ${(e as Error).message}`);
-        HAS_COMPLETION_HELPER = false;
+    if (HAS_COMPLETION_HELPER) {
+        try {
+            completion = completionHelper.getCompletionHelper();
+        } catch (e) {
+            const log = await getLogger();
+            log.warn('Failed to initialize completion helper', { error: (e as Error).message });
+            HAS_COMPLETION_HELPER = false;
+        }
     }
 }
 
@@ -232,7 +274,6 @@ try {
 } catch (e) {
     // No hooks module found
 }
-{% endif %}
 
 // Get version function
 function getVersion(): string {
@@ -332,10 +373,12 @@ function loadPlugins(program: Command): void {
                 
                 if (typeof plugin.registerPlugin === 'function') {
                     plugin.registerPlugin(program);
-                    console.error(`Loaded plugin: ${pluginName}`);
+                    const log = await getLogger();
+                    log.info('Plugin loaded successfully', { plugin: pluginName });
                 }
             } catch (e) {
-                console.error(`Failed to load plugin ${pluginName}: ${(e as Error).message}`);
+                const log = await getLogger();
+                log.error('Failed to load plugin', { plugin: pluginName, error: (e as Error).message });
             }
         }
     }
@@ -440,6 +483,16 @@ const {{ cmd_name }}Cmd = program
     {% endfor %}
     .action(async ({% if cmd_data.args %}{{ cmd_data.args|map(attribute='name')|join(': string, ') }}{% if cmd_data.args %}: string, {% endif %}{% endif %}options: {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}Options, command: Command) => {
         try {
+            // Set command context for logging
+            const log = await getLogger();
+            log.setContext({ command: '{{ cmd_name }}', type: 'execution' }, async () => {
+                log.debug('Command execution started', { 
+                    {% if cmd_data.args %}
+                    args: { {% for arg in cmd_data.args %}{{ arg.name|lower|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} },
+                    {% endif %}
+                    options,
+                    lifecycle: '{{ cmd_data.lifecycle or "standard" }}'
+                });
             {% if cmd_data.lifecycle == 'managed' %}
             // Managed command - expect an instance
             const commandInstanceName = '{{ cmd_name }}Command';
@@ -492,20 +545,36 @@ const {{ cmd_name }}Cmd = program
                 await (appHooks[hookName] as HookFunction)(kwargs);
             } else {
                 // Default placeholder behavior
-                console.log(`Executing {{ cmd_name }} command...`);
-                {% if cmd_data.args %}
-                {% for arg in cmd_data.args %}
-                console.log(`  {{ arg.name }}: ${{ '${' }}{{ arg.name }}}`);  
-                {% endfor %}
-                {% endif %}
-                {% if cmd_data.options %}
-                {% for opt in cmd_data.options %}
-                console.log(`  {{ opt.name }}: ${options.{{ opt.name|replace('-', '') }}}`);
-                {% endfor %}
-                {% endif %}
+                log.info('No hook found, using default behavior', { hookName });
+                log.info('Command executed with placeholder implementation', {
+                    command: '{{ cmd_name }}',
+                    {% if cmd_data.args %}
+                    args: {
+                        {% for arg in cmd_data.args %}
+                        {{ arg.name }}: {{ arg.name }},
+                        {% endfor %}
+                    },
+                    {% endif %}
+                    {% if cmd_data.options %}
+                    options: {
+                        {% for opt in cmd_data.options %}
+                        {{ opt.name|replace('-', '_') }}: options.{{ opt.name|replace('-', '') }},
+                        {% endfor %}
+                    }
+                    {% endif %}
+                });
             }
-            {% endif %}
+                {% endif %}
+                
+                log.debug('Command execution completed', { command: '{{ cmd_name }}' });
+            });
         } catch (error) {
+            const log = await getLogger();
+            log.error('Command execution failed', { 
+                command: '{{ cmd_name }}', 
+                error: (error as Error).message,
+                stack: (error as Error).stack
+            });
             const exitCode = handleCLIError(error as Error, options.verbose || false);
             process.exit(exitCode);
         }
@@ -540,8 +609,24 @@ interface {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ 
     {% endfor %}
     .action(async ({% if subcmd_data.args %}{{ subcmd_data.args|map(attribute='name')|join(': string, ') }}{% if subcmd_data.args %}: string, {% endif %}{% endif %}options: {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ subcmd_name[1:] }}Options, command: Command) => {
         try {
-            const hookName = 'on{{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ subcmd_name[1:] }}';
-            if (appHooks && typeof appHooks[hookName] === 'function') {
+            // Set subcommand context for logging
+            const log = await getLogger();
+            log.setContext({ 
+                command: '{{ cmd_name }}', 
+                subcommand: '{{ subcmd_name }}',
+                type: 'execution' 
+            }, async () => {
+                log.debug('Subcommand execution started', { 
+                    command: '{{ cmd_name }}',
+                    subcommand: '{{ subcmd_name }}',
+                    {% if subcmd_data.args %}
+                    args: { {% for arg in subcmd_data.args %}{{ arg.name|lower|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} },
+                    {% endif %}
+                    options
+                });
+                
+                const hookName = 'on{{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ subcmd_name[1:] }}';
+                if (appHooks && typeof appHooks[hookName] === 'function') {
                 const kwargs: CommandArgs = {
                     commandName: '{{ subcmd_name }}',
                     {% if subcmd_data.args %}
@@ -559,21 +644,42 @@ interface {{ cmd_name[0]|upper }}{{ cmd_name[1:] }}{{ subcmd_name[0]|upper }}{{ 
                 };
                 
                 await (appHooks[hookName] as HookFunction)(kwargs);
-            } else {
-                // Default placeholder behavior
-                console.log(`Executing {{ subcmd_name }} command...`);
-                {% if subcmd_data.args %}
-                {% for arg in subcmd_data.args %}
-                console.log(`  {{ arg.name }}: ${{ '${' }}{{ arg.name }}}`);  
-                {% endfor %}
-                {% endif %}
-                {% if subcmd_data.options %}
-                {% for opt in subcmd_data.options %}
-                console.log(`  {{ opt.name }}: ${options.{{ opt.name|replace('-', '') }}}`);
-                {% endfor %}
-                {% endif %}
-            }
+                } else {
+                    // Default placeholder behavior
+                    log.info('No hook found for subcommand, using default behavior', { hookName });
+                    log.info('Subcommand executed with placeholder implementation', {
+                        command: '{{ cmd_name }}',
+                        subcommand: '{{ subcmd_name }}',
+                        {% if subcmd_data.args %}
+                        args: {
+                            {% for arg in subcmd_data.args %}
+                            {{ arg.name }}: {{ arg.name }},
+                            {% endfor %}
+                        },
+                        {% endif %}
+                        {% if subcmd_data.options %}
+                        options: {
+                            {% for opt in subcmd_data.options %}
+                            {{ opt.name|replace('-', '_') }}: options.{{ opt.name|replace('-', '') }},
+                            {% endfor %}
+                        }
+                        {% endif %}
+                    });
+                }
+                
+                log.debug('Subcommand execution completed', { 
+                    command: '{{ cmd_name }}', 
+                    subcommand: '{{ subcmd_name }}' 
+                });
+            });
         } catch (error) {
+            const log = await getLogger();
+            log.error('Subcommand execution failed', { 
+                command: '{{ cmd_name }}',
+                subcommand: '{{ subcmd_name }}', 
+                error: (error as Error).message,
+                stack: (error as Error).stack
+            });
             const exitCode = handleCLIError(error as Error, options.verbose || false);
             process.exit(exitCode);
         }
@@ -919,8 +1025,20 @@ daemonCmd
 {% endif %}
 
 // CLI entry point
-function cliEntry(): void {
+async function cliEntry(): Promise<void> {
     try {
+        // Initialize logging early
+        const log = await getLogger();
+        log.setContext({ phase: 'initialization' }, () => {
+            log.info('Starting {{ display_name }} CLI', { 
+                version: getVersion(),
+                argv: process.argv.slice(2)
+            });
+        });
+        
+        // Initialize helpers
+        await initializeHelpers();
+        
         // Load plugins before parsing
         loadPlugins(program);
         
@@ -971,5 +1089,11 @@ export { program, cliEntry };
 
 // Run if called directly
 if (require.main === module) {
-    cliEntry();
+    cliEntry().catch(error => {
+        console.error('Fatal error:', error.message);
+        if (process.env.DEBUG) {
+            console.error(error.stack);
+        }
+        process.exit(1);
+    });
 }

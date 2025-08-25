@@ -1,28 +1,26 @@
 """
-
 Universal Template Engine for Goobits CLI Framework
 
-
-
 This module provides the core engine for generating CLI implementations
-
 across multiple programming languages using a unified template system.
 
+The engine supports:
+- Language-agnostic intermediate representation (IR)
+- Multi-language rendering (Python, Node.js, TypeScript, Rust)
+- Template caching and performance optimization
+- Component-based architecture
+- Hierarchical command structures
 """
 
 
 
+import asyncio
+import time
 from abc import ABC, abstractmethod
-
 from pathlib import Path
-
 from typing import Dict, Any, List, Optional
 
 import jinja2
-
-
-import time
-import asyncio
 
 from .component_registry import ComponentRegistry
 from .command_hierarchy import CommandFlattener, HierarchyBuilder
@@ -82,39 +80,24 @@ def _safe_get_attr(obj: Any, attr: str, default: Any = "") -> Any:
 
 
 # Import performance optimization components
-
 try:
-
     from .performance.cache import TemplateCache
-
     from .performance.lazy_loader import LazyLoader
-    
     from .performance.parallel_io import ParallelIOManager, write_files_batch
-
     PERFORMANCE_AVAILABLE = True
-
 except ImportError:
-
     PERFORMANCE_AVAILABLE = False
-
     # Create placeholder classes for when performance features aren't available
-
     class TemplateCache:
-
         def __init__(self, *args, **kwargs):
-
             pass
 
     class LazyLoader:
-
         def __init__(self, *args, **kwargs):
-
             pass
             
     class ParallelIOManager:
-    
         def __init__(self, *args, **kwargs):
-        
             pass
 
 
@@ -122,17 +105,19 @@ except ImportError:
 
 
 class LanguageRenderer(ABC):
-
     """
-
     Abstract base class for language-specific renderers.
-
     
-
     Each supported language (Python, Node.js, TypeScript, Rust) must
-
     implement this interface to provide language-specific rendering logic.
-
+    
+    This class defines the contract for:
+    - Language identification
+    - File extension mapping
+    - Template context transformation
+    - Custom Jinja2 filters
+    - Component rendering
+    - Output file structure
     """
 
     
@@ -287,53 +272,43 @@ class LanguageRenderer(ABC):
 
 
 class UniversalTemplateEngine:
-
     """
-
     Main engine for the Universal Template System.
-
     
-
     This class orchestrates the entire process of converting a Goobits
-
     configuration into language-specific CLI implementations using
-
     universal component templates with performance optimizations.
-
+    
+    Key features:
+    - Language-agnostic intermediate representation (IR) generation
+    - Multi-language renderer support
+    - Template caching and lazy loading
+    - Parallel I/O for improved performance
+    - Component-based template system
+    - Hierarchical command structure support
     """
 
     
 
     def __init__(self, template_dir: Optional[Path] = None, 
-
                  template_cache: Optional[TemplateCache] = None,
-
                  enable_lazy_loading: bool = True,
-
-                 test_mode: bool = False):
-
+                 test_mode: bool = False) -> None:
         """
-
         Initialize the universal template engine.
-
         
-
         Args:
-
             template_dir: Path to templates directory (alias for components_dir for backward compatibility)
-
             template_cache: Optional template cache for performance optimization
-
             enable_lazy_loading: Whether to enable lazy loading of components
-
             test_mode: When True, disables performance optimizations and caching for testing
-
+            
+        Raises:
+            ValueError: If template_dir does not exist
         """
 
         # Validate template directory exists
-
         if template_dir is not None and not template_dir.exists():
-
             raise ValueError(f"Template directory does not exist: {template_dir}")
 
         

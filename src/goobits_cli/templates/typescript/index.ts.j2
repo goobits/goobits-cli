@@ -13,10 +13,46 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import * as hooks from './src/hooks.js';
 
+// Structured logging setup (initialized lazily)
+let logger: any = null;
+
+async function initializeLogger(): Promise<any> {
+    if (logger) return logger;
+    
+    try {
+        const loggerModule = await import('./lib/logger.js');
+        logger = loggerModule.getLogger('index');
+    } catch (e) {
+        // Fallback to console if logger not available
+        logger = {
+            debug: (msg: string, meta?: any) => console.debug(`DEBUG: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            info: (msg: string, meta?: any) => console.log(`INFO: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            warn: (msg: string, meta?: any) => console.warn(`WARN: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            error: (msg: string, meta?: any) => console.error(`ERROR: ${msg}`, meta ? JSON.stringify(meta) : ''),
+            setContext: () => {},
+            clearContext: () => {},
+            updateContext: () => {},
+            getContext: () => ({}),
+            removeContextKeys: () => {}
+        };
+    }
+    
+    return logger;
+}
+
+// Get logger (with lazy initialization)
+async function getLogger(): Promise<any> {
+    if (!logger) {
+        logger = await initializeLogger();
+    }
+    return logger;
+}
+
 // Simple types for the CLI
 interface CommandArgs {
   commandName: string;
   rawArgs?: Record<string, any>;
+  logger?: any; // Structured logger instance
   [key: string]: any;
 }
 
@@ -24,7 +60,15 @@ interface CommandArgs {
 const program = new Command();
 
 // Main CLI setup
-export function cli(): void {
+export async function cli(): Promise<void> {
+  // Initialize logging
+  const log = await getLogger();
+  log.setContext({ phase: 'initialization' }, () => {
+    log.info('Starting {{ display_name }} CLI', { 
+      version: '{{ version }}',
+      argv: process.argv.slice(2)
+    });
+  });
   program
     .name('{{ command_name }}')
     .description('{{ description }}')
@@ -54,22 +98,51 @@ export function cli(): void {
         {{ arg.name }},
         {% endfor %}
         {% endif %}
+        logger: await getLogger()
       };
       
       try {
-        const hookName = 'on{{ cmd_name | title | replace("-", "") }}';
-        if (hooks && typeof hooks[hookName as keyof typeof hooks] === 'function') {
-          await (hooks[hookName as keyof typeof hooks] as (args: CommandArgs) => Promise<void>)(args);
-        } else {
-          console.log(chalk.blue(`Executing {{ cmd_name }} command...`));
-          {% if cmd_data.args %}
-          {% for arg in cmd_data.args %}
-          console.log(`  {{ arg.name }}:`, {{ arg.name }});
-          {% endfor %}
-          {% endif %}
-          console.log('Options:', options);
-        }
+        const log = await getLogger();
+        log.setContext({ command: '{{ cmd_name }}', type: 'execution' }, async () => {
+          log.debug('Command execution started', { 
+            command: '{{ cmd_name }}',
+            {% if cmd_data.args %}
+            args: {
+              {% for arg in cmd_data.args %}
+              {{ arg.name }}: {{ arg.name }},
+              {% endfor %}
+            },
+            {% endif %}
+            options
+          });
+          
+          const hookName = 'on{{ cmd_name | title | replace("-", "") }}';
+          if (hooks && typeof hooks[hookName as keyof typeof hooks] === 'function') {
+            await (hooks[hookName as keyof typeof hooks] as (args: CommandArgs) => Promise<void>)(args);
+          } else {
+            log.info('No hook found, using default behavior', { hookName });
+            log.info('Command executed with placeholder implementation', {
+              command: '{{ cmd_name }}',
+              {% if cmd_data.args %}
+              args: {
+                {% for arg in cmd_data.args %}
+                {{ arg.name }}: {{ arg.name }},
+                {% endfor %}
+              },
+              {% endif %}
+              options
+            });
+          }
+          
+          log.debug('Command execution completed', { command: '{{ cmd_name }}' });
+        });
       } catch (error) {
+        const log = await getLogger();
+        log.error('Command execution failed', { 
+          command: '{{ cmd_name }}', 
+          error: (error as Error).message,
+          stack: (error as Error).stack
+        });
         console.error(chalk.red(`Error executing {{ cmd_name }}:`), error);
         process.exit(1);
       }

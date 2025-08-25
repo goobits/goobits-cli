@@ -1,85 +1,54 @@
 """Common test fixtures and data for all language generators.
 
-
-
 This module provides standard test configurations, CLI schemas, and mock objects
-
 that can be reused across different test scenarios and language generators.
-
 """
 
-from typing import Dict, List, Optional, Any, Union
-
 from dataclasses import dataclass, field
-
 from pathlib import Path
-
-
+from typing import Any, Dict, List, Optional, Union
 
 from goobits_cli.schemas import (
-
-    GoobitsConfigSchema, CLISchema, CommandSchema, ArgumentSchema, OptionSchema,
-
-    PythonConfigSchema, DependenciesSchema, InstallationSchema, 
-
-    ShellIntegrationSchema, ValidationSchema, MessagesSchema
-
+    ArgumentSchema,
+    CLISchema,
+    CommandSchema,
+    DependenciesSchema,
+    GoobitsConfigSchema,
+    InstallationSchema,
+    MessagesSchema,
+    OptionSchema,
+    PythonConfigSchema,
+    ShellIntegrationSchema,
+    ValidationSchema,
 )
 
 
 
-
-
 @dataclass
-
 class TestFixtures:
-
     """Central repository of test fixtures and common test data."""
 
-    
-
     # Standard test configurations by complexity
-
     minimal_configs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-
     basic_configs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-
     complex_configs: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
-    
-
     # Command and option templates
-
     common_commands: Dict[str, CommandSchema] = field(default_factory=dict)
-
     common_arguments: Dict[str, ArgumentSchema] = field(default_factory=dict)
-
     common_options: Dict[str, OptionSchema] = field(default_factory=dict)
 
-    
-
     # Expected outputs for testing
-
     expected_outputs: Dict[str, Dict[str, str]] = field(default_factory=dict)
-
     error_scenarios: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
-    
-
     def __post_init__(self):
-
         """Initialize all fixture data."""
-
         self._initialize_common_arguments()
-
         self._initialize_common_options()
-
         self._initialize_common_commands()
-
         self._initialize_configs()
-
         self._initialize_expected_outputs()
-
         self._initialize_error_scenarios()
 
     

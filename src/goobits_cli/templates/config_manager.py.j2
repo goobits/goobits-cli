@@ -61,6 +61,8 @@ class ConfigManager:
         self._config: Optional[Dict[str, Any]] = None
         self._config_path: Optional[Path] = None
         self.logger = logging.getLogger(__name__)
+        # Utilize centralized logging context for configuration operations
+        self._operation_context = {}
     
     def get_config_dir(self) -> Path:
         """Get the configuration directory path based on platform"""
@@ -93,7 +95,10 @@ class ConfigManager:
         config_dir = self.get_config_dir()
         try:
             config_dir.mkdir(parents=True, exist_ok=True)
-            self.logger.debug(f"Ensured config directory exists: {config_dir}")
+            self.logger.debug(f"Ensured config directory exists: {config_dir}", extra={
+                'config_dir': str(config_dir),
+                'operation': 'ensure_config_dir'
+            })
         except PermissionError:
             raise ConfigFileError(
                 f"Permission denied creating configuration directory",
@@ -116,7 +121,11 @@ class ConfigManager:
                 try:
                     data = config_path.read_text(encoding='utf-8')
                     self._config = json.loads(data)
-                    self.logger.debug(f"Loaded configuration from {config_path}")
+                    self.logger.debug(f"Loaded configuration from {config_path}", extra={
+                        'config_path': str(config_path),
+                        'operation': 'load_config',
+                        'config_keys': list(self._config.keys()) if self._config else []
+                    })
                 except json.JSONDecodeError as e:
                     raise ConfigFileError(
                         f"Invalid JSON in configuration file: {str(e)}",
@@ -141,11 +150,17 @@ class ConfigManager:
                 if not self.save():
                     self.logger.warning("Failed to save default configuration")
                 else:
-                    self.logger.info(f"Created default configuration at {config_path}")
+                    self.logger.info(f"Created default configuration at {config_path}", extra={
+                        'config_path': str(config_path),
+                        'operation': 'create_default_config'
+                    })
         except ConfigError:
             raise  # Re-raise our custom errors
         except Exception as e:
-            self.logger.error(f"Unexpected error loading config: {e}")
+            self.logger.error(f"Unexpected error loading config: {e}", extra={
+                'operation': 'load_config',
+                'error_type': type(e).__name__
+            }, exc_info=True)
             self._config = self.get_defaults()
         
         return self._config
@@ -153,7 +168,10 @@ class ConfigManager:
     def save(self) -> bool:
         """Save configuration to file with enhanced error handling."""
         if self._config is None:
-            self.logger.warning("No configuration to save")
+            self.logger.warning("No configuration to save", extra={
+                'operation': 'save_config',
+                'reason': 'no_config_data'
+            })
             return False
             
         try:
@@ -175,7 +193,11 @@ class ConfigManager:
             try:
                 temp_path.write_text(json_data, encoding='utf-8')
                 temp_path.replace(config_path)
-                self.logger.debug(f"Saved configuration to {config_path}")
+                self.logger.debug(f"Saved configuration to {config_path}", extra={
+                    'config_path': str(config_path),
+                    'operation': 'save_config',
+                    'config_size': len(json_data)
+                })
                 return True
             except PermissionError:
                 if temp_path.exists():
@@ -197,7 +219,10 @@ class ConfigManager:
         except ConfigError:
             raise  # Re-raise our custom errors
         except Exception as e:
-            self.logger.error(f"Unexpected error saving config: {e}")
+            self.logger.error(f"Unexpected error saving config: {e}", extra={
+                'operation': 'save_config',
+                'error_type': type(e).__name__
+            }, exc_info=True)
             return False
     
     def get(self, key: str, default_value: Any = None) -> Any:
@@ -266,7 +291,11 @@ class ConfigManager:
                 current.pop(keys[-1], None)
             return False
             
-        self.logger.debug(f"Set configuration {key} = {value}")
+        self.logger.debug(f"Set configuration {key} = {value}", extra={
+            'operation': 'set_config',
+            'config_key': key,
+            'value_type': type(value).__name__
+        })
         return True
     
     def delete(self, key: str) -> bool:

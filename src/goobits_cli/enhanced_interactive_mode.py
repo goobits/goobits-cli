@@ -16,7 +16,7 @@ from typing import List, Dict, Any, Optional
 
 from pathlib import Path
 
-import logging
+from .logger import get_logger
 
 
 
@@ -38,11 +38,13 @@ except ImportError:
 
     ENHANCED_FEATURES_AVAILABLE = False
 
-    logging.warning("Enhanced completion and plugin features not available")
+    # Use centralized logger
+    _logger = get_logger(__name__)
+    _logger.warning("Enhanced completion and plugin features not available")
 
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 

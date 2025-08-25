@@ -1,28 +1,27 @@
 """
-
 Component Registry for Universal Template System
 
-
-
 This module provides enhanced component loading and management capabilities,
-
 including template validation, dependency tracking, and hot-reloading support.
 
+Features:
+- Template discovery and loading
+- Dependency tracking between components
+- Hot-reloading support for development
+- Template validation with Jinja2
+- Component metadata management
+- Custom Jinja2 filters for template processing
 """
 
 
 
+import logging
+import re
+from datetime import datetime
 from pathlib import Path
-
 from typing import Dict, List, Optional
 
 import jinja2
-
-import logging
-
-import re
-
-from datetime import datetime
 
 
 
@@ -33,15 +32,15 @@ logger = logging.getLogger(__name__)
 
 
 class ComponentInfo:
-
-    """Simple component info object with name attribute for list_components() return."""
-
+    """Simple component info object with name attribute for list_components() return.
     
-
-    def __init__(self, name: str, path: Optional[Path] = None):
-
+    Attributes:
+        name: Component name (without .j2 extension)
+        path: Optional path to the component file
+    """
+    
+    def __init__(self, name: str, path: Optional[Path] = None) -> None:
         self.name = name
-
         self.path = path
 
 
@@ -49,21 +48,24 @@ class ComponentInfo:
 
 
 class ComponentMetadata:
-
-    """Metadata for a component template."""
-
+    """Metadata for a component template.
     
-
-    def __init__(self, name: str, path: Path, dependencies: Optional[List[str]] = None):
-
+    Tracks component information including file system metadata,
+    dependencies, and modification times for hot-reloading.
+    
+    Attributes:
+        name: Component name
+        path: Path to the component file
+        dependencies: List of component dependencies
+        last_modified: Last modification timestamp
+        loaded_at: When the component was loaded
+    """
+    
+    def __init__(self, name: str, path: Path, dependencies: Optional[List[str]] = None) -> None:
         self.name = name
-
         self.path = path
-
         self.dependencies = dependencies or []
-
         self.last_modified = path.stat().st_mtime if path.exists() else 0
-
         self.loaded_at = datetime.now()
 
     
@@ -95,43 +97,30 @@ class ComponentMetadata:
 
 
 class ComponentRegistry:
-
     """
-
     Enhanced registry for managing universal component templates.
-
     
-
     Features:
-
     - Template loading and caching
-
     - Dependency tracking between components
-
     - Hot-reloading support
-
     - Template validation
-
     - Component discovery
-
+    
+    This class serves as the central registry for all component templates
+    used by the Universal Template System. It handles template discovery,
+    loading, validation, and metadata management.
     """
 
     
 
-    def __init__(self, components_dir: Optional[Path] = None, auto_reload: bool = False):
-
+    def __init__(self, components_dir: Optional[Path] = None, auto_reload: bool = False) -> None:
         """
-
         Initialize the component registry.
-
         
-
         Args:
-
             components_dir: Path to components directory, defaults to built-in components
-
             auto_reload: Enable automatic reloading of modified templates
-
         """
 
         self.components_dir = components_dir or Path(__file__).parent / "components"
@@ -145,19 +134,12 @@ class ComponentRegistry:
         
 
         # Component storage
-
         self._components: Dict[str, str] = {}
-
         self._metadata: Dict[str, ComponentMetadata] = {}
-
         self._dependencies: Dict[str, List[str]] = {}  # For test compatibility
-
         
-
         # Jinja2 environment for template validation
-
         self._loader = jinja2.FileSystemLoader(str(self.components_dir))
-
         self._env = jinja2.Environment(
             loader=self._loader,
             trim_blocks=True,
@@ -167,15 +149,12 @@ class ComponentRegistry:
         
 
         # Add custom filters that templates expect
-
         self._env.filters['snake_case'] = self._snake_case_filter
-
         self._env.filters['camelCase'] = self._camel_case_filter
-        
+        self._env.filters['PascalCase'] = self._pascal_case_filter
         self._env.filters['js_string'] = self._js_string_filter
-
+        self._env.filters['ts_type'] = self._ts_type_filter
         
-
         logger.info(f"ComponentRegistry initialized with components_dir: {self.components_dir}")
 
     
@@ -663,58 +642,96 @@ class ComponentRegistry:
     
 
     def _snake_case_filter(self, name: str) -> str:
-
-        """Convert name to snake_case."""
-
+        """Convert name to snake_case.
+        
+        Args:
+            name: Input name to convert
+            
+        Returns:
+            Name converted to snake_case format
+        """
         # Replace hyphens with underscores
-
         name = name.replace("-", "_")
-
         
-
         # Convert CamelCase to snake_case
-
         name = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', name)
-
         name = re.sub(r'([a-z\d])([A-Z])', r'\1_\2', name)
-
         
-
         # Convert to lowercase and clean up
-
         name = name.lower()
-
         name = re.sub(r'_+', '_', name)  # Remove multiple underscores
-
         name = name.strip('_')  # Remove leading/trailing underscores
-
         
-
         return name
 
     
 
     def _camel_case_filter(self, text: str) -> str:
-
-        """Convert text to camelCase."""
-
+        """Convert text to camelCase.
+        
+        Args:
+            text: Input text to convert
+            
+        Returns:
+            Text converted to camelCase format
+        """
         if not text:
-
             return text
-
         words = re.split(r'[-_\s]+', text.lower())
-
         return words[0] + ''.join(word.capitalize() for word in words[1:])
 
     
     
+    def _pascal_case_filter(self, text: str) -> str:
+        """Convert text to PascalCase.
+        
+        Args:
+            text: Input text to convert
+            
+        Returns:
+            Text converted to PascalCase format
+        """
+        if not text:
+            return text
+        words = re.split(r'[-_\s]+', text.lower())
+        return ''.join(word.capitalize() for word in words)
+
     def _js_string_filter(self, value: str) -> str:
-        """Escape string for JavaScript and wrap in quotes."""
+        """Escape string for JavaScript and wrap in quotes.
+        
+        Args:
+            value: String value to escape and quote
+            
+        Returns:
+            JavaScript-escaped string wrapped in double quotes
+        """
         if not isinstance(value, str):
             return f'"{str(value)}"'
         
         escaped = value.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
         return f'"{escaped}"'
+
+    def _ts_type_filter(self, value: str) -> str:
+        """Convert Python/CLI type to TypeScript type.
+        
+        Args:
+            value: Type name to convert
+            
+        Returns:
+            TypeScript type equivalent
+        """
+        type_mapping = {
+            'str': 'string',
+            'string': 'string',
+            'int': 'number',
+            'integer': 'number',
+            'float': 'number',
+            'bool': 'boolean',
+            'boolean': 'boolean',
+            'list': 'string[]',
+            'array': 'string[]'
+        }
+        return type_mapping.get(value.lower(), 'any')
 
     
 

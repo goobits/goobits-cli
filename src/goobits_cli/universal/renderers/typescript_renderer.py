@@ -102,7 +102,9 @@ class TypeScriptRenderer(LanguageRenderer):
 
             "js": "javascript",  # For config files
 
-            "json": "json"
+            "json": "json",
+
+            "logger": "ts"
 
         }
 
@@ -348,6 +350,8 @@ class TypeScriptRenderer(LanguageRenderer):
             'completion_engine': 'lib/completion.ts',
 
             'error_handler': 'lib/errors.ts',
+
+            'logger': 'lib/logger.ts',
 
             
 

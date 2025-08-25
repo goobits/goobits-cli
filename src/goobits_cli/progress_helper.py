@@ -21,8 +21,7 @@ Progress indicators and visual feedback helpers for Goobits CLI Framework
 
 import sys
 
-
-import logging
+from .logger import get_logger
 
 from typing import Any, Callable, Optional, Iterator
 
@@ -74,7 +73,7 @@ class DependencyMissingError(ProgressError):
 
 # Set up logging
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 

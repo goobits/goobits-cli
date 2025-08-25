@@ -37,9 +37,14 @@ def _lazy_load_enhanced_features():
         return True
     except ImportError:
         ENHANCED_FEATURES_AVAILABLE = False
-        logging.warning("Enhanced completion and plugin features not available")
+        logging.warning("Enhanced completion and plugin features not available", extra={
+            'feature': 'interactive_mode',
+            'enhanced_features': False,
+            'fallback': 'basic_interactive'
+        })
         return False
 
+# Centralized logging - integrates with CLI logging context
 logger = logging.getLogger(__name__)
 
 
@@ -87,10 +92,19 @@ class Enhanced{{ cli_name | title }}Interactive:
             # Load and activate plugins
             asyncio.run(self._load_plugins())
             
-            logger.info("Enhanced features initialized successfully")
+            logger.info("Enhanced features initialized successfully", extra={
+                'feature': 'interactive_mode',
+                'enhanced_features': True,
+                'plugins_loaded': True
+            })
             
         except Exception as e:
-            logger.error(f"Failed to setup enhanced features: {e}")
+            logger.error(f"Failed to setup enhanced features: {e}", extra={
+                'feature': 'interactive_mode',
+                'enhanced_features': False,
+                'fallback': 'basic_interactive',
+                'error_type': type(e).__name__
+            }, exc_info=True)
             self._setup_basic_features()
     
     def _setup_basic_features(self) -> None:
@@ -124,7 +138,11 @@ class Enhanced{{ cli_name | title }}Interactive:
                     return completion_func(text, state)
                     
                 except Exception as e:
-                    logger.debug(f"Completion error: {e}")
+                    logger.debug(f"Completion error: {e}", extra={
+                        'feature': 'completion',
+                        'completion_text': text,
+                        'error_type': type(e).__name__
+                    })
                     return None
             
             readline.set_completer(enhanced_completer)
@@ -136,7 +154,10 @@ class Enhanced{{ cli_name | title }}Interactive:
             readline.parse_and_bind("set menu-complete-display-prefix on")
             
         except ImportError:
-            logger.warning("readline not available, completion disabled")
+            logger.warning("readline not available, completion disabled", extra={
+                'feature': 'interactive_completion',
+                'readline_available': False
+            })
     
     def _basic_completer(self, text: str, state: int) -> Optional[str]:
         """Basic completion function."""
@@ -162,10 +183,18 @@ class Enhanced{{ cli_name | title }}Interactive:
                     'description': f'Plugin command from {plugin_info.name}'
                 }
             
-            logger.info(f"Loaded {len(plugin_commands)} plugin commands")
+            logger.info(f"Loaded {len(plugin_commands)} plugin commands", extra={
+                'feature': 'plugins',
+                'plugins_count': len(plugin_commands),
+                'command_names': list(plugin_commands.keys())
+            })
             
         except Exception as e:
-            logger.error(f"Error loading plugins: {e}")
+            logger.error(f"Error loading plugins: {e}", extra={
+                'feature': 'plugins',
+                'operation': 'load_plugins',
+                'error_type': type(e).__name__
+            }, exc_info=True)
     
     def _setup_builtin_commands(self) -> None:
         """Setup built-in interactive commands."""

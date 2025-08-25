@@ -18,7 +18,7 @@ from pathlib import Path
 
 from typing import Any, Dict, Optional, Union
 
-import logging
+from .logger import get_logger
 
 
 
@@ -122,7 +122,7 @@ class ConfigManager:
 
         self._config_path: Optional[Path] = None
 
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_logger(__name__)
 
     
 

@@ -14,7 +14,7 @@ This module provides a simple HTTP server that can serve Python packages
 
 
 
-import logging
+from .logger import get_logger
 
 import mimetypes
 
@@ -38,6 +38,9 @@ import sys
 
 DEFAULT_SERVER_TIMEOUT = 5
 
+# Set up centralized logging
+logger = get_logger(__name__)
+
 
 
 
@@ -60,7 +63,7 @@ class PyPIHandler(BaseHTTPRequestHandler):
 
         """Override to use proper logging instead of stderr."""
 
-        logging.info(f"{self.client_address[0]} - - [{self.log_date_time_string()}] {format % args}")
+        logger.info(f"{self.client_address[0]} - - [{self.log_date_time_string()}] {format % args}")
 
     
 
@@ -134,7 +137,7 @@ class PyPIHandler(BaseHTTPRequestHandler):
 
         except Exception as e:
 
-            logging.error(f"Error generating index: {e}")
+            logger.error(f"Error generating index: {e}")
 
             self._send_error(500, "Internal server error")
 
@@ -178,7 +181,7 @@ class PyPIHandler(BaseHTTPRequestHandler):
 
         except Exception as e:
 
-            logging.error(f"Error serving file {file_path}: {e}")
+            logger.error(f"Error serving file {file_path}: {e}")
 
             self._send_error(500, "Internal server error")
 
@@ -550,17 +553,7 @@ class PyPIServer:
 
         
 
-        # Set up logging
-
-        logging.basicConfig(
-
-            level=logging.INFO,
-
-            format='%(asctime)s - %(levelname)s - %(message)s',
-
-            datefmt='%Y-%m-%d %H:%M:%S'
-
-        )
+        # Set up logging - now handled by centralized logger system
 
     
 
@@ -572,9 +565,9 @@ class PyPIServer:
 
         if not self.package_dir.exists():
 
-            logging.warning(f"Package directory does not exist: {self.package_dir}")
+            logger.warning(f"Package directory does not exist: {self.package_dir}")
 
-            logging.info("Creating package directory...")
+            logger.info("Creating package directory...")
 
             self.package_dir.mkdir(parents=True, exist_ok=True)
 
@@ -596,9 +589,9 @@ class PyPIServer:
 
             
 
-            logging.info(f"Starting PyPI server on http://{self.host}:{self.port}")
+            logger.info(f"Starting PyPI server on http://{self.host}:{self.port}")
 
-            logging.info(f"Serving packages from: {self.package_dir}")
+            logger.info(f"Serving packages from: {self.package_dir}")
 
             
 
@@ -608,11 +601,11 @@ class PyPIServer:
 
             if packages:
 
-                logging.info(f"Available packages: {', '.join(packages)}")
+                logger.info(f"Available packages: {', '.join(packages)}")
 
             else:
 
-                logging.info("No packages found - place .whl or .tar.gz files in the directory")
+                logger.info("No packages found - place .whl or .tar.gz files in the directory")
 
             
 
@@ -640,11 +633,11 @@ class PyPIServer:
 
             
 
-            logging.info("✅ PyPI server started successfully!")
+            logger.info("✅ PyPI server started successfully!")
 
-            logging.info("Usage example:")
+            logger.info("Usage example:")
 
-            logging.info(f"  pip install --index-url http://{self.host}:{self.port} --trusted-host {self.host} PACKAGE_NAME")
+            logger.info(f"  pip install --index-url http://{self.host}:{self.port} --trusted-host {self.host} PACKAGE_NAME")
 
             
 
@@ -652,17 +645,17 @@ class PyPIServer:
 
             if e.errno == 48:  # Address already in use
 
-                logging.error(f"Port {self.port} is already in use. Try a different port.")
+                logger.error(f"Port {self.port} is already in use. Try a different port.")
 
             else:
 
-                logging.error(f"Failed to start server: {e}")
+                logger.error(f"Failed to start server: {e}")
 
             raise
 
         except Exception as e:
 
-            logging.error(f"Failed to start PyPI server: {e}")
+            logger.error(f"Failed to start PyPI server: {e}")
 
             raise
 
@@ -684,7 +677,7 @@ class PyPIServer:
 
             if not self._shutdown_event.is_set():
 
-                logging.error(f"Server error: {e}")
+                logger.error(f"Server error: {e}")
 
     
 
@@ -694,7 +687,7 @@ class PyPIServer:
 
         if self.server:
 
-            logging.info("Shutting down PyPI server...")
+            logger.info("Shutting down PyPI server...")
 
             self._shutdown_event.set()
 
@@ -708,7 +701,7 @@ class PyPIServer:
 
             
 
-            logging.info("✅ PyPI server stopped")
+            logger.info("✅ PyPI server stopped")
 
     
 
@@ -724,7 +717,7 @@ class PyPIServer:
 
         except KeyboardInterrupt:
 
-            logging.info("Received interrupt signal")
+            logger.info("Received interrupt signal")
 
             self.stop()
 
@@ -734,7 +727,7 @@ class PyPIServer:
 
         """Handle shutdown signals."""
 
-        logging.info(f"Received signal {signum}, shutting down...")
+        logger.info(f"Received signal {signum}, shutting down...")
 
         self.stop()
 
@@ -800,11 +793,11 @@ def serve_packages(package_dir: Path, host: str = "localhost", port: int = 8080)
 
     except KeyboardInterrupt:
 
-        logging.info("Interrupted by user")
+        logger.info("Interrupted by user")
 
     except Exception as e:
 
-        logging.error(f"Server error: {e}")
+        logger.error(f"Server error: {e}")
 
         raise
 

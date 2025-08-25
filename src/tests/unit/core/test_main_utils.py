@@ -1,5 +1,4 @@
-"""
-Tests for main CLI utilities, templates, and helper functions.
+"""Tests for main CLI utilities, templates, and helper functions.
 
 This module tests utility functionality including:
 - Template generation (basic, advanced, API client, text processor)
@@ -7,13 +6,15 @@ This module tests utility functionality including:
 - Utility functions (version handling, dependencies, etc.)
 - Helper functions and formatters
 """
-import pytest
-import tempfile
+
 import shutil
+import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
-import yaml
+from unittest.mock import MagicMock, mock_open, patch
+
+import pytest
 import typer
+import yaml
 from typer.testing import CliRunner
 
 from goobits_cli.main import (

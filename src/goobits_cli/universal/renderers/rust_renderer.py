@@ -101,7 +101,9 @@ class RustRenderer(LanguageRenderer):
 
             "toml": "toml",
 
-            "md": "markdown"
+            "md": "markdown",
+
+            "logger": "rs"
 
         }
 
@@ -280,6 +282,8 @@ class RustRenderer(LanguageRenderer):
             "completion_engine": "src/completion.rs",
 
             "error_handler": "src/errors.rs",
+
+            "logger": "src/logger.rs",
 
             # Additional Rust specific files
 

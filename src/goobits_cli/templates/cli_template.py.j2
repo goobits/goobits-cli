@@ -21,6 +21,7 @@ Auto-generated from {{ file_name }}
 """
 import os
 import sys
+import time
 import logging
 import importlib.util
 from pathlib import Path
@@ -87,15 +88,199 @@ def handle_cli_error(error: Exception, verbose: bool = False) -> int:
         return 1
 
 
-# Set up logging
-logging.basicConfig(
-    level=logging.WARNING,
-    format='%(levelname)s: %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stderr)
-    ]
-)
+# Structured logging setup - Centralized CLI logging infrastructure
+def setup_cli_logging():
+    """
+    Initialize structured logging for {{ display_name }}.
+    
+    Environment Variables:
+    - {{ command_name | upper }}_LOG_LEVEL: Set logging level (DEBUG, INFO, WARNING, ERROR) - default: INFO
+    - {{ command_name | upper }}_LOG_OUTPUT: Set output destination (stdout, stderr, file:<path>) - default: stdout
+    - LOG_LEVEL: Global log level fallback
+    - LOG_OUTPUT: Global log output fallback  
+    - ENVIRONMENT: Set environment (production/development) - affects format
+    """
+    import json
+    from pathlib import Path
+    from contextvars import ContextVar
+    from typing import Dict, Any
+    
+    # Context variables for structured logging
+    global _log_context
+    _log_context: ContextVar[Dict[str, Any]] = ContextVar('log_context', default={})
+    
+    class StructuredFormatter(logging.Formatter):
+        """Custom formatter that outputs structured logs based on environment."""
+        
+        def __init__(self):
+            super().__init__()
+            self.environment = os.getenv('ENVIRONMENT', 'development')
+            self.is_production = self.environment.lower() in ('production', 'prod')
+        
+        def format(self, record: logging.LogRecord) -> str:
+            """Format log record as JSON for production or readable format for development."""
+            
+            # Get current context
+            context = _log_context.get({})
+            
+            # Build log data
+            log_data = {
+                'timestamp': self.formatTime(record),
+                'level': record.levelname,
+                'logger': record.name,
+                'message': record.getMessage(),
+                'module': record.module,
+                'function': record.funcName,
+                'line': record.lineno,
+            }
+            
+            # Add context if available
+            if context:
+                log_data['context'] = context
+            
+            # Add exception info if present
+            if record.exc_info:
+                log_data['exception'] = {
+                    'type': record.exc_info[0].__name__ if record.exc_info[0] else None,
+                    'message': str(record.exc_info[1]) if record.exc_info[1] else None,
+                    'traceback': self.formatException(record.exc_info) if record.exc_info else None
+                }
+            
+            # Add extra fields from log record
+            extra_fields = {}
+            for key, value in record.__dict__.items():
+                if key not in ['name', 'msg', 'args', 'levelname', 'levelno', 'pathname', 
+                              'filename', 'module', 'lineno', 'funcName', 'created', 
+                              'msecs', 'relativeCreated', 'thread', 'threadName', 
+                              'processName', 'process', 'message', 'exc_info', 'exc_text', 'stack_info']:
+                    extra_fields[key] = value
+            
+            if extra_fields:
+                log_data['extra'] = extra_fields
+            
+            if self.is_production:
+                # JSON format for production
+                return json.dumps(log_data)
+            else:
+                # Human-readable format for development
+                context_str = f" [{', '.join(f'{k}={v}' for k, v in context.items())}]" if context else ""
+                extra_str = f" {extra_fields}" if extra_fields else ""
+                
+                base_msg = f"{log_data['timestamp']} {log_data['level']:8} {log_data['logger']:20} {log_data['message']}"
+                
+                if context_str or extra_str:
+                    base_msg += f"{context_str}{extra_str}"
+                
+                # Add exception info if present
+                if record.exc_info:
+                    base_msg += f"\n{self.formatException(record.exc_info)}"
+                
+                return base_msg
+    
+    # Get configuration from environment with CLI-specific prefixes
+    log_level = (os.getenv('{{ command_name | upper }}_LOG_LEVEL') or 
+                 os.getenv('LOG_LEVEL', 'INFO')).upper()
+    log_output = (os.getenv('{{ command_name | upper }}_LOG_OUTPUT') or 
+                  os.getenv('LOG_OUTPUT', 'stdout')).lower()
+    
+    # Configure logging level
+    try:
+        level = getattr(logging, log_level)
+    except AttributeError:
+        level = logging.INFO
+        print(f"Warning: Invalid LOG_LEVEL '{log_level}', using INFO", file=sys.stderr)
+    
+    # Set up formatter
+    formatter = StructuredFormatter()
+    
+    # Configure handlers based on LOG_OUTPUT
+    handlers = []
+    
+    if log_output == 'stderr':
+        # All logs to stderr
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(formatter)
+        handlers.append(handler)
+    elif log_output.startswith('file:'):
+        # Log to file
+        log_file = log_output[5:]  # Remove 'file:' prefix
+        log_path = Path(log_file)
+        
+        # Ensure log directory exists
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        handler = logging.FileHandler(log_path)
+        handler.setFormatter(formatter)
+        handlers.append(handler)
+    elif log_output == 'stdout':
+        # Container-friendly: INFO/DEBUG to stdout, WARN/ERROR to stderr
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.setFormatter(formatter)
+        stdout_handler.setLevel(logging.DEBUG)
+        stdout_handler.addFilter(lambda record: record.levelno < logging.WARNING)
+        
+        stderr_handler = logging.StreamHandler(sys.stderr)
+        stderr_handler.setFormatter(formatter)
+        stderr_handler.setLevel(logging.WARNING)
+        
+        handlers.extend([stdout_handler, stderr_handler])
+    else:
+        # Default to stdout for unknown options
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(formatter)
+        handlers.append(handler)
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    
+    # Clear existing handlers to avoid duplicates
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Add new handlers
+    for handler in handlers:
+        root_logger.addHandler(handler)
+    
+    root_logger.setLevel(level)
+    
+    return level, log_output
+
+# Context management functions for CLI logging
+def set_cli_context(**kwargs):
+    """Set logging context variables that will be included in all log messages."""
+    current_context = _log_context.get({})
+    updated_context = {**current_context, **kwargs}
+    _log_context.set(updated_context)
+
+def clear_cli_context():
+    """Clear all logging context variables."""
+    _log_context.set({})
+
+def update_cli_context(**kwargs):
+    """Update existing context with new values."""
+    current_context = _log_context.get({})
+    current_context.update(kwargs)
+    _log_context.set(current_context)
+
+# Initialize structured logging
+_log_context = None  # Will be initialized in setup_cli_logging
+logging_level, logging_output = setup_cli_logging()
 logger = logging.getLogger(__name__)
+
+# Log initialization message
+logger.info(f"{{ display_name }} CLI initialized with structured logging: level={logging_level}, output={logging_output}")
+
+# Make logging functions available to hook system
+def get_cli_logger(name: str = None) -> logging.Logger:
+    """Get a logger instance for use in hooks and CLI components."""
+    return logging.getLogger(name or __name__)
+
+def get_cli_logging_context():
+    """Get current CLI logging context for use in hooks."""
+    return _log_context.get({}) if _log_context else {}
+
+# Export logging context functions for hook use
+__all__ = ['get_cli_logger', 'get_cli_logging_context', 'set_cli_context', 'clear_cli_context', 'update_cli_context']
 
 # Import generated helper modules with enhanced error handling
 _missing_dependencies = []
@@ -509,14 +694,40 @@ def load_plugins(cli_group):
 def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% if cmd_data.args %}{{ (cmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (cmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (cmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
     """{% if cmd_data.icon %}{{ cmd_data.icon | format_icon }}{% endif %}{{ cmd_data.desc }}"""
     {% if cmd_data.lifecycle == "managed" %}
-    # Managed command - expect an instance of ManagedCommand
+    # Managed command - expect an instance of ManagedCommand with context management
     command_instance_name = f"{{ cmd_name }}_command"
     if app_hooks and hasattr(app_hooks, command_instance_name):
+        # Set managed command execution context
+        set_cli_context(
+            command='{{ cmd_name }}',
+            operation_type='managed_command_execution',
+            lifecycle='managed',
+            {% if cmd_data.args %}
+            command_args={ {% for arg in cmd_data.args %}'{{ arg.name|lower|replace('-', '_') }}': {{ arg.name|lower|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} },
+            {% endif %}
+            {% if cmd_data.options %}
+            command_options={ {% for opt in cmd_data.options %}'{{ opt.name|replace('-', '_') }}': {{ opt.name|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} }
+            {% endif %}
+        )
+        
+        logger.info(f"Executing managed command: {{ cmd_name }}", extra={
+            'command': '{{ cmd_name }}',
+            'lifecycle': 'managed',
+            'instance_name': command_instance_name
+        })
+        
         # Get the command instance
         command_instance = getattr(app_hooks, command_instance_name)
         
-        # Prepare arguments including global options
-        kwargs = {}
+        # Prepare arguments including global options and logging utilities
+        kwargs = {
+            # Logging infrastructure available to managed commands
+            'logger': get_cli_logger(),
+            'set_context': set_cli_context,
+            'update_context': update_cli_context,
+            'clear_context': clear_cli_context,
+            'get_context': get_cli_logging_context,
+        }
         kwargs['command_name'] = '{{ cmd_name }}'  # Pass command name for daemon management
         {% if cmd_data.args %}
         {% for arg in cmd_data.args %}
@@ -540,9 +751,28 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
             {% endfor %}
         {% endif %}
         
-        # Call execute() method on the ManagedCommand instance
-        result = command_instance.execute(**kwargs)
-        return result
+        try:
+            # Call execute() method on the ManagedCommand instance
+            result = command_instance.execute(**kwargs)
+            logger.info(f"Managed command {{ cmd_name }} completed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Managed command {{ cmd_name }} failed: {str(e)}", extra={
+                'command': '{{ cmd_name }}',
+                'lifecycle': 'managed',
+                'error_type': type(e).__name__,
+                'instance_name': command_instance_name
+            }, exc_info=True)
+            raise
+        finally:
+            # Clear managed command-specific context
+            update_cli_context(
+                command=None,
+                operation_type=None,
+                lifecycle=None,
+                command_args=None,
+                command_options=None
+            )
     else:
         click.echo(f"Error: Managed command '{{ cmd_name }}' requires '{{ cmd_name }}_command' instance in app_hooks.py")
         sys.exit(1)
@@ -589,14 +819,38 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
     
     return True
     {% else %}
-    # Standard command - use the existing hook pattern
+    # Standard command - use the existing hook pattern with context management
     hook_name = f"on_{{ cmd_name }}"
     if app_hooks and hasattr(app_hooks, hook_name):
-        # Call the hook with all parameters
+        # Set command execution context
+        set_cli_context(
+            command='{{ cmd_name }}',
+            operation_type='command_execution',
+            {% if cmd_data.args %}
+            command_args={ {% for arg in cmd_data.args %}'{{ arg.name|lower|replace('-', '_') }}': {{ arg.name|lower|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} },
+            {% endif %}
+            {% if cmd_data.options %}
+            command_options={ {% for opt in cmd_data.options %}'{{ opt.name|replace('-', '_') }}': {{ opt.name|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} }
+            {% endif %}
+        )
+        
+        logger.info(f"Executing command: {{ cmd_name }}", extra={
+            'command': '{{ cmd_name }}',
+            'hook_function': hook_name
+        })
+        
+        # Call the hook with all parameters (including logger)
         hook_func = getattr(app_hooks, hook_name)
         
-        # Prepare arguments including global options
-        kwargs = {}
+        # Prepare arguments including global options and logging utilities
+        kwargs = {
+            # Logging infrastructure available to hooks
+            'logger': get_cli_logger(),
+            'set_context': set_cli_context,
+            'update_context': update_cli_context,
+            'clear_context': clear_cli_context,
+            'get_context': get_cli_logging_context,
+        }
         kwargs['command_name'] = '{{ cmd_name }}'  # Pass command name for all commands
         {% if cmd_data.args %}
         {% for arg in cmd_data.args %}
@@ -620,8 +874,25 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
             {% endfor %}
         {% endif %}
         
-        result = hook_func(**kwargs)
-        return result
+        try:
+            result = hook_func(**kwargs)
+            logger.info(f"Command {{ cmd_name }} completed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Command {{ cmd_name }} failed: {str(e)}", extra={
+                'command': '{{ cmd_name }}',
+                'error_type': type(e).__name__,
+                'hook_function': hook_name
+            }, exc_info=True)
+            raise
+        finally:
+            # Clear command-specific context but keep CLI-level context
+            update_cli_context(
+                command=None,
+                operation_type=None,
+                command_args=None,
+                command_options=None
+            )
     else:
         # Default placeholder behavior
         click.echo(f"Executing {{ cmd_name }} command...")
@@ -939,14 +1210,41 @@ def {{ cmd_name }}():
 {% endfor %}
 def {{ subcmd_name }}(ctx{% if subcmd_data.args or subcmd_data.options %}, {% endif %}{% if subcmd_data.args %}{{ (subcmd_data.args|map(attribute='name')|map('lower')|map('replace', '-', '_')|list + (subcmd_data.options|map(attribute='name')|map('replace', '-', '_')|list))|join(', ') }}{% else %}{{ (subcmd_data.options or [])|map(attribute='name')|map('replace', '-', '_')|join(', ') }}{% endif %}):
     """{% if subcmd_data.icon %}{{ subcmd_data.icon | format_icon }}{% endif %}{{ subcmd_data.desc }}"""
-    # Check if hook function exists
+    # Check if hook function exists with context management
     hook_name = f"on_{{ cmd_name }}_{{ subcmd_name }}"
     if app_hooks and hasattr(app_hooks, hook_name):
-        # Call the hook with all parameters
+        # Set subcommand execution context
+        set_cli_context(
+            command=f'{{ cmd_name }}.{{ subcmd_name }}',
+            operation_type='subcommand_execution',
+            parent_command='{{ cmd_name }}',
+            subcommand='{{ subcmd_name }}',
+            {% if subcmd_data.args %}
+            command_args={ {% for arg in subcmd_data.args %}'{{ arg.name|lower|replace('-', '_') }}': {{ arg.name|lower|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} },
+            {% endif %}
+            {% if subcmd_data.options %}
+            command_options={ {% for opt in subcmd_data.options %}'{{ opt.name|replace('-', '_') }}': {{ opt.name|replace('-', '_') }}{% if not loop.last %}, {% endif %}{% endfor %} }
+            {% endif %}
+        )
+        
+        logger.info(f"Executing subcommand: {{ cmd_name }}.{{ subcmd_name }}", extra={
+            'command': '{{ cmd_name }}',
+            'subcommand': '{{ subcmd_name }}',
+            'hook_function': hook_name
+        })
+        
+        # Call the hook with all parameters (including logger)
         hook_func = getattr(app_hooks, hook_name)
         
-        # Prepare arguments including global options
-        kwargs = {}
+        # Prepare arguments including global options and logging utilities
+        kwargs = {
+            # Logging infrastructure available to hooks
+            'logger': get_cli_logger(),
+            'set_context': set_cli_context,
+            'update_context': update_cli_context,
+            'clear_context': clear_cli_context,
+            'get_context': get_cli_logging_context,
+        }
         kwargs['command_name'] = '{{ subcmd_name }}'  # Pass command name for all commands
         {% if subcmd_data.args %}
         {% for arg in subcmd_data.args %}
@@ -967,8 +1265,28 @@ def {{ subcmd_name }}(ctx{% if subcmd_data.args or subcmd_data.options %}, {% en
             {% endfor %}
         {% endif %}
         
-        result = hook_func(**kwargs)
-        return result
+        try:
+            result = hook_func(**kwargs)
+            logger.info(f"Subcommand {{ cmd_name }}.{{ subcmd_name }} completed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Subcommand {{ cmd_name }}.{{ subcmd_name }} failed: {str(e)}", extra={
+                'command': '{{ cmd_name }}',
+                'subcommand': '{{ subcmd_name }}',
+                'error_type': type(e).__name__,
+                'hook_function': hook_name
+            }, exc_info=True)
+            raise
+        finally:
+            # Clear subcommand-specific context
+            update_cli_context(
+                command=None,
+                operation_type=None,
+                parent_command=None,
+                subcommand=None,
+                command_args=None,
+                command_options=None
+            )
     else:
         # Default placeholder behavior
         click.echo(f"Executing {{ subcmd_name }} command...")
@@ -1452,11 +1770,23 @@ def path():
 def cli_entry():
     """Entry point for the CLI when installed via pipx."""
     try:
+        # Set initial context
+        set_cli_context(
+            cli_name="{{ display_name }}",
+            version=get_version(),
+            session_id=f"cli_{int(time.time() * 1000)}"
+        )
+        
         # Load plugins before running the CLI
         load_plugins(main)
+        
+        logger.debug("Starting CLI execution", extra={'command_args': sys.argv})
         main()
+        
     except KeyboardInterrupt:
+        logger.info("CLI operation cancelled by user", extra={'signal': 'SIGINT'})
         click.echo("\n⏹️  Operation cancelled by user", err=True)
+        clear_cli_context()
         sys.exit(130)  # Standard exit code for Ctrl+C
     except Exception as e:
         # Get verbose flag from context or command line args
@@ -1469,8 +1799,19 @@ def cli_entry():
             # No context available, fallback to command line args
             verbose = '--verbose' in sys.argv
         
+        # Log the error with context
+        logger.error(f"CLI execution failed: {str(e)}", extra={
+            'error_type': type(e).__name__,
+            'verbose': verbose,
+            'command_args': sys.argv
+        }, exc_info=verbose)
+        
         exit_code = handle_cli_error(e, verbose)
+        clear_cli_context()
         sys.exit(exit_code)
+    finally:
+        # Ensure context is cleared on exit
+        clear_cli_context()
 
 if __name__ == "__main__":
     cli_entry()

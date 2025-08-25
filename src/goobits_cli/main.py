@@ -85,6 +85,9 @@ from typing import Optional
 
 import typer
 
+# Import centralized logging
+from .logger import setup_logging, get_logger, set_context, clear_context
+
 # Lazy imports for heavy dependencies
 yaml = None
 toml = None
@@ -157,6 +160,12 @@ def main(
 
     """Goobits CLI Framework - Build professional command-line tools with YAML configuration."""
 
+    # Initialize centralized logging early
+    setup_logging()
+    
+    # Set global context
+    set_context(framework_version=__version__)
+    
     pass
 
 
@@ -737,6 +746,14 @@ def build(
 
     """
     _lazy_imports()
+    
+    # Set up logging context for build operation
+    import uuid
+    operation_id = str(uuid.uuid4())[:8]
+    set_context(operation="build", operation_id=operation_id)
+    
+    logger = get_logger(__name__)
+    logger.info("Starting build operation")
 
     # Determine config file path
 
@@ -747,11 +764,14 @@ def build(
     
 
     config_path = Path(config_path).resolve()
+    
+    # Add config context
+    set_context(config_file=str(config_path))
 
     
 
     if not config_path.exists():
-
+        logger.error(f"Configuration file not found: {config_path}")
         typer.echo(f"Error: Configuration file '{config_path}' not found.", err=True)
 
         raise typer.Exit(1)
@@ -797,7 +817,7 @@ def build(
     
 
     # Load goobits configuration
-
+    logger.info("Loading goobits configuration")
     goobits_config = load_goobits_config(config_path)
 
     
@@ -813,6 +833,10 @@ def build(
     # Detect language from configuration
 
     language = goobits_config.language
+    
+    # Add language to context
+    set_context(language=language, package_name=goobits_config.package_name)
+    logger.info(f"Detected language: {language}")
 
     typer.echo(f"Detected language: {language}")
 
@@ -1172,8 +1196,11 @@ def build(
             typer.echo("ℹ️  Package source directory not found, setup.sh not copied to package")
 
     
-
+    logger.info("Build operation completed successfully")
     typer.echo("🎉 Build completed successfully!")
+    
+    # Clear operation context
+    clear_context()
 
 
 
@@ -1911,13 +1938,21 @@ def serve(
 
     """
     _lazy_imports()
+    
+    # Set up logging context for serve operation
+    set_context(operation="serve", host=host, port=port)
+    logger = get_logger(__name__)
+    logger.info("Starting PyPI server")
 
     directory = Path(directory).resolve()
+    
+    # Add directory to context
+    set_context(serve_directory=str(directory))
 
     
 
     if not directory.exists():
-
+        logger.error(f"Serve directory does not exist: {directory}")
         typer.echo(f"Error: Directory '{directory}' does not exist.", err=True)
 
         raise typer.Exit(1)
@@ -1945,11 +1980,11 @@ def serve(
     
 
     try:
-
+        logger.info(f"Starting server on {host}:{port}")
         serve_packages(directory, host, port)
 
     except KeyboardInterrupt:
-
+        logger.info("Server stopped by user")
         typer.echo("\n👋 Server stopped by user")
 
     except OSError as e:

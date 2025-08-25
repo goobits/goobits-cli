@@ -591,6 +591,8 @@ class RustGenerator(BaseGenerator):
 
             "src/hooks.rs",
 
+            "src/logger.rs",
+
             "src/cli.rs",
 
             "src/config.rs",
@@ -881,13 +883,37 @@ use std::process;
 
 use anyhow::Result;
 
+use serde_json::json;
+
 
 
 mod hooks;
 
+mod logger;
+
+
+
+use logger::{{setup_logging, info, error, set_context, create_command_context}};
+
 
 
 fn main() {{
+
+    // Initialize logging as early as possible
+
+    if let Err(e) = setup_logging() {{
+
+        eprintln!("Failed to initialize logging: {{}}", e);
+
+        process::exit(1);
+
+    }}
+
+    
+
+    info("main", "Starting {command_name} CLI", None);
+
+    
 
     let app = Command::new("{command_name}")
 
@@ -933,11 +959,15 @@ fn main() {{
 
     if let Err(e) = handle_command(&matches) {{
 
-        eprintln!("Error: {{}}", e);
+        logger::log_error("main", &e);
 
         process::exit(1);
 
     }}
+
+    
+
+    info("main", "CLI execution completed successfully", None);
 
 }}
 
@@ -969,7 +999,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
 
         _ => {{
 
-            println!("No command specified. Use --help for available commands.");
+            info("main", "No command specified. Use --help for available commands.", None);
 
             Ok(())
 
@@ -1171,16 +1201,20 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                     hook_call = self._generate_hook_call(hook_name, sub_data)
                     
                     subcommand_handlers.append(f'''Some(("{sub_name}", sub_sub_matches)) => {{
+                let context = create_command_context("{cmd_name}-{sub_name}", &[]);
+                set_context(context);
+                info("main", "Executing {cmd_name} {sub_name} command", None);
+                
                 {param_extraction}
                 if let Err(e) = hooks::{hook_call} {{
-                    eprintln!("Error: {{}}", e);
+                    logger::log_error("main", &e);
                     std::process::exit(1);
                 }}
                 Ok(())
             }}''')
                 
                 subcommand_handlers.append('''_ => {
-                eprintln!("Unknown subcommand. Use --help for available options.");
+                error("main", "Unknown subcommand. Use --help for available options.", None);
                 std::process::exit(1);
             }''')
                 
@@ -1197,9 +1231,13 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 hook_call = self._generate_hook_call(f"on_{safe_cmd_name}", cmd_data)
                 
                 handlers.append(f'''Some(("{cmd_name}", sub_matches)) => {{
+            let context = create_command_context("{cmd_name}", &[]);
+            set_context(context);
+            info("main", "Executing {cmd_name} command", None);
+            
             {param_extraction}
             if let Err(e) = hooks::{hook_call} {{
-                eprintln!("Error: {{}}", e);
+                logger::log_error("main", &e);
                 std::process::exit(1);
             }}
             Ok(())

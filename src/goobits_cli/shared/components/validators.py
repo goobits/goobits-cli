@@ -1,5 +1,4 @@
-"""
-Specific validators for Goobits CLI configurations.
+"""Specific validators for Goobits CLI configurations.
 
 This module implements validators based on the schemas created by Agents A and B,
 providing comprehensive validation for command structures, hooks, options,

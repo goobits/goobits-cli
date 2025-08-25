@@ -41,7 +41,7 @@ class DependencyMissingError(ProgressError):
         super().__init__(message, suggestion)
 
 
-# Set up logging
+# Set up centralized logging - integrates with CLI logging context
 logger = logging.getLogger(__name__)
 
 try:
@@ -52,13 +52,24 @@ try:
     from rich.console import Console
     from rich.spinner import Spinner
     HAS_RICH = True
-    logger.debug("Rich library loaded successfully")
+    logger.debug("Rich library loaded successfully", extra={
+        'feature': 'progress_display',
+        'library': 'rich'
+    })
 except ImportError as e:
     HAS_RICH = False
     Progress = None
     TaskID = None
-    logger.debug(f"Rich library not available: {e}")
-    logger.info("Progress features will use basic fallbacks. Install 'rich' for enhanced display: pip install rich")
+    logger.debug(f"Rich library not available: {e}", extra={
+        'feature': 'progress_display',
+        'library': 'rich',
+        'fallback': 'basic_progress'
+    })
+    logger.info("Progress features will use basic fallbacks. Install 'rich' for enhanced display: pip install rich", extra={
+        'feature': 'progress_display',
+        'status': 'fallback_mode',
+        'install_command': 'pip install rich'
+    })
 
 
 class ProgressHelper:
@@ -70,14 +81,24 @@ class ProgressHelper:
         if HAS_RICH:
             try:
                 self.console = console or Console()
-                logger.debug("Rich console initialized")
+                logger.debug("Rich console initialized", extra={
+                    'feature': 'progress_display',
+                    'console_type': 'rich'
+                })
             except Exception as e:
-                logger.warning(f"Failed to initialize Rich console: {e}")
+                logger.warning(f"Failed to initialize Rich console: {e}", extra={
+                    'feature': 'progress_display',
+                    'console_type': 'rich',
+                    'fallback': 'basic_output'
+                })
                 self.console = None
                 self._fallback_enabled = True
         else:
             self.console = None
-            logger.debug("Using fallback mode (Rich not available)")
+            logger.debug("Using fallback mode (Rich not available)", extra={
+                'feature': 'progress_display',
+                'mode': 'fallback'
+            })
     
     @contextmanager
     def spinner(self, text: str = "Processing...", spinner: str = "dots"):
@@ -97,11 +118,19 @@ class ProgressHelper:
                 try:
                     status.spinner = spinner
                 except Exception as e:
-                    logger.debug(f"Failed to set spinner style '{spinner}': {e}")
+                    logger.debug(f"Failed to set spinner style '{spinner}': {e}", extra={
+                        'feature': 'spinner',
+                        'requested_style': spinner,
+                        'fallback': 'default_spinner'
+                    })
                     # Continue with default spinner
                 yield status
         except Exception as e:
-            logger.warning(f"Rich spinner failed, falling back to basic output: {e}")
+            logger.warning(f"Rich spinner failed, falling back to basic output: {e}", extra={
+                'feature': 'spinner',
+                'fallback': 'basic_output',
+                'original_error': str(e)
+            })
             # Fallback to basic output
             print(f"{text}", end="", flush=True)
             try:
@@ -173,7 +202,11 @@ class ProgressHelper:
                 yield progress, task_id
                 
         except Exception as e:
-            logger.warning(f"Rich progress bar failed, falling back to basic output: {e}")
+            logger.warning(f"Rich progress bar failed, falling back to basic output: {e}", extra={
+                'feature': 'progress_bar',
+                'fallback': 'basic_output',
+                'original_error': str(e)
+            })
             # Fallback to simple progress
             print(f"{description}")
             
@@ -214,7 +247,10 @@ class ProgressHelper:
                 self.console.print(f"[bold green]✓[/bold green] {message}")
                 return
             except Exception as e:
-                logger.debug(f"Rich success message failed: {e}")
+                logger.debug(f"Rich success message failed: {e}", extra={
+                    'feature': 'success_message',
+                    'fallback': 'plain_text'
+                })
         print(f"✓ {message}")
     
     def print_error(self, message: str):
@@ -224,7 +260,10 @@ class ProgressHelper:
                 self.console.print(f"[bold red]✗[/bold red] {message}", err=True)
                 return
             except Exception as e:
-                logger.debug(f"Rich error message failed: {e}")
+                logger.debug(f"Rich error message failed: {e}", extra={
+                    'feature': 'error_message',
+                    'fallback': 'plain_text'
+                })
         print(f"✗ {message}", file=sys.stderr)
     
     def print_warning(self, message: str):
@@ -234,7 +273,10 @@ class ProgressHelper:
                 self.console.print(f"[bold yellow]⚠[/bold yellow] {message}", err=True)
                 return
             except Exception as e:
-                logger.debug(f"Rich warning message failed: {e}")
+                logger.debug(f"Rich warning message failed: {e}", extra={
+                    'feature': 'warning_message',
+                    'fallback': 'plain_text'
+                })
         print(f"⚠ {message}", file=sys.stderr)
     
     def print_info(self, message: str):
@@ -244,7 +286,10 @@ class ProgressHelper:
                 self.console.print(f"[bold blue]ℹ[/bold blue] {message}")
                 return
             except Exception as e:
-                logger.debug(f"Rich info message failed: {e}")
+                logger.debug(f"Rich info message failed: {e}", extra={
+                    'feature': 'info_message',
+                    'fallback': 'plain_text'
+                })
         print(f"ℹ {message}")
 
 
@@ -259,7 +304,10 @@ def get_progress_helper() -> ProgressHelper:
         try:
             _default_progress = ProgressHelper()
         except Exception as e:
-            logger.warning(f"Failed to initialize progress helper: {e}")
+            logger.warning(f"Failed to initialize progress helper: {e}", extra={
+                'feature': 'progress_helper',
+                'fallback': 'minimal_fallback'
+            })
             # Create a minimal fallback instance
             _default_progress = ProgressHelper(console=None)
     return _default_progress
