@@ -9,8 +9,14 @@ import os
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
-import aiofiles
 import logging
+
+# Try to import aiofiles, but work without it
+try:
+    import aiofiles
+    AIOFILES_AVAILABLE = True
+except ImportError:
+    AIOFILES_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +77,17 @@ class ParallelIOManager:
                 # Ensure directory exists
                 path.parent.mkdir(parents=True, exist_ok=True)
                 
-                # Write file asynchronously
-                async with aiofiles.open(path, 'w', encoding='utf-8') as f:
-                    await f.write(content)
+                if AIOFILES_AVAILABLE:
+                    # Write file asynchronously with aiofiles
+                    async with aiofiles.open(path, 'w', encoding='utf-8') as f:
+                        await f.write(content)
+                else:
+                    # Fallback to thread pool executor
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(
+                        self._executor,
+                        lambda: path.write_text(content, encoding='utf-8')
+                    )
                 
                 logger.debug(f"Written file: {path}")
                 return True
@@ -138,8 +152,17 @@ class ParallelIOManager:
                 if not path.exists():
                     return None
                     
-                async with aiofiles.open(path, 'r', encoding='utf-8') as f:
-                    content = await f.read()
+                if AIOFILES_AVAILABLE:
+                    # Read file asynchronously with aiofiles
+                    async with aiofiles.open(path, 'r', encoding='utf-8') as f:
+                        content = await f.read()
+                else:
+                    # Fallback to thread pool executor
+                    loop = asyncio.get_event_loop()
+                    content = await loop.run_in_executor(
+                        self._executor,
+                        lambda: path.read_text(encoding='utf-8')
+                    )
                 
                 logger.debug(f"Read file: {path}")
                 return content

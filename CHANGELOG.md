@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- README configuration example now includes required `display_name`, `cli.name`, and `cli.tagline` fields
+- pyproject.toml testpaths now correctly points to `src/tests/` instead of `tests/`
+- CODEMAP.md generator file count corrected from "76 Python files" to "5 generator files"
+
 ### Changed
 - Documentation sync and accuracy improvements
 
@@ -33,7 +38,7 @@ This release delivers full multi-language support with unlimited nested commands
 - **Node.js dependency resolution** error messages
 - **TypeScript compilation** configuration
 - **Rust unused variable warnings** in generated code
-- **Test suite stability** - comprehensive test coverage across 35 test files
+- **Test suite stability** - comprehensive test coverage across 35 test files (53 total Python files in test suite)
 
 ## [1.x] - Previous Versions
 

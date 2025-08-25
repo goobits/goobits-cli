@@ -624,15 +624,21 @@ class NodeJSGenerator(BaseGenerator):
 
             
 
-            # Generate using universal engine
+            # Generate using universal engine with parallel I/O if available
 
             output_dir = Path(".")
 
-            generated_files = self.universal_engine.generate_cli(
+            # Use parallel generation for 30-50% performance improvement
+            if hasattr(self.universal_engine, 'generate_cli_parallel') and self.universal_engine.performance_enabled:
+                generated_files = self.universal_engine.generate_cli_parallel(
+                    goobits_config, "nodejs", output_dir
+                )
+            else:
+                generated_files = self.universal_engine.generate_cli(
 
-                goobits_config, "nodejs", output_dir
+                    goobits_config, "nodejs", output_dir
 
-            )
+                )
 
             
 

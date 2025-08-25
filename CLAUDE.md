@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For rapid project understanding, see **CODEMAP.md** - a comprehensive project map designed for LLM quick comprehension.
 
+**Note**: The framework has two CLI interfaces:
+- **Generated CLI** (`goobits`): Built from goobits.yaml with 3 core commands (build, init, serve)
+- **Development CLI** (`python -m goobits_cli.main`): Full framework interface with additional commands (migrate, validate, upgrade)
+
 ## Project Overview
 
 Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, TypeScript, and Rust** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.
@@ -68,8 +72,9 @@ python performance/performance_suite.py
 # Run mypy for type checking
 mypy src/goobits_cli/
 
-# Python linting (ruff installed automatically with dev extras)
-ruff check src/
+# Python linting (black and flake8 installed automatically with dev extras)
+black --check src/
+flake8 src/
 ```
 
 ### Prerequisites

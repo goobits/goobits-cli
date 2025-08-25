@@ -100,7 +100,7 @@ goobits_cli = [ "setup.sh",]
 [tool.pytest.ini_options]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers"
-testpaths = [ "tests",]
+testpaths = [ "src/tests",]
 
 [tool.setuptools.packages.find]
 where = [ "src",]

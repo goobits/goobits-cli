@@ -11,7 +11,7 @@ PROJECT SUMMARY
   Framework:    typer (framework CLI), rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
   
-  Total Files:  76 Python files in core, 35 test files
+  Total Files:  5 generator files, 53 test files
   Total LOC:    ~60,000+ lines of Python code
 
 ================================================================================
@@ -62,7 +62,7 @@ Key Patterns:
 │   │   ├── performance/     [Performance monitoring]
 │   │   └── completion/      [Dynamic completion system]
 │   └── shared/              [Cross-language utilities]
-├── src/tests/               [Comprehensive test suite - 35 test files]
+├── src/tests/               [Comprehensive test suite - 53 test files]
 │   ├── unit/                [Unit tests by component]
 │   ├── integration/         [Cross-language integration]
 │   ├── e2e/                 [End-to-end CLI testing]
@@ -124,9 +124,10 @@ PRODUCTION:
   • pyyaml        - YAML parsing
 
 DEVELOPMENT:
-  • pytest       - Test framework (696 tests)
+  • pytest       - Test framework
   • mypy         - Type checking
-  • ruff         - Python linting  
+  • black        - Code formatting
+  • flake8       - Python linting  
   • coverage     - Test coverage analysis
 
 Generated CLIs Use:
@@ -171,15 +172,19 @@ Naming Conventions:
 
 CLI Commands:
   • Generate:    goobits build [config.yaml]
-  • Initialize:  goobits init
+  • Initialize:  goobits init [project_name]
+  • Validate:    goobits validate [config_path]
+  • Migrate:     goobits migrate <path>
   • Serve PyPI:  goobits serve <directory>
+  • Upgrade:     goobits upgrade
 
 Development:
   • Install:     ./setup.sh install --dev
   • Test:        pytest src/tests/
   • Coverage:    pytest --cov=goobits_cli
   • Type check:  mypy src/goobits_cli/
-  • Lint:        ruff check src/
+  • Format:      black src/
+  • Lint:        flake8 src/
 
 ================================================================================
 
@@ -192,7 +197,7 @@ Development:
 • Performance: Generated CLIs <100ms startup target met
 • Interactive mode available for all generated CLIs
 • Rust support fully operational with Clap framework
-• Test coverage: 35 test files, comprehensive coverage
+• Test coverage: 53 test files, comprehensive coverage
 • Generated CLIs use hook system: hooks.py/js/ts/rs for logic
 
 ================================================================================

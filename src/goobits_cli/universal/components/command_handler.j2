@@ -714,15 +714,15 @@ program
     .name('{{ cli.name }}')
     .description('{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
-    {%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
+{%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
     .option('-v, --verbose', 'Enable verbose error output and debugging information', false)
-    {%- endif %};
+{%- endif %};
 
 {%- if cli.root_command.options %}
 {%- for option in cli.root_command.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
-    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
+    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | js_string if option.default is string else option.default | tojson }}{% endif %}
 );
 {% endfor %}
 {%- endif %}
@@ -742,7 +742,7 @@ const {{ cmd.name.replace('-', '_') }}Cmd = program
 {{ cmd.name.replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
 {% endfor %}
 {% for option in cmd.options if cmd.options %}
-{{ cmd.name.replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{{ cmd.name.replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | js_string if option.default is string else option.default | tojson }}{% endif %});
 {% endfor %}
 {{ cmd.name.replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options) => {
     const globalOpts = program.opts();
@@ -766,7 +766,7 @@ const {{ cmd.name.replace('-', '_') }}Cmd = program
         
         // Execute the hook function with proper error handling
         const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-        const result = await hooks[hookName](...args{% if cmd.arguments and cmd.arguments|length > 0 %}, {% endif %}options);
+        const result = await hooks[hookName](...args{% if cmd.arguments %}, {% endif %}options);
         
         // Handle return codes
         if (typeof result === 'number' && result !== 0) {
@@ -798,7 +798,7 @@ const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ par
 {{ cmd.path | join('_') | replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
 {% endfor %}
 {%- for option in cmd.options if cmd.options %}
-{{ cmd.path | join('_') | replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | js_string if option.default is string else option.default | tojson }}{% endif %});
 {% endfor %}
 {{ cmd.path | join('_') | replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options) => {
     const globalOpts = program.opts();
@@ -822,7 +822,7 @@ const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ par
         
         // Execute the hook function with proper error handling
         const args = [{% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}{% if not loop.last %}, {% endif %}{% endfor %}];
-        const result = await hooks[hookName](...args{% if cmd.arguments and cmd.arguments|length > 0 %}, {% endif %}options);
+        const result = await hooks[hookName](...args{% if cmd.arguments %}, {% endif %}options);
         
         // Handle return codes
         if (typeof result === 'number' && result !== 0) {
@@ -942,15 +942,15 @@ program
     .name('{{ cli.name }}')
     .description('{{ (cli.tagline if cli.tagline is defined else (cli.description if cli.description is defined else (project.description if project.description is defined else 'No description'))) | js_string }}')
     .version('{{ cli.version }}')
-    {%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
+{%- if cli.root_command.options and cli.root_command.options | selectattr("name", "equalto", "verbose") | list | length == 0 %}
     .option('-v, --verbose', 'Enable verbose error output and debugging information', false)
-    {%- endif %};
+{%- endif %};
 
 {%- if cli.root_command.options %}
 {%- for option in cli.root_command.options %}
 program.option(
     '--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}',
-    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %}
+    '{{ ((option.description if option.description is defined else 'No description')) | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | js_string if option.default is string else option.default | tojson }}{% endif %}
 );
 {% endfor %}
 {%- endif %}
@@ -970,7 +970,7 @@ const {{ cmd.name.replace('-', '_') }}Cmd = program
 {{ cmd.name.replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
 {% endfor %}
 {% for option in cmd.options if cmd.options %}
-{{ cmd.name.replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{{ cmd.name.replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | js_string if option.default is string else option.default | tojson }}{% endif %});
 {% endfor %}
 {{ cmd.name.replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
     const globalOpts = program.opts();
@@ -1026,7 +1026,7 @@ const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ par
 {{ cmd.path | join('_') | replace('-', '_') }}Cmd.argument('{% if not (arg.required is defined and arg.required) %}[{% endif %}{{ arg.name }}{% if arg.multiple is defined and arg.multiple %}...{% endif %}{% if not (arg.required is defined and arg.required) %}]{% endif %}', '{{ ((arg.desc if arg.desc is defined else 'No description')) | js_string }}');
 {% endfor %}
 {%- for option in cmd.options if cmd.options %}
-{{ cmd.path | join('_') | replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | tojson }}{% endif %});
+{{ cmd.path | join('_') | replace('-', '_') }}Cmd.option('--{{ option.name }}{% if option.short is defined and option.short %}, -{{ option.short }}{% endif %}', '{{ option.description | js_string }}'{% if option.default is defined and option.default %}, {{ option.default | js_string if option.default is string else option.default | tojson }}{% endif %});
 {% endfor %}
 {{ cmd.path | join('_') | replace('-', '_') }}Cmd.action(async ({% for arg in cmd.arguments if cmd.arguments %}{{ arg.name }}: {% if arg.multiple is defined and arg.multiple %}string[]{% else %}string{% endif %}{% if cmd.options or not loop.last %}, {% endif %}{% endfor %}options: any) => {
     const globalOpts = program.opts();
