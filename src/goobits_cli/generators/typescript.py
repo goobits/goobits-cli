@@ -84,7 +84,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
     
 
-    def __init__(self, use_universal_templates: bool = False):
+    def __init__(self, use_universal_templates: bool = True):
 
         """Initialize the TypeScript generator with TypeScript-specific templates.
 

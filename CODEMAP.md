@@ -154,9 +154,9 @@ To add new language support:
   4. Add tests in src/tests/
   5. Update schemas.py if needed
 
-To use Universal Templates:
-  Flag: goobits build --universal-templates
-  Files: universal/template_engine.py, universal/renderers/
+Universal Template System (Default):
+  Core: universal/template_engine.py, universal/renderers/
+  Provides consistent cross-language CLI generation
 
 ================================================================================
 
@@ -174,7 +174,7 @@ CLI Commands:
   • Initialize:  goobits init
   • Serve PyPI:  goobits serve
   • Upgrade:     goobits upgrade
-  • Universal:   goobits build --universal-templates
+  • Standard:    goobits build [config.yaml]
 
 Development:
   • Install:     ./setup.sh install --dev
@@ -190,7 +190,7 @@ Development:
 
 • Self-hosting: goobits generates its own CLI from goobits.yaml
 • All 4 languages work end-to-end with production quality
-• Universal templates (--universal-templates) are v2.0 system
+• Universal template system is now the default generation method
 • Performance: Generated CLIs <100ms startup target met
 • Interactive mode available for all generated CLIs
 • Rust support fully operational with Clap framework

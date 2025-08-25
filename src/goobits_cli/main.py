@@ -713,16 +713,6 @@ def build(
 
         help="Create backup files (.bak) when overwriting existing files"
 
-    ),
-
-    universal_templates: bool = typer.Option(
-
-        False,
-
-        "--universal-templates",
-
-        help="Use Universal Template System (experimental)"
-
     )
 
 ):
@@ -824,10 +814,9 @@ def build(
 
     typer.echo(f"Detected language: {language}")
 
-    # Universal Template System is production-ready (v3.0.0+)
-    if universal_templates:
-        typer.echo("✅ Using Universal Template System (production-ready)")
-        typer.echo("   Generating optimized cross-language CLI with enhanced features.")
+    # Universal Template System is now the default
+    typer.echo("✅ Using Universal Template System (production-ready)")
+    typer.echo("   Generating optimized cross-language CLI with enhanced features.")
 
     typer.echo("Generating CLI script...")
 
@@ -855,7 +844,7 @@ def build(
 
             from goobits_cli.generators.nodejs import NodeJSGenerator
 
-            generator = NodeJSGenerator(use_universal_templates=universal_templates)
+            generator = NodeJSGenerator(use_universal_templates=True)
 
             
 
@@ -867,7 +856,7 @@ def build(
 
             from goobits_cli.generators.typescript import TypeScriptGenerator
 
-            generator = TypeScriptGenerator(use_universal_templates=universal_templates)
+            generator = TypeScriptGenerator(use_universal_templates=True)
 
             
 
@@ -879,7 +868,7 @@ def build(
 
             from goobits_cli.generators.rust import RustGenerator
 
-            generator = RustGenerator(use_universal_templates=universal_templates)
+            generator = RustGenerator(use_universal_templates=True)
 
             
 
@@ -893,7 +882,7 @@ def build(
 
             from goobits_cli.generators.python import PythonGenerator  
 
-            generator = PythonGenerator(use_universal_templates=universal_templates)
+            generator = PythonGenerator(use_universal_templates=True)
 
             
 

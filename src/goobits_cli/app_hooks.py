@@ -16,7 +16,7 @@ from typing import Optional
 
 
 
-def on_build(config_path: Optional[str], output_dir: Optional[str], output: Optional[str], backup: bool, universal_templates: bool = True) -> None:
+def on_build(config_path: Optional[str], output_dir: Optional[str], output: Optional[str], backup: bool) -> None:
 
     """Hook for build command - delegate to main.py implementation."""
 
@@ -41,7 +41,7 @@ def on_build(config_path: Optional[str], output_dir: Optional[str], output: Opti
 
     try:
 
-        main.build(config_path_obj, output_dir_obj, output, backup, universal_templates)
+        main.build(config_path_obj, output_dir_obj, output, backup)
 
     except SystemExit:
 

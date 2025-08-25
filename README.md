@@ -239,9 +239,6 @@ goobits build
 # Specify custom config file
 goobits build my-config.yaml
 
-# Use universal template system
-goobits build --universal-templates
-
 # Create backups when overwriting
 goobits build --backup
 ```
@@ -360,11 +357,7 @@ Generate shell completions for your CLI:
 
 ### Universal Templates
 
-Use the experimental universal template system for consistent cross-language generation:
-
-```bash
-goobits build --universal-templates
-```
+The Universal Template System is now the default, providing consistent cross-language generation across Python, Node.js, TypeScript, and Rust.
 
 ## 🛠️ Troubleshooting
 

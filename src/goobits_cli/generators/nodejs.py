@@ -106,7 +106,7 @@ class NodeJSGenerator(BaseGenerator):
 
     
 
-    def __init__(self, use_universal_templates: bool = False):
+    def __init__(self, use_universal_templates: bool = True):
 
         """Initialize the Node.js generator with Jinja2 environment.
 
