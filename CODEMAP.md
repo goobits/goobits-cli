@@ -173,10 +173,10 @@ Naming Conventions:
 CLI Commands:
   • Generate:    goobits build [config.yaml]
   • Initialize:  goobits init [project_name]
-  • Validate:    python -m goobits_cli.main validate [config_path]
-  • Migrate:     python -m goobits_cli.main migrate <path>
+  • Validate:    goobits validate [config_path]
+  • Migrate:     goobits migrate <path>
   • Serve PyPI:  goobits serve <directory>
-  • Upgrade:     python -m goobits_cli.main upgrade
+  • Upgrade:     goobits upgrade
 
 Development:
   • Install:     ./setup.sh install --dev

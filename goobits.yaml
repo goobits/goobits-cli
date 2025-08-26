@@ -102,9 +102,9 @@ cli:
   
   command_groups:
     - name: "Core Commands"
-      commands: ["build", "init"]
+      commands: ["build", "init", "validate"]
     - name: "Development Tools"
-      commands: ["serve"]
+      commands: ["serve", "migrate"]
 
   commands:
     build:
@@ -163,6 +163,38 @@ cli:
           desc: "🔌 Port to run the server on"
           default: 8080
     
+    validate:
+      desc: "Validate goobits.yaml configuration without generating files"
+      icon: "✅"
+      args:
+        - name: "config_path"
+          desc: "Path to goobits.yaml file (defaults to ./goobits.yaml)"
+          required: false
+      options:
+        - name: "verbose"
+          short: "v"
+          type: "flag"
+          desc: "📋 Show detailed validation information"
+    
+    migrate:
+      desc: "Migrate YAML configurations to 3.0.0 format"
+      icon: "🔄"
+      args:
+        - name: "path"
+          desc: "Path to YAML file or directory to migrate"
+          required: true
+      options:
+        - name: "backup"
+          type: "flag"
+          desc: "💾 Create backup files (.bak)"
+          default: true
+        - name: "dry-run"
+          type: "flag"
+          desc: "👁️ Show changes without applying them"
+        - name: "pattern"
+          type: "str"
+          desc: "🔍 File pattern for directory migration"
+          default: "*.yaml"
 
   config:
     rich_help_panel: true

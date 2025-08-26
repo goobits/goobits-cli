@@ -90,3 +90,48 @@ def on_serve(directory: str, host: str, port: int) -> None:
         # Handle typer.Exit gracefully
 
         pass
+
+
+def on_validate(config_path: Optional[str] = None, verbose: bool = False) -> None:
+    """Hook for validate command - delegate to main.py implementation."""
+
+    try:
+        # Try package import first (when installed)
+        import goobits_cli.main as main  # type: ignore[import-untyped]
+    except ImportError:
+        # Fallback to relative import (development mode)
+        from . import main  # type: ignore[import-untyped]
+
+    config_path_obj = Path(config_path) if config_path else None
+
+    try:
+
+        main.validate(config_path_obj, verbose)
+
+    except SystemExit:
+
+        # Handle typer.Exit gracefully
+
+        pass
+
+
+def on_migrate(path: str, backup: bool = True, dry_run: bool = False, pattern: str = "*.yaml") -> None:
+    """Hook for migrate command - delegate to main.py implementation."""
+
+    try:
+        # Try package import first (when installed)
+        import goobits_cli.main as main  # type: ignore[import-untyped]
+    except ImportError:
+        # Fallback to relative import (development mode)
+        from . import main  # type: ignore[import-untyped]
+
+    try:
+
+        main.migrate(path, backup, dry_run, pattern)
+
+    except SystemExit:
+
+        # Handle typer.Exit gracefully
+
+        pass
+

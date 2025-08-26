@@ -46,38 +46,34 @@ goobits build
 
 ### Core Commands
 
-**Generated CLI** (`goobits` command):
+**Core Commands** (`goobits` command):
 
-- `goobits build <config_path>` - Generate CLI from goobits.yaml
+- `goobits build [config_path]` - Generate CLI from goobits.yaml
   - `--output-dir`: Output directory for generated files
   - `--output`: Output filename for generated CLI
   - `--backup`: Create .bak files when overwriting
 
-- `goobits init <project_name>` - Create initial goobits.yaml
+- `goobits init [project_name]` - Create initial goobits.yaml
   - `--template`: Choose template (basic, advanced, api-client, text-processor)
   - `--force`: Overwrite existing configuration
+
+- `goobits validate [config_path]` - Validate goobits.yaml configuration
+  - `--verbose`: Show detailed validation information
+
+- `goobits migrate <path>` - Migrate YAML configurations to 3.0.0 format
+  - `--backup`: Create backup files (.bak)
+  - `--dry-run`: Show changes without applying
+  - `--pattern`: File pattern for directory migration (default: *.yaml)
 
 - `goobits serve <directory>` - Serve local PyPI-compatible package index
   - `--host`: Server host (default: localhost)
   - `--port`: Server port (default: 8080)
 
-- `goobits upgrade` - (Not yet implemented in generated CLI)
-
-**Development Commands** (available via `python -m goobits_cli.main`):
-
-- `python -m goobits_cli.main validate [config_path]` - Validate goobits.yaml configuration
-  - `--verbose`: Show detailed validation information
-
-- `python -m goobits_cli.main migrate <path>` - Migrate YAML configurations to 3.0.0 format
-  - `--backup/--no-backup`: Create backup files (default: true)
-  - `--dry-run`: Show changes without applying
-  - `--pattern`: File pattern for directory migration (default: *.yaml)
-
-- `python -m goobits_cli.main upgrade` - Upgrade goobits-cli (advanced options)
-  - `--source`: Upgrade source (pypi, git, local)
-  - `--version`: Specific version to install
+- `goobits upgrade` - Upgrade goobits-cli to latest version
+  - `--check`: Check for updates without installing
+  - `--version`: Install specific version
   - `--pre`: Include pre-release versions
-  - `--dry-run`: Show what would be upgraded without doing it
+  - `--dry-run`: Show what would be done without doing it
 
 ### Configuration Example
 
