@@ -476,8 +476,10 @@ program.option(
 {%- endfor %}
 
 // Commands - use safer access pattern for CLI data
-{%- if cli.root_command and cli.root_command.subcommands %}
-  {%- for command in cli.root_command.subcommands %}
+
+{% if cli.root_command and cli.root_command.subcommands %}
+  {% for command in cli.root_command.subcommands %}
+
 program
     .command('{{ command.name }}')
     .description('{{ command.description }}')
@@ -536,6 +538,7 @@ program
         });
     {%- endfor %}
     {%- endif %}
+    
   {%- endfor %}
 {%- else %}
 // No commands defined

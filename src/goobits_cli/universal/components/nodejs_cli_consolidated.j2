@@ -369,7 +369,8 @@ program
     .version('{{ cli.version | default(project.version) | default("1.0.0") }}');
 
 // Global options from processed commander structure
-{%- if commander_commands and commander_commands.root_command and commander_commands.root_command.options %}
+
+{% if commander_commands and commander_commands.root_command and commander_commands.root_command.options %}
 {%- for option in commander_commands.root_command.options %}
 program.option(
     '{{ option.flags }}',
@@ -382,8 +383,10 @@ program.option(
 {%- endif %}
 
 // Commands - use processed commander structure
-{%- if commander_commands and commander_commands.subcommands %}
-  {%- for cmd_data in commander_commands.subcommands %}
+
+{% if commander_commands and commander_commands.subcommands %}
+  {% for cmd_data in commander_commands.subcommands %}
+
 program
     .command('{{ cmd_data.name }}')
     .description('{{ cmd_data.description }}')
@@ -442,7 +445,8 @@ program
         });
     {%- endfor %}
     {%- endif %}
-  {%- endfor %}
+
+  {% endfor %}
 {%- else %}
 // No commands defined
 {%- endif %}
