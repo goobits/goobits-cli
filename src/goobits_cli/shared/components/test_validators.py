@@ -661,7 +661,12 @@ class TestConfigValidator:
             'command_name': 'myapp',
             'display_name': 'My Awesome CLI',
             'description': 'A great CLI tool',
-            'language': 'python'
+            'language': 'python',
+            'cli_output_path': 'src/my_package/cli.py',
+            'installation': {
+                'pypi_name': 'my-awesome-cli',
+                'development_path': '.'
+            }
         }
         
         validator = ConfigValidator()
@@ -720,6 +725,11 @@ class TestConfigValidator:
             'display_name': 'Test CLI',
             'description': 'Test CLI',
             'language': 'python',
+            'cli_output_path': 'src/test_package/cli.py',
+            'installation': {
+                'pypi_name': 'test-cli',
+                'development_path': '.'
+            },
             'python': {
                 'minimum_version': '3.12',
                 'maximum_version': '3.8'  # Invalid: min > max
@@ -732,7 +742,7 @@ class TestConfigValidator:
         
         assert result.is_valid is False
         errors = result.get_errors()
-        assert any("minimum" in error.message and "maximum" in error.message 
+        assert any("minimum" in error.message.lower() and "maximum" in error.message.lower() 
                   for error in errors)
     
     def test_installation_config_validation(self):
@@ -973,6 +983,11 @@ class TestIntegrationScenarios:
             'command_name': 'test',
             'display_name': 'Test CLI',
             'description': 'A test CLI application',
+            'cli_output_path': 'src/test_package/cli.py',
+            'installation': {
+                'pypi_name': 'test-cli',
+                'development_path': '.'
+            },
             'cli': {
                 'name': 'Test CLI',
                 'commands': {

@@ -25,7 +25,7 @@ def test_template_system():
     """Test the Universal Template System with all languages"""
     
     # Load test configuration
-    config_path = Path("test_universal_validation.yaml")
+    config_path = Path(__file__).parent / "test_universal_validation.yaml"
     assert config_path.exists(), f"Error: {config_path} not found"
         
     with open(config_path, 'r') as f:

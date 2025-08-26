@@ -233,7 +233,23 @@ class BaseValidator(ABC):
             return False
             
         # Language-specific rules
-        if language == "rust":
+        if language == "python":
+            # Python identifiers: letters, numbers, underscores, and optionally hyphens for CLI names
+            if allow_hyphens:
+                valid_pattern = r'^[a-zA-Z_][a-zA-Z0-9_-]*$'
+                invalid_chars_msg = "Use letters, numbers, underscores, and hyphens only"
+            else:
+                valid_pattern = r'^[a-zA-Z_][a-zA-Z0-9_]*$'
+                invalid_chars_msg = "Use letters, numbers, and underscores only"
+            
+            if not re.match(valid_pattern, name):
+                result.add_error(
+                    f"Python identifier '{name}' contains invalid characters",
+                    field_path,
+                    invalid_chars_msg
+                )
+                return False
+        elif language == "rust":
             # Rust allows underscores but not hyphens in identifiers
             if not allow_hyphens and '-' in name:
                 result.add_error(

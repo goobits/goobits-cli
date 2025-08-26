@@ -71,10 +71,11 @@ class CommandValidator(BaseValidator):
                          result: ValidationResult, context: ValidationContext) -> None:
         """Validate a single command definition."""
         
-        # Validate command name
-        if not self.validate_identifier(name, field_path, result, 
-                                      allow_hyphens=True, language=context.language):
-            return
+        # Validate command name (continue validation even if name is invalid)
+        name_is_valid = self.validate_identifier(name, field_path, result, 
+                                      allow_hyphens=True, language=context.language)
+        
+        # Continue validation even if command name is invalid to collect all errors
             
         # Check for command name conventions
         if len(name) > 30:
@@ -568,7 +569,7 @@ class OptionValidator(BaseValidator):
             
             # Validate choices
             choices = self.get_field_value(option, 'choices')
-            if choices:
+            if choices is not None:  # Check for existence, not truthiness
                 self._validate_option_choices(choices, default, option_type, 
                                             option_path, result)
             
@@ -634,38 +635,49 @@ class OptionValidator(BaseValidator):
     def _validate_option_choices(self, choices: Any, default: Any, option_type: str,
                                field_path: str, result: ValidationResult) -> None:
         """Validate option choices."""
+        choices_are_valid = True
+        
         if not isinstance(choices, list):
             result.add_error(
                 "Option choices must be a list",
                 f"{field_path}.choices"
             )
-            return
+            choices_are_valid = False
             
-        if len(choices) == 0:
+        elif len(choices) == 0:
             result.add_error(
                 "Option choices cannot be empty",
                 f"{field_path}.choices"
             )
-            return
+            choices_are_valid = False
             
-        if len(choices) == 1:
-            result.add_warning(
-                "Option has only one choice - consider using a default value instead",
-                f"{field_path}.choices"
-            )
-        
-        # Check if default is in choices
-        if default is not None and default not in choices:
+        # Only perform these checks if choices are valid
+        if choices_are_valid and isinstance(choices, list):
+            if len(choices) == 1:
+                result.add_warning(
+                    "Option has only one choice - consider using a default value instead",
+                    f"{field_path}.choices"
+                )
+            
+            # Check for duplicates
+            if len(set(choices)) != len(choices):
+                result.add_warning(
+                    "Option choices contain duplicates",
+                    f"{field_path}.choices"
+                )
+                
+            # Check if default is in choices
+            if default is not None and default not in choices:
+                result.add_error(
+                    f"Default value '{default}' is not in choices: {choices}",
+                    f"{field_path}.default"
+                )
+        # If choices are invalid but we still have a default, validate that the default concept makes sense
+        elif default is not None and not choices_are_valid:
+            # Still report default validation issue even with invalid choices
             result.add_error(
-                f"Default value '{default}' is not in choices: {choices}",
+                f"Default value '{default}' cannot be validated against invalid choices",
                 f"{field_path}.default"
-            )
-        
-        # Check for duplicates
-        if len(set(choices)) != len(choices):
-            result.add_warning(
-                "Option choices contain duplicates",
-                f"{field_path}.choices"
             )
 
 
