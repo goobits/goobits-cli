@@ -268,53 +268,12 @@ class TypeScriptRenderer(LanguageRenderer):
 
         """
 
-        cli_name = (
-            ir.get("cli", {})
-            .get("root_command", {})
-            .get("name", "cli")
-            .replace("-", "_")
-        )
-
+        # Minimal file generation - only 3 files
         output = {
-            # Main CLI files
-            "command_handler": "cli.ts",
-            "hooks_template": "src/hooks.ts",
-            "config_manager": "lib/config.ts",
-            "completion_engine": "lib/completion.ts",
-            "error_handler": "lib/errors.ts",
-            "logger": "lib/logger.ts",
-            # Entry points
-            "main_entry": "index.ts",
-            "main_entry_js": "index.js",  # JavaScript fallback for test environments
-            "bin_entry": "bin/index.js",  # JavaScript executable for npm bin
-            "binary_entry": "bin/cli.ts",
-            # Build and configuration files
-            "package_config": "package.json",
-            "postinstall_script": "scripts/postinstall.js",
-            "typescript_config": "tsconfig.json",
-            "eslint_config": ".eslintrc.json",
-            "prettier_config": ".prettierrc",
-            # Type definitions
-            "cli_types": "types/cli.d.ts",
-            "error_types": "types/errors.d.ts",
-            "config_types": "types/config.d.ts",
-            "plugin_types": "types/plugins.d.ts",
-            # Helper libraries
-            "progress_helper": "lib/progress.ts",
-            "prompts_helper": "lib/prompts.ts",
-            "daemon_helper": "lib/daemon.ts",
-            "decorators": "lib/decorators.ts",
-            # Test structure
-            "test_setup": "test/setup.ts",
-            "test_config": "test/jest.config.js",
-            "cli_test": "test/cli.test.ts",
+            "typescript_cli_consolidated": "cli.ts",  # TypeScript with everything embedded
+            "typescript_types": "types.d.ts",  # Type definitions for IDE support
+            "setup_script": "setup.sh",  # Smart setup with package.json/tsconfig merging
         }
-
-        # Add interactive mode if enabled
-
-        if self._has_interactive_features(ir):
-
-            output["interactive_mode"] = f"{cli_name}_interactive.ts"
 
         return output
 

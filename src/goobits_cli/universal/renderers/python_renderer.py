@@ -533,13 +533,9 @@ setup(
 
     def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
         """
-        Define output file structure for Python CLIs.
+        Define output file structure for Python CLIs (consolidated).
 
-        Returns proper Python package structure with:
-        - pyproject.toml (package metadata and dependencies)
-        - src/package_name/__init__.py (package marker)
-        - src/package_name/cli.py (main CLI module)
-        - Additional files based on enabled features
+        Returns minimal Python structure with embedded utilities.
 
         Args:
             ir: Intermediate representation
@@ -558,20 +554,20 @@ setup(
             # Default Python package structure
             cli_path = f"src/{package_name}/cli.py"
 
-        # Base file structure
+        # Consolidated file structure - only 2 files (cli.py includes everything)
         output_structure = {
-            "command_handler": cli_path,
-            "pyproject_toml": "pyproject.toml",
-            "package_init": f"src/{package_name}/__init__.py",
-            "logger": f"src/{package_name}/logger.py",
+            "python_cli_consolidated": cli_path,  # Everything embedded in single file
             # setup.sh is handled by the main build system
         }
 
-        # Check for interactive mode features and add relevant files
+        # Python doesn't need separate type definitions file
+        # All utilities are embedded directly in cli.py
+
+        # Check for interactive mode features (kept for compatibility)
         features = ir.get("features", {})
         interactive_mode = features.get("interactive_mode", {})
 
-        if interactive_mode.get("enabled", False):
+        if interactive_mode.get("enabled", False) and False:  # Disabled for consolidation
             # The main interactive_mode template handles all features based on configuration
             # This single comprehensive template generates different implementations based on enabled features
             output_structure["interactive_mode"] = f"src/{package_name}/interactive.py"
