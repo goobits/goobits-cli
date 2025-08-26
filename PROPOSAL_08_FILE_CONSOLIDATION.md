@@ -22,255 +22,205 @@ Goobits should generate the absolute minimum files needed to add a CLI to existi
 3. **Excessive Files**: Users get 27 files when they just want a CLI
 4. **Manifest Overwrites**: Destroying existing package.json/Cargo.toml/tsconfig.json
 
-## Proposed Solution
+## Solution: Minimal, Clean, Modern
 
-### Target Structure (2-3 files per language)
+### Final File Structure
 
-**Python:**
+**Python (2 files):**
 ```
-cli.py          # Consolidated CLI with embedded utilities
-setup.sh        # Smart setup script
-```
-
-**Node.js:**
-```
-cli.js          # Main CLI with embedded config/errors/logger
-package.json    # Merged if exists, created if not
-setup.sh        # Creates src/hooks.js if missing
+cli.py          # Complete CLI with all utilities embedded
+setup.sh        # Installation and hook creation
 ```
 
-**TypeScript:**
+**Node.js (2 files):**
 ```
-cli.ts          # Main CLI with embedded utilities and types
-package.json    # Merged if exists
-tsconfig.json   # Merged if exists
-setup.sh        # Creates src/hooks.ts if missing
+cli.mjs         # ES6 module with embedded utilities (~1000 lines)
+setup.sh        # Handles package.json merge + creates src/hooks.mjs
 ```
 
-**Rust:**
+**TypeScript (3 files):**
 ```
-src/main.rs     # Main with inline modules
-Cargo.toml      # Merged if exists
-setup.sh        # Creates src/hooks.rs if missing
-```
-
-### Implementation Strategy
-
-#### Phase 1: Remove Destructive Files (COMPLETED)
-- ✅ Remove README.md generation from all renderers
-- ✅ Remove .gitignore generation from all renderers
-
-#### Phase 2: Consolidate Library Files
-
-**For Node.js/TypeScript**, embed these into main CLI file:
-```javascript
-// Inside cli.js/cli.ts - embedded instead of separate files
-class ConfigManager {
-    // 110 lines from lib/config.js
-}
-
-class ErrorHandler {
-    // 171 lines from lib/errors.js
-}
-
-class Logger {
-    // 237 lines from lib/logger.js
-}
-
-// 144 lines from completion_engine.js
-function generateCompletion() { ... }
+cli.ts          # Complete CLI with embedded utilities and types
+setup.sh        # Handles package.json/tsconfig.json merge + creates src/hooks.ts
+types.d.ts      # Type definitions (kept separate for IDE support)
 ```
 
-Total: ~662 lines to embed (reasonable for single file)
-
-**For Python**, re-enable consolidation without Shiv:
-```python
-# Change line 86 in python.py
-self.consolidate = True  # Was disabled due to Shiv issues
-
-# Use simple embedding instead of zipapp
-# Embed logger.py, interactive.py directly in generated_cli.py
+**Rust (2 files):**
+```
+src/main.rs     # Complete CLI with inline modules
+setup.sh        # Handles Cargo.toml merge + creates src/hooks.rs
 ```
 
-**For Rust**, use inline modules:
-```rust
-// In src/main.rs
-mod config {
-    // Contents of config.rs
-}
+## Implementation Plan
 
-mod errors {
-    // Contents of errors.rs
-}
+### Phase 1: Module System Standardization ✅
+- Convert all Node.js/TypeScript to ES6 modules only
+- Use `.mjs` extension for Node.js to ensure ES6
+- Remove all CommonJS (`require`, `module.exports`)
 
-// etc.
+### Phase 2: File Consolidation
+
+**Embedding Strategy:**
+- Node.js: ~1000 lines total (config: 110, errors: 171, logger: 237, completion: 144)
+- TypeScript: Same as Node.js + type definitions inline
+- Python: Simple embedding (no zipapp/Shiv complexity)
+- Rust: Inline modules within main.rs
+
+### Phase 3: Smart Manifest Merging
+
+**setup.sh handles all merging** (not in build command):
+```bash
+# In setup.sh - merge package.json if exists
+if [ -f package.json ]; then
+    npm pkg set "bin.mycli=./cli.mjs"
+    npm pkg set "scripts.mycli=node cli.mjs"
+    npm install commander chalk ora
+else
+    cat > package.json << EOF
+    { "type": "module", "bin": {"mycli": "./cli.mjs"}, ... }
+EOF
+fi
 ```
 
-#### Phase 3: Smart Manifest Handling
+**Key Principles:**
+- Never overwrite user files from `goobits build`
+- setup.sh does all merging/installation
+- Use native tools (npm pkg, cargo add) for safety
 
-Add merge functions in `main.py`:
+### Phase 4: Update Renderers
 
 ```python
-def merge_package_json(existing_path, new_content, backup=False):
-    """
-    Merge strategy:
-    - Keep existing name, version, description
-    - Add missing dependencies (keep existing versions)
-    - Add missing scripts (keep existing)
-    - Add bin entry if missing
-    """
-
-def merge_cargo_toml(existing_path, new_content, backup=False):
-    """
-    Merge strategy:
-    - Keep existing package metadata
-    - Add missing dependencies (keep existing versions)
-    - Add bin entries if missing
-    """
-
-def merge_tsconfig_json(existing_path, new_content, backup=False):
-    """
-    Merge strategy:
-    - Keep existing compiler options
-    - Add only essential missing options
-    - Merge include/exclude arrays
-    """
-```
-
-Update build command (~line 1092):
-```python
-# Special handling for manifests
-if file_path == "package.json" and full_path.exists():
-    content = merge_package_json(full_path, content, backup)
-elif file_path == "Cargo.toml" and full_path.exists():
-    content = merge_cargo_toml(full_path, content, backup)
-elif file_path == "tsconfig.json" and full_path.exists():
-    content = merge_tsconfig_json(full_path, content, backup)
-```
-
-#### Phase 4: Update Renderer Output Structure
-
-Modify each renderer's `get_output_structure()`:
-
-**Node.js** (`nodejs_renderer.py:293`):
-```python
+# nodejs_renderer.py - only 2 files
 output = {
-    "command_handler": "cli.js",
-    "package_config": "package.json",
+    "command_handler": "cli.mjs",  # ES6 module
     "setup_script": "setup.sh",
 }
-```
 
-**TypeScript** (`typescript_renderer.py:280`):
-```python
+# typescript_renderer.py - only 3 files
 output = {
     "command_handler": "cli.ts",
-    "package_config": "package.json",
-    "typescript_config": "tsconfig.json",
+    "type_definitions": "types.d.ts",
     "setup_script": "setup.sh",
 }
-```
 
-**Rust** (`rust_renderer.py:221`):
-```python
+# rust_renderer.py - only 2 files  
 output = {
     "command_handler": "src/main.rs",
-    "cargo_config": "Cargo.toml",
     "setup_script": "setup.sh",
 }
 ```
 
-#### Phase 5: Update Templates
+## Concrete Implementation Steps
 
-Modify `command_handler.j2` to include embedded utilities:
+### Step 1: Convert to ES6 Modules
+```javascript
+// Before (CommonJS in logger.js)
+const { AsyncLocalStorage } = require('async_hooks');
+module.exports = { setupLogging, getLogger };
 
-```jinja2
-{% if language in ["nodejs", "typescript"] %}
-// ===== Embedded Utilities =====
-{{ include_component("config_manager") }}
-{{ include_component("error_handler") }}
-{{ include_component("logger") }}
-{{ include_component("completion_engine") }}
-{% endif %}
+// After (ES6 in cli.mjs)
+import { AsyncLocalStorage } from 'async_hooks';
+export { setupLogging, getLogger };
+```
 
-{% if language == "rust" %}
-// ===== Inline Modules =====
-mod config {
-    {{ include_component("config_manager") | indent(4) }}
+### Step 2: Embed Templates
+```javascript
+// cli.mjs - single file with everything
+#!/usr/bin/env node
+import { Command } from 'commander';
+
+// ===== Embedded Config Manager =====
+class ConfigManager { /* 110 lines */ }
+
+// ===== Embedded Error Handler =====  
+class ErrorHandler { /* 171 lines */ }
+
+// ===== Embedded Logger =====
+class Logger { /* 237 lines */ }
+
+// ===== Main CLI Logic =====
+const program = new Command();
+// ... rest of CLI
+```
+
+### Step 3: Smart setup.sh
+```bash
+#!/bin/bash
+# Detect existing package.json and merge intelligently
+if [ -f package.json ]; then
+    echo "📦 Updating existing package.json..."
+    npm pkg set "bin.${CLI_NAME}=./cli.mjs"
+    npm install commander@^12.0.0 chalk@^5.3.0
+else
+    echo "📦 Creating new package.json..."
+    cat > package.json << 'EOF'
+{
+  "type": "module",
+  "bin": { "${CLI_NAME}": "./cli.mjs" },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "chalk": "^5.3.0"
+  }
 }
-// ... etc
-{% endif %}
+EOF
+fi
+
+# Create hooks file if missing
+if [ ! -f src/hooks.mjs ]; then
+    mkdir -p src
+    cat > src/hooks.mjs << 'EOF'
+export async function onBuild(args) {
+    console.log('Build command:', args);
+}
+EOF
+fi
+```
+
+## Error Handling
+
+### Manifest Corruption
+```bash
+# In setup.sh - validate JSON before modifying
+if ! npm pkg get name > /dev/null 2>&1; then
+    echo "⚠️  package.json appears corrupted, creating backup..."
+    cp package.json package.json.backup
+    # Attempt repair or guide user
+fi
+```
+
+### Missing Dependencies
+```bash
+# Check for npm/cargo/pip before running
+command -v npm >/dev/null 2>&1 || { 
+    echo "❌ npm not found. Please install Node.js"; 
+    exit 1; 
+}
 ```
 
 ## Benefits
 
-1. **File Reduction**: 80-90% fewer files generated
-2. **Non-destructive**: No more overwriting README or existing configs
-3. **User-friendly**: Clear separation of generated vs editable files
-4. **Drop-in Compatible**: Can add CLI to existing projects safely
-5. **Easier Testing**: Fewer files to validate
-6. **Cleaner Projects**: Less clutter in user repositories
+1. **93% File Reduction**: TypeScript from 27→3 files
+2. **Zero Overwrites**: setup.sh handles everything safely  
+3. **Clean Repos**: Users see only essential files
+4. **Modern Code**: ES6 modules throughout
+5. **Safe Merging**: Native tools (npm pkg, cargo add)
 
-## Risks and Mitigation
+## Success Criteria
 
-### Risk 1: Large Single Files
-**Mitigation**: 
-- Embedded code totals ~600-1000 lines (reasonable)
-- Use code folding regions for organization
-- Optional flag to generate expanded structure if needed
+- ✅ Maximum 3 files per language
+- ✅ No destructive file operations
+- ✅ ES6 modules only (Node.js/TypeScript)
+- ✅ setup.sh handles all merging
+- ✅ Tests pass with consolidated output
 
-### Risk 2: Test Suite Breakage
-**Mitigation**:
-- Add compatibility flag during transition
-- Update tests incrementally
-- Keep old behavior available via `--expanded` flag
+## Implementation Order
 
-### Risk 3: User Confusion
-**Mitigation**:
-- Clear comments in generated files
-- Improved setup.sh explains what it's doing
-- Documentation update
-
-## Implementation Timeline
-
-1. **Week 1**: Implement manifest merging in main.py
-2. **Week 2**: Update Node.js renderer and templates
-3. **Week 3**: Update TypeScript and Rust renderers
-4. **Week 4**: Re-enable Python consolidation, update tests
-5. **Week 5**: Documentation and migration guide
-
-## Backward Compatibility
-
-Add `--expanded` flag to maintain old behavior:
-```bash
-goobits build --expanded  # Generate all files (old behavior)
-goobits build            # Generate consolidated files (new default)
-```
-
-## Success Metrics
-
-- ✅ File count reduced by >75%
-- ✅ Zero destructive overwrites
-- ✅ All tests pass
-- ✅ Existing projects can safely add CLI
-- ✅ Generated CLIs remain fully functional
-
-## Decision Required
-
-Should we proceed with this consolidation approach? The changes are significant but address real pain points:
-- README overwrites (critical bug)
-- Dead code generation (technical debt)
-- File proliferation (user experience issue)
-
-## Next Steps
-
-If approved:
-1. Create feature branch `feature/file-consolidation`
-2. Implement manifest merging functions
-3. Update renderers one language at a time
-4. Update test expectations
-5. Update documentation
+1. **Day 1**: Convert Node.js templates to ES6 + .mjs
+2. **Day 2**: Update nodejs_renderer.py to output 2 files
+3. **Day 3**: Update TypeScript renderer for 3 files
+4. **Day 4**: Fix Python consolidation (remove Shiv)
+5. **Day 5**: Update all tests for new structure
 
 ---
 
-**Note**: This proposal prioritizes user experience and safety over maintaining the current multi-file structure. The goal is to make Goobits CLIs truly "drop-in" additions to existing projects rather than project generators.
+**Decision**: This is not backward compatible by design. Clean repos are the priority.
