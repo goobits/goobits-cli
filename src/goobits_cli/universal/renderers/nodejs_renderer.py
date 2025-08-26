@@ -304,8 +304,6 @@ class NodeJSRenderer(LanguageRenderer):
             "bin_entry": "bin/cli.js",
             "postinstall_script": "scripts/postinstall.js",
             "setup_script": "setup.sh",
-            "readme": "README.md",
-            "gitignore": ".gitignore",
         }
 
         # Add interactive mode if enabled (unified template approach)

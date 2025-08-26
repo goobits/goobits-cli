@@ -228,9 +228,7 @@ class RustRenderer(LanguageRenderer):
             "cargo_config": "Cargo.toml",
             "lib_entry": "src/lib.rs",
             "cli_module": "src/cli.rs",
-            "readme": "README.md",
             "setup_script": "setup.sh",
-            "gitignore": ".gitignore",
         }
 
         # Add interactive mode if enabled

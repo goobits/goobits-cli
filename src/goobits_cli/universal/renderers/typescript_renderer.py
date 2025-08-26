@@ -308,9 +308,6 @@ class TypeScriptRenderer(LanguageRenderer):
             "test_setup": "test/setup.ts",
             "test_config": "test/jest.config.js",
             "cli_test": "test/cli.test.ts",
-            # Documentation
-            "readme": "README.md",
-            "gitignore": ".gitignore",
         }
 
         # Add interactive mode if enabled
