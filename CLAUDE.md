@@ -18,7 +18,7 @@ For rapid project understanding, see **CODEMAP.md** - a comprehensive project ma
 
 Goobits CLI Framework is a **production-ready multi-language** CLI generator that creates professional command-line interfaces from YAML configuration files. It supports **Python, Node.js, TypeScript, and Rust** with advanced features including **Universal Template System**, **Performance validation**, and **Comprehensive testing**. The framework generates high-performance, language-specific code with rich terminal interfaces, automated setup scripts, and robust installation management.
 
-**Current Status**: v3.0.0 with 4 language implementations **ALL PRODUCTION-READY** and unlimited nested command support (Python 100%, Node.js 100%, TypeScript 100%, Rust 100% complete - all compilation issues resolved). Advanced features fully integrated with optimized performance, all languages generate working CLIs, comprehensive testing at 100% pass rate.
+**Current Status**: v3.0.1 with 4 language implementations **ALL PRODUCTION-READY** and unlimited nested command support (Python 100%, Node.js 100%, TypeScript 100%, Rust 100% complete - all compilation issues resolved). Advanced features fully integrated with optimized performance, all languages generate working CLIs, comprehensive testing at 100% pass rate.
 
 ## Development Commands
 
@@ -204,7 +204,7 @@ The setup.sh script automatically installs all specified dependencies:
 
 ### Generated Files (Minimal Consolidation)
 
-As of v3.0.0, the framework generates minimal files to avoid repository clutter:
+As of v3.0.1, the framework generates minimal files to avoid repository clutter:
 
 - **Python**: Single `cli.py` file with all utilities embedded inline
 - **Node.js**: Single `cli.mjs` ES6 module with embedded components

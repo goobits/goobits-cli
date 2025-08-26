@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2025-08-26
+
+### 🎉 FILE CONSOLIDATION RELEASE
+
 ### Added
 - **File Consolidation**: Minimal file generation (2-3 files per language)
 - **validate command**: Validate goobits.yaml without generating files
-- **Script entry point**: Added `goobits` command to pyproject.toml
+- **Script entry point**: Added `goobits` command to pyproject.toml for direct CLI access
 
 ### Changed
 - **BREAKING**: Generated file structure reduced by 60-93%
@@ -20,9 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rust: 2 files (src/main.rs with inline modules, setup.sh)
 
 ### Fixed
-- No more README.md generation (preserves user documentation)
-- Smart manifest merging (preserves package.json/Cargo.toml)
-- Files generated relative to goobits.yaml location
+- **Critical**: No more README.md generation (preserves user documentation)
+- **Critical**: Smart manifest merging (preserves package.json/Cargo.toml)
+- **Critical**: Files generated relative to goobits.yaml location
+- Documentation accuracy sync with codebase
 
 ## [3.0.0] - 2025-08-26
 
