@@ -1,0 +1,25 @@
+# Test configuration for Rust CLI
+package_name: test-rust-cli
+command_name: testrust
+display_name: "Test Rust CLI"
+description: "Testing Rust generation"
+language: rust
+
+installation:
+  pypi_name: test-rust-cli
+
+cli:
+  name: testrust
+  tagline: "Test Rust CLI"
+  description: "A test CLI for Rust generation"
+  version: "1.0.0"
+  commands:
+    hello:
+      desc: "Say hello"
+    build:
+      desc: "Build something"
+      subcommands:
+        project:
+          desc: "Build a project"
+    serve:
+      desc: "Start server"

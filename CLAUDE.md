@@ -307,3 +307,12 @@ goobits build
 **Production Readiness:**
 - Generated CLIs: Production ready with exceptional performance
 - Advanced features: Production ready with lazy loading optimization complete
+
+## Dead Code Detection
+
+Run dead code detection with:
+- `make dead-code` - Check for dead code
+- `make dead-code-fix` - Auto-fix imports
+
+Tools: Vulture (unused code) + Ruff (unused imports)
+Config: Makefile, .vulture_whitelist.py

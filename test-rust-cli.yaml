@@ -1,0 +1,26 @@
+package_name: test-cli
+command_name: test-cli
+display_name: "Test Rust CLI"  
+description: "Test CLI generation for Rust"
+language: rust
+
+cli_output_path: "test-output/rust/src/main.rs"
+
+cli:
+  name: test-cli
+  tagline: "Test Rust CLI"
+  version: "1.0.0"
+  description: "Test Rust CLI"
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        name:
+          desc: "Name to greet"
+          required: true
+      options:
+        greeting:
+          short: g
+          type: string
+          desc: "Custom greeting"
+          default: "Hello"

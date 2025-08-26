@@ -1,0 +1,26 @@
+package_name: test-cli
+command_name: test-cli  
+display_name: "Test TypeScript CLI"
+description: "Test CLI generation for TypeScript"
+language: typescript
+
+cli_output_path: "test-output/typescript/cli.ts"
+
+cli:
+  name: test-cli
+  tagline: "Test TypeScript CLI"
+  version: "1.0.0"
+  description: "Test TypeScript CLI"
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        name:
+          desc: "Name to greet"
+          required: true
+      options:
+        greeting:
+          short: g
+          type: string
+          desc: "Custom greeting"
+          default: "Hello"

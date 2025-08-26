@@ -1,0 +1,25 @@
+# Test configuration for TypeScript CLI
+package_name: test-typescript-cli
+command_name: testts
+display_name: "Test TypeScript CLI"
+description: "Testing TypeScript generation"
+language: typescript
+
+installation:
+  pypi_name: test-typescript-cli
+
+cli:
+  name: testts
+  tagline: "Test TypeScript CLI"
+  description: "A test CLI for TypeScript generation"
+  version: "1.0.0"
+  commands:
+    hello:
+      desc: "Say hello"
+    build:
+      desc: "Build something"
+      subcommands:
+        project:
+          desc: "Build a project"
+    serve:
+      desc: "Start server"

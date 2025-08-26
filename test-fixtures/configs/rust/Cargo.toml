@@ -1,0 +1,59 @@
+
+[package]
+name = "test-rust-cli"
+version = "1.0.0"
+edition = "2021"
+authors = ["Unknown Author <unknown@example.com>"]
+description = "Testing Rust generation"
+license = "MIT"
+documentation = "https://docs.rs/test-rust-cli"
+readme = "README.md"
+exclude = [
+    ".gitignore",
+    "Cargo.lock",
+]
+
+[[bin]]
+name = "testrust"
+path = "src/main.rs"
+
+
+[dependencies]
+# Core dependencies - always included
+clap = { version = "4.4", features = ["derive", "color"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Serde dependencies - always included because Universal Template System generates code that uses them
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Time/date handling - always included because logger uses it
+chrono = { version = "0.4", features = ["serde"] }
+
+# Conditional dependencies based on detected features
+# Note: chrono is now included in core dependencies above
+
+# Optional dependencies for advanced features
+colored = { version = "2.0", optional = true }
+indicatif = { version = "0.17", optional = true }
+[features]
+# Feature flags based on detected CLI requirements
+default = ["colored"]
+
+# Granular feature sets
+progress = ["indicatif", "colored"]
+# Convenience feature combinations
+full = ['colored', 'indicatif']
+# Development features
+dev = ['colored', 'indicatif']
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+opt-level = 0

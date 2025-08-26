@@ -1,0 +1,37 @@
+package_name: test_python_hooks
+command_name: test-python
+display_name: Python Hooks Test CLI
+description: Test Python hook generation
+language: python
+
+cli_output_path: "src/test_python_hooks/cli.py"
+
+cli:
+  name: test-python
+  tagline: Test CLI for Python hooks verification
+  description: Test CLI for Python hooks verification
+  version: 1.0.0
+  
+  commands:
+    greet:
+      desc: Test greet command
+      args:
+        - name: name
+          desc: Name to greet
+          required: true
+      options:
+        - name: style
+          desc: Greeting style  
+          type: str
+          default: casual
+        - name: language
+          desc: Language for greeting
+          type: str
+          default: en
+        - name: uppercase
+          desc: Uppercase output
+          type: flag
+
+installation:
+  pypi_name: test-python-hooks
+  development_path: "."

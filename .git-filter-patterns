@@ -1,0 +1,138 @@
+# Git filter-repo patterns file
+# Use with: git filter-repo --paths-from-file .git-filter-patterns --invert-paths --force
+# This file lists all paths and patterns to REMOVE from git history
+
+# ==========================
+# VIRTUAL ENVIRONMENTS (100% confident)
+# ==========================
+test_env/
+venv/
+test_venv/
+
+# ==========================
+# PYTHON BUILD ARTIFACTS (100% confident)
+# ==========================
+# Compiled Python files
+glob:*.pyc
+glob:*.pyo
+glob:*.pyd
+
+# Python cache directories
+glob:*/__pycache__/*
+glob:*/__pycache__/
+__pycache__/
+
+# Python egg-info directories (build artifacts)
+glob:*.egg-info/*
+glob:*.egg-info/
+src/goobits_cli.egg-info/
+src/complexcli.egg-info/
+src/nodejs_test_cli.egg-info/
+src/test_cli.egg-info/
+
+# Python distribution directories
+glob:*.egg
+.eggs/
+
+# ==========================
+# BUILD/COMPILATION OUTPUTS (99% confident)
+# ==========================
+# Rust build artifacts
+glob:*/target/*
+glob:target/*
+target/
+test_frameworks/target/
+
+# General build directories
+dist/
+build/
+glob:*/dist/*
+glob:*/build/*
+
+# ==========================
+# TEST/COVERAGE ARTIFACTS (99% confident)
+# ==========================
+# Test caches and coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+glob:.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# ==========================
+# TEST OUTPUT DIRECTORIES (95% confident)
+# ==========================
+test-py-legacy/
+test_results/
+test_universal_hooks/
+test_universal_nodejs_output/
+test_universal_python_output/
+test_universal_typescript_output/
+
+# ==========================
+# MISPLACED TEST CLIS (95% confident)
+# These belong in test directories, not src/
+# ==========================
+src/complexcli/
+src/nodejs_test_cli/
+src/test_cli/
+src/testcli/
+src/test_python_cli/
+
+# ==========================
+# GENERATED JAVASCRIPT (90% confident)
+# Keep TypeScript sources, remove compiled JS
+# ==========================
+glob:examples/*.js
+glob:examples/*.cjs
+glob:examples/*.mjs
+glob:examples/lib/*.js
+glob:examples/bin/*.js
+
+# ==========================
+# NODE.JS ARTIFACTS (90% confident)
+# ==========================
+glob:*/node_modules/*
+glob:node_modules/*
+node_modules/
+
+# ==========================
+# LOCK FILES (80% confident - OPTIONAL)
+# Uncomment if you decide to remove these
+# ==========================
+# Cargo.lock
+# glob:*/Cargo.lock
+# package-lock.json
+# glob:*/package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ==========================
+# IDE AND EDITOR FILES (should already be gitignored)
+# ==========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==========================
+# TEMPORARY AND BACKUP FILES
+# ==========================
+*.tmp
+*.bak
+*.backup
+*.orig
+
+# ==========================
+# LOG FILES
+# ==========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

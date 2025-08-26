@@ -33,7 +33,7 @@ pip install -e .[dev,test]
 mkdir my-cli && cd my-cli
 
 # Generate initial configuration
-goobits init my-cli
+goobits init
 
 # Build CLI and setup scripts
 goobits build
@@ -46,24 +46,18 @@ goobits build
 
 ### Core Commands
 
-**Core Commands** (`goobits` command):
-
 - `goobits build [config_path]` - Generate CLI from goobits.yaml
   - `--output-dir`: Output directory for generated files
   - `--output`: Output filename for generated CLI
   - `--backup`: Create .bak files when overwriting
 
-- `goobits init [project_name]` - Create initial goobits.yaml
-  - `--template`: Choose template (basic, advanced, api-client, text-processor)
+- `goobits init` - Create initial goobits.yaml
+  - `--template`: Choose template (basic, advanced, api-client)
   - `--force`: Overwrite existing configuration
-
-- `goobits validate [config_path]` - Validate goobits.yaml configuration
-  - `--verbose`: Show detailed validation information
 
 - `goobits migrate <path>` - Migrate YAML configurations to 3.0.0 format
   - `--backup`: Create backup files (.bak)
   - `--dry-run`: Show changes without applying
-  - `--pattern`: File pattern for directory migration (default: *.yaml)
 
 - `goobits serve <directory>` - Serve local PyPI-compatible package index
   - `--host`: Server host (default: localhost)
@@ -71,129 +65,101 @@ goobits build
 
 - `goobits upgrade` - Upgrade goobits-cli to latest version
   - `--check`: Check for updates without installing
-  - `--version`: Install specific version
   - `--pre`: Include pre-release versions
-  - `--dry-run`: Show what would be done without doing it
 
-### Configuration Example
+## Configuration
+
+Create a `goobits.yaml` file:
 
 ```yaml
-# goobits.yaml
 package_name: my-awesome-cli
 command_name: mycli
 display_name: "My Awesome CLI"
-description: "My awesome CLI tool"
+description: "A powerful CLI tool"
 language: python  # or nodejs, typescript, rust
 
-cli_output_path: "src/mycli/cli.py"
-
-installation:
-  pypi_name: my-awesome-cli
-  development_path: "."
-  extras:
-    python: ["dev", "test"]
-
 cli:
-  name: "My Awesome CLI"
-  tagline: "An awesome command-line tool"
+  name: mycli
+  tagline: "Do awesome things"
   version: "1.0.0"
   commands:
-    greet:
-      desc: "Greet someone"
+    hello:
+      desc: "Say hello"
       args:
-        - name: "name"
+        - name: name
           desc: "Name to greet"
+          required: true
       options:
-        - name: "enthusiastic"
-          type: "flag"
-          desc: "Add enthusiasm!"
-```
-
-### Hook Implementation
-
-Create and implement business logic in language-specific hook files (not auto-generated):
-
-**Python** (`app_hooks.py`):
-```python
-def on_greet(name, enthusiastic=False):
-    greeting = f"Hello, {name}"
-    if enthusiastic:
-        greeting += "!"
-    print(greeting)
-```
-
-**Node.js** (`src/hooks.js`):
-```javascript
-export async function onGreet({ name, enthusiastic }) {
-    let greeting = `Hello, ${name}`;
-    if (enthusiastic) greeting += "!";
-    console.log(greeting);
-}
-```
-
-**TypeScript** (`src/hooks.ts`):
-```typescript
-interface GreetArgs {
-    name: string;
-    enthusiastic?: boolean;
-}
-
-export async function onGreet({ name, enthusiastic }: GreetArgs): Promise<void> {
-    let greeting = `Hello, ${name}`;
-    if (enthusiastic) greeting += "!";
-    console.log(greeting);
-}
-```
-
-**Rust** (`src/hooks.rs`):
-```rust
-use clap::ArgMatches;
-use anyhow::Result;
-
-pub fn on_greet(matches: &ArgMatches) -> Result<()> {
-    let name = matches.get_one::<String>("name").unwrap();
-    let mut greeting = format!("Hello, {}", name);
-    if matches.get_flag("enthusiastic") {
-        greeting.push('!');
-    }
-    println!("{}", greeting);
-    Ok(())
-}
+        - name: greeting
+          short: g
+          type: string
+          desc: "Custom greeting"
+          default: "Hello"
 ```
 
 ## Language Support
 
-| Language | Status | Package Manager | Features |
-|----------|--------|----------------|----------|
-| Python | ✅ 100% | pip/pipx | Full support, rich terminal UI |
-| Node.js | ✅ 100% | npm | Commander.js, completions |
-| TypeScript | ✅ 100% | npm | Type safety, completions |
-| Rust | ✅ 100% | cargo | High performance, Clap CLI |
+### Python (Default)
+```yaml
+language: python
+python:
+  minimum_version: "3.8"
+  maximum_version: "3.13"
+```
+
+### Node.js
+```yaml
+language: nodejs
+nodejs:
+  minimum_version: "14.0.0"
+  package_manager: npm  # or yarn, pnpm
+```
+
+### TypeScript
+```yaml
+language: typescript
+typescript:
+  strict_mode: true
+  target: "ES2020"
+```
+
+### Rust
+```yaml
+language: rust
+rust:
+  minimum_version: "1.70.0"
+  edition: "2021"
+```
 
 ## Advanced Features
 
-### Universal Template System
-
-The Universal Template System provides consistent CLI generation across all supported languages from a single template. It is now always enabled for optimal performance and consistency.
-
 ### Interactive Mode
-Generated CLIs support interactive REPL:
+All generated CLIs support interactive mode:
 ```bash
 mycli --interactive
 ```
 
 ### Shell Completions
-Setup scripts generate completions for bash, zsh, fish:
+Generated CLIs include shell completion scripts:
 ```bash
-./setup.sh --completions
+./setup.sh --completions  # Generate completion scripts
 ```
 
-## Development
+### Hooks System
+Implement business logic in language-specific hook files:
+- Python: `app_hooks.py`
+- Node.js: `src/hooks.js`
+- TypeScript: `src/hooks.ts`
+- Rust: `src/hooks.rs`
 
-### Requirements
-- Python 3.8+
-- Node.js 16+ (for Node.js/TypeScript CLIs)
-- Rust/Cargo (for Rust CLIs)
+### Validation
+Built-in validation for:
+- API key checking
+- Disk space requirements
+- System dependencies
+- Runtime versions
+
+## Development
 
 ### Testing
 ```bash
@@ -203,34 +169,43 @@ pytest src/tests/
 # Run with coverage
 pytest --cov=goobits_cli src/tests/
 
-# Type checking (requires dev dependencies)
+# Type checking
 mypy src/goobits_cli/
-
-# Linting (requires dev dependencies)
-black --check src/
-flake8 src/
 ```
 
-### Building Self-Hosted CLI
-```bash
-# Goobits uses itself
-goobits build
-```
+### Performance
+- CLI startup: <100ms
+- Memory usage: <10MB
+- Universal Template System with lazy loading
 
-## Documentation
-
-- [CODEMAP.md](CODEMAP.md) - Quick project overview for developers
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+### Documentation
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contributing guidelines
 - [CHANGELOG.md](CHANGELOG.md) - Version history
+- [CLAUDE.md](CLAUDE.md) - AI assistant instructions
+- [CODEMAP.md](CODEMAP.md) - Codebase structure
+
+## Examples
+
+See the `examples/` directory for sample configurations:
+- `basic.yaml` - Simple CLI with basic commands
+- `advanced.yaml` - Complex CLI with subcommands
+- `api-client.yaml` - REST API client CLI
+- `multi-language/` - Same CLI in all 4 languages
 
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) file
 
-## Author
+## Contributing
 
-DataBassGit
+Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
+## Support
+
+- Issues: [GitHub Issues](https://github.com/goobits/goobits-cli/issues)
+- Discussions: [GitHub Discussions](https://github.com/goobits/goobits-cli/discussions)
+- Documentation: [https://docs.goobits.io](https://docs.goobits.io)
 
 ---
 
-Built with ❤️ using [Goobits CLI Framework](https://github.com/goobits/goobits-cli)
+Built with ❤️ by the Goobits team

@@ -1,4 +1,4 @@
-.PHONY: test test-all test-pytest test-parity test-examples test-unit test-integration test-e2e test-performance test-performance-suite ci-test-fast ci-test-full ci-test-release ci-test clean-test install-dev lint typecheck help
+.PHONY: test test-all test-pytest test-parity test-examples test-unit test-integration test-e2e test-performance test-performance-suite ci-test-fast ci-test-full ci-test-release ci-test clean-test install-dev lint typecheck dead-code dead-code-fix help
 
 # Default Python interpreter
 PYTHON := python3
@@ -164,6 +164,16 @@ lint: ## Run code linting
 typecheck: ## Run type checking
 	@echo "$(YELLOW)Running type checking...$(RESET)"
 	mypy src/goobits_cli/
+
+# Dead code detection
+dead-code: ## Check for dead code with Vulture and Ruff
+	@echo "$(YELLOW)Running dead code detection...$(RESET)"
+	@vulture . --min-confidence 80 --exclude "*/test_*,*/migrations/*,*/__pycache__/*,.venv/*,venv/*,*/node_modules/*,*/target/*,*/dist/*,*/build/*"
+	@ruff check --select F401,F841
+
+dead-code-fix: ## Auto-fix unused imports with Ruff
+	@echo "$(YELLOW)Auto-fixing unused imports...$(RESET)"
+	@ruff check --select F401,F841 --fix
 
 # Cleanup
 clean-test: ## Clean test artifacts and outputs
