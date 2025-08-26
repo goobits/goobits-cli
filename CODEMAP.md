@@ -54,7 +54,7 @@ Key Patterns:
 │   │   ├── nodejs/          [Node.js templates & package.json]
 │   │   ├── typescript/      [TS templates & build configs]
 │   │   └── rust/            [Rust templates & Cargo.toml]
-│   ├── universal/           [Universal Template System v2.0]
+│   ├── universal/           [Universal Template System v3.0]
 │   │   ├── template_engine.py [Cross-language template engine]
 │   │   ├── renderers/       [Language-specific renderers]
 │   │   ├── interactive/     [Interactive mode components]
