@@ -372,7 +372,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "already in use" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_basic(self, mock_subprocess):
         """Test basic upgrade command."""
         # Mock pipx --version check
@@ -388,7 +388,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert "Upgrade completed successfully" in result.stdout
         assert "Using pipx version" in result.stdout
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_pipx_not_found(self, mock_subprocess):
         """Test upgrade command when pipx is not available."""
         # Simulate pipx not found
@@ -399,7 +399,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "pipx is required" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_specific_version(self, mock_subprocess):
         """Test upgrade command with specific version."""
         mock_subprocess.side_effect = [
@@ -413,7 +413,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "version 1.5.0 from PyPI" in result.stdout
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_git_source(self, mock_subprocess):
         """Test upgrade command from git source."""
         mock_subprocess.side_effect = [
@@ -427,7 +427,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "version latest from Git" in result.stdout
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_local_source(self, mock_subprocess):
         """Test upgrade command from local source."""
         mock_subprocess.side_effect = [
@@ -441,7 +441,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "local development version" in result.stdout
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_dry_run(self, mock_subprocess):
         """Test upgrade command with dry run."""
         mock_subprocess.return_value = MagicMock(stdout="pipx 1.0.0", stderr="", returncode=0)
@@ -453,7 +453,7 @@ class TestMainCLICommands(TestMainCLIBase):
         # Should only call pipx version check, not actual upgrade
         assert len(mock_subprocess.call_args_list) == 1
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_invalid_source(self, mock_subprocess):
         """Test upgrade command with invalid source."""
         mock_subprocess.return_value = MagicMock(stdout="pipx 1.0.0", stderr="", returncode=0)
@@ -463,7 +463,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Unknown source" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_user_cancellation(self, mock_subprocess):
         """Test upgrade command when user cancels."""
         mock_subprocess.return_value = MagicMock(stdout="pipx 1.0.0", stderr="", returncode=0)
@@ -473,7 +473,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "Upgrade cancelled" in result.stdout
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_upgrade_failure(self, mock_subprocess):
         """Test upgrade command when upgrade fails."""
         mock_subprocess.side_effect = [
@@ -486,7 +486,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Upgrade failed" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_version_check_failure(self, mock_subprocess):
         """Test upgrade command when new version check fails."""
         mock_subprocess.side_effect = [
@@ -500,7 +500,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0  # Should still succeed
         assert "New version information not available" in result.stdout
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_unexpected_error(self, mock_subprocess):
         """Test upgrade command with unexpected error."""
         mock_subprocess.side_effect = [
@@ -513,7 +513,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Unexpected error during upgrade" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_pre_release_flag(self, mock_subprocess):
         """Test upgrade command with pre-release flag."""
         mock_subprocess.side_effect = [

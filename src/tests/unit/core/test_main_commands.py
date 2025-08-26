@@ -233,7 +233,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert "is not a directory" in result.output
 
     # Upgrade command tests
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_pipx_not_found(self, mock_run):
         """Test upgrade command when pipx is not available."""
         mock_run.side_effect = FileNotFoundError()
@@ -243,7 +243,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "pipx is required" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_invalid_source(self, mock_run):
         """Test upgrade command with invalid source."""
         mock_run.return_value = MagicMock(stdout="pipx 1.0.0\n")  # pipx version check succeeds
@@ -253,7 +253,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Unknown source" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_upgrade_failure(self, mock_run):
         """Test upgrade command when upgrade fails."""
         # First call succeeds (pipx version check), second call fails (upgrade)
@@ -268,7 +268,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Upgrade failed" in result.output
 
-    @patch('subprocess.run')
+    @patch('goobits_cli.main.run_cached')
     def test_upgrade_command_unexpected_error(self, mock_run):
         """Test upgrade command with unexpected error."""
         # First call succeeds (pipx version check), second call fails (upgrade)
