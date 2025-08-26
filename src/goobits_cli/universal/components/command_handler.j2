@@ -27,12 +27,12 @@
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
-{{ project.display_name or project.name }} CLI
-Generated from: {{ config_filename | default('goobits.yaml') }}
 """
+# {{ project.display_name or project.name }} CLI
+# Generated from: {{ config_filename | default('goobits.yaml') }}
 
-{%- set features = feature_requirements | default({}) -%}
-{% if features.rich_interface %}
+{% set features = feature_requirements | default({}) %}
+{% if features.rich_interface -%}
 import rich_click as click
 from rich_click import RichGroup
 {% else %}
