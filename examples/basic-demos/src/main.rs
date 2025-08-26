@@ -107,8 +107,7 @@ fn main() {
                 .arg(
                     Arg::new("uppercase")
                         .long("uppercase")                        .short('u')
-                        .help("Convert to uppercase")                        .action(clap::ArgAction::Set)
-                )
+                        .help("Convert to uppercase")                        .action(clap::ArgAction::SetTrue)                )
                 .arg(
                     Arg::new("language")
                         .long("language")                        .short('l')
@@ -126,8 +125,7 @@ fn main() {
                 .arg(
                     Arg::new("verbose")
                         .long("verbose")                        .short('v')
-                        .help("Show detailed information")                        .action(clap::ArgAction::Set)
-                )
+                        .help("Show detailed information")                        .action(clap::ArgAction::SetTrue)                )
                 .arg(
                     Arg::new("sections")
                         .long("sections")                        .short('s')

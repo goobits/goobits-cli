@@ -125,7 +125,8 @@ class TypeScriptRenderer(LanguageRenderer):
 
         # Start with base IR context and set language
 
-        context = self._set_language_context(ir)
+        context = ir.copy()
+        context["language"] = "typescript"
 
         # Add TypeScript-specific transformations
 

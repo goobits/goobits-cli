@@ -112,10 +112,10 @@ const greetCmd = program
     .description('Greet someone with style');
 greetCmd.argument('name', 'No description');
 greetCmd.argument('[message]', 'No description');
-greetCmd.option('--style <value>, -s', 'Greeting style', casual);
+greetCmd.option('--style <value>, -s', 'Greeting style', 'casual');
 greetCmd.option('--count <value>, -c', 'Repeat greeting N times', 1);
 greetCmd.option('--uppercase, -u', 'Convert to uppercase');
-greetCmd.option('--language <value>, -l', 'Language code', en);
+greetCmd.option('--language <value>, -l', 'Language code', 'en');
 greetCmd.action(async (name, message, options) => {
     const globalOpts = program.opts();
     const verbose = globalOpts.verbose || false;
@@ -153,9 +153,9 @@ commandMap.set('greet', greetCmd);
 const infoCmd = program
     .command('info')
     .description('Display system and environment information');
-infoCmd.option('--format <value>, -f', 'Output format', text);
+infoCmd.option('--format <value>, -f', 'Output format', 'text');
 infoCmd.option('--verbose, -v', 'Show detailed information');
-infoCmd.option('--sections <value>, -s', 'Comma-separated sections to show', all);
+infoCmd.option('--sections <value>, -s', 'Comma-separated sections to show', 'all');
 infoCmd.action(async (options) => {
     const globalOpts = program.opts();
     const verbose = globalOpts.verbose || false;

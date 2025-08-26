@@ -96,7 +96,8 @@ class RustRenderer(LanguageRenderer):
 
         # Start with base IR context and set language
 
-        context = self._set_language_context(ir)
+        context = ir.copy()
+        context["language"] = "rust"
 
         # Add Rust-specific transformations
 
