@@ -257,28 +257,29 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
     """{{ cmd_data.desc | default(cmd_data.description) }}"""
     pass
 
-      {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
+      {%- if cmd_data.subcommands is mapping %}
+        {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
 
 @{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_name }}')
-        {%- for arg in sub_data.arguments | default([]) %}
+          {%- for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
-        {%- endfor %}
-        {%- for opt in sub_data.options | default([]) %}
+          {%- endfor %}
+          {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
 @click.option('{{ opt.long }}', '{{ opt.short }}',
               {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | tojson }},{% endif %}
               help='{{ opt.description }}')
-        {%- endfor %}
+          {%- endfor %}
 @click.pass_obj
-def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for arg in sub_data.arguments | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in sub_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
-    """{{ sub_data.desc | default(sub_data.description) }}"""
+def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
+    """{{ sub_data.desc if sub_data is mapping else sub_data if sub_data is string else '' }}"""
     try:
         if hooks and hasattr(hooks, 'on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}'):
             kwargs = {
-                {%- for arg in sub_data.arguments | default([]) %}
+                {%- for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}
                 '{{ arg.name }}': {{ arg.name }},
                 {%- endfor %}
-                {%- for opt in sub_data.options | default([]) %}
+                {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
                 '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
                 {%- endfor %}
             }
@@ -288,7 +289,8 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
-      {%- endfor %}
+        {%- endfor %}
+      {%- endif %}
     {%- endif %}
   {%- endfor %}
 {%- elif cli.root_command and cli.root_command.subcommands %}

@@ -217,23 +217,11 @@ class RustRenderer(LanguageRenderer):
             .replace("-", "_")
         )
 
+        # Minimal file generation - only 2 files
         output = {
-            "command_handler": "src/main.rs",
-            "hook_system": "src/hooks.rs",
-            "config_manager": "src/config.rs",
-            "completion_engine": "src/completion.rs",
-            "error_handler": "src/errors.rs",
-            "logger": "src/logger.rs",
-            # Additional Rust specific files
-            "cargo_config": "Cargo.toml",
-            "lib_entry": "src/lib.rs",
-            "cli_module": "src/cli.rs",
-            "setup_script": "setup.sh",
+            "rust_cli_consolidated": "src/main.rs",  # Everything with inline modules
+            "setup_script": "setup.sh",  # Smart setup with Cargo.toml merging
         }
-
-        # Add interactive mode if enabled
-        if self._has_interactive_features(ir):
-            output["interactive_mode"] = f"src/{cli_name}_interactive.rs"
 
         return output
 

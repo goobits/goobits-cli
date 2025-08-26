@@ -692,10 +692,24 @@ setup(
 
         if "subcommands" in transformed:
 
-            transformed["subcommands"] = [
-                self._transform_command_for_python(subcmd)
-                for subcmd in transformed["subcommands"]
-            ]
+            # Handle both list and dict formats for subcommands
+            if isinstance(transformed["subcommands"], list):
+                transformed["subcommands"] = [
+                    self._transform_command_for_python(subcmd)
+                    for subcmd in transformed["subcommands"]
+                ]
+            elif isinstance(transformed["subcommands"], dict):
+                # Convert dict format to list format for consistency
+                transformed_subcmds = []
+                for sub_name, sub_data in transformed["subcommands"].items():
+                    if isinstance(sub_data, str):
+                        # Simple description format
+                        sub_cmd = {"name": sub_name, "description": sub_data}
+                    elif isinstance(sub_data, dict):
+                        # Full command format
+                        sub_cmd = {"name": sub_name, **sub_data}
+                    transformed_subcmds.append(self._transform_command_for_python(sub_cmd))
+                transformed["subcommands"] = transformed_subcmds
 
         return transformed
 
