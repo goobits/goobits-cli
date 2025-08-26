@@ -10,26 +10,15 @@ for multiple programming languages from a common intermediate representation.
 
 """
 
-
-
 from .template_engine import (
-
     LanguageRenderer,
-
     ComponentRegistry,
-
     UniversalTemplateEngine,
-
 )
 
 
-
 __all__ = [
-
     "LanguageRenderer",
-
-    "ComponentRegistry", 
-
+    "ComponentRegistry",
     "UniversalTemplateEngine",
-
 ]

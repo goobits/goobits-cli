@@ -10,29 +10,21 @@ with CLI generation and interactive modes across all supported languages.
 
 """
 
-
-
-
 from typing import List, Dict, Any, Set
 
 
 from jinja2 import Template
 
 
-
 from .manager import get_plugin_manager, PluginInfo, PluginType, PluginStatus
 
 
-
-
-
 class PluginCLIIntegrator:
-
     """
 
     Integrates plugins with CLI generation and command systems.
 
-    
+
 
     Provides seamless integration between plugins and the main CLI
 
@@ -40,25 +32,19 @@ class PluginCLIIntegrator:
 
     """
 
-    
-
     def __init__(self, language: str = "python"):
-
         """Initialize the integrator for a specific language."""
 
         self.language = language
 
         self.manager = get_plugin_manager()
 
-    
-
     async def get_plugin_commands(self) -> Dict[str, List[PluginInfo]]:
-
         """
 
         Get all plugin-provided commands organized by plugin.
 
-        
+
 
         Returns:
 
@@ -70,27 +56,20 @@ class PluginCLIIntegrator:
 
         plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
-        
-
         for plugin in plugins:
 
             if plugin.plugin_type == PluginType.COMMAND:
 
                 command_plugins[plugin.name] = plugin
 
-        
-
         return command_plugins
 
-    
-
     async def get_plugin_completions(self) -> List[PluginInfo]:
-
         """
 
         Get all plugin-provided completion providers.
 
-        
+
 
         Returns:
 
@@ -102,33 +81,28 @@ class PluginCLIIntegrator:
 
         plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
-        
-
         for plugin in plugins:
 
             if plugin.plugin_type == PluginType.COMPLETION:
 
                 completion_plugins.append(plugin)
 
-        
-
         return completion_plugins
 
-    
-
-    async def integrate_plugins_with_cli(self, cli_config: Dict[str, Any]) -> Dict[str, Any]:
-
+    async def integrate_plugins_with_cli(
+        self, cli_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
 
         Integrate enabled plugins with CLI configuration.
 
-        
+
 
         Args:
 
             cli_config: Base CLI configuration
 
-            
+
 
         Returns:
 
@@ -138,59 +112,43 @@ class PluginCLIIntegrator:
 
         enhanced_config = cli_config.copy()
 
-        
-
         # Get plugin commands
 
         plugin_commands = await self.get_plugin_commands()
 
-        
-
         # Add plugin commands to CLI configuration
 
-        if 'commands' not in enhanced_config:
+        if "commands" not in enhanced_config:
 
-            enhanced_config['commands'] = {}
-
-        
+            enhanced_config["commands"] = {}
 
         for plugin_name, plugin in plugin_commands.items():
 
             for command_name in plugin.provides_commands:
 
                 plugin_command_config = {
-
-                    'description': f'Command from {plugin.name} plugin',
-
-                    'plugin_name': plugin.name,
-
-                    'plugin_type': plugin.plugin_type.value,
-
-                    'language': plugin.language
-
+                    "description": f"Command from {plugin.name} plugin",
+                    "plugin_name": plugin.name,
+                    "plugin_type": plugin.plugin_type.value,
+                    "language": plugin.language,
                 }
 
-                enhanced_config['commands'][command_name] = plugin_command_config
-
-        
+                enhanced_config["commands"][command_name] = plugin_command_config
 
         return enhanced_config
 
-    
-
     def generate_plugin_integration_code(self, plugins: List[PluginInfo]) -> str:
-
         """
 
         Generate language-specific code to integrate plugins.
 
-        
+
 
         Args:
 
             plugins: List of plugins to integrate
 
-            
+
 
         Returns:
 
@@ -198,19 +156,19 @@ class PluginCLIIntegrator:
 
         """
 
-        if self.language == 'python':
+        if self.language == "python":
 
             return self._generate_python_integration_code(plugins)
 
-        elif self.language == 'nodejs':
+        elif self.language == "nodejs":
 
             return self._generate_nodejs_integration_code(plugins)
 
-        elif self.language == 'typescript':
+        elif self.language == "typescript":
 
             return self._generate_typescript_integration_code(plugins)
 
-        elif self.language == 'rust':
+        elif self.language == "rust":
 
             return self._generate_rust_integration_code(plugins)
 
@@ -218,13 +176,11 @@ class PluginCLIIntegrator:
 
             return ""
 
-    
-
     def _generate_python_integration_code(self, plugins: List[PluginInfo]) -> str:
-
         """Generate Python plugin integration code."""
 
-        template = Template('''
+        template = Template(
+            '''
 
 # Plugin Integration Code (Generated)
 
@@ -328,17 +284,16 @@ def activate_plugins(plugins: Dict[str, Any]):
 
             print(f"Failed to activate plugin {name}: {e}")
 
-''')
+'''
+        )
 
         return template.render(plugins=plugins)
 
-    
-
     def _generate_nodejs_integration_code(self, plugins: List[PluginInfo]) -> str:
-
         """Generate Node.js plugin integration code."""
 
-        template = Template('''
+        template = Template(
+            """
 
 // Plugin Integration Code (Generated)
 
@@ -454,17 +409,16 @@ async function activatePlugins(plugins) {
 
 module.exports = { loadPlugins, activatePlugins, PLUGINS };
 
-''')
+"""
+        )
 
         return template.render(plugins=plugins)
 
-    
-
     def _generate_typescript_integration_code(self, plugins: List[PluginInfo]) -> str:
+        """Generate TypeScript plugin integration code."""
 
-        """Generate TypeScript plugin integration code.""" 
-
-        template = Template('''
+        template = Template(
+            """
 
 // Plugin Integration Code (Generated)
 
@@ -580,17 +534,16 @@ export async function activatePlugins(plugins: Record<string, any>): Promise<voi
 
 export { PLUGINS };
 
-''')
+"""
+        )
 
         return template.render(plugins=plugins)
 
-    
-
     def _generate_rust_integration_code(self, plugins: List[PluginInfo]) -> str:
-
         """Generate Rust plugin integration code."""
 
-        template = Template('''
+        template = Template(
+            """
 
 // Plugin Integration Code (Generated)
 
@@ -732,41 +685,32 @@ fn load_plugin_from_path(path: &PathBuf) -> Result<Box<dyn Plugin>, Box<dyn std:
 
 }
 
-''')
+"""
+        )
 
         return template.render(plugins=plugins)
 
 
-
-
-
 class PluginCommandManager:
-
     """
 
     Manages plugin-provided commands in the CLI system.
 
     """
 
-    
-
     def __init__(self):
-
         """Initialize the command manager."""
 
         self.manager = get_plugin_manager()
 
         self.registered_commands: Set[str] = set()
 
-    
-
     async def register_plugin_commands(self) -> Dict[str, PluginInfo]:
-
         """
 
         Register all plugin-provided commands.
 
-        
+
 
         Returns:
 
@@ -777,8 +721,6 @@ class PluginCommandManager:
         registered = {}
 
         plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
-
-        
 
         for plugin in plugins:
 
@@ -792,19 +734,14 @@ class PluginCommandManager:
 
                         self.registered_commands.add(command_name)
 
-        
-
         return registered
 
-    
-
     async def unregister_plugin_commands(self, plugin_name: str) -> None:
-
         """
 
         Unregister commands from a specific plugin.
 
-        
+
 
         Args:
 
@@ -820,21 +757,18 @@ class PluginCommandManager:
 
                 self.registered_commands.discard(command_name)
 
-    
-
     def is_plugin_command(self, command_name: str) -> bool:
-
         """
 
         Check if a command is provided by a plugin.
 
-        
+
 
         Args:
 
             command_name: Name of the command to check
 
-            
+
 
         Returns:
 
@@ -845,22 +779,18 @@ class PluginCommandManager:
         return command_name in self.registered_commands
 
 
-
-
-
 def setup_plugin_integration(language: str) -> PluginCLIIntegrator:
-
     """
 
     Setup plugin integration for a specific language.
 
-    
+
 
     Args:
 
         language: Target language (python, nodejs, typescript, rust)
 
-        
+
 
     Returns:
 
@@ -871,26 +801,14 @@ def setup_plugin_integration(language: str) -> PluginCLIIntegrator:
     return PluginCLIIntegrator(language)
 
 
-
-
-
 def create_plugin_template_context(
-
-    plugin_name: str,
-
-    plugin_type: str,
-
-    language: str,
-
-    **kwargs
-
+    plugin_name: str, plugin_type: str, language: str, **kwargs
 ) -> Dict[str, Any]:
-
     """
 
     Create template context for plugin generation.
 
-    
+
 
     Args:
 
@@ -902,7 +820,7 @@ def create_plugin_template_context(
 
         **kwargs: Additional template variables
 
-        
+
 
     Returns:
 
@@ -911,89 +829,49 @@ def create_plugin_template_context(
     """
 
     context = {
-
-        'plugin_name': plugin_name,
-
-        'plugin_type': plugin_type,
-
-        'plugin_language': language,
-
-        'plugin_version': '1.0.0',
-
-        'plugin_description': f'{plugin_name} plugin for Goobits CLI',
-
-        'plugin_author': 'Plugin Author',
-
-        'plugin_license': 'MIT',
-
-        'plugin_priority': 50,
-
-        'plugin_dependencies': [],
-
-        'plugin_python_requirements': [],
-
-        'plugin_npm_requirements': [],
-
-        'plugin_rust_dependencies': [],
-
-        'plugin_system_requirements': [],
-
-        'plugin_min_goobits_version': '1.4.0',
-
-        'plugin_supported_languages': [language],
-
-        'plugin_supported_platforms': ['linux', 'darwin', 'win32'],
-
-        'plugin_provides_commands': [plugin_name] if plugin_type == 'command' else [],
-
-        'plugin_provides_completions': [plugin_name] if plugin_type == 'completion' else [],
-
-        'plugin_provides_hooks': [plugin_name] if plugin_type == 'hook' else [],
-
-        'plugin_tags': [plugin_type, language],
-
-        'plugin_homepage': '',
-
-        'plugin_repository': '',
-
-        'plugin_config_enabled': True,
-
-        'plugin_config_priority': 50,
-
-        'plugin_config_settings': {},
-
-        'plugin_security_sandbox': True,
-
-        'plugin_security_max_time': 30,
-
-        'plugin_security_max_memory': 104857600,
-
-        'plugin_security_trusted': False,
-
-        'plugin_hook_pre_install': '',
-
-        'plugin_hook_post_install': '',
-
-        'plugin_hook_pre_uninstall': '',
-
-        'plugin_hook_post_uninstall': '',
-
-        'source_config': 'goobits.yaml'
-
+        "plugin_name": plugin_name,
+        "plugin_type": plugin_type,
+        "plugin_language": language,
+        "plugin_version": "1.0.0",
+        "plugin_description": f"{plugin_name} plugin for Goobits CLI",
+        "plugin_author": "Plugin Author",
+        "plugin_license": "MIT",
+        "plugin_priority": 50,
+        "plugin_dependencies": [],
+        "plugin_python_requirements": [],
+        "plugin_npm_requirements": [],
+        "plugin_rust_dependencies": [],
+        "plugin_system_requirements": [],
+        "plugin_min_goobits_version": "1.4.0",
+        "plugin_supported_languages": [language],
+        "plugin_supported_platforms": ["linux", "darwin", "win32"],
+        "plugin_provides_commands": [plugin_name] if plugin_type == "command" else [],
+        "plugin_provides_completions": (
+            [plugin_name] if plugin_type == "completion" else []
+        ),
+        "plugin_provides_hooks": [plugin_name] if plugin_type == "hook" else [],
+        "plugin_tags": [plugin_type, language],
+        "plugin_homepage": "",
+        "plugin_repository": "",
+        "plugin_config_enabled": True,
+        "plugin_config_priority": 50,
+        "plugin_config_settings": {},
+        "plugin_security_sandbox": True,
+        "plugin_security_max_time": 30,
+        "plugin_security_max_memory": 104857600,
+        "plugin_security_trusted": False,
+        "plugin_hook_pre_install": "",
+        "plugin_hook_post_install": "",
+        "plugin_hook_pre_uninstall": "",
+        "plugin_hook_post_uninstall": "",
+        "source_config": "goobits.yaml",
     }
-
-    
 
     # Update with provided kwargs
 
     context.update(kwargs)
 
-    
-
     return context
-
-
-
 
 
 # Global instances
@@ -1001,11 +879,7 @@ def create_plugin_template_context(
 _command_manager = None
 
 
-
-
-
 def get_plugin_command_manager() -> PluginCommandManager:
-
     """Get the global plugin command manager."""
 
     global _command_manager

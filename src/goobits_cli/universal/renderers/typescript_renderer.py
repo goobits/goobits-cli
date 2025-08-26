@@ -10,9 +10,6 @@ with proper type safety, interfaces, and TypeScript-specific conventions.
 
 """
 
-
-
-
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 import re
@@ -20,41 +17,41 @@ import re
 # Lazy import for version to avoid early import overhead
 _version = None
 
+
 def _get_version():
     global _version
     if _version is None:
         try:
             from ... import __version__ as v
+
             _version = v
         except ImportError:
             _version = "3.0.0-alpha.1"
     return _version
 
+
 # Lazy import Jinja2 to avoid startup overhead
 _jinja2 = None
+
 
 def _get_jinja2():
     global _jinja2
     if _jinja2 is None:
         import jinja2 as j2
+
         _jinja2 = j2
     return _jinja2
-
 
 
 from ..template_engine import LanguageRenderer
 
 
-
-
-
 class TypeScriptRenderer(LanguageRenderer):
-
     """
 
     TypeScript-specific renderer for the Universal Template System.
 
-    
+
 
     Generates TypeScript CLI implementations with:
 
@@ -70,14 +67,11 @@ class TypeScriptRenderer(LanguageRenderer):
 
     """
 
-    
-
     def _get_version(self) -> str:
         """Get current version for generator metadata."""
         return _get_version()
-    
-    def __init__(self):
 
+    def __init__(self):
         """Initialize the TypeScript renderer."""
 
         # Setup Jinja2 environment with custom filters and Unicode support
@@ -87,58 +81,41 @@ class TypeScriptRenderer(LanguageRenderer):
             lstrip_blocks=True,
             autoescape=False,
             # Enable optimized Unicode handling
-            finalize=lambda x: x if x is not None else ''
+            finalize=lambda x: x if x is not None else "",
         )
 
         self._add_custom_filters()
 
-    
-
     @property
-
     def language(self) -> str:
-
         """Return the language name."""
 
         return "typescript"
 
-    
-
-    @property  
-
+    @property
     def file_extensions(self) -> Dict[str, str]:
-
         """Return mapping of component types to file extensions for TypeScript."""
 
         return {
-
             "ts": "typescript",
-
-            "d.ts": "declaration", 
-
+            "d.ts": "declaration",
             "js": "javascript",  # For config files
-
             "json": "json",
-
-            "logger": "ts"
-
+            "logger": "ts",
         }
 
-    
-
     def get_template_context(self, ir: Dict[str, Any]) -> Dict[str, Any]:
-
         """
 
         Transform IR into TypeScript-specific template context.
 
-        
+
 
         Args:
 
             ir: Intermediate representation from UniversalTemplateEngine
 
-            
+
 
         Returns:
 
@@ -150,134 +127,84 @@ class TypeScriptRenderer(LanguageRenderer):
 
         context = self._set_language_context(ir)
 
-        
-
         # Add TypeScript-specific transformations
 
-        context['typescript'] = {
-
-            'interfaces': self._generate_interfaces(ir),
-
-            'type_mappings': self._get_type_mappings(),
-
-            'imports': self._generate_imports(ir),
-
-            'exports': self._generate_exports(ir),
-
-            'main_entry': 'cli.ts',
-
-            'bin_entry': 'bin/index.js',
-
-            'package_config': {
-
-                'dependencies': {
-
-                    'commander': '^9.0.0'
-
+        context["typescript"] = {
+            "interfaces": self._generate_interfaces(ir),
+            "type_mappings": self._get_type_mappings(),
+            "imports": self._generate_imports(ir),
+            "exports": self._generate_exports(ir),
+            "main_entry": "index.ts",
+            "bin_entry": "bin/index.js",
+            "package_config": {
+                "dependencies": {},  # Dependencies are handled in package_config.j2 template
+                "devDependencies": {
+                    "typescript": "^5.0.0",
+                    "@types/node": "^18.0.0",
+                    "ts-node": "^10.0.0",
                 },
-
-                'devDependencies': {
-
-                    'typescript': '^5.0.0',
-
-                    '@types/node': '^18.0.0',
-
-                    'ts-node': '^10.0.0'
-
-                }
-
-            }
-
+            },
         }
-
-        
 
         # Transform CLI schema for TypeScript
 
-        if 'cli' in ir:
+        if "cli" in ir:
 
-            context['cli']['typescript'] = self._transform_cli_schema(ir['cli'])
-
-        
+            context["cli"]["typescript"] = self._transform_cli_schema(ir["cli"])
 
         # Add TypeScript build configuration
 
-        context['build_config'] = self._generate_build_config(ir)
-
-        
+        context["build_config"] = self._generate_build_config(ir)
 
         # Convert names to TypeScript conventions
 
         context = self._apply_naming_conventions(context)
 
-        
-
         # Add TypeScript-specific metadata with defensive defaults
 
         context["metadata"] = {
-
-            **{k: v for k, v in context.get("metadata", {}).items() if not isinstance(v, str) or not v.startswith("{{")},
-
+            **{
+                k: v
+                for k, v in context.get("metadata", {}).items()
+                if not isinstance(v, str) or not v.startswith("{{")
+            },
             "timestamp": datetime.now().isoformat(),
-
             "generator_version": self._get_version(),
-
             "package_name": context["project"].get("package_name", "cli"),
-
             "command_name": context["project"].get("command_name", "cli"),
-
         }
 
         # Add datetime module for template generation headers
         context["datetime"] = datetime
-        
 
         return context
 
-    
-
     def get_custom_filters(self) -> Dict[str, callable]:
-
         """Return TypeScript-specific Jinja2 filters."""
 
         return {
-
-            'ts_type': self._ts_type_filter,
-
-            'ts_interface': self._ts_interface_filter,
-
-            'ts_import': self._ts_import_filter,
-
-            'ts_commander_option': self._ts_commander_option_filter,
-
-            'camelCase': self._camel_case_filter,
-
-            'PascalCase': self._pascal_case_filter,
-            'pascal_case': self._pascal_case_filter,
-
-            'ts_safe_name': self._ts_safe_name_filter,
-
-            'ts_optional': self._ts_optional_filter,
-
-            'ts_array_type': self._ts_array_type_filter,
-
-            'ts_function_signature': self._ts_function_signature_filter,
-
-            'js_string': self._js_string_filter
-
+            "ts_type": self._ts_type_filter,
+            "ts_interface": self._ts_interface_filter,
+            "ts_import": self._ts_import_filter,
+            "ts_commander_option": self._ts_commander_option_filter,
+            "camelCase": self._camel_case_filter,
+            "PascalCase": self._pascal_case_filter,
+            "pascal_case": self._pascal_case_filter,
+            "ts_safe_name": self._ts_safe_name_filter,
+            "ts_optional": self._ts_optional_filter,
+            "ts_array_type": self._ts_array_type_filter,
+            "ts_function_signature": self._ts_function_signature_filter,
+            "js_string": self._js_string_filter,
         }
 
-    
-
-    def render_component(self, component_name: str, template_content: str, 
-
-                        context: Dict[str, Any]) -> str:
-
+    def render_component(
+        self, component_name: str, template_content: str, context: Dict[str, Any]
+    ) -> str:
         """
 
         Render a component template for TypeScript.
 
-        
+
 
         Args:
 
@@ -287,7 +214,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
             context: TypeScript-specific template context
 
-            
+
 
         Returns:
 
@@ -299,49 +226,40 @@ class TypeScriptRenderer(LanguageRenderer):
 
         template = self._env.from_string(template_content)
 
-        
-
         # Add component-specific context
 
         render_context = context.copy()
 
-        render_context['component_name'] = component_name
-
-        
+        render_context["component_name"] = component_name
 
         # Apply TypeScript-specific processing based on component type
 
-        if component_name == 'command_handler':
+        if component_name == "command_handler":
 
             render_context = self._enhance_command_context(render_context)
 
-        elif component_name == 'config_manager':
+        elif component_name == "config_manager":
 
             render_context = self._enhance_config_context(render_context)
 
-        elif component_name == 'completion_engine':
+        elif component_name == "completion_engine":
 
             render_context = self._enhance_completion_context(render_context)
 
-        
-
         return template.render(**render_context)
 
-    
-
     def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
-
         """
 
         Define the output file structure for TypeScript CLIs.
 
-        
+
 
         Args:
 
             ir: Intermediate representation
 
-            
+
 
         Returns:
 
@@ -349,93 +267,50 @@ class TypeScriptRenderer(LanguageRenderer):
 
         """
 
-        cli_name = ir.get("cli", {}).get("root_command", {}).get("name", "cli").replace("-", "_")
-
-        
+        cli_name = (
+            ir.get("cli", {})
+            .get("root_command", {})
+            .get("name", "cli")
+            .replace("-", "_")
+        )
 
         output = {
-
             # Main CLI files
-
-            'command_handler': 'cli.ts',
-
-            'hooks_template': 'src/hooks.ts',
-
-            'config_manager': 'lib/config.ts',
-
-            'completion_engine': 'lib/completion.ts',
-
-            'error_handler': 'lib/errors.ts',
-
-            'logger': 'lib/logger.ts',
-
-            
-
+            "command_handler": "cli.ts",
+            "hooks_template": "src/hooks.ts",
+            "config_manager": "lib/config.ts",
+            "completion_engine": "lib/completion.ts",
+            "error_handler": "lib/errors.ts",
+            "logger": "lib/logger.ts",
             # Entry points
-
-            'main_entry': 'index.ts',
-
-            'binary_entry': 'bin/cli.ts',
-
-            
-
+            "main_entry": "index.ts",
+            "main_entry_js": "index.js",  # JavaScript fallback for test environments
+            "bin_entry": "bin/index.js",  # JavaScript executable for npm bin
+            "binary_entry": "bin/cli.ts",
             # Build and configuration files
-
-            'package_config': 'package.json',
-
-            'postinstall_script': 'scripts/postinstall.js',
-
-            'typescript_config': 'tsconfig.json',
-
-            'eslint_config': '.eslintrc.json',
-
-            'prettier_config': '.prettierrc',
-
-            
-
+            "package_config": "package.json",
+            "postinstall_script": "scripts/postinstall.js",
+            "typescript_config": "tsconfig.json",
+            "eslint_config": ".eslintrc.json",
+            "prettier_config": ".prettierrc",
             # Type definitions
-
-            'cli_types': 'types/cli.d.ts',
-
-            'error_types': 'types/errors.d.ts',
-
-            'config_types': 'types/config.d.ts',
-
-            'plugin_types': 'types/plugins.d.ts',
-
-            
-
+            "cli_types": "types/cli.d.ts",
+            "error_types": "types/errors.d.ts",
+            "config_types": "types/config.d.ts",
+            "plugin_types": "types/plugins.d.ts",
             # Helper libraries
-
-            'progress_helper': 'lib/progress.ts',
-
-            'prompts_helper': 'lib/prompts.ts',
-
-            'daemon_helper': 'lib/daemon.ts',
-
-            'decorators': 'lib/decorators.ts',
-
-            
-
+            "progress_helper": "lib/progress.ts",
+            "prompts_helper": "lib/prompts.ts",
+            "daemon_helper": "lib/daemon.ts",
+            "decorators": "lib/decorators.ts",
             # Test structure
-
-            'test_setup': 'test/setup.ts',
-
-            'test_config': 'test/jest.config.js',
-
-            'cli_test': 'test/cli.test.ts',
-
-            
-
+            "test_setup": "test/setup.ts",
+            "test_config": "test/jest.config.js",
+            "cli_test": "test/cli.test.ts",
             # Documentation
-
-            'readme': 'README.md',
-
-            'gitignore': '.gitignore'
-
+            "readme": "README.md",
+            "gitignore": ".gitignore",
         }
-
-        
 
         # Add interactive mode if enabled
 
@@ -443,215 +318,155 @@ class TypeScriptRenderer(LanguageRenderer):
 
             output["interactive_mode"] = f"{cli_name}_interactive.ts"
 
-        
-
         return output
 
-    
-
     def _add_custom_filters(self) -> None:
-
         """Add TypeScript-specific filters to Jinja2 environment."""
 
         for name, filter_func in self.get_custom_filters().items():
 
             self._env.filters[name] = filter_func
 
-    
-
     def _generate_interfaces(self, ir: Dict[str, Any]) -> List[Dict[str, Any]]:
-
         """Generate TypeScript interfaces from CLI schema."""
 
         interfaces = []
 
-        
-
         # Generate global options interface
 
-        if 'cli' in ir and 'global_options' in ir['cli']:
+        if "cli" in ir and "global_options" in ir["cli"]:
 
-            interfaces.append({
-
-                'name': 'GlobalOptions',
-
-                'properties': self._extract_properties_from_options(ir['cli']['global_options'])
-
-            })
-
-        
+            interfaces.append(
+                {
+                    "name": "GlobalOptions",
+                    "properties": self._extract_properties_from_options(
+                        ir["cli"]["global_options"]
+                    ),
+                }
+            )
 
         # Generate command interfaces from root_command subcommands
 
-        if 'cli' in ir and 'root_command' in ir['cli'] and 'subcommands' in ir['cli']['root_command']:
+        if (
+            "cli" in ir
+            and "root_command" in ir["cli"]
+            and "subcommands" in ir["cli"]["root_command"]
+        ):
 
-            for command in ir['cli']['root_command']['subcommands']:
+            for command in ir["cli"]["root_command"]["subcommands"]:
 
-                cmd_name = command.get('name', 'Command')
+                cmd_name = command.get("name", "Command")
 
                 interface_name = f"{self._pascal_case_filter(cmd_name)}Options"
 
                 properties = {}
 
-                
-
                 # Add options as properties
 
-                for option in command.get('options', []):
+                for option in command.get("options", []):
 
-                    prop_name = option.get('name', 'option')
+                    prop_name = option.get("name", "option")
 
-                    prop_type = self._ts_type_filter(option.get('type', 'string'))
+                    prop_type = self._ts_type_filter(option.get("type", "string"))
 
-                    is_required = option.get('required', False)
+                    is_required = option.get("required", False)
 
                     properties[prop_name] = {
-
-                        'type': prop_type,
-
-                        'required': is_required,
-
-                        'optional': not is_required  # Add optional field for template compatibility
-
+                        "type": prop_type,
+                        "required": is_required,
+                        "optional": not is_required,  # Add optional field for template compatibility
                     }
 
-                
-
-                interfaces.append({
-
-                    'name': interface_name,
-
-                    'properties': properties
-
-                })
-
-        
+                interfaces.append({"name": interface_name, "properties": properties})
 
         # Generate common interfaces
 
-        interfaces.extend([
-
-            {
-
-                'name': 'CommandArgs',
-
-                'properties': {
-
-                    'commandName': {'type': 'string', 'required': True, 'optional': False},
-
-                    '[key: string]': {'type': 'any', 'required': False, 'optional': True}
-
-                }
-
-            },
-
-            {
-
-                'name': 'HookFunction',
-
-                'properties': {
-
-                    '(args: CommandArgs)': {'type': 'Promise<any> | any', 'required': True, 'optional': False}
-
-                }
-
-            }
-
-        ])
-
-        
+        interfaces.extend(
+            [
+                {
+                    "name": "CommandArgs",
+                    "properties": {
+                        "commandName": {
+                            "type": "string",
+                            "required": True,
+                            "optional": False,
+                        },
+                        "[key: string]": {
+                            "type": "any",
+                            "required": False,
+                            "optional": True,
+                        },
+                    },
+                },
+                {
+                    "name": "HookFunction",
+                    "properties": {
+                        "(args: CommandArgs)": {
+                            "type": "Promise<any> | any",
+                            "required": True,
+                            "optional": False,
+                        }
+                    },
+                },
+            ]
+        )
 
         return interfaces
 
-    
-
-    def _extract_properties_from_options(self, options: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-
+    def _extract_properties_from_options(
+        self, options: List[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
         """Extract properties from options list for interface generation."""
 
         properties = {}
 
         for option in options:
 
-            prop_name = option.get('name', 'option')
+            prop_name = option.get("name", "option")
 
-            prop_type = self._ts_type_filter(option.get('type', 'string'))
+            prop_type = self._ts_type_filter(option.get("type", "string"))
 
-            is_required = option.get('required', False)
+            is_required = option.get("required", False)
 
             properties[prop_name] = {
-
-                'type': prop_type,
-
-                'required': is_required,
-
-                'optional': not is_required  # Add optional field for template compatibility
-
+                "type": prop_type,
+                "required": is_required,
+                "optional": not is_required,  # Add optional field for template compatibility
             }
 
         return properties
 
-    
-
     def _get_type_mappings(self) -> Dict[str, str]:
-
         """Get mapping from generic types to TypeScript types."""
 
         return {
-
-            'str': 'string',
-
-            'string': 'string', 
-
-            'int': 'number',
-
-            'integer': 'number',
-
-            'float': 'number',
-
-            'number': 'number',
-
-            'bool': 'boolean',
-
-            'boolean': 'boolean',
-
-            'flag': 'boolean',
-
-            'list': 'any[]',
-
-            'array': 'any[]',
-
-            'dict': 'Record<string, any>',
-
-            'object': 'Record<string, any>',
-
-            'any': 'any',
-
-            'void': 'void',
-
-            'null': 'null',
-
-            'undefined': 'undefined'
-
+            "str": "string",
+            "string": "string",
+            "int": "number",
+            "integer": "number",
+            "float": "number",
+            "number": "number",
+            "bool": "boolean",
+            "boolean": "boolean",
+            "flag": "boolean",
+            "list": "any[]",
+            "array": "any[]",
+            "dict": "Record<string, any>",
+            "object": "Record<string, any>",
+            "any": "any",
+            "void": "void",
+            "null": "null",
+            "undefined": "undefined",
         }
 
-    
-
     def _generate_imports(self, ir: Dict[str, Any]) -> List[str]:
-
         """Generate TypeScript import statements."""
 
         imports = [
-
             "import { Command } from 'commander';",
-
             "import * as path from 'path';",
-
-            "import * as fs from 'fs';"
-
+            "import * as fs from 'fs';",
         ]
-
-        
 
         # Add conditional imports based on features used
 
@@ -659,31 +474,20 @@ class TypeScriptRenderer(LanguageRenderer):
 
             imports.append("import { spawn, execSync } from 'child_process';")
 
-        
-
         if self._uses_async_features(ir):
 
             imports.append("import { promisify } from 'util';")
 
-        
-
         return imports
 
-    
-
     def _generate_exports(self, ir: Dict[str, Any]) -> List[str]:
-
         """Generate TypeScript export statements."""
 
         exports = []
 
-        
-
         # Export main CLI function
 
         exports.append("export { program, cliEntry };")
-
-        
 
         # Export interfaces if needed
 
@@ -691,227 +495,145 @@ class TypeScriptRenderer(LanguageRenderer):
 
             exports.append("export type { CommandArgs, HookFunction, GlobalOptions };")
 
-        
-
         return exports
 
-    
-
     def _transform_cli_schema(self, cli_schema: Dict[str, Any]) -> Dict[str, Any]:
-
         """Transform CLI schema for TypeScript-specific rendering."""
 
         transformed = cli_schema.copy()
 
-        
-
         # Convert command names to TypeScript-safe identifiers
 
-        if 'commands' in transformed:
+        if "commands" in transformed:
 
-            for cmd_name, cmd_data in transformed['commands'].items():
+            for cmd_name, cmd_data in transformed["commands"].items():
 
                 # Add TypeScript-specific metadata
 
-                cmd_data['typescript'] = {
-
-                    'interface_name': f"{self._pascal_case_filter(cmd_name)}Options",
-
-                    'hook_name': f"on{self._pascal_case_filter(cmd_name)}",
-
-                    'safe_name': self._ts_safe_name_filter(cmd_name)
-
+                cmd_data["typescript"] = {
+                    "interface_name": f"{self._pascal_case_filter(cmd_name)}Options",
+                    "hook_name": f"on{self._pascal_case_filter(cmd_name)}",
+                    "safe_name": self._ts_safe_name_filter(cmd_name),
                 }
-
-                
 
                 # Transform options with TypeScript types
 
-                if 'options' in cmd_data:
+                if "options" in cmd_data:
 
-                    for option in cmd_data['options']:
+                    for option in cmd_data["options"]:
 
-                        option['typescript_type'] = self._ts_type_filter(option.get('type', 'string'))
-
-        
+                        option["typescript_type"] = self._ts_type_filter(
+                            option.get("type", "string")
+                        )
 
         return transformed
 
-    
-
     def _generate_build_config(self, ir: Dict[str, Any]) -> Dict[str, Any]:
-
         """Generate simple TypeScript build configuration."""
 
         return {
-
-            'tsconfig': {
-
-                'compilerOptions': {
-
-                    'target': 'ES2020',
-
-                    'module': 'CommonJS',
-
-                    'moduleResolution': 'node',
-
-                    'outDir': './dist',
-
-                    'strict': True,
-
-                    'esModuleInterop': True,
-
-                    'skipLibCheck': True,
-
-                    'declaration': True,
-
-                    'sourceMap': True
-
+            "tsconfig": {
+                "compilerOptions": {
+                    "target": "ES2020",
+                    "module": "CommonJS",
+                    "moduleResolution": "node",
+                    "outDir": "./dist",
+                    "strict": True,
+                    "esModuleInterop": True,
+                    "skipLibCheck": True,
+                    "declaration": True,
+                    "sourceMap": True,
                 }
-
             }
-
         }
 
-    
-
     def _apply_naming_conventions(self, context: Dict[str, Any]) -> Dict[str, Any]:
-
         """Apply TypeScript naming conventions throughout the context."""
 
         # Convert project names to appropriate cases
 
-        if 'project' in context:
+        if "project" in context:
 
-            project = context['project']
+            project = context["project"]
 
             # Keep original names but add TypeScript variants
 
-            project['typescript'] = {
-
-                'class_name': self._pascal_case_filter(project.get('name', '')),
-
-                'variable_name': self._camel_case_filter(project.get('name', '')),
-
-                'type_name': self._pascal_case_filter(project.get('name', '')) + 'CLI'
-
+            project["typescript"] = {
+                "class_name": self._pascal_case_filter(project.get("name", "")),
+                "variable_name": self._camel_case_filter(project.get("name", "")),
+                "type_name": self._pascal_case_filter(project.get("name", "")) + "CLI",
             }
-
-        
 
         return context
 
-    
-
     def _enhance_command_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
-
         """Enhance context for command handler component."""
 
         enhanced = context.copy()
 
-        
-
         # Add Commander.js specific helpers
 
-        enhanced['commander'] = {
-
-            'option_builders': self._generate_commander_options(context),
-
-            'argument_builders': self._generate_commander_arguments(context),
-
-            'action_handlers': self._generate_action_handlers(context)
-
+        enhanced["commander"] = {
+            "option_builders": self._generate_commander_options(context),
+            "argument_builders": self._generate_commander_arguments(context),
+            "action_handlers": self._generate_action_handlers(context),
         }
-
-        
 
         return enhanced
 
-    
-
     def _enhance_config_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
-
         """Enhance context for config manager component."""
 
         enhanced = context.copy()
 
-        
-
         # Add configuration interfaces and validation
 
-        enhanced['config'] = {
-
-            'interface': self._generate_config_interface(context),
-
-            'validation': self._generate_config_validation(context),
-
-            'defaults': self._generate_config_defaults(context)
-
+        enhanced["config"] = {
+            "interface": self._generate_config_interface(context),
+            "validation": self._generate_config_validation(context),
+            "defaults": self._generate_config_defaults(context),
         }
-
-        
 
         return enhanced
 
-    
-
     def _enhance_completion_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
-
         """Enhance context for completion engine component."""
 
         enhanced = context.copy()
 
-        
-
         # Add shell completion specific data
 
-        enhanced['completion'] = {
-
-            'completers': self._generate_completers(context),
-
-            'shell_scripts': self._generate_shell_scripts(context)
-
+        enhanced["completion"] = {
+            "completers": self._generate_completers(context),
+            "shell_scripts": self._generate_shell_scripts(context),
         }
 
-        
-
         return enhanced
-
-    
 
     # Filter implementations
 
     def _ts_type_filter(self, type_str: str) -> str:
-
         """Convert generic types to TypeScript types."""
 
         if type_str is None or type_str == "":
 
-            return 'any'
-
-        
+            return "any"
 
         mappings = self._get_type_mappings()
 
-        return mappings.get(str(type_str).lower(), 'any')
-
-    
+        return mappings.get(str(type_str).lower(), "any")
 
     def _ts_interface_filter(self, name: str) -> str:
-
         """Generate interface name (PascalCase)."""
 
         return self._pascal_case_filter(name)
 
-    
-
     def _ts_import_filter(self, module: str, items: Optional[List[str]] = None) -> str:
-
         """Generate TypeScript import statement."""
 
         if items:
 
-            import_list = ', '.join(items)
+            import_list = ", ".join(items)
 
             return f"import {{ {import_list} }} from '{module}';"
 
@@ -919,21 +641,16 @@ class TypeScriptRenderer(LanguageRenderer):
 
             return f"import * as {self._camel_case_filter(module)} from '{module}';"
 
-    
-
     def _ts_commander_option_filter(self, option: Dict[str, Any]) -> str:
-
         """Generate typed Commander.js .option() call."""
 
-        name = option.get('name', '')
+        name = option.get("name", "")
 
-        short = option.get('short', '')
+        short = option.get("short", "")
 
-        desc = option.get('description', '')
+        desc = option.get("description", "")
 
-        type_str = option.get('type', 'string')
-
-        
+        type_str = option.get("type", "string")
 
         # Build flag string
 
@@ -943,104 +660,136 @@ class TypeScriptRenderer(LanguageRenderer):
 
             flags = f"-{short}, {flags}"
 
-        
-
         # Add value placeholder for non-boolean types
 
-        if type_str != 'flag' and type_str != 'boolean':
+        if type_str != "flag" and type_str != "boolean":
 
             flags += f" <{self._ts_type_filter(type_str)}>"
 
-        
-
         return f".option('{flags}', '{desc}')"
 
-    
-
     def _camel_case_filter(self, text: str) -> str:
-
         """Convert text to camelCase."""
 
         if not text:
 
             return text
 
-        words = re.split(r'[-_\s]+', text.lower())
+        words = re.split(r"[-_\s]+", text.lower())
 
-        return words[0] + ''.join(word.capitalize() for word in words[1:])
-
-    
+        return words[0] + "".join(word.capitalize() for word in words[1:])
 
     def _pascal_case_filter(self, text: str) -> str:
-
         """Convert text to PascalCase."""
 
         if not text:
 
             return text
 
-        words = re.split(r'[-_\s]+', text.lower()) 
+        words = re.split(r"[-_\s]+", text.lower())
 
-        return ''.join(word.capitalize() for word in words)
-
-    
+        return "".join(word.capitalize() for word in words)
 
     def _ts_safe_name_filter(self, name: str) -> str:
-
         """Convert name to TypeScript-safe identifier."""
 
         ts_reserved_words = {
-
-            "abstract", "any", "as", "asserts", "async", "await", "bigint", "boolean", 
-
-            "break", "case", "catch", "class", "const", "constructor", "continue", 
-
-            "debugger", "declare", "default", "delete", "do", "else", "enum", "export", 
-
-            "extends", "false", "finally", "for", "from", "function", "get", "if", 
-
-            "implements", "import", "in", "infer", "instanceof", "interface", "is", 
-
-            "keyof", "let", "module", "namespace", "never", "new", "null", "number", 
-
-            "object", "of", "package", "private", "protected", "public", "readonly", 
-
-            "require", "return", "set", "static", "string", "super", "switch", "symbol", 
-
-            "this", "throw", "true", "try", "type", "typeof", "undefined", "unique", 
-
-            "unknown", "var", "void", "while", "with", "yield"
-
+            "abstract",
+            "any",
+            "as",
+            "asserts",
+            "async",
+            "await",
+            "bigint",
+            "boolean",
+            "break",
+            "case",
+            "catch",
+            "class",
+            "const",
+            "constructor",
+            "continue",
+            "debugger",
+            "declare",
+            "default",
+            "delete",
+            "do",
+            "else",
+            "enum",
+            "export",
+            "extends",
+            "false",
+            "finally",
+            "for",
+            "from",
+            "function",
+            "get",
+            "if",
+            "implements",
+            "import",
+            "in",
+            "infer",
+            "instanceof",
+            "interface",
+            "is",
+            "keyof",
+            "let",
+            "module",
+            "namespace",
+            "never",
+            "new",
+            "null",
+            "number",
+            "object",
+            "of",
+            "package",
+            "private",
+            "protected",
+            "public",
+            "readonly",
+            "require",
+            "return",
+            "set",
+            "static",
+            "string",
+            "super",
+            "switch",
+            "symbol",
+            "this",
+            "throw",
+            "true",
+            "try",
+            "type",
+            "typeof",
+            "undefined",
+            "unique",
+            "unknown",
+            "var",
+            "void",
+            "while",
+            "with",
+            "yield",
         }
-
-        
 
         # Replace invalid characters with underscore
 
-        safe = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+        safe = re.sub(r"[^a-zA-Z0-9_]", "_", name)
 
         # Ensure doesn't start with number
 
         if safe and safe[0].isdigit():
 
-            safe = '_' + safe
-
-        
+            safe = "_" + safe
 
         # Check for reserved words
 
         if safe.lower() in ts_reserved_words:
 
-            safe = '_' + safe
+            safe = "_" + safe
 
-            
-
-        return safe or '_unnamed'
-
-    
+        return safe or "_unnamed"
 
     def _ts_optional_filter(self, arg: Any) -> str:
-
         """Return optional modifier for TypeScript property."""
 
         # Handle different input types
@@ -1065,11 +814,11 @@ class TypeScriptRenderer(LanguageRenderer):
 
                 return ""
 
-        elif hasattr(arg, 'optional'):
+        elif hasattr(arg, "optional"):
 
             # Handle object with optional attribute
 
-            return "?" if getattr(arg, 'optional', False) else ""
+            return "?" if getattr(arg, "optional", False) else ""
 
         else:
 
@@ -1077,51 +826,43 @@ class TypeScriptRenderer(LanguageRenderer):
 
             return ""
 
-    
-
     def _ts_array_type_filter(self, item_type: str) -> str:
-
         """Convert to TypeScript array type."""
 
         ts_type = self._ts_type_filter(item_type)
 
         return f"{ts_type}[]"
 
-    
-
-    def _ts_function_signature_filter(self, params, return_type: str = 'void') -> str:
-
+    def _ts_function_signature_filter(self, params, return_type: str = "void") -> str:
         """Generate TypeScript function signature."""
 
         param_strs = []
 
-        
-
         # Handle different input formats
 
-        if isinstance(params, dict) and ('arguments' in params or 'options' in params):
+        if isinstance(params, dict) and ("arguments" in params or "options" in params):
 
             # Command data structure with arguments and options
 
             # Add arguments as positional parameters
 
-            for arg in params.get('arguments', []):
+            for arg in params.get("arguments", []):
 
-                name = arg.get('name', 'arg')
+                name = arg.get("name", "arg")
 
-                type_str = self._ts_type_filter(arg.get('type', 'any'))
+                type_str = self._ts_type_filter(arg.get("type", "any"))
 
-                optional = '' if arg.get('required', True) else '?'
+                optional = "" if arg.get("required", True) else "?"
 
                 param_strs.append(f"{name}{optional}: {type_str}")
 
-            
-
             # Add options as a typed object if there are any
 
-            if params.get('options'):
+            if params.get("options"):
 
-                param_strs.append("options?: any")  # Could be more specific based on option types
+                param_strs.append(
+                    "options?: any"
+                )  # Could be more specific based on option types
 
         elif isinstance(params, list):
 
@@ -1129,92 +870,67 @@ class TypeScriptRenderer(LanguageRenderer):
 
             for param in params:
 
-                name = param.get('name', 'arg')
+                name = param.get("name", "arg")
 
-                type_str = self._ts_type_filter(param.get('type', 'any'))
+                type_str = self._ts_type_filter(param.get("type", "any"))
 
-                optional = '' if param.get('required', True) else '?'
+                optional = "" if param.get("required", True) else "?"
 
                 param_strs.append(f"{name}{optional}: {type_str}")
 
-        
-
-        params_str = ', '.join(param_strs)
+        params_str = ", ".join(param_strs)
 
         return_ts_type = self._ts_type_filter(return_type)
 
         return f"({params_str}): {return_ts_type}"
 
-    
-
     # Helper methods for context generation
 
     def _generate_global_options_interface(self, options: List[Dict[str, Any]]) -> str:
-
         """Generate interface for global options."""
 
         if not options:
 
             return "interface GlobalOptions {}"
 
-        
-
         properties = []
 
         for option in options:
 
-            name = self._camel_case_filter(option.get('name', ''))
+            name = self._camel_case_filter(option.get("name", ""))
 
             type_str = self._ts_optional_filter(
-
-                option.get('type', 'string'), 
-
-                option.get('required', False)
-
+                option.get("type", "string"), option.get("required", False)
             )
 
             properties.append(f"  {name}: {type_str};")
 
-        
-
         return "interface GlobalOptions {\n" + "\n".join(properties) + "\n}"
 
-    
-
     def _generate_command_interface(self, cmd_data: Dict[str, Any]) -> str:
-
         """Generate interface for command options."""
 
         properties = ["  debug?: boolean;"]  # Always include debug option
 
-        
+        if "options" in cmd_data:
 
-        if 'options' in cmd_data:
+            for option in cmd_data["options"]:
 
-            for option in cmd_data['options']:
-
-                name = self._camel_case_filter(option.get('name', ''))
+                name = self._camel_case_filter(option.get("name", ""))
 
                 type_str = self._ts_optional_filter(
-
-                    option.get('type', 'string'),
-
-                    option.get('required', False)
-
+                    option.get("type", "string"), option.get("required", False)
                 )
 
                 properties.append(f"  {name}: {type_str};")
 
-        
-
-        interface_name = cmd_data.get('typescript', {}).get('interface_name', 'CommandOptions')
+        interface_name = cmd_data.get("typescript", {}).get(
+            "interface_name", "CommandOptions"
+        )
 
         return f"interface {interface_name} {{\n" + "\n".join(properties) + "\n}"
 
-    
-
     def _generate_config_interface(self, context: Dict[str, Any]) -> str:
-
         """Generate configuration interface."""
 
         # Basic config interface - can be extended based on needs
@@ -1229,10 +945,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
 }"""
 
-    
-
     def _generate_config_validation(self, context: Dict[str, Any]) -> str:
-
         """Generate configuration validation logic."""
 
         return """function validateConfig(config: any): ConfigOptions {
@@ -1243,10 +956,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
 }"""
 
-    
-
     def _generate_config_defaults(self, context: Dict[str, Any]) -> str:
-
         """Generate default configuration values."""
 
         return """const DEFAULT_CONFIG: Partial<ConfigOptions> = {
@@ -1255,84 +965,57 @@ class TypeScriptRenderer(LanguageRenderer):
 
 };"""
 
-    
-
     def _generate_commander_options(self, context: Dict[str, Any]) -> List[str]:
-
         """Generate Commander.js option builders."""
 
         # This would generate the .option() calls for Commander.js
 
         return []
 
-    
-
     def _generate_commander_arguments(self, context: Dict[str, Any]) -> List[str]:
-
         """Generate Commander.js argument builders."""
 
         # This would generate the .argument() calls for Commander.js
 
         return []
 
-    
-
     def _generate_action_handlers(self, context: Dict[str, Any]) -> List[str]:
-
         """Generate Commander.js action handlers."""
 
         # This would generate the .action() callbacks
 
         return []
 
-    
-
     def _generate_completers(self, context: Dict[str, Any]) -> List[str]:
-
         """Generate completion functions."""
 
         return []
 
-    
-
     def _generate_shell_scripts(self, context: Dict[str, Any]) -> Dict[str, str]:
-
         """Generate shell completion scripts."""
 
         return {}
 
-    
-
     # Feature detection helpers
 
     def _uses_child_process(self, ir: Dict[str, Any]) -> bool:
-
         """Check if CLI uses child process functionality."""
 
         # Could check for spawn/exec usage in commands
 
         return True  # Default to including for CLI tools
 
-    
-
     def _uses_async_features(self, ir: Dict[str, Any]) -> bool:
-
         """Check if CLI uses async/await features."""
 
         return True  # Most modern CLIs are async
 
-    
-
     def _needs_interface_exports(self, ir: Dict[str, Any]) -> bool:
-
         """Check if interfaces should be exported."""
 
         return True  # Default to exporting for TypeScript libraries
 
-    
-
     def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
-
         """Check if CLI has interactive mode features."""
 
         features = cli_schema.get("features", {})
@@ -1341,18 +1024,15 @@ class TypeScriptRenderer(LanguageRenderer):
 
         return interactive_mode.get("enabled", False)
 
-    
-
     def _js_string_filter(self, value: str) -> str:
-
         """
         Escape string for JavaScript/TypeScript while preserving Unicode characters.
-        
+
         Only escapes necessary characters for JavaScript/TypeScript string literals:
         - Backslashes (must be first to avoid double-escaping)
         - Quote characters that would break string literals
         - Control characters that would break JavaScript parsing
-        
+
         Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
         since JavaScript/TypeScript natively supports UTF-8.
         """
@@ -1361,16 +1041,14 @@ class TypeScriptRenderer(LanguageRenderer):
 
             return str(value)
 
-        
-
         # Only escape characters that would break JavaScript/TypeScript syntax
         # Order matters: backslash first to avoid double-escaping
-        escaped = value.replace('\\', '\\\\')  # Escape backslashes first
-        escaped = escaped.replace('"', '\\"')  # Escape double quotes 
+        escaped = value.replace("\\", "\\\\")  # Escape backslashes first
+        escaped = escaped.replace('"', '\\"')  # Escape double quotes
         escaped = escaped.replace("'", "\\'")  # Escape single quotes
-        escaped = escaped.replace('\n', '\\n')  # Escape newlines
-        escaped = escaped.replace('\r', '\\r')  # Escape carriage returns  
-        escaped = escaped.replace('\t', '\\t')  # Escape tabs
-        
+        escaped = escaped.replace("\n", "\\n")  # Escape newlines
+        escaped = escaped.replace("\r", "\\r")  # Escape carriage returns
+        escaped = escaped.replace("\t", "\\t")  # Escape tabs
+
         # Do NOT escape Unicode characters - they should be preserved
         return escaped

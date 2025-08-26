@@ -22,23 +22,21 @@ import yaml
 
 from goobits_cli.schemas import GoobitsConfigSchema
 
-
-
-# Note: generate_cli function moved to avoid circular imports
-
-# Use direct generator imports instead
-
-
-
+# Import generate_cli from test fixtures
+try:
+    from tests.conftest import generate_cli
+except ImportError:
+    # Fallback for different test environments
+    def generate_cli(config, filename):
+        """Fallback generate_cli implementation"""
+        from goobits_cli.builder import Builder
+        builder = Builder()
+        return builder.build_files(config)
 
 
 @dataclass
-
 class CommandResult:
-
     """Result of executing a CLI command."""
-
-    
 
     exit_code: int
 
@@ -52,46 +50,33 @@ class CommandResult:
 
     working_directory: str
 
-    
-
     @property
-
     def success(self) -> bool:
-
         """Whether the command executed successfully."""
 
         return self.exit_code == 0
 
-    
-
     @property
-
     def failed(self) -> bool:
-
         """Whether the command failed."""
 
         return self.exit_code != 0
 
-    
-
     def assert_success(self):
-
         """Assert that the command was successful."""
 
-        assert self.success, f"Command failed with exit code {self.exit_code}. stderr: {self.stderr}"
-
-    
+        assert (
+            self.success
+        ), f"Command failed with exit code {self.exit_code}. stderr: {self.stderr}"
 
     def assert_failure(self):
-
         """Assert that the command failed."""
 
-        assert self.failed, f"Command should have failed but succeeded. stdout: {self.stdout}"
-
-    
+        assert (
+            self.failed
+        ), f"Command should have failed but succeeded. stdout: {self.stdout}"
 
     def contains_output(self, text: str, case_sensitive: bool = True) -> bool:
-
         """Check if output contains specific text."""
 
         output = self.stdout + self.stderr
@@ -102,26 +87,17 @@ class CommandResult:
 
         return text in output
 
-    
-
     def assert_contains(self, text: str, case_sensitive: bool = True):
-
         """Assert that output contains specific text."""
 
-        assert self.contains_output(text, case_sensitive), \
-            f"Output does not contain '{text}'. Output: {self.stdout}{self.stderr}"
-
-
-
+        assert self.contains_output(
+            text, case_sensitive
+        ), f"Output does not contain '{text}'. Output: {self.stdout}{self.stderr}"
 
 
 @dataclass
-
 class TestEnvironment:
-
     """Isolated test environment for CLI testing."""
-
-    
 
     temp_dir: Path
 
@@ -135,10 +111,7 @@ class TestEnvironment:
 
     env_vars: Dict[str, str] = field(default_factory=dict)
 
-    
-
     def __post_init__(self):
-
         """Initialize the test environment."""
 
         self.temp_dir = Path(self.temp_dir)
@@ -147,23 +120,16 @@ class TestEnvironment:
 
             self.temp_dir.mkdir(parents=True)
 
-    
-
     def create_virtual_environment(self) -> Path:
-
         """Create a Python virtual environment for isolated testing."""
 
         if self.venv_path:
 
             return self.venv_path
 
-        
-
         self.venv_path = self.temp_dir / "test_venv"
 
         venv.create(self.venv_path, with_pip=True)
-
-        
 
         # Set up Python and pip executables
 
@@ -179,43 +145,29 @@ class TestEnvironment:
 
             self.pip_exe = self.venv_path / "bin" / "pip"
 
-        
-
         return self.venv_path
 
-    
-
     def install_python_packages(self, packages: List[str]):
-
         """Install Python packages in the virtual environment."""
 
         if not self.venv_path or not self.pip_exe:
 
             self.create_virtual_environment()
 
-        
-
         for package in packages:
 
-            result = subprocess.run([
-
-                str(self.pip_exe), "install", package
-
-            ], capture_output=True, text=True)
-
-            
+            result = subprocess.run(
+                [str(self.pip_exe), "install", package], capture_output=True, text=True
+            )
 
             if result.returncode != 0:
 
                 raise RuntimeError(f"Failed to install {package}: {result.stderr}")
 
-    
-
     def install_cli_from_files(self, cli_name: str, files: Dict[str, str]) -> Path:
-
         """Install a CLI from generated files.
 
-        
+
 
         Args:
 
@@ -223,7 +175,7 @@ class TestEnvironment:
 
             files: Dictionary mapping filename to content
 
-            
+
 
         Returns:
 
@@ -234,8 +186,6 @@ class TestEnvironment:
         cli_dir = self.temp_dir / cli_name
 
         cli_dir.mkdir(exist_ok=True)
-
-        
 
         # Write all files
 
@@ -249,65 +199,54 @@ class TestEnvironment:
 
             file_path.write_text(content)
 
-            
-
             # Make executable files executable
 
-            if filename.endswith(('.sh', '.py')) or filename == 'index.js':
+            if filename.endswith((".sh", ".py")) or filename == "index.js":
 
                 file_path.chmod(0o755)
 
-                
-
             # Identify main CLI file
 
-            if filename in ['cli.py', 'index.js', 'cli.ts'] or filename.endswith('main.rs'):
+            if filename in ["cli.py", "index.js", "cli.ts"] or filename.endswith(
+                "main.rs"
+            ):
 
                 main_cli_file = file_path
 
-        
-
         # Install dependencies if needed
 
-        if 'package.json' in files and shutil.which('npm'):
+        if "package.json" in files and shutil.which("npm"):
 
-            result = subprocess.run(['npm', 'install'], cwd=cli_dir, capture_output=True)
+            result = subprocess.run(
+                ["npm", "install"], cwd=cli_dir, capture_output=True
+            )
 
             if result.returncode != 0:
 
                 print(f"Warning: npm install failed: {result.stderr.decode()}")
 
-        
-
         # For Python CLIs, install required packages
 
-        if main_cli_file and main_cli_file.suffix == '.py':
+        if main_cli_file and main_cli_file.suffix == ".py":
 
-            self.install_python_packages(['rich-click', 'pydantic', 'jinja2', 'pyyaml'])
-
-        
+            self.install_python_packages(["rich-click", "pydantic", "jinja2", "pyyaml"])
 
         if main_cli_file:
 
             self.installed_clis[cli_name] = main_cli_file
 
-        
-
         return main_cli_file or cli_dir
 
-    
-
     def get_cli_command(self, cli_name: str) -> List[str]:
-
         """Get the command to execute a CLI.
 
-        
+
 
         Args:
 
             cli_name: Name of the CLI
 
-            
+
 
         Returns:
 
@@ -319,31 +258,27 @@ class TestEnvironment:
 
             raise ValueError(f"CLI {cli_name} not installed")
 
-        
-
         cli_path = self.installed_clis[cli_name]
 
-        
+        if cli_path.suffix == ".py":
 
-        if cli_path.suffix == '.py':
+            return [str(self.python_exe or "python"), str(cli_path)]
 
-            return [str(self.python_exe or 'python'), str(cli_path)]
+        elif cli_path.suffix == ".js":
 
-        elif cli_path.suffix == '.js':
+            return ["node", str(cli_path)]
 
-            return ['node', str(cli_path)]
+        elif cli_path.suffix == ".ts":
 
-        elif cli_path.suffix == '.ts':
+            if shutil.which("ts-node"):
 
-            if shutil.which('ts-node'):
-
-                return ['ts-node', str(cli_path)]
+                return ["ts-node", str(cli_path)]
 
             else:
 
-                return ['node', str(cli_path)]
+                return ["node", str(cli_path)]
 
-        elif cli_path.name.endswith('main') or cli_path.parent.name == 'target':
+        elif cli_path.name.endswith("main") or cli_path.parent.name == "target":
 
             return [str(cli_path)]  # Compiled Rust binary
 
@@ -351,18 +286,12 @@ class TestEnvironment:
 
             return [str(cli_path)]
 
-    
-
     def set_env_var(self, key: str, value: str):
-
         """Set an environment variable for this test environment."""
 
         self.env_vars[key] = value
 
-    
-
     def get_env(self) -> Dict[str, str]:
-
         """Get environment variables for this test environment."""
 
         env = os.environ.copy()
@@ -371,10 +300,7 @@ class TestEnvironment:
 
         return env
 
-    
-
     def cleanup(self):
-
         """Clean up the test environment."""
 
         if self.temp_dir.exists():
@@ -382,40 +308,24 @@ class TestEnvironment:
             shutil.rmtree(self.temp_dir)
 
 
-
-
-
 class CLITestRunner:
-
     """Runner for CLI tests with various execution options."""
-
-    
 
     def __init__(self, test_env: TestEnvironment):
 
         self.test_env = test_env
 
-    
-
     def run_command(
-
         self,
-
         command: List[str],
-
         input_text: Optional[str] = None,
-
         timeout: float = 30.0,
-
         working_directory: Optional[Path] = None,
-
-        env_vars: Optional[Dict[str, str]] = None
-
+        env_vars: Optional[Dict[str, str]] = None,
     ) -> CommandResult:
-
         """Execute a command and return the result.
 
-        
+
 
         Args:
 
@@ -429,7 +339,7 @@ class CLITestRunner:
 
             env_vars: Additional environment variables
 
-            
+
 
         Returns:
 
@@ -439,8 +349,6 @@ class CLITestRunner:
 
         start_time = time.time()
 
-        
-
         # Prepare environment
 
         env = self.test_env.get_env()
@@ -449,95 +357,52 @@ class CLITestRunner:
 
             env.update(env_vars)
 
-        
-
         # Set working directory
 
         cwd = working_directory or self.test_env.temp_dir
 
-        
-
         try:
 
             result = subprocess.run(
-
                 command,
-
                 input=input_text,
-
                 capture_output=True,
-
                 text=True,
-
                 timeout=timeout,
-
                 cwd=str(cwd),
-
-                env=env
-
+                env=env,
             )
-
-            
 
             execution_time = time.time() - start_time
 
-            
-
             return CommandResult(
-
                 exit_code=result.returncode,
-
                 stdout=result.stdout,
-
                 stderr=result.stderr,
-
                 command=command,
-
                 execution_time=execution_time,
-
-                working_directory=str(cwd)
-
+                working_directory=str(cwd),
             )
-
-        
 
         except subprocess.TimeoutExpired:
 
             execution_time = time.time() - start_time
 
             return CommandResult(
-
                 exit_code=-1,
-
                 stdout="",
-
                 stderr=f"Command timed out after {timeout} seconds",
-
                 command=command,
-
                 execution_time=execution_time,
-
-                working_directory=str(cwd)
-
+                working_directory=str(cwd),
             )
 
-    
-
     def run_cli_command(
-
-        self,
-
-        cli_name: str,
-
-        args: List[str],
-
-        **kwargs
-
+        self, cli_name: str, args: List[str], **kwargs
     ) -> CommandResult:
-
         """Execute a CLI command.
 
-        
+
 
         Args:
 
@@ -547,7 +412,7 @@ class CLITestRunner:
 
             **kwargs: Additional arguments passed to run_command
 
-            
+
 
         Returns:
 
@@ -559,60 +424,37 @@ class CLITestRunner:
 
         full_command = base_command + args
 
-        
-
         return self.run_command(full_command, **kwargs)
 
-    
-
     def test_cli_help(self, cli_name: str) -> CommandResult:
-
         """Test CLI help output."""
 
-        return self.run_cli_command(cli_name, ['--help'])
-
-    
+        return self.run_cli_command(cli_name, ["--help"])
 
     def test_cli_version(self, cli_name: str) -> CommandResult:
-
         """Test CLI version output."""
 
-        return self.run_cli_command(cli_name, ['--version'])
-
-    
+        return self.run_cli_command(cli_name, ["--version"])
 
     def test_cli_invalid_command(self, cli_name: str) -> CommandResult:
-
         """Test CLI behavior with invalid command."""
 
-        return self.run_cli_command(cli_name, ['nonexistent-command'])
-
-    
+        return self.run_cli_command(cli_name, ["nonexistent-command"])
 
     def test_command_help(self, cli_name: str, command: str) -> CommandResult:
-
         """Test specific command help."""
 
-        return self.run_cli_command(cli_name, [command, '--help'])
-
-
-
+        return self.run_cli_command(cli_name, [command, "--help"])
 
 
 class FileSystemHelper:
-
     """Helper for file system operations in tests."""
-
-    
 
     def __init__(self, base_path: Path):
 
         self.base_path = Path(base_path)
 
-    
-
     def create_file(self, path: str, content: str) -> Path:
-
         """Create a file with content."""
 
         file_path = self.base_path / path
@@ -623,46 +465,31 @@ class FileSystemHelper:
 
         return file_path
 
-    
-
     def create_yaml_file(self, path: str, data: Dict[str, Any]) -> Path:
-
         """Create a YAML file."""
 
         content = yaml.dump(data, default_flow_style=False)
 
         return self.create_file(path, content)
 
-    
-
     def create_json_file(self, path: str, data: Dict[str, Any]) -> Path:
-
         """Create a JSON file."""
 
         content = json.dumps(data, indent=2)
 
         return self.create_file(path, content)
 
-    
-
     def read_file(self, path: str) -> str:
-
         """Read file content."""
 
         return (self.base_path / path).read_text()
 
-    
-
     def file_exists(self, path: str) -> bool:
-
         """Check if file exists."""
 
         return (self.base_path / path).exists()
 
-    
-
     def create_directory(self, path: str) -> Path:
-
         """Create a directory."""
 
         dir_path = self.base_path / path
@@ -671,18 +498,12 @@ class FileSystemHelper:
 
         return dir_path
 
-    
-
     def list_files(self, pattern: str = "*") -> List[Path]:
-
         """List files matching a pattern."""
 
         return list(self.base_path.glob(pattern))
 
-    
-
     def copy_file(self, src: str, dest: str) -> Path:
-
         """Copy a file."""
 
         src_path = self.base_path / src
@@ -696,17 +517,11 @@ class FileSystemHelper:
         return dest_path
 
 
-
-
-
 # Context managers and convenience functions
 
 
-
 @contextmanager
-
 def create_isolated_test_env() -> TestEnvironment:
-
     """Create an isolated test environment."""
 
     with tempfile.TemporaryDirectory(prefix="goobits_test_") as temp_dir:
@@ -722,13 +537,8 @@ def create_isolated_test_env() -> TestEnvironment:
             env.cleanup()
 
 
-
-
-
 @contextmanager
-
 def temporary_directory() -> Path:
-
     """Create a temporary directory."""
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -736,32 +546,18 @@ def temporary_directory() -> Path:
         yield Path(temp_dir)
 
 
-
-
-
 def cleanup_test_environment(env: TestEnvironment):
-
     """Clean up a test environment."""
 
     env.cleanup()
 
 
-
-
-
 def capture_command_output(
-
-    command: List[str],
-
-    timeout: float = 30.0,
-
-    working_directory: Optional[Path] = None
-
+    command: List[str], timeout: float = 30.0, working_directory: Optional[Path] = None
 ) -> CommandResult:
-
     """Capture output from a command execution.
 
-    
+
 
     Args:
 
@@ -771,7 +567,7 @@ def capture_command_output(
 
         working_directory: Working directory
 
-        
+
 
     Returns:
 
@@ -781,87 +577,54 @@ def capture_command_output(
 
     start_time = time.time()
 
-    
-
     try:
 
         result = subprocess.run(
-
             command,
-
             capture_output=True,
-
             text=True,
-
             timeout=timeout,
-
-            cwd=str(working_directory) if working_directory else None
-
+            cwd=str(working_directory) if working_directory else None,
         )
-
-        
 
         execution_time = time.time() - start_time
 
-        
-
         return CommandResult(
-
             exit_code=result.returncode,
-
             stdout=result.stdout,
-
             stderr=result.stderr,
-
             command=command,
-
             execution_time=execution_time,
-
-            working_directory=str(working_directory) if working_directory else os.getcwd()
-
+            working_directory=(
+                str(working_directory) if working_directory else os.getcwd()
+            ),
         )
-
-    
 
     except subprocess.TimeoutExpired:
 
         execution_time = time.time() - start_time
 
         return CommandResult(
-
             exit_code=-1,
-
             stdout="",
-
             stderr=f"Command timed out after {timeout} seconds",
-
             command=command,
-
             execution_time=execution_time,
-
-            working_directory=str(working_directory) if working_directory else os.getcwd()
-
+            working_directory=(
+                str(working_directory) if working_directory else os.getcwd()
+            ),
         )
 
 
-
-
-
 def validate_cli_execution(
-
     result: CommandResult,
-
     expected_exit_code: int = 0,
-
     expected_output_patterns: Optional[List[str]] = None,
-
-    expected_error_patterns: Optional[List[str]] = None
-
+    expected_error_patterns: Optional[List[str]] = None,
 ) -> bool:
-
     """Validate CLI execution result.
 
-    
+
 
     Args:
 
@@ -873,7 +636,7 @@ def validate_cli_execution(
 
         expected_error_patterns: Patterns that should be in stderr
 
-        
+
 
     Returns:
 
@@ -887,8 +650,6 @@ def validate_cli_execution(
 
         return False
 
-    
-
     # Check output patterns
 
     if expected_output_patterns:
@@ -898,8 +659,6 @@ def validate_cli_execution(
             if pattern not in result.stdout:
 
                 return False
-
-    
 
     # Check error patterns
 
@@ -911,27 +670,15 @@ def validate_cli_execution(
 
                 return False
 
-    
-
     return True
 
 
-
-
-
 def generate_cli_and_test(
-
-    config: GoobitsConfigSchema,
-
-    config_filename: str,
-
-    test_commands: List[List[str]]
-
+    config: GoobitsConfigSchema, config_filename: str, test_commands: List[List[str]]
 ) -> Dict[str, CommandResult]:
-
     """Generate CLI and run test commands.
 
-    
+
 
     Args:
 
@@ -941,7 +688,7 @@ def generate_cli_and_test(
 
         test_commands: List of command arguments to test
 
-        
+
 
     Returns:
 
@@ -955,21 +702,15 @@ def generate_cli_and_test(
 
         files = generate_cli(config, config_filename)
 
-        
-
         # Install CLI
 
         cli_name = config.package_name
 
         env.install_cli_from_files(cli_name, files)
 
-        
-
         # Create test runner
 
         runner = CLITestRunner(env)
-
-        
 
         # Run test commands
 
@@ -977,29 +718,19 @@ def generate_cli_and_test(
 
         for command_args in test_commands:
 
-            command_key = ' '.join(command_args)
+            command_key = " ".join(command_args)
 
             results[command_key] = runner.run_cli_command(cli_name, command_args)
-
-        
 
         return results
 
 
-
-
-
 def compare_cli_behaviors(
-
-    configs: Dict[str, GoobitsConfigSchema],
-
-    test_commands: List[List[str]]
-
+    configs: Dict[str, GoobitsConfigSchema], test_commands: List[List[str]]
 ) -> Dict[str, Dict[str, CommandResult]]:
-
     """Compare CLI behaviors across different configurations.
 
-    
+
 
     Args:
 
@@ -1007,7 +738,7 @@ def compare_cli_behaviors(
 
         test_commands: Commands to test
 
-        
+
 
     Returns:
 
@@ -1017,18 +748,12 @@ def compare_cli_behaviors(
 
     all_results = {}
 
-    
-
     for config_name, config in configs.items():
 
         config_filename = f"{config_name}.yaml"
 
         all_results[config_name] = generate_cli_and_test(
-
             config, config_filename, test_commands
-
         )
-
-    
 
     return all_results

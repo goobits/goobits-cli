@@ -8,7 +8,7 @@ PROJECT SUMMARY
   Name:         Goobits CLI Framework
   Type:         Multi-language CLI generator
   Language:     Python (core), Node.js, TypeScript, Rust (targets)
-  Framework:    typer (framework CLI), rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
+  Framework:    Click/rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
   
   Total Files:  4 generator files + __init__.py, 55 test files
@@ -117,9 +117,9 @@ Key Relationships:
 ---------------
 
 PRODUCTION:
-  • typer         - Python CLI framework (framework itself)
+  • click         - Python CLI framework core
   • rich-click    - Enhanced Click for generated Python CLIs
-  • pydantic      - YAML config validation
+  • rich          - Terminal UI components
   • jinja2        - Template rendering
   • pyyaml        - YAML parsing
 
@@ -173,10 +173,10 @@ Naming Conventions:
 CLI Commands:
   • Generate:    goobits build [config.yaml]
   • Initialize:  goobits init [project_name]
-  • Validate:    goobits validate [config_path]
-  • Migrate:     goobits migrate <path>
+  • Validate:    python -m goobits_cli.main validate [config_path]
+  • Migrate:     python -m goobits_cli.main migrate <path>
   • Serve PyPI:  goobits serve <directory>
-  • Upgrade:     goobits upgrade
+  • Upgrade:     python -m goobits_cli.main upgrade
 
 Development:
   • Install:     ./setup.sh install --dev

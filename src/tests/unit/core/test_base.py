@@ -4,6 +4,7 @@ Base test class for main CLI functionality.
 This module provides the shared TestMainCLIBase class that contains
 common setup, teardown, and helper methods used by multiple test modules.
 """
+
 import pytest
 import tempfile
 import shutil
@@ -13,25 +14,33 @@ from typer.testing import CliRunner
 
 class TestMainCLIBase:
     """Base test class with shared setup and helper methods."""
-    
+
     def setup_method(self):
         """Set up test environment."""
         self.runner = CliRunner()
         self.temp_dir = Path(tempfile.mkdtemp())
-        
+
     def teardown_method(self):
         """Clean up test environment."""
         if self.temp_dir.exists():
             shutil.rmtree(self.temp_dir)
 
-    def create_test_config_file(self, content: str, filename: str = "goobits.yaml") -> Path:
+    def create_test_config_file(
+        self, content: str, filename: str = "goobits.yaml"
+    ) -> Path:
         """Create a test configuration file."""
         config_path = self.temp_dir / filename
-        with open(config_path, 'w') as f:
+        with open(config_path, "w") as f:
             f.write(content)
         return config_path
 
-    def get_minimal_valid_config(self, package_name="test-cli", command_name="testcli", language="python", include_cli=True):
+    def get_minimal_valid_config(
+        self,
+        package_name="test-cli",
+        command_name="testcli",
+        language="python",
+        include_cli=True,
+    ):
         """Get minimal valid config with all required fields."""
         config = f"""
 package_name: {package_name}

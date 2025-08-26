@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 @dataclass
 class TestResult:
     """Result of a single test execution"""
+
     language: str
     test_name: str
     passed: bool
@@ -32,6 +33,7 @@ class TestResult:
 @dataclass
 class ParityResult:
     """Result of parity comparison across languages"""
+
     test_name: str
     all_passed: bool
     results: Dict[str, TestResult]
@@ -40,13 +42,13 @@ class ParityResult:
 
 class ParityTestRunner:
     """Runs feature parity tests across multiple language implementations"""
-    
+
     LANGUAGES = ["python", "nodejs", "typescript", "rust"]
-    
+
     def __init__(self, verbose: bool = False):
         self.verbose = verbose
         self.goobits_path = self._find_goobits_executable()
-        
+
     def _find_goobits_executable(self) -> str:
         """Find the goobits executable"""
         # Try common locations
@@ -54,58 +56,69 @@ class ParityTestRunner:
             "goobits",  # In PATH
             "./goobits",  # Current directory
             "../../../goobits",  # Relative to test directory
-            Path(__file__).parent.parent.parent.parent / "goobits"
+            Path(__file__).parent.parent.parent.parent / "goobits",
         ]
-        
+
         for candidate in candidates:
             if shutil.which(str(candidate)):
                 return str(candidate)
-                
-        raise RuntimeError("Could not find goobits executable. Make sure it's installed.")
-        
+
+        raise RuntimeError(
+            "Could not find goobits executable. Make sure it's installed."
+        )
+
     def load_test_suite(self, suite_path: Path) -> Dict[str, Any]:
         """Load and validate a test suite from YAML"""
         with open(suite_path) as f:
             suite = yaml.safe_load(f)
-            
+
         # Basic validation
         required_fields = ["suite_name", "description", "tests"]
         for field_name in required_fields:
             if field_name not in suite:
                 raise ValueError(f"Test suite missing required field: {field_name}")
-                
+
         return suite
-        
+
     def generate_cli(self, language: str, config_path: Path, output_dir: Path) -> Path:
         """Generate a CLI for the specified language"""
         # Create a temporary config with the language set
         with open(config_path) as f:
             config = yaml.safe_load(f)
-            
+
         config["language"] = language
-        
+
         temp_config = output_dir / f"config-{language}.yaml"
         with open(temp_config, "w") as f:
             yaml.dump(config, f)
-            
+
         # Run goobits build
-        cmd = [self.goobits_path, "build", str(temp_config), "-o", str(output_dir / language)]
-        
+        cmd = [
+            self.goobits_path,
+            "build",
+            str(temp_config),
+            "-o",
+            str(output_dir / language),
+        ]
+
         if self.verbose:
             print(f"Generating {language} CLI: {' '.join(cmd)}")
-            
+
         result = subprocess.run(cmd, capture_output=True, text=True)
-        
+
         if result.returncode != 0:
             raise RuntimeError(f"Failed to generate {language} CLI: {result.stderr}")
-            
+
         # Copy hook file to the generated directory
         hook_source = config_path.parent / "app_hooks.py"
         if language == "python" and hook_source.exists():
             # Copy to root and to src/demo_cli for basic-demos examples
             shutil.copy(hook_source, output_dir / language / "app_hooks.py")
             if (output_dir / language / "src" / "demo_cli").exists():
-                shutil.copy(hook_source, output_dir / language / "src" / "demo_cli" / "app_hooks.py")
+                shutil.copy(
+                    hook_source,
+                    output_dir / language / "src" / "demo_cli" / "app_hooks.py",
+                )
         elif language in ["nodejs", "typescript"]:
             hook_source = config_path.parent / "hooks.js"
             if hook_source.exists():
@@ -121,17 +134,25 @@ class ParityTestRunner:
                 src_dir = output_dir / language / "src"
                 src_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy(hook_source, src_dir / "hooks.rs")
-            
+
         # Find the generated CLI executable
         cli_name = config["cli"]["name"]
-        
+
         if language == "python":
             # Try multiple possible locations for Python CLI
             possible_paths = [
                 output_dir / language / "cli.py",
-                output_dir / language / "src" / f"{cli_name.replace('-', '_')}" / "cli.py",
-                output_dir / language / "src" / "demo_cli" / "cli.py",  # For basic-demos examples
-                output_dir / language / f"{cli_name}.py"
+                output_dir
+                / language
+                / "src"
+                / f"{cli_name.replace('-', '_')}"
+                / "cli.py",
+                output_dir
+                / language
+                / "src"
+                / "demo_cli"
+                / "cli.py",  # For basic-demos examples
+                output_dir / language / f"{cli_name}.py",
             ]
             cli_path = None
             for path in possible_paths:
@@ -149,11 +170,11 @@ class ParityTestRunner:
                     cwd=npm_dir,
                     capture_output=True,
                     text=True,
-                    timeout=60
+                    timeout=60,
                 )
                 if npm_result.returncode != 0 and self.verbose:
                     print(f"npm install warning: {npm_result.stderr[:200]}")
-                    
+
                 # For TypeScript, build after npm install
                 if language == "typescript":
                     build_result = subprocess.run(
@@ -161,11 +182,11 @@ class ParityTestRunner:
                         cwd=npm_dir,
                         capture_output=True,
                         text=True,
-                        timeout=60
+                        timeout=60,
                     )
                     if build_result.returncode != 0 and self.verbose:
                         print(f"npm build warning: {build_result.stderr[:200]}")
-                        
+
                     # Copy hooks AFTER TypeScript compilation to ensure CommonJS format
                     hook_source = config_path.parent / "hooks.js"
                     if hook_source.exists():
@@ -173,8 +194,8 @@ class ParityTestRunner:
                         if src_dir.exists():
                             shutil.copy(hook_source, src_dir / "hooks.js")
                             if self.verbose:
-                                print(f"Copied CommonJS hooks after TypeScript build")
-            
+                                print("Copied CommonJS hooks after TypeScript build")
+
             # For Node.js/TypeScript, look for bin/cli.js first, then fallback
             # TypeScript generates .cjs files, Node.js generates .js files
             if language == "typescript":
@@ -183,13 +204,13 @@ class ParityTestRunner:
                     output_dir / language / "bin" / "cli.js",
                     output_dir / language / "cli.cjs",
                     output_dir / language / "cli.js",
-                    output_dir / language / "index.js"
+                    output_dir / language / "index.js",
                 ]
             else:
                 possible_paths = [
                     output_dir / language / "bin" / "cli.js",
                     output_dir / language / "cli.js",
-                    output_dir / language / "index.js"
+                    output_dir / language / "index.js",
                 ]
             cli_path = None
             for path in possible_paths:
@@ -205,20 +226,22 @@ class ParityTestRunner:
                 ["cargo", "build", "--release"],
                 cwd=cargo_dir,
                 capture_output=True,
-                text=True
+                text=True,
             )
             if build_result.returncode != 0:
                 raise RuntimeError(f"Failed to build Rust CLI: {build_result.stderr}")
             cli_path = cargo_dir / "target" / "release" / cli_name
         else:
             raise ValueError(f"Unknown language: {language}")
-            
+
         if not cli_path.exists():
             raise RuntimeError(f"Generated CLI not found at: {cli_path}")
-            
+
         return cli_path
-        
-    def run_test(self, test: Dict[str, Any], cli_path: Path, language: str, working_dir: Path) -> TestResult:
+
+    def run_test(
+        self, test: Dict[str, Any], cli_path: Path, language: str, working_dir: Path
+    ) -> TestResult:
         """Run a single test case"""
         # Check if test should be skipped
         skip_languages = test.get("skip_languages", [])
@@ -231,9 +254,9 @@ class ParityTestRunner:
                 stdout="",
                 stderr="",
                 skipped=True,
-                skip_reason=test.get("skip_reason", "Skipped for this language")
+                skip_reason=test.get("skip_reason", "Skipped for this language"),
             )
-            
+
         # Check for language-specific overrides
         overrides = test.get("language_overrides", {}).get(language, {})
         if overrides.get("skip"):
@@ -245,9 +268,9 @@ class ParityTestRunner:
                 stdout="",
                 stderr="",
                 skipped=True,
-                skip_reason=overrides.get("skip_reason", "Skipped for this language")
+                skip_reason=overrides.get("skip_reason", "Skipped for this language"),
             )
-        
+
         # Build command
         if language == "python":
             cmd = ["python3", str(cli_path)]
@@ -257,21 +280,22 @@ class ParityTestRunner:
             cmd = [str(cli_path)]
         else:
             raise ValueError(f"Unknown language: {language}")
-            
+
         # Add command arguments
         if test.get("command"):
             # Use shlex to properly parse command with quotes
             import shlex
+
             cmd.extend(shlex.split(test["command"]))
-            
+
         # Set up environment
         env = os.environ.copy()
         if test.get("env"):
             env.update(test["env"])
-            
+
         # Prepare stdin
         stdin_data = test.get("stdin", "")
-        
+
         # Run the command
         try:
             result = subprocess.run(
@@ -281,44 +305,52 @@ class ParityTestRunner:
                 text=True,
                 env=env,
                 cwd=working_dir,
-                timeout=10
+                timeout=10,
             )
-            
+
             # Get expected values (with overrides)
             expected_exit_code = overrides.get("exit_code", test.get("exit_code", 0))
             expected_stdout = overrides.get("stdout", test.get("stdout", {}))
             expected_stderr = overrides.get("stderr", test.get("stderr", {}))
-            
+
             # Check results
             passed = True
             errors = []
-            
+
             # Check exit code
             if result.returncode != expected_exit_code:
                 passed = False
-                errors.append(f"Exit code mismatch: expected {expected_exit_code}, got {result.returncode}")
-                
+                errors.append(
+                    f"Exit code mismatch: expected {expected_exit_code}, got {result.returncode}"
+                )
+
             # Check stdout
             if expected_stdout:
-                stdout_passed, stdout_errors = self._check_output(result.stdout, expected_stdout, "stdout")
+                stdout_passed, stdout_errors = self._check_output(
+                    result.stdout, expected_stdout, "stdout"
+                )
                 if not stdout_passed:
                     passed = False
                     errors.extend(stdout_errors)
-                    
-            # Check stderr  
+
+            # Check stderr
             if expected_stderr:
-                stderr_passed, stderr_errors = self._check_output(result.stderr, expected_stderr, "stderr")
+                stderr_passed, stderr_errors = self._check_output(
+                    result.stderr, expected_stderr, "stderr"
+                )
                 if not stderr_passed:
                     passed = False
                     errors.extend(stderr_errors)
-                    
+
             # Check files
             if test.get("files"):
-                files_passed, files_errors = self._check_files(test["files"], working_dir)
+                files_passed, files_errors = self._check_files(
+                    test["files"], working_dir
+                )
                 if not files_passed:
                     passed = False
                     errors.extend(files_errors)
-                    
+
             return TestResult(
                 language=language,
                 test_name=test["name"],
@@ -326,9 +358,9 @@ class ParityTestRunner:
                 exit_code=result.returncode,
                 stdout=result.stdout,
                 stderr=result.stderr,
-                error="; ".join(errors) if errors else None
+                error="; ".join(errors) if errors else None,
             )
-            
+
         except subprocess.TimeoutExpired:
             return TestResult(
                 language=language,
@@ -337,7 +369,7 @@ class ParityTestRunner:
                 exit_code=-1,
                 stdout="",
                 stderr="",
-                error="Test timed out after 10 seconds"
+                error="Test timed out after 10 seconds",
             )
         except Exception as e:
             return TestResult(
@@ -347,41 +379,51 @@ class ParityTestRunner:
                 exit_code=-1,
                 stdout="",
                 stderr="",
-                error=f"Test execution failed: {str(e)}"
+                error=f"Test execution failed: {str(e)}",
             )
-            
-    def _check_output(self, actual: str, expected: Dict[str, Any], output_type: str) -> Tuple[bool, List[str]]:
+
+    def _check_output(
+        self, actual: str, expected: Dict[str, Any], output_type: str
+    ) -> Tuple[bool, List[str]]:
         """Check if output matches expectations"""
         errors = []
-        
+
         # Check exact match
         if "exact" in expected:
             if actual.strip() != expected["exact"].strip():
-                errors.append(f"{output_type}: Expected exact match '{expected['exact']}', got '{actual.strip()}'")
-                
+                errors.append(
+                    f"{output_type}: Expected exact match '{expected['exact']}', got '{actual.strip()}'"
+                )
+
         # Check contains
         if "contains" in expected:
             for substring in expected["contains"]:
                 if substring not in actual:
                     errors.append(f"{output_type}: Expected to contain '{substring}'")
-                    
+
         # Check not contains
         if "not_contains" in expected:
             for substring in expected["not_contains"]:
                 if substring in actual:
-                    errors.append(f"{output_type}: Expected NOT to contain '{substring}'")
-                    
+                    errors.append(
+                        f"{output_type}: Expected NOT to contain '{substring}'"
+                    )
+
         # Check regex match
         if "matches" in expected:
             if not re.search(expected["matches"], actual, re.MULTILINE):
-                errors.append(f"{output_type}: Expected to match regex '{expected['matches']}'")
-                
+                errors.append(
+                    f"{output_type}: Expected to match regex '{expected['matches']}'"
+                )
+
         return len(errors) == 0, errors
-        
-    def _check_files(self, expected_files: Dict[str, Any], working_dir: Path) -> Tuple[bool, List[str]]:
+
+    def _check_files(
+        self, expected_files: Dict[str, Any], working_dir: Path
+    ) -> Tuple[bool, List[str]]:
         """Check file system expectations"""
         errors = []
-        
+
         # Check created files
         if "created" in expected_files:
             for file_path in expected_files["created"]:
@@ -394,7 +436,7 @@ class ParityTestRunner:
                     full_path = working_dir / file_path
                 if not full_path.exists():
                     errors.append(f"Expected file to be created: {file_path}")
-                    
+
         # Check deleted files
         if "deleted" in expected_files:
             for file_path in expected_files["deleted"]:
@@ -406,129 +448,135 @@ class ParityTestRunner:
                     full_path = working_dir / file_path
                 if full_path.exists():
                     errors.append(f"Expected file to be deleted: {file_path}")
-                    
+
         # Check file content
         if "content" in expected_files:
             for file_path, content_checks in expected_files["content"].items():
                 file_path = file_path.replace("$$", str(os.getpid()))
                 full_path = working_dir / file_path.lstrip("/")
-                
+
                 if not full_path.exists():
                     errors.append(f"Expected file does not exist: {file_path}")
                     continue
-                    
+
                 try:
                     content = full_path.read_text()
-                    content_passed, content_errors = self._check_output(content, content_checks, f"file {file_path}")
+                    content_passed, content_errors = self._check_output(
+                        content, content_checks, f"file {file_path}"
+                    )
                     errors.extend(content_errors)
                 except Exception as e:
                     errors.append(f"Failed to read file {file_path}: {str(e)}")
-                    
+
         return len(errors) == 0, errors
-        
+
     def compare_results(self, results: Dict[str, TestResult]) -> ParityResult:
         """Compare results across languages to check for parity"""
         test_name = next(iter(results.values())).test_name
-        
+
         # Get non-skipped results
         active_results = {lang: res for lang, res in results.items() if not res.skipped}
-        
+
         if not active_results:
             # All tests were skipped
             return ParityResult(
-                test_name=test_name,
-                all_passed=True,
-                results=results,
-                differences=[]
+                test_name=test_name, all_passed=True, results=results, differences=[]
             )
-            
+
         # Check if all active tests passed
         all_passed = all(res.passed for res in active_results.values())
-        
+
         # Find differences
         differences = []
-        
+
         # Compare exit codes
         exit_codes = {lang: res.exit_code for lang, res in active_results.items()}
         unique_exit_codes = set(exit_codes.values())
         if len(unique_exit_codes) > 1:
             differences.append(f"Exit codes differ: {exit_codes}")
-            
+
         # Note: We don't compare stdout/stderr content directly as formatting may differ
         # The individual test assertions handle the important checks
-        
+
         return ParityResult(
             test_name=test_name,
             all_passed=all_passed,
             results=results,
-            differences=differences
+            differences=differences,
         )
-        
+
     def run_suite(self, suite_path: Path) -> List[ParityResult]:
         """Run a complete test suite"""
         suite = self.load_test_suite(suite_path)
         results = []
-        
+
         print(f"\nRunning test suite: {suite['suite_name']}")
         print(f"Description: {suite['description']}")
         print(f"Tests: {len(suite['tests'])}")
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            
+
             # Resolve config path
             config_path = suite_path.parent / suite["setup"]["goobits_config"]
             if not config_path.exists():
                 raise FileNotFoundError(f"Config file not found: {config_path}")
-                
+
             # Generate CLIs for each language
             print("\nGenerating CLIs...")
             cli_paths = {}
             for language in self.LANGUAGES:
                 try:
                     print(f"  {language}...", end="", flush=True)
-                    cli_paths[language] = self.generate_cli(language, config_path, temp_path)
+                    cli_paths[language] = self.generate_cli(
+                        language, config_path, temp_path
+                    )
                     print(" ✓")
                 except Exception as e:
                     print(f" ✗ ({str(e)})")
                     if self.verbose:
                         import traceback
+
                         traceback.print_exc()
                     # Continue with other languages
-                    
+
             if not cli_paths:
                 raise RuntimeError("Failed to generate any CLIs")
-                
+
             # Run each test
             print(f"\nRunning {len(suite['tests'])} tests...")
             for test in suite["tests"]:
                 test_results = {}
-                
+
                 if self.verbose:
                     print(f"\n  Test: {test['name']}")
                     if test.get("description"):
                         print(f"    Description: {test['description']}")
                 else:
                     print(f"  {test['name']}...", end="", flush=True)
-                    
+
                 for language, cli_path in cli_paths.items():
                     # Create a working directory for this test
                     test_work_dir = temp_path / f"work-{language}-{test['name']}"
                     test_work_dir.mkdir(parents=True, exist_ok=True)
-                    
+
                     result = self.run_test(test, cli_path, language, test_work_dir)
                     test_results[language] = result
-                    
+
                     if self.verbose:
-                        status = "SKIP" if result.skipped else ("PASS" if result.passed else "FAIL")
+                        status = (
+                            "SKIP"
+                            if result.skipped
+                            else ("PASS" if result.passed else "FAIL")
+                        )
                         print(f"    {language}: {status}")
                         if result.error:
                             print(f"      Error: {result.error}")
-                            
+
                 # Compare results
                 parity_result = self.compare_results(test_results)
                 results.append(parity_result)
-                
+
                 if not self.verbose:
                     if parity_result.all_passed:
                         print(" ✓")
@@ -538,34 +586,34 @@ class ParityTestRunner:
                         for lang, res in parity_result.results.items():
                             if not res.passed and not res.skipped:
                                 print(f"    {lang}: {res.error or 'Failed'}")
-                                
+
         return results
-        
+
     def print_summary(self, all_results: Dict[str, List[ParityResult]]):
         """Print a summary of all test results"""
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("FEATURE PARITY TEST SUMMARY")
-        print("="*80)
-        
+        print("=" * 80)
+
         total_tests = 0
         total_passed = 0
         failed_tests = []
-        
+
         for suite_name, results in all_results.items():
             suite_total = len(results)
             suite_passed = sum(1 for r in results if r.all_passed)
             total_tests += suite_total
             total_passed += suite_passed
-            
+
             print(f"\n{suite_name}: {suite_passed}/{suite_total} passed")
-            
+
             # Show failed tests
             for result in results:
                 if not result.all_passed:
                     failed_tests.append((suite_name, result))
-                    
+
         print(f"\nOVERALL: {total_passed}/{total_tests} tests passed")
-        
+
         if failed_tests:
             print(f"\nFAILED TESTS ({len(failed_tests)}):")
             for suite_name, result in failed_tests:
@@ -575,8 +623,8 @@ class ParityTestRunner:
                         print(f"    {lang}: {test_result.error or 'Failed'}")
                         if self.verbose and test_result.stderr:
                             print(f"      stderr: {test_result.stderr.strip()}")
-                            
+
                 if result.differences:
                     print(f"    Parity differences: {', '.join(result.differences)}")
-                    
+
         return total_passed == total_tests

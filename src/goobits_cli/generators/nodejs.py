@@ -35,20 +35,24 @@ FileSystemLoader = None
 TemplateNotFound = None
 typer = None
 
+
 def _lazy_imports():
     """Load heavy dependencies only when needed."""
     global Environment, FileSystemLoader, TemplateNotFound, typer
-    
+
     if Environment is None:
         from jinja2 import Environment as _Environment
         from jinja2 import FileSystemLoader as _FileSystemLoader
         from jinja2 import TemplateNotFound as _TemplateNotFound
+
         Environment = _Environment
         FileSystemLoader = _FileSystemLoader
         TemplateNotFound = _TemplateNotFound
     if typer is None:
         import typer as _typer
+
         typer = _typer
+
 
 # Base generator imports
 from . import BaseGenerator
@@ -58,7 +62,9 @@ from ..formatter import align_header_items, format_icon_spacing, align_setup_ste
 # Universal Template System imports
 # Universal Template System is required
 from ..universal.template_engine import UniversalTemplateEngine
-from ..universal.renderers.nodejs_renderer import NodeJSRenderer as UniversalNodeJSRenderer
+from ..universal.renderers.nodejs_renderer import (
+    NodeJSRenderer as UniversalNodeJSRenderer,
+)
 from ..universal.interactive import integrate_interactive_mode
 from ..universal.completion import (
     integrate_completion_system,
@@ -69,8 +75,11 @@ from ..universal.plugins import integrate_plugin_system
 # Phase 2 shared components
 from ..shared.components.validation_framework import ValidationRunner, ValidationMode
 from ..shared.components.validators import (
-    CommandValidator, ArgumentValidator, OptionValidator,
-    ConfigValidator, HookValidator
+    CommandValidator,
+    ArgumentValidator,
+    OptionValidator,
+    ConfigValidator,
+    HookValidator,
 )
 
 try:
@@ -78,9 +87,6 @@ try:
 except ImportError:
     # Phase 2 components not yet available
     DocumentationGenerator = None
-
-
-
 
 
 class NodeJSGenerator(BaseGenerator):
@@ -94,17 +100,19 @@ class NodeJSGenerator(BaseGenerator):
         try:
             # Detect test mode to avoid asyncio conflicts
             import sys
-            is_test = 'pytest' in sys.modules
-            
+
+            is_test = "pytest" in sys.modules
+
             self.universal_engine = UniversalTemplateEngine(test_mode=is_test)
             self.nodejs_renderer = UniversalNodeJSRenderer()
             self.universal_engine.register_renderer("nodejs", self.nodejs_renderer)
         except Exception as e:
             from . import DependencyError
+
             raise DependencyError(
                 f"Failed to initialize Universal Template System: {e}",
                 dependency="goobits-cli universal templates",
-                install_command="pip install --upgrade goobits-cli"
+                install_command="pip install --upgrade goobits-cli",
             ) from e
 
         # Set up Jinja2 environment for Node.js templates
@@ -116,14 +124,14 @@ class NodeJSGenerator(BaseGenerator):
             self.env = Environment(
                 loader=FileSystemLoader([template_dir, fallback_dir]),
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
             )
         else:
             # If nodejs subdirectory doesn't exist, use main templates dir
             self.env = Environment(
                 loader=FileSystemLoader(fallback_dir),
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
             )
             self.template_missing = True
 
@@ -131,96 +139,85 @@ class NodeJSGenerator(BaseGenerator):
         self.validation_runner = ValidationRunner()
         self.doc_generator = None  # Will be initialized per generation with config
 
-        
-
         # Add custom filters (these may need Node.js specific versions later)
 
         def json_stringify(x):
-
             """Convert to JSON, handling Pydantic models."""
 
-            if hasattr(x, 'model_dump'):
+            if hasattr(x, "model_dump"):
 
                 return json.dumps(x.model_dump(), indent=2)
 
-            elif hasattr(x, 'dict'):
+            elif hasattr(x, "dict"):
 
-                return json.dumps(x.model_dump() if hasattr(x, 'model_dump') else x.dict(), indent=2)
+                return json.dumps(
+                    x.model_dump() if hasattr(x, "model_dump") else x.dict(), indent=2
+                )
 
             else:
 
                 return json.dumps(x, indent=2)
 
-        
-
         def escape_backticks(text: str) -> str:
             """Escape backtick characters for safe template rendering."""
-            return text.replace('`', '\\`')
+            return text.replace("`", "\\`")
 
         def js_string(value: str) -> str:
             """
             Escape string for JavaScript while preserving Unicode characters.
-            
+
             Only escapes necessary characters for JavaScript string literals:
             - Backslashes (must be first to avoid double-escaping)
             - Quote characters that would break string literals
             - Control characters that would break JavaScript parsing
-            
+
             Unicode characters (like Chinese, Arabic, emoji, etc.) are preserved as-is
             since JavaScript natively supports UTF-8.
             """
             if not isinstance(value, str):
                 return str(value)
-            
+
             # Only escape characters that would break JavaScript syntax
             # Order matters: backslash first to avoid double-escaping
-            escaped = value.replace('\\', '\\\\')  # Escape backslashes first
+            escaped = value.replace("\\", "\\\\")  # Escape backslashes first
             escaped = escaped.replace('"', '\\"')  # Escape double quotes
             escaped = escaped.replace("'", "\\'")  # Escape single quotes
-            escaped = escaped.replace('\n', '\\n')  # Escape newlines
-            escaped = escaped.replace('\r', '\\r')  # Escape carriage returns
-            escaped = escaped.replace('\t', '\\t')  # Escape tabs
-            
+            escaped = escaped.replace("\n", "\\n")  # Escape newlines
+            escaped = escaped.replace("\r", "\\r")  # Escape carriage returns
+            escaped = escaped.replace("\t", "\\t")  # Escape tabs
+
             # Do NOT escape Unicode characters - they should be preserved
             return escaped
 
         # Register custom filters
-        self.env.filters['json_stringify'] = json_stringify
-        self.env.filters['escape_backticks'] = escape_backticks
-        self.env.filters['js_string'] = js_string
-        self.env.filters['align_header_items'] = align_header_items
-        self.env.filters['format_icon_spacing'] = format_icon_spacing
-        self.env.filters['align_setup_steps'] = align_setup_steps
+        self.env.filters["json_stringify"] = json_stringify
+        self.env.filters["escape_backticks"] = escape_backticks
+        self.env.filters["js_string"] = js_string
+        self.env.filters["align_header_items"] = align_header_items
+        self.env.filters["format_icon_spacing"] = format_icon_spacing
+        self.env.filters["align_setup_steps"] = align_setup_steps
 
         # Initialize generated files storage
         self._generated_files = {}
 
-    
-
-    def _check_file_conflicts(self, target_files: dict, target_directory: Optional[str] = None) -> tuple[dict, dict]:
-
+    def _check_file_conflicts(
+        self, target_files: dict, target_directory: Optional[str] = None
+    ) -> tuple[dict, dict]:
         """Check for file conflicts and adjust paths if needed.
-        
+
         Returns:
             Tuple of (adjusted_files, conflict_info) where conflict_info tracks renames
         """
 
         import os
 
-        
-
         adjusted_files = {}
 
         warnings = []
-        
+
         conflict_info = {}
 
-        
-
         # Determine the directory to check for conflicts
-
-
-        
 
         for filepath, content in target_files.items():
 
@@ -234,29 +231,31 @@ class NodeJSGenerator(BaseGenerator):
 
                 check_path = filepath
 
-            
-
             if filepath == "cli.js" and os.path.exists(check_path):
 
                 # cli.js exists, warn but still generate (user can choose to overwrite)
 
-                warnings.append("⚠️  Existing cli.js detected. Generated CLI will overwrite it.")
+                warnings.append(
+                    "⚠️  Existing cli.js detected. Generated CLI will overwrite it."
+                )
 
-                warnings.append("   Back up your existing cli.js if it contains custom code.")
+                warnings.append(
+                    "   Back up your existing cli.js if it contains custom code."
+                )
 
                 adjusted_files[filepath] = content
 
             elif filepath == "package.json" and os.path.exists(check_path):
 
-                warnings.append("⚠️  Existing package.json detected. Review and merge dependencies manually.")
+                warnings.append(
+                    "⚠️  Existing package.json detected. Review and merge dependencies manually."
+                )
 
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
             else:
 
                 adjusted_files[filepath] = content
-
-        
 
         # Print warnings if any
 
@@ -270,24 +269,29 @@ class NodeJSGenerator(BaseGenerator):
 
             typer.echo("")
 
-        
-
         return adjusted_files, conflict_info
 
-    
-
-    def _get_dynamic_version(self, version: Optional[str], cli_config: Optional[ConfigSchema], project_dir: str = ".") -> str:
+    def _get_dynamic_version(
+        self,
+        version: Optional[str],
+        cli_config: Optional[ConfigSchema],
+        project_dir: str = ".",
+    ) -> str:
         """Get version dynamically from package.json or fall back to config/default."""
         from . import BaseGenerator
-        return BaseGenerator._get_dynamic_version(self, version, cli_config, "nodejs", project_dir)
 
-    def _validate_configuration(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+        return BaseGenerator._get_dynamic_version(
+            self, version, cli_config, "nodejs", project_dir
+        )
 
-                               cli_config: Optional[ConfigSchema]) -> None:
-
+    def _validate_configuration(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        cli_config: Optional[ConfigSchema],
+    ) -> None:
         """Validate configuration using shared validators when available.
 
-        
+
 
         Args:
 
@@ -295,7 +299,7 @@ class NodeJSGenerator(BaseGenerator):
 
             cli_config: The CLI configuration extracted from config
 
-            
+
 
         Raises:
 
@@ -311,17 +315,13 @@ class NodeJSGenerator(BaseGenerator):
             if not result.is_valid:
                 raise ValueError(f"Configuration validation failed: {result.errors}")
 
-        
-
         # Current validation logic
 
-        if hasattr(config, 'package_name'):  # GoobitsConfigSchema
+        if hasattr(config, "package_name"):  # GoobitsConfigSchema
 
             if not cli_config:
 
                 raise ValueError("No CLI configuration found")
-
-        
 
         # Additional validations can be added here
 
@@ -329,55 +329,61 @@ class NodeJSGenerator(BaseGenerator):
 
             # Validate commands
 
-            if hasattr(cli_config, 'commands') and cli_config.commands:
+            if hasattr(cli_config, "commands") and cli_config.commands:
 
                 for cmd_name, cmd_data in cli_config.commands.items():
 
                     # Validation with CommandValidator available
                     if self.validation_runner:
                         cmd_validator = CommandValidator()
-                        cmd_result = self.validation_runner.validate(cmd_validator, cmd_data)
+                        cmd_result = self.validation_runner.validate(
+                            cmd_validator, cmd_data
+                        )
 
                         if not cmd_result.is_valid:
-                            raise ValueError(f"Command '{cmd_name}' validation failed: {cmd_result.errors}")
-
-                    
+                            raise ValueError(
+                                f"Command '{cmd_name}' validation failed: {cmd_result.errors}"
+                            )
 
                     # Validate arguments
 
-                    if hasattr(cmd_data, 'args') and cmd_data.args:
+                    if hasattr(cmd_data, "args") and cmd_data.args:
 
                         for arg in cmd_data.args:
 
                             # ArgumentValidator available
                             if self.validation_runner:
                                 arg_validator = ArgumentValidator()
-                                arg_result = self.validation_runner.validate(arg_validator, arg)
+                                arg_result = self.validation_runner.validate(
+                                    arg_validator, arg
+                                )
                                 if not arg_result.is_valid:
-                                    raise ValueError(f"Argument validation failed: {arg_result.errors}")
-
-                    
+                                    raise ValueError(
+                                        f"Argument validation failed: {arg_result.errors}"
+                                    )
 
                     # Validate options
 
-                    if hasattr(cmd_data, 'options') and cmd_data.options:
+                    if hasattr(cmd_data, "options") and cmd_data.options:
 
                         for opt in cmd_data.options:
 
                             # OptionValidator available
                             if self.validation_runner:
                                 opt_validator = OptionValidator()
-                                opt_result = self.validation_runner.validate(opt_validator, opt)
+                                opt_result = self.validation_runner.validate(
+                                    opt_validator, opt
+                                )
                                 if not opt_result.is_valid:
-                                    raise ValueError(f"Option validation failed: {opt_result.errors}")
-
-    
+                                    raise ValueError(
+                                        f"Option validation failed: {opt_result.errors}"
+                                    )
 
     def generate(
-        self, 
-        config: Union[ConfigSchema, GoobitsConfigSchema], 
-        config_filename: str, 
-        version: Optional[str] = None
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        config_filename: str,
+        version: Optional[str] = None,
     ) -> str:
         """Generate Node.js CLI code from configuration.
 
@@ -393,18 +399,18 @@ class NodeJSGenerator(BaseGenerator):
         # Check if config_filename looks like a directory path (E2E test compatibility)
         # E2E tests call generator.generate(config, str(tmp_path)) expecting files to be written
         is_e2e_test_path = (
-            config_filename.startswith('/') or 
-            config_filename.startswith('./') or 
-            'tmp' in config_filename or 
-            'pytest' in config_filename or
-            Path(config_filename).is_dir()
+            config_filename.startswith("/")
+            or config_filename.startswith("./")
+            or "tmp" in config_filename
+            or "pytest" in config_filename
+            or Path(config_filename).is_dir()
         )
-        
+
         if is_e2e_test_path:
             # For E2E tests, write files directly to output directory (test compatibility)
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
-            
+
             # Generate CLI content using universal templates
             try:
                 cli_content = self._generate_cli(config, "test.yaml", version)
@@ -416,36 +422,38 @@ class NodeJSGenerator(BaseGenerator):
                 )
                 typer.echo(error_msg, err=True)
                 raise RuntimeError(f"E2E test CLI generation failed: {e}") from e
-            
+
             # Also generate package.json for Node.js
-            all_files = self.generate_all_files(config, "test.yaml", version, str(output_path))
-            
+            all_files = self.generate_all_files(
+                config, "test.yaml", version, str(output_path)
+            )
+
             try:
                 for file_name, content in all_files.items():
                     file_path = output_path / file_name
                     # Create parent directories if they don't exist
                     file_path.parent.mkdir(parents=True, exist_ok=True)
-                    with open(file_path, 'w', encoding='utf-8') as f:
+                    with open(file_path, "w", encoding="utf-8") as f:
                         f.write(content)
             except OSError:
                 pass  # If writing fails, just return the content
-            
+
             return cli_content
 
         # Use Universal Template System
         return self._generate_cli(config, config_filename, version)
 
-    
-
-    def _generate_cli(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
-
-                                         config_filename: str, version: Optional[str] = None) -> str:
-
+    def _generate_cli(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        config_filename: str,
+        version: Optional[str] = None,
+    ) -> str:
         """
 
         Generate using Universal Template System.
 
-        
+
 
         Args:
 
@@ -455,7 +463,7 @@ class NodeJSGenerator(BaseGenerator):
 
             version: Optional version string
 
-            
+
 
         Returns:
 
@@ -471,8 +479,6 @@ class NodeJSGenerator(BaseGenerator):
 
                 raise RuntimeError("Universal Template Engine not initialized")
 
-            
-
             # Convert config to GoobitsConfigSchema if needed
 
             if isinstance(config, ConfigSchema):
@@ -480,68 +486,71 @@ class NodeJSGenerator(BaseGenerator):
                 # Create minimal GoobitsConfigSchema for universal system
 
                 goobits_config = GoobitsConfigSchema(
-
-                    package_name=getattr(config, 'package_name', config.cli.name),
-
-                    command_name=getattr(config, 'command_name', config.cli.name),
-
-                    display_name=getattr(config, 'display_name', config.cli.name.title()),
-
-                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
-
+                    package_name=getattr(config, "package_name", config.cli.name),
+                    command_name=getattr(config, "command_name", config.cli.name),
+                    display_name=getattr(
+                        config, "display_name", config.cli.name.title()
+                    ),
+                    description=getattr(
+                        config,
+                        "description",
+                        config.cli.description or config.cli.tagline,
+                    ),
                     cli=config.cli,
-
-                    installation=getattr(config, 'installation', None)
-
+                    installation=getattr(config, "installation", None),
                 )
 
             else:
 
                 goobits_config = config
 
-                
-
             # Integrate interactive mode support
 
             if integrate_interactive_mode:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = (
+                    goobits_config.model_dump()
+                    if hasattr(goobits_config, "model_dump")
+                    else goobits_config.dict()
+                )
 
-                config_dict = integrate_interactive_mode(config_dict, 'nodejs')
+                config_dict = integrate_interactive_mode(config_dict, "nodejs")
 
                 # Convert back to GoobitsConfigSchema
 
                 goobits_config = GoobitsConfigSchema(**config_dict)
-
-            
 
             # Integrate completion system support
 
             if integrate_completion_system:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = (
+                    goobits_config.model_dump()
+                    if hasattr(goobits_config, "model_dump")
+                    else goobits_config.dict()
+                )
 
-                config_dict = integrate_completion_system(config_dict, 'nodejs')
+                config_dict = integrate_completion_system(config_dict, "nodejs")
 
                 # Convert back to GoobitsConfigSchema
 
                 goobits_config = GoobitsConfigSchema(**config_dict)
-
-            
 
             # Integrate plugin system support
 
             if integrate_plugin_system:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = (
+                    goobits_config.model_dump()
+                    if hasattr(goobits_config, "model_dump")
+                    else goobits_config.dict()
+                )
 
-                config_dict = integrate_plugin_system(config_dict, 'nodejs')
+                config_dict = integrate_plugin_system(config_dict, "nodejs")
 
                 # Convert back to GoobitsConfigSchema
 
                 goobits_config = GoobitsConfigSchema(**config_dict)
-
-            
 
             # Generate using universal engine with parallel I/O if available
 
@@ -549,11 +558,11 @@ class NodeJSGenerator(BaseGenerator):
 
             # Use parallel generation for 30-50% performance improvement (but not in tests)
             use_parallel = (
-                hasattr(self.universal_engine, 'generate_cli_parallel') and 
-                self.universal_engine.performance_enabled and 
-                not self.universal_engine.test_mode
+                hasattr(self.universal_engine, "generate_cli_parallel")
+                and self.universal_engine.performance_enabled
+                and not self.universal_engine.test_mode
             )
-            
+
             if use_parallel:
                 generated_files = self.universal_engine.generate_cli_parallel(
                     goobits_config, "nodejs", output_dir
@@ -562,8 +571,6 @@ class NodeJSGenerator(BaseGenerator):
                 generated_files = self.universal_engine.generate_cli(
                     goobits_config, "nodejs", output_dir
                 )
-
-            
 
             # Store generated files for later access
 
@@ -575,15 +582,16 @@ class NodeJSGenerator(BaseGenerator):
 
                 self._generated_files[file_path] = content
 
-            
-
             # Return main entry file for backward compatibility
 
-            main_file = next((content for path, content in generated_files.items() 
-
-                            if "cli.js" in path or "index.js" in path), "")
-
-            
+            main_file = next(
+                (
+                    content
+                    for path, content in generated_files.items()
+                    if "cli.js" in path or "index.js" in path
+                ),
+                "",
+            )
 
             if not main_file:
 
@@ -591,11 +599,7 @@ class NodeJSGenerator(BaseGenerator):
 
                 main_file = next(iter(generated_files.values()), "")
 
-                
-
             return main_file
-
-            
 
         except Exception as e:
 
@@ -609,34 +613,38 @@ class NodeJSGenerator(BaseGenerator):
 4. Report this issue if the problem persists
             
 💡 CLI generation uses universal templates."""
-            
+
             typer.echo(error_msg, err=True)
             raise RuntimeError(f"CLI generation failed: {type(e).__name__}: {e}") from e
 
-    
-
-    def generate_to_directory(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
-                              output_directory: str, config_filename: str = "goobits.yaml", 
-                              version: Optional[str] = None) -> Dict[str, str]:
+    def generate_to_directory(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        output_directory: str,
+        config_filename: str = "goobits.yaml",
+        version: Optional[str] = None,
+    ) -> Dict[str, str]:
         """
         Generate CLI files and write them to the specified output directory.
-        
+
         Args:
             config: The configuration object
             output_directory: Directory where files should be written
             config_filename: Name of the configuration file (default: "goobits.yaml")
             version: Optional version string
-            
+
         Returns:
             Dictionary mapping file paths to their contents (for compatibility)
         """
         # Use the same approach as the generate() method for E2E compatibility
         output_path = Path(output_directory)
         output_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Generate all files
-        all_files = self.generate_all_files(config, config_filename, version, output_directory)
-        
+        all_files = self.generate_all_files(
+            config, config_filename, version, output_directory
+        )
+
         # Write files to directory
         written_files = {}
         for file_name, content in all_files.items():
@@ -644,93 +652,62 @@ class NodeJSGenerator(BaseGenerator):
             try:
                 # Create parent directories if they don't exist
                 file_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(content)
                 written_files[file_name] = content
             except OSError:
                 pass  # Continue with other files if one fails
-        
+
         return written_files
 
     def get_output_files(self) -> List[str]:
-
         """Return list of files this generator creates."""
 
         return [
-
             "cli.js",
-
             "src/hooks.js",
-
             "package.json",
-
             "setup.sh",
-
             "README.md",
-
             ".gitignore",
-
             "bin/cli.js",
-
             "lib/errors.js",
-
             "lib/config.js",
-
             "lib/completion.js",
-
             "lib/formatter.js",
-
             "lib/progress.js",
-
             "lib/prompts.js",
-
             "lib/plugin-manager.js",
-
             "completion_engine.js",
-
             "enhanced_interactive_mode.js",
-
             "commands/builtin/plugin.js",
-
             "commands/builtin/completion.js",
-
             "commands/builtin/format-demo.js",
-
             "commands/builtin/upgrade.js",
-
-            "commands/builtin/daemon.js"
-
+            "commands/builtin/daemon.js",
         ]
 
-    
-
     def get_default_output_path(self, package_name: str) -> str:
-
         """Get the default output path for Node.js CLI."""
 
         return "cli.js"  # Main entry point for generated CLI
 
-    
-
     def _generate_fallback_code(self, context: dict) -> str:
-
         """Generate a basic Node.js CLI when templates are missing."""
 
-        cli_config = context['cli']
+        cli_config = context["cli"]
 
-        package_name = context['package_name'] or 'my-cli'
+        package_name = context["package_name"] or "my-cli"
 
-        command_name = context['command_name'] or package_name
+        command_name = context["command_name"] or package_name
 
-        description = context['description'] or 'A CLI tool'
+        description = context["description"] or "A CLI tool"
 
-        version = context['version']
-
-        
+        version = context["version"]
 
         # Generate a basic Commander.js CLI using ES modules
 
-        code = f'''/**
+        code = f"""/**
 
  * Generated by goobits-cli
 
@@ -770,9 +747,7 @@ const config = {json.dumps(cli_config.model_dump() if cli_config else {}, indent
 
 
 
-'''
-
-        
+"""
 
         # Add commands if available
 
@@ -782,15 +757,13 @@ const config = {json.dumps(cli_config.model_dump() if cli_config else {}, indent
 
             for cmd_name, cmd_data in cli_config.commands.items():
 
-                code += f'''
+                code += f"""
 
 program
 
   .command('{cmd_name}')
 
-  .description('{cmd_data.desc}')'''
-
-                
+  .description('{cmd_data.desc}')"""
 
                 # Add arguments
 
@@ -800,17 +773,15 @@ program
 
                         if arg.required:
 
-                            arg_str = f'<{arg.name}>'
+                            arg_str = f"<{arg.name}>"
 
                         else:
 
-                            arg_str = f'[{arg.name}]'
+                            arg_str = f"[{arg.name}]"
 
-                        code += f'''
+                        code += f"""
 
-  .argument('{arg_str}', '{arg.desc}')'''
-
-                
+  .argument('{arg_str}', '{arg.desc}')"""
 
                 # Add options
 
@@ -818,27 +789,25 @@ program
 
                     for opt in cmd_data.options:
 
-                        flags = f'-{opt.short}, --{opt.name}'
+                        flags = f"-{opt.short}, --{opt.name}"
 
-                        if opt.type != 'flag':
+                        if opt.type != "flag":
 
-                            flags += f' <{opt.type}>'
+                            flags += f" <{opt.type}>"
 
-                        code += f'''
+                        code += f"""
 
-  .option('{flags}', '{opt.desc}')'''
+  .option('{flags}', '{opt.desc}')"""
 
-                
+                code += """
 
-                code += '''
-
-  .action(('''
+  .action(("""
 
                 if cmd_data.args:
 
-                    code += ', '.join(arg.name for arg in cmd_data.args) + ', '
+                    code += ", ".join(arg.name for arg in cmd_data.args) + ", "
 
-                code += f'''options) => {{
+                code += f"""options) => {{
 
     console.log('Executing {cmd_name} command...');
 
@@ -846,11 +815,9 @@ program
 
   }});
 
-'''
+"""
 
-        
-
-        code += '''
+        code += """
 
 // Main CLI function
 
@@ -876,29 +843,22 @@ export function cli() {
 
 export default cli;
 
-'''
-
-        
+"""
 
         return code
 
-    
-
-    
-
-    
-
-    def generate_all_files(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
-
-                          config_filename: str, version: Optional[str] = None,
-
-                          target_directory: Optional[str] = None) -> Dict[str, str]:
-
+    def generate_all_files(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        config_filename: str,
+        version: Optional[str] = None,
+        target_directory: Optional[str] = None,
+    ) -> Dict[str, str]:
         """
 
         Generate all files needed for the Node.js CLI.
 
-        
+
 
         Args:
 
@@ -908,7 +868,7 @@ export default cli;
 
             version: Optional version string
 
-            
+
 
         Returns:
 
@@ -921,16 +881,12 @@ export default cli;
         self.generate(config, config_filename, version)
         return self._generated_files.copy() if self._generated_files else {}
 
-    
-
-
     def _generate_simple_hooks(self, context: dict) -> str:
-
         """Generate a simple hooks.js file similar to Python's app_hooks.py."""
 
-        cli_config = context.get('cli')
+        cli_config = context.get("cli")
 
-        hooks_content = f'''/**
+        hooks_content = f"""/**
 
  * Hook functions for {context['display_name']}
 
@@ -946,19 +902,17 @@ export default cli;
 
 
 
-'''
-
-        
+"""
 
         # Generate hook functions for each command
 
-        if cli_config and hasattr(cli_config, 'commands'):
+        if cli_config and hasattr(cli_config, "commands"):
 
             for cmd_name, cmd_data in cli_config.commands.items():
 
-                safe_cmd_name = cmd_name.replace('-', '_')
+                safe_cmd_name = cmd_name.replace("-", "_")
 
-                hooks_content += f'''/**
+                hooks_content += f"""/**
 
  * Hook function for '{cmd_name}' command
 
@@ -998,13 +952,11 @@ export async function on{safe_cmd_name.replace('_', '').title()}(args) {{
 
 
 
-'''
-
-        
+"""
 
         # Add a catch-all hook for unhandled commands
 
-        hooks_content += '''/**
+        hooks_content += """/**
 
  * Default hook for unhandled commands
 
@@ -1020,19 +972,14 @@ export async function onUnknownCommand(args) {
 
 }
 
-'''
-
-        
+"""
 
         return hooks_content
 
-    
-
     def _generate_setup_script(self, context: dict) -> str:
-
         """Generate setup.sh script for Node.js CLI."""
 
-        return f'''#!/bin/bash
+        return f"""#!/bin/bash
 
 # Setup script for {context['display_name']}
 
@@ -1108,89 +1055,56 @@ else
 
 fi
 
-'''
-
-    
+"""
 
     def _generate_package_json(self, context: dict) -> str:
-
         """Generate minimal package.json from context."""
 
         # Use minimal fallback approach only
 
-        main_entry_file = context.get('main_entry_file', 'cli.js')
-
-        
+        main_entry_file = context.get("main_entry_file", "cli.js")
 
         package_data = {
-
-            "name": context['package_name'],
-
-            "version": context['version'],
-
-            "description": context['description'],
-
+            "name": context["package_name"],
+            "version": context["version"],
+            "description": context["description"],
             "main": main_entry_file,
-
-            "bin": {
-
-                context['command_name']: f"./{main_entry_file}"
-
-            },
-
+            "bin": {context["command_name"]: f"./{main_entry_file}"},
             "scripts": {
-
-                "test": "echo \"Error: no test specified\" && exit 1",
-
-                "start": f"node {main_entry_file}"
-
+                "test": 'echo "Error: no test specified" && exit 1',
+                "start": f"node {main_entry_file}",
             },
-
             "keywords": ["cli"],
-
             "author": "",
-
             "license": "MIT",
-
             "type": "module",
-
-            "dependencies": {
-
-                "commander": "^11.1.0",
-
-                "chalk": "^5.3.0"
-
-            },
-
-            "engines": {
-
-                "node": ">=14.0.0"
-
-            }
-
+            "dependencies": {"commander": "^11.1.0", "chalk": "^5.3.0"},
+            "engines": {"node": ">=14.0.0"},
         }
-
-        
 
         # Add any npm packages from installation extras
 
-        if context.get('installation') and hasattr(context['installation'], 'extras'):
+        if context.get("installation") and hasattr(context["installation"], "extras"):
 
-            if hasattr(context['installation'].extras, 'npm'):
+            if hasattr(context["installation"].extras, "npm"):
 
-                for package in context['installation'].extras.npm:
+                for package in context["installation"].extras.npm:
 
-                    if '@' in package and not package.startswith('@'):
+                    if "@" in package and not package.startswith("@"):
 
-                        name, version = package.rsplit('@', 1)
+                        name, version = package.rsplit("@", 1)
 
                         package_data["dependencies"][name] = f"^{version}"
 
-                    elif '@' in package and package.startswith('@') and package.count('@') > 1:
+                    elif (
+                        "@" in package
+                        and package.startswith("@")
+                        and package.count("@") > 1
+                    ):
 
                         # Handle scoped packages with version like @types/node@18.0.0
 
-                        name, version = package.rsplit('@', 1)
+                        name, version = package.rsplit("@", 1)
 
                         package_data["dependencies"][name] = f"^{version}"
 
@@ -1198,38 +1112,31 @@ fi
 
                         package_data["dependencies"][package] = "latest"
 
-        
-
         # Update package.json with metadata from context
 
-        package_data["author"] = context.get('author', '')
+        package_data["author"] = context.get("author", "")
 
-        package_data["license"] = context.get('license', 'MIT')
+        package_data["license"] = context.get("license", "MIT")
 
-        if context.get('homepage'):
+        if context.get("homepage"):
 
-            package_data["homepage"] = context['homepage']
+            package_data["homepage"] = context["homepage"]
 
-        if context.get('repository'):
+        if context.get("repository"):
 
-            package_data["repository"] = {"type": "git", "url": context['repository']}
+            package_data["repository"] = {"type": "git", "url": context["repository"]}
 
-        if context.get('bugs_url'):
+        if context.get("bugs_url"):
 
-            package_data["bugs"] = {"url": context['bugs_url']}
+            package_data["bugs"] = {"url": context["bugs_url"]}
 
-        if context.get('keywords'):
+        if context.get("keywords"):
 
-            package_data["keywords"].extend(context['keywords'])
-
-        
+            package_data["keywords"].extend(context["keywords"])
 
         return json.dumps(package_data, indent=2)
 
-    
-
     def _generate_readme(self, context: dict) -> str:
-
         """Generate README.md for the Node.js CLI."""
 
         # Use DocumentationGenerator if available
@@ -1245,8 +1152,6 @@ fi
                 # Fallback to manual generation if doc_generator fails
 
                 pass
-
-        
 
         # Fallback to existing implementation
 
@@ -1348,48 +1253,42 @@ MIT
 
 """
 
-    
-
     def _generate_commands_documentation(self, context: dict) -> str:
-
         """Generate commands documentation for README."""
 
-        cli_config = context.get('cli')
+        cli_config = context.get("cli")
 
-        if not cli_config or not hasattr(cli_config, 'commands'):
+        if not cli_config or not hasattr(cli_config, "commands"):
 
             return "No commands configured."
-
-        
 
         commands_doc = []
 
         for cmd_name, cmd_data in cli_config.commands.items():
 
-            cmd_desc = cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'
+            cmd_desc = (
+                cmd_data.desc if hasattr(cmd_data, "desc") else "Command description"
+            )
 
             commands_doc.append(f"- `{cmd_name}` - {cmd_desc}")
 
-            
-
             # Add subcommands if they exist
 
-            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+            if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
 
                 for sub_name, sub_data in cmd_data.subcommands.items():
 
-                    sub_desc = sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'
+                    sub_desc = (
+                        sub_data.desc
+                        if hasattr(sub_data, "desc")
+                        else "Subcommand description"
+                    )
 
                     commands_doc.append(f"  - `{cmd_name} {sub_name}` - {sub_desc}")
 
-        
-
-        return '\n'.join(commands_doc) if commands_doc else "No commands configured."
-
-    
+        return "\n".join(commands_doc) if commands_doc else "No commands configured."
 
     def _generate_gitignore(self) -> str:
-
         """Generate .gitignore for Node.js project."""
 
         return """# Node.js
@@ -1486,57 +1385,57 @@ export default function registerPluginCommand(program) {
         """Convert snake_case, kebab-case, or PascalCase to camelCase."""
         if not text:
             return text
-        
+
         # Handle different separators: underscores, hyphens, spaces
         # Also handle PascalCase by inserting underscores before capitals
         import re
-        
+
         # First, handle PascalCase by converting to snake_case
         # Insert underscore before each capital letter (except first)
-        text = re.sub(r'(?<!^)(?=[A-Z])', '_', text)
-        
+        text = re.sub(r"(?<!^)(?=[A-Z])", "_", text)
+
         # Replace spaces and hyphens with underscores for consistent processing
-        text = text.replace('-', '_').replace(' ', '_')
-        
+        text = text.replace("-", "_").replace(" ", "_")
+
         # Split by underscores and handle the conversion
-        parts = [part.lower() for part in text.split('_') if part]
+        parts = [part.lower() for part in text.split("_") if part]
         if len(parts) <= 1:
             return text.lower()
-        
+
         # First part stays lowercase, subsequent parts are capitalized
-        return parts[0] + ''.join(part.capitalize() for part in parts[1:])
+        return parts[0] + "".join(part.capitalize() for part in parts[1:])
 
     def _to_pascalcase(self, text: str) -> str:
         """Convert snake_case, kebab-case, or camelCase to PascalCase."""
         if not text:
             return text
-        
+
         # Handle different separators: underscores, hyphens, spaces
         import re
-        
+
         # First, handle existing camelCase/PascalCase by inserting underscores
-        text = re.sub(r'(?<!^)(?=[A-Z])', '_', text)
-        
+        text = re.sub(r"(?<!^)(?=[A-Z])", "_", text)
+
         # Replace spaces and hyphens with underscores for consistent processing
-        text = text.replace('-', '_').replace(' ', '_')
-        
+        text = text.replace("-", "_").replace(" ", "_")
+
         # Split by underscores and capitalize each part
-        parts = [part.lower() for part in text.split('_') if part]
-        return ''.join(part.capitalize() for part in parts)
+        parts = [part.lower() for part in text.split("_") if part]
+        return "".join(part.capitalize() for part in parts)
 
     def _to_kebabcase(self, text: str) -> str:
         """Convert snake_case, camelCase, or PascalCase to kebab-case."""
         if not text:
             return text
-        
+
         # Handle different input formats
         import re
-        
+
         # First, handle camelCase/PascalCase by inserting hyphens before capitals
-        text = re.sub(r'(?<!^)(?=[A-Z])', '-', text)
-        
+        text = re.sub(r"(?<!^)(?=[A-Z])", "-", text)
+
         # Replace underscores and spaces with hyphens
-        text = text.replace('_', '-').replace(' ', '-')
-        
+        text = text.replace("_", "-").replace(" ", "-")
+
         # Convert to lowercase and clean up multiple consecutive hyphens
-        return re.sub(r'-+', '-', text.lower()).strip('-')
+        return re.sub(r"-+", "-", text.lower()).strip("-")

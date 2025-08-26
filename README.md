@@ -36,7 +36,7 @@ mkdir my-cli && cd my-cli
 goobits init my-cli
 
 # Build CLI and setup scripts
-goobits build goobits.yaml
+goobits build
 
 # Install for development
 ./setup.sh install --dev
@@ -61,11 +61,7 @@ goobits build goobits.yaml
   - `--host`: Server host (default: localhost)
   - `--port`: Server port (default: 8080)
 
-- `goobits upgrade` - Upgrade goobits-cli to latest version
-  - `--check`: Check for updates without installing
-  - `--version`: Install specific version
-  - `--pre`: Include pre-release versions
-  - `--dry-run`: Show what would be done without doing it
+- `goobits upgrade` - (Not yet implemented in generated CLI)
 
 **Development Commands** (available via `python -m goobits_cli.main`):
 
@@ -80,6 +76,8 @@ goobits build goobits.yaml
 - `python -m goobits_cli.main upgrade` - Upgrade goobits-cli (advanced options)
   - `--source`: Upgrade source (pypi, git, local)
   - `--version`: Specific version to install
+  - `--pre`: Include pre-release versions
+  - `--dry-run`: Show what would be upgraded without doing it
 
 ### Configuration Example
 

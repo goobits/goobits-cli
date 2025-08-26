@@ -17,14 +17,11 @@
 Interactive prompts and input helpers for Goobits CLI Framework
 """
 
-
-
 import sys
 
 from typing import Any, List, Optional, Union, Callable, Dict
 
 from pathlib import Path
-
 
 
 try:
@@ -40,7 +37,6 @@ except ImportError:
     HAS_RICH_PROMPT = False
 
 
-
 try:
 
     import questionary
@@ -52,16 +48,10 @@ except ImportError:
     HAS_QUESTIONARY = False
 
 
-
-
-
 class PromptsHelper:
-
     """Helper class for interactive prompts and user input"""
 
-    
-
-    def __init__(self, console: Optional['Console'] = None):
+    def __init__(self, console: Optional["Console"] = None):
 
         if HAS_RICH_PROMPT:
 
@@ -74,12 +64,16 @@ class PromptsHelper:
         self.use_questionary = HAS_QUESTIONARY
 
         self.use_rich = HAS_RICH_PROMPT
-        
+
         # Initialize predictive prompting if available
         try:
             from .universal.performance.predictive_prompts import (
-                get_prompt_manager, PromptConfig, record_prompt_shown, get_prepared_prompt
+                get_prompt_manager,
+                PromptConfig,
+                record_prompt_shown,
+                get_prepared_prompt,
             )
+
             self.predictive_enabled = True
             self.prompt_manager = get_prompt_manager()
             self.record_prompt = record_prompt_shown
@@ -87,33 +81,17 @@ class PromptsHelper:
         except ImportError:
             self.predictive_enabled = False
 
-    
-
     def text(
-
         self,
-
         message: str,
-
         default: Optional[str] = None,
-
-        validate: Optional[Callable[[str], Union[bool, str]]] = None
-
+        validate: Optional[Callable[[str], Union[bool, str]]] = None,
     ) -> str:
-
         """Prompt for text input"""
 
         if self.use_questionary:
 
-            return questionary.text(
-
-                message,
-
-                default=default,
-
-                validate=validate
-
-            ).ask()
+            return questionary.text(message, default=default, validate=validate).ask()
 
         elif self.use_rich:
 
@@ -131,16 +109,11 @@ class PromptsHelper:
 
             prompt_text += ": "
 
-            
-
             result = input(prompt_text).strip()
 
             return result if result else (default or "")
 
-    
-
     def password(self, message: str = "Password") -> str:
-
         """Prompt for password input (hidden)"""
 
         if self.use_questionary:
@@ -159,18 +132,7 @@ class PromptsHelper:
 
             return getpass.getpass(f"{message}: ")
 
-    
-
-    def confirm(
-
-        self,
-
-        message: str,
-
-        default: bool = False
-
-    ) -> bool:
-
+    def confirm(self, message: str, default: bool = False) -> bool:
         """Prompt for yes/no confirmation"""
 
         if self.use_questionary:
@@ -189,34 +151,24 @@ class PromptsHelper:
 
             response = input(f"{message} ({default_text}): ").strip().lower()
 
-            
-
             if not response:
 
                 return default
 
-            return response in ('y', 'yes', '1', 'true')
-
-    
+            return response in ("y", "yes", "1", "true")
 
     def select(
-
         self,
-
         message: str,
-
         choices: List[Union[str, Dict[str, Any]]],
-
-        default: Optional[Union[str, int]] = None
-
+        default: Optional[Union[str, int]] = None,
     ) -> str:
-
         """Prompt for selection from a list of choices"""
-        
+
         # Record this prompt for predictive learning
         if self.predictive_enabled:
-            context = {'type': 'select', 'choices_count': len(choices)}
-            self.record_prompt('select_prompt', context)
+            context = {"type": "select", "choices_count": len(choices)}
+            self.record_prompt("select_prompt", context)
 
         if self.use_questionary:
 
@@ -228,8 +180,6 @@ class PromptsHelper:
 
             print(f"\n{message}")
 
-            
-
             # Handle choice formatting
 
             formatted_choices = []
@@ -238,21 +188,21 @@ class PromptsHelper:
 
                 if isinstance(choice, dict):
 
-                    formatted_choices.append(choice.get('name', str(choice)))
+                    formatted_choices.append(choice.get("name", str(choice)))
 
                 else:
 
                     formatted_choices.append(str(choice))
 
-            
-
             for i, choice in enumerate(formatted_choices):
 
-                marker = ">" if (isinstance(default, int) and i == default) or choice == default else " "
+                marker = (
+                    ">"
+                    if (isinstance(default, int) and i == default) or choice == default
+                    else " "
+                )
 
                 print(f"  {marker} {i + 1}. {choice}")
-
-            
 
             while True:
 
@@ -270,8 +220,6 @@ class PromptsHelper:
 
                             return default
 
-                    
-
                     index = int(response) - 1
 
                     if 0 <= index < len(formatted_choices):
@@ -280,7 +228,9 @@ class PromptsHelper:
 
                     else:
 
-                        print(f"Please enter a number between 1 and {len(formatted_choices)}")
+                        print(
+                            f"Please enter a number between 1 and {len(formatted_choices)}"
+                        )
 
                 except ValueError:
 
@@ -292,20 +242,12 @@ class PromptsHelper:
 
                     sys.exit(1)
 
-    
-
     def multiselect(
-
         self,
-
         message: str,
-
         choices: List[Union[str, Dict[str, Any]]],
-
-        default: Optional[List[str]] = None
-
+        default: Optional[List[str]] = None,
     ) -> List[str]:
-
         """Prompt for multiple selections from a list of choices"""
 
         if self.use_questionary:
@@ -320,8 +262,6 @@ class PromptsHelper:
 
             print("(Use space to select, enter to confirm)")
 
-            
-
             # Handle choice formatting
 
             formatted_choices = []
@@ -330,17 +270,13 @@ class PromptsHelper:
 
                 if isinstance(choice, dict):
 
-                    formatted_choices.append(choice.get('name', str(choice)))
+                    formatted_choices.append(choice.get("name", str(choice)))
 
                 else:
 
                     formatted_choices.append(str(choice))
 
-            
-
             selected = set(default or [])
-
-            
 
             for i, choice in enumerate(formatted_choices):
 
@@ -348,11 +284,9 @@ class PromptsHelper:
 
                 print(f"  {marker} {i + 1}. {choice}")
 
-            
-
-            print("\nEnter numbers separated by spaces (e.g., '1 3 5'), or 'done' to finish:")
-
-            
+            print(
+                "\nEnter numbers separated by spaces (e.g., '1 3 5'), or 'done' to finish:"
+            )
 
             while True:
 
@@ -360,19 +294,13 @@ class PromptsHelper:
 
                     response = input("Select: ").strip().lower()
 
-                    
-
-                    if response in ('done', 'finish', ''):
+                    if response in ("done", "finish", ""):
 
                         break
-
-                    
 
                     # Parse space-separated numbers
 
                     indices = [int(x) - 1 for x in response.split()]
-
-                    
 
                     for index in indices:
 
@@ -396,11 +324,7 @@ class PromptsHelper:
 
                             print(f"Invalid choice: {index + 1}")
 
-                    
-
                     print("Current selection:", list(selected))
-
-                    
 
                 except ValueError:
 
@@ -412,26 +336,15 @@ class PromptsHelper:
 
                     sys.exit(1)
 
-            
-
             return list(selected)
 
-    
-
     def integer(
-
         self,
-
         message: str,
-
         default: Optional[int] = None,
-
         min_value: Optional[int] = None,
-
-        max_value: Optional[int] = None
-
+        max_value: Optional[int] = None,
     ) -> int:
-
         """Prompt for integer input"""
 
         if self.use_questionary:
@@ -456,17 +369,13 @@ class PromptsHelper:
 
                     return "Please enter a valid integer"
 
-            
-
-            return int(questionary.text(
-
-                message,
-
-                default=str(default) if default is not None else None,
-
-                validate=validate_int
-
-            ).ask())
+            return int(
+                questionary.text(
+                    message,
+                    default=str(default) if default is not None else None,
+                    validate=validate_int,
+                ).ask()
+            )
 
         elif self.use_rich:
 
@@ -488,19 +397,13 @@ class PromptsHelper:
 
                     prompt_text += ": "
 
-                    
-
                     response = input(prompt_text).strip()
 
                     if not response and default is not None:
 
                         return default
 
-                    
-
                     value = int(response)
-
-                    
 
                     if min_value is not None and value < min_value:
 
@@ -514,11 +417,7 @@ class PromptsHelper:
 
                         continue
 
-                    
-
                     return value
-
-                    
 
                 except ValueError:
 
@@ -530,22 +429,13 @@ class PromptsHelper:
 
                     sys.exit(1)
 
-    
-
     def float_input(
-
         self,
-
         message: str,
-
         default: Optional[float] = None,
-
         min_value: Optional[float] = None,
-
-        max_value: Optional[float] = None
-
+        max_value: Optional[float] = None,
     ) -> float:
-
         """Prompt for float input"""
 
         if self.use_rich:
@@ -568,19 +458,13 @@ class PromptsHelper:
 
                     prompt_text += ": "
 
-                    
-
                     response = input(prompt_text).strip()
 
                     if not response and default is not None:
 
                         return default
 
-                    
-
                     value = float(response)
-
-                    
 
                     if min_value is not None and value < min_value:
 
@@ -594,11 +478,7 @@ class PromptsHelper:
 
                         continue
 
-                    
-
                     return value
-
-                    
 
                 except ValueError:
 
@@ -610,24 +490,14 @@ class PromptsHelper:
 
                     sys.exit(1)
 
-    
-
     def path(
-
         self,
-
         message: str,
-
         default: Optional[str] = None,
-
         exists: bool = False,
-
         is_dir: bool = False,
-
-        is_file: bool = False
-
+        is_file: bool = False,
     ) -> Path:
-
         """Prompt for file/directory path"""
 
         def validate_path(path_str: str) -> Union[bool, str]:
@@ -636,25 +506,17 @@ class PromptsHelper:
 
                 path_obj = Path(path_str).expanduser()
 
-                
-
                 if exists and not path_obj.exists():
 
                     return f"Path does not exist: {path_obj}"
-
-                
 
                 if is_dir and path_obj.exists() and not path_obj.is_dir():
 
                     return f"Path is not a directory: {path_obj}"
 
-                
-
                 if is_file and path_obj.exists() and not path_obj.is_file():
 
                     return f"Path is not a file: {path_obj}"
-
-                
 
                 return True
 
@@ -662,18 +524,10 @@ class PromptsHelper:
 
                 return f"Invalid path: {e}"
 
-        
-
         if self.use_questionary:
 
             result = questionary.path(
-
-                message,
-
-                default=default,
-
-                validate=validate_path
-
+                message, default=default, validate=validate_path
             ).ask()
 
         else:
@@ -686,8 +540,6 @@ class PromptsHelper:
 
                 validation_result = validate_path(path_str)
 
-                
-
                 if validation_result is True:
 
                     result = path_str
@@ -698,12 +550,7 @@ class PromptsHelper:
 
                     print(validation_result)
 
-        
-
         return Path(result).expanduser()
-
-
-
 
 
 # Default instance
@@ -711,11 +558,7 @@ class PromptsHelper:
 _default_prompts = None
 
 
-
-
-
 def get_prompts_helper() -> PromptsHelper:
-
     """Get the default prompts helper instance"""
 
     global _default_prompts
@@ -727,83 +570,76 @@ def get_prompts_helper() -> PromptsHelper:
     return _default_prompts
 
 
-
-
-
 # Convenience functions
 
-def text(message: str, default: Optional[str] = None, validate: Optional[Callable] = None) -> str:
 
+def text(
+    message: str, default: Optional[str] = None, validate: Optional[Callable] = None
+) -> str:
     """Prompt for text input"""
 
     return get_prompts_helper().text(message, default, validate)
 
 
-
-
-
 def password(message: str = "Password") -> str:
-
     """Prompt for password input"""
 
     return get_prompts_helper().password(message)
 
 
-
-
-
 def confirm(message: str, default: bool = False) -> bool:
-
     """Prompt for confirmation"""
 
     return get_prompts_helper().confirm(message, default)
 
 
-
-
-
-def select(message: str, choices: List[Union[str, Dict]], default: Optional[Union[str, int]] = None) -> str:
-
+def select(
+    message: str,
+    choices: List[Union[str, Dict]],
+    default: Optional[Union[str, int]] = None,
+) -> str:
     """Prompt for selection from choices"""
 
     return get_prompts_helper().select(message, choices, default)
 
 
-
-
-
-def multiselect(message: str, choices: List[Union[str, Dict]], default: Optional[List[str]] = None) -> List[str]:
-
+def multiselect(
+    message: str, choices: List[Union[str, Dict]], default: Optional[List[str]] = None
+) -> List[str]:
     """Prompt for multiple selections"""
 
     return get_prompts_helper().multiselect(message, choices, default)
 
 
-
-
-
-def integer(message: str, default: Optional[int] = None, min_value: Optional[int] = None, max_value: Optional[int] = None) -> int:
-
+def integer(
+    message: str,
+    default: Optional[int] = None,
+    min_value: Optional[int] = None,
+    max_value: Optional[int] = None,
+) -> int:
     """Prompt for integer input"""
 
     return get_prompts_helper().integer(message, default, min_value, max_value)
 
 
-
-
-
-def float_input(message: str, default: Optional[float] = None, min_value: Optional[float] = None, max_value: Optional[float] = None) -> float:
-
+def float_input(
+    message: str,
+    default: Optional[float] = None,
+    min_value: Optional[float] = None,
+    max_value: Optional[float] = None,
+) -> float:
     """Prompt for float input"""
 
     return get_prompts_helper().float_input(message, default, min_value, max_value)
 
 
-
-
-
-def path(message: str, default: Optional[str] = None, exists: bool = False, is_dir: bool = False, is_file: bool = False) -> Path:
-
+def path(
+    message: str,
+    default: Optional[str] = None,
+    exists: bool = False,
+    is_dir: bool = False,
+    is_file: bool = False,
+) -> Path:
     """Prompt for file/directory path"""
 
     return get_prompts_helper().path(message, default, exists, is_dir, is_file)

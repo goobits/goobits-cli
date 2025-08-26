@@ -1,7 +1,5 @@
 """Rust CLI generator implementation."""
 
-
-
 import json
 
 
@@ -20,35 +18,45 @@ FileSystemLoader = None
 TemplateNotFound = None
 typer = None
 
+
 def _lazy_imports():
     """Load heavy dependencies only when needed."""
     global Environment, FileSystemLoader, TemplateNotFound, typer
-    
+
     if Environment is None:
         from jinja2 import Environment as _Environment
         from jinja2 import FileSystemLoader as _FileSystemLoader
         from jinja2 import TemplateNotFound as _TemplateNotFound
+
         Environment = _Environment
         FileSystemLoader = _FileSystemLoader
         TemplateNotFound = _TemplateNotFound
     if typer is None:
         import typer as _typer
+
         typer = _typer
 
 
-
-from . import BaseGenerator, GeneratorError, ConfigurationError, TemplateError, DependencyError, ValidationError, _safe_to_dict
+from . import (
+    BaseGenerator,
+    GeneratorError,
+    ConfigurationError,
+    TemplateError,
+    DependencyError,
+    ValidationError,
+    _safe_to_dict,
+)
 
 from ..schemas import ConfigSchema, GoobitsConfigSchema
 
 from ..formatter import (
-
-    align_examples, format_multiline_text, escape_for_docstring,
-
-    align_setup_steps, format_icon_spacing, align_header_items
-
+    align_examples,
+    format_multiline_text,
+    escape_for_docstring,
+    align_setup_steps,
+    format_icon_spacing,
+    align_header_items,
 )
-
 
 
 # Universal Template System imports
@@ -56,9 +64,11 @@ from ..formatter import (
 from ..universal.template_engine import UniversalTemplateEngine
 from ..universal.renderers.rust_renderer import RustRenderer
 from ..universal.interactive import integrate_interactive_mode
-from ..universal.completion import integrate_completion_system, get_completion_files_for_language
+from ..universal.completion import (
+    integrate_completion_system,
+    get_completion_files_for_language,
+)
 from ..universal.plugins import integrate_plugin_system
-
 
 
 try:
@@ -68,9 +78,6 @@ try:
 except ImportError:
 
     DocumentationGenerator = None
-
-
-
 
 
 # Error classes now imported from shared generators.__init__ module
@@ -86,13 +93,14 @@ MAX_TEMPLATE_SIZE = 10 * 1024 * 1024  # 10MB template size limit
 # Timeout decorator to prevent hanging template operations
 def render_with_timeout(timeout=30):
     """Decorator to add timeout to template rendering operations."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = [None]
             exception = [None]
             completed = threading.Event()
-            
+
             def target():
                 try:
                     result[0] = func(*args, **kwargs)
@@ -100,38 +108,35 @@ def render_with_timeout(timeout=30):
                     exception[0] = e
                 finally:
                     completed.set()
-            
+
             thread = threading.Thread(target=target)
             thread.daemon = True
             thread.start()
-            
+
             # Wait for completion or timeout
             if not completed.wait(timeout=timeout):
                 # Thread is still running after timeout
                 raise TemplateError(
                     f"Template rendering operation timed out after {timeout} seconds",
-                    template_name=getattr(func, '__name__', 'unknown')
+                    template_name=getattr(func, "__name__", "unknown"),
                 )
-            
+
             if exception[0]:
                 raise exception[0]
-            
+
             return result[0]
+
         return wrapper
+
     return decorator
 
 
 class RustGenerator(BaseGenerator):
-
     """CLI code generator for Rust using clap framework."""
-
-    
 
     def __init__(self):
         """Initialize the Rust generator with Universal Template System."""
         _lazy_imports()  # Initialize lazy imports when generator is created
-
-        
 
         # Initialize Universal Template System
         try:
@@ -141,19 +146,15 @@ class RustGenerator(BaseGenerator):
         except Exception as e:
             raise DependencyError(
                 f"Failed to initialize Universal Template System: {e}",
-                dependency="goobits-cli universal templates", 
-                install_command="pip install --upgrade goobits-cli"
+                dependency="goobits-cli universal templates",
+                install_command="pip install --upgrade goobits-cli",
             ) from e
-
-        
 
         # Set up Jinja2 environment for template fallbacks
 
         template_dir = Path(__file__).parent.parent / "templates" / "rust"
 
         fallback_dir = Path(__file__).parent.parent / "templates"
-
-        
 
         # Try rust subdirectory first, fallback to main templates
 
@@ -162,7 +163,7 @@ class RustGenerator(BaseGenerator):
             self.env = Environment(
                 loader=FileSystemLoader([template_dir, fallback_dir]),
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
             )
 
         else:
@@ -172,72 +173,63 @@ class RustGenerator(BaseGenerator):
             self.env = Environment(
                 loader=FileSystemLoader(fallback_dir),
                 trim_blocks=True,
-                lstrip_blocks=True
+                lstrip_blocks=True,
             )
 
             self.template_missing = True
-
-        
 
         # Add custom filters
 
         try:
 
-            self.env.filters['align_examples'] = align_examples
+            self.env.filters["align_examples"] = align_examples
 
-            self.env.filters['format_multiline'] = format_multiline_text
+            self.env.filters["format_multiline"] = format_multiline_text
 
-            self.env.filters['escape_docstring'] = escape_for_docstring
+            self.env.filters["escape_docstring"] = escape_for_docstring
 
-            self.env.filters['align_setup_steps'] = align_setup_steps
+            self.env.filters["align_setup_steps"] = align_setup_steps
 
-            self.env.filters['format_icon'] = format_icon_spacing
+            self.env.filters["format_icon"] = format_icon_spacing
 
-            self.env.filters['align_header_items'] = align_header_items
+            self.env.filters["align_header_items"] = align_header_items
 
-            self.env.filters['to_rust_type'] = self._to_rust_type
+            self.env.filters["to_rust_type"] = self._to_rust_type
 
-            self.env.filters['to_snake_case'] = self._to_snake_case
+            self.env.filters["to_snake_case"] = self._to_snake_case
 
-            self.env.filters['to_screaming_snake_case'] = self._to_screaming_snake_case
+            self.env.filters["to_screaming_snake_case"] = self._to_screaming_snake_case
 
-            self.env.filters['to_pascal_case'] = self._to_pascal_case
+            self.env.filters["to_pascal_case"] = self._to_pascal_case
 
-            self.env.filters['escape_rust_string'] = self._escape_rust_string
+            self.env.filters["escape_rust_string"] = self._escape_rust_string
 
         except Exception as e:
 
             raise DependencyError(
-
                 f"Failed to register template filters: {str(e)}",
-
-                dependency="goobits-cli formatter"
-
+                dependency="goobits-cli formatter",
             ) from e
-
-        
 
         # Initialize generated files storage
 
         self._generated_files = {}
 
-        
-
         # Initialize shared components
 
         self.doc_generator = None  # Will be initialized when config is available
 
-    
-
-    def generate(self, config: Union[ConfigSchema, GoobitsConfigSchema, dict], 
-
-                 config_filename: str, version: Optional[str] = None) -> str:
-
+    def generate(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema, dict],
+        config_filename: str,
+        version: Optional[str] = None,
+    ) -> str:
         """
 
         Generate Rust CLI code from configuration.
 
-        
+
 
         Args:
 
@@ -247,14 +239,14 @@ class RustGenerator(BaseGenerator):
 
             version: Optional version string
 
-            
+
 
         Returns:
 
             Generated Rust CLI code
 
         """
-        
+
         # Handle dict config by converting to ConfigSchema
         if isinstance(config, dict):
             try:
@@ -266,48 +258,59 @@ class RustGenerator(BaseGenerator):
         # Check if config_filename looks like a directory path (E2E test compatibility)
         # E2E tests call generator.generate(config, str(tmp_path)) expecting files to be written
         from pathlib import Path
+
         config_path = Path(config_filename)
-        if (config_path.is_dir() or 
-            (not config_path.suffix and config_path.exists()) or
-            (not config_path.suffix and ('pytest' in config_filename or config_filename.endswith('_test')))):
-            
+        if (
+            config_path.is_dir()
+            or (not config_path.suffix and config_path.exists())
+            or (
+                not config_path.suffix
+                and ("pytest" in config_filename or config_filename.endswith("_test"))
+            )
+        ):
+
             # For E2E tests, generate all files and write them to the output directory
             generated_files = self.generate_all_files(config, "test.yaml", version)
-            
+
             # Write files to the output directory
             output_path = Path(config_filename)
             output_path.mkdir(parents=True, exist_ok=True)
-            
+
             for file_path, content in generated_files.items():
                 full_path = output_path / file_path
                 # Create parent directories if needed
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 # Write file content
-                full_path.write_text(content, encoding='utf-8')
-            
+                full_path.write_text(content, encoding="utf-8")
+
             # Return the main.rs content for compatibility
-            return generated_files.get('src/main.rs', '')
-        
+            return generated_files.get("src/main.rs", "")
+
         # Normal case: config_filename is actually a filename
         # Use Universal Template System
         return self._generate_cli(config, config_filename, version)
 
-    
-
-    def _get_dynamic_version(self, version: Optional[str], cli_config=None, project_dir: str = ".") -> str:
+    def _get_dynamic_version(
+        self, version: Optional[str], cli_config=None, project_dir: str = "."
+    ) -> str:
         """Get version dynamically from Cargo.toml or fall back to config/default."""
         from . import BaseGenerator
-        return BaseGenerator._get_dynamic_version(self, version, cli_config, "rust", project_dir)
 
-    def _generate_cli(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
+        return BaseGenerator._get_dynamic_version(
+            self, version, cli_config, "rust", project_dir
+        )
 
-                                         config_filename: str, version: Optional[str] = None) -> str:
-
+    def _generate_cli(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        config_filename: str,
+        version: Optional[str] = None,
+    ) -> str:
         """
 
         Generate using Universal Template System.
 
-        
+
 
         Args:
 
@@ -317,7 +320,7 @@ class RustGenerator(BaseGenerator):
 
             version: Optional version string
 
-            
+
 
         Returns:
 
@@ -333,8 +336,6 @@ class RustGenerator(BaseGenerator):
 
                 raise RuntimeError("Universal Template Engine not initialized")
 
-            
-
             # Convert config to GoobitsConfigSchema if needed
 
             if isinstance(config, ConfigSchema):
@@ -342,80 +343,79 @@ class RustGenerator(BaseGenerator):
                 # Create minimal GoobitsConfigSchema for universal system
 
                 goobits_config = GoobitsConfigSchema(
-
-                    package_name=getattr(config, 'package_name', config.cli.name),
-
-                    command_name=getattr(config, 'command_name', config.cli.name),
-
-                    display_name=getattr(config, 'display_name', config.cli.name.title()),
-
-                    description=getattr(config, 'description', config.cli.description or config.cli.tagline),
-
+                    package_name=getattr(config, "package_name", config.cli.name),
+                    command_name=getattr(config, "command_name", config.cli.name),
+                    display_name=getattr(
+                        config, "display_name", config.cli.name.title()
+                    ),
+                    description=getattr(
+                        config,
+                        "description",
+                        config.cli.description or config.cli.tagline,
+                    ),
                     cli=config.cli,
-
-                    installation=getattr(config, 'installation', None)
-
+                    installation=getattr(config, "installation", None),
                 )
 
             else:
 
                 goobits_config = config
 
-                
-
             # Integrate interactive mode support
 
             if integrate_interactive_mode:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = (
+                    goobits_config.model_dump()
+                    if hasattr(goobits_config, "model_dump")
+                    else goobits_config.dict()
+                )
 
-                config_dict = integrate_interactive_mode(config_dict, 'rust')
+                config_dict = integrate_interactive_mode(config_dict, "rust")
 
                 # Convert back to GoobitsConfigSchema
 
                 goobits_config = GoobitsConfigSchema(**config_dict)
-
-            
 
             # Integrate completion system support
 
             if integrate_completion_system:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = (
+                    goobits_config.model_dump()
+                    if hasattr(goobits_config, "model_dump")
+                    else goobits_config.dict()
+                )
 
-                config_dict = integrate_completion_system(config_dict, 'rust')
+                config_dict = integrate_completion_system(config_dict, "rust")
 
                 # Convert back to GoobitsConfigSchema
 
                 goobits_config = GoobitsConfigSchema(**config_dict)
-
-            
 
             # Integrate plugin system support
 
             if integrate_plugin_system:
 
-                config_dict = goobits_config.model_dump() if hasattr(goobits_config, 'model_dump') else goobits_config.dict()
+                config_dict = (
+                    goobits_config.model_dump()
+                    if hasattr(goobits_config, "model_dump")
+                    else goobits_config.dict()
+                )
 
-                config_dict = integrate_plugin_system(config_dict, 'rust')
+                config_dict = integrate_plugin_system(config_dict, "rust")
 
                 # Convert back to GoobitsConfigSchema
 
                 goobits_config = GoobitsConfigSchema(**config_dict)
-
-            
 
             # Generate using universal engine
 
             output_dir = Path(".")
 
             generated_files = self.universal_engine.generate_cli(
-
                 goobits_config, "rust", output_dir
-
             )
-
-            
 
             # Store generated files for later access
 
@@ -429,15 +429,16 @@ class RustGenerator(BaseGenerator):
 
                 self._generated_files[str(relative_path)] = content
 
-            
-
             # Return main CLI file for backward compatibility
 
-            main_cli_file = next((content for path, content in generated_files.items() 
-
-                                if "src/main.rs" in path), "")
-
-            
+            main_cli_file = next(
+                (
+                    content
+                    for path, content in generated_files.items()
+                    if "src/main.rs" in path
+                ),
+                "",
+            )
 
             if not main_cli_file:
 
@@ -445,17 +446,15 @@ class RustGenerator(BaseGenerator):
 
                 main_cli_file = next(iter(generated_files.values()), "")
 
-                
-
             return main_cli_file
-
-            
 
         except Exception as e:
 
             # Handle template generation failure
 
-            typer.echo(f"⚠️  Template generation failed ({type(e).__name__}: {e})", err=True)
+            typer.echo(
+                f"⚠️  Template generation failed ({type(e).__name__}: {e})", err=True
+            )
 
             # Universal templates failed - this is now a critical error
 
@@ -466,19 +465,18 @@ class RustGenerator(BaseGenerator):
 1. Check Rust configuration syntax
 2. Ensure all required fields are present  
 3. Try with --debug flag for detailed logs"""
-            
+
             typer.echo(error_msg, err=True)
             raise RuntimeError(f"Rust CLI generation failed: {e}") from e
 
-    
-
-    def generate_all_files(self, config, config_filename: str, version: Optional[str] = None) -> Dict[str, str]:
-
+    def generate_all_files(
+        self, config, config_filename: str, version: Optional[str] = None
+    ) -> Dict[str, str]:
         """
 
         Generate all files needed for the Rust CLI.
 
-        
+
 
         Args:
 
@@ -488,7 +486,7 @@ class RustGenerator(BaseGenerator):
 
             version: Optional version string
 
-            
+
 
         Returns:
 
@@ -502,8 +500,6 @@ class RustGenerator(BaseGenerator):
 
             self.generate(config, config_filename, version)
 
-            
-
             # For universal templates, files are already generated during generate() call
             # Return the stored files from generation
             return self._generated_files.copy() if self._generated_files else {}
@@ -512,105 +508,79 @@ class RustGenerator(BaseGenerator):
 
             # Wrap and re-raise any errors
 
-            raise TemplateError(
-
-                f"Failed to generate all files: {str(e)}"
-
-            ) from e
-
-    
+            raise TemplateError(f"Failed to generate all files: {str(e)}") from e
 
     def get_output_files(self) -> List[str]:
-
         """Return list of files this generator creates."""
 
         return [
-
             "src/main.rs",
-
             "src/hooks.rs",
-
             "src/logger.rs",
-
             "src/cli.rs",
-
             "src/config.rs",
-
             "src/errors.rs",
-
             "src/completion.rs",
-
             "Cargo.toml",
-
             "setup.sh",
-
             "README.md",
-
-            ".gitignore"
-
+            ".gitignore",
         ]
 
-    
-
     def get_default_output_path(self, package_name: str) -> str:
-
         """Get the default output path for Rust CLI."""
 
         return "src/main.rs"
 
-    
-
     def get_generated_files(self) -> dict:
-
         """Get all generated files from the last generate() call."""
 
-        return getattr(self, '_generated_files', {})
-    
-    def generate_to_directory(self, config: Union[ConfigSchema, GoobitsConfigSchema], 
-                              output_directory: str, config_filename: str = "goobits.yaml", 
-                              version: Optional[str] = None) -> Dict[str, str]:
+        return getattr(self, "_generated_files", {})
+
+    def generate_to_directory(
+        self,
+        config: Union[ConfigSchema, GoobitsConfigSchema],
+        output_directory: str,
+        config_filename: str = "goobits.yaml",
+        version: Optional[str] = None,
+    ) -> Dict[str, str]:
         """
         Generate CLI files and write them to the specified output directory.
-        
+
         Args:
             config: The configuration object
             output_directory: Directory where files should be written
             config_filename: Name of the configuration file (default: "goobits.yaml")
             version: Optional version string
-            
+
         Returns:
             Dictionary mapping file paths to their contents (for compatibility)
         """
         from pathlib import Path
-        
+
         # Generate all files
         generated_files = self.generate_all_files(config, config_filename, version)
-        
+
         # Ensure output directory exists
         output_path = Path(output_directory)
         output_path.mkdir(parents=True, exist_ok=True)
-        
+
         # Write each file to disk
         for file_path, content in generated_files.items():
             full_path = output_path / file_path
             # Create parent directories if needed
             full_path.parent.mkdir(parents=True, exist_ok=True)
             # Write file content
-            full_path.write_text(content, encoding='utf-8')
-        
+            full_path.write_text(content, encoding="utf-8")
+
         return generated_files
 
-    
-
     def _validate_config(self, config: ConfigSchema) -> None:
-
         """Validate configuration and provide helpful error messages."""
 
         cli = config.cli
 
         defined_commands = set(cli.commands.keys())
-
-        
 
         # Validate command groups reference existing commands
 
@@ -623,18 +593,11 @@ class RustGenerator(BaseGenerator):
                 if invalid_commands:
 
                     raise ValidationError(
-
                         f"Command group '{group.name}' references non-existent commands: {', '.join(sorted(invalid_commands))}",
-
                         field=f"command_groups.{group.name}.commands",
-
                         value=str(list(invalid_commands)),
-
-                        valid_options=list(defined_commands)
-
+                        valid_options=list(defined_commands),
                     )
-
-        
 
         # Validate command structure
 
@@ -643,16 +606,10 @@ class RustGenerator(BaseGenerator):
             if not cmd_data.desc:
 
                 raise ValidationError(
-
                     f"Command '{cmd_name}' is missing required description",
-
                     field=f"commands.{cmd_name}.desc",
-
-                    value="empty"
-
+                    value="empty",
                 )
-
-            
 
             # Validate arguments
 
@@ -663,141 +620,103 @@ class RustGenerator(BaseGenerator):
                     if not arg.desc:
 
                         raise ValidationError(
-
                             f"Argument '{arg.name}' in command '{cmd_name}' is missing required description",
-
                             field=f"commands.{cmd_name}.args.{arg.name}.desc",
-
-                            value="empty"
-
+                            value="empty",
                         )
-
-            
 
             # Validate options
 
             if cmd_data.options:
 
-                valid_types = ['str', 'string', 'int', 'float', 'bool', 'flag']
+                valid_types = ["str", "string", "int", "float", "bool", "flag"]
 
                 for opt in cmd_data.options:
 
                     if not opt.desc:
 
                         raise ValidationError(
-
                             f"Option '{opt.name}' in command '{cmd_name}' is missing required description",
-
                             field=f"commands.{cmd_name}.options.{opt.name}.desc",
-
-                            value="empty"
-
+                            value="empty",
                         )
 
                     if opt.type not in valid_types:
 
                         raise ValidationError(
-
                             f"Option '{opt.name}' in command '{cmd_name}' has invalid type '{opt.type}'",
-
                             field=f"commands.{cmd_name}.options.{opt.name}.type",
-
                             value=opt.type,
-
-                            valid_options=valid_types
-
+                            valid_options=valid_types,
                         )
 
-    
-
     def _to_rust_type(self, python_type: str) -> str:
-
         """Convert Python type hints to Rust types."""
 
         type_map = {
-
-            'str': 'String',
-
-            'int': 'i32',
-
-            'float': 'f64',
-
-            'bool': 'bool',
-
-            'flag': 'bool',
-
-            'list': 'Vec<String>',
-
-            'dict': 'std::collections::HashMap<String, String>',
-
+            "str": "String",
+            "int": "i32",
+            "float": "f64",
+            "bool": "bool",
+            "flag": "bool",
+            "list": "Vec<String>",
+            "dict": "std::collections::HashMap<String, String>",
         }
 
-        return type_map.get(python_type, 'String')
-
-    
+        return type_map.get(python_type, "String")
 
     def _to_snake_case(self, text: str) -> str:
-
         """Convert text to snake_case."""
 
-        return text.replace('-', '_').replace(' ', '_').lower()
-
-    
+        return text.replace("-", "_").replace(" ", "_").lower()
 
     def _to_screaming_snake_case(self, text: str) -> str:
-
         """Convert text to SCREAMING_SNAKE_CASE."""
 
         return self._to_snake_case(text).upper()
 
-    
-
     def _to_pascal_case(self, text: str) -> str:
-
         """Convert text to PascalCase."""
 
         if not text:
 
             return text
 
-        words = text.replace('-', '_').replace(' ', '_').split('_')
+        words = text.replace("-", "_").replace(" ", "_").split("_")
 
-        return ''.join(word.capitalize() for word in words)
-
-    
+        return "".join(word.capitalize() for word in words)
 
     def _escape_rust_string(self, text: str) -> str:
-
         """Escape string for Rust string literal."""
 
-        return text.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n').replace('\t', '\\t')
-
-    
+        return (
+            text.replace("\\", "\\\\")
+            .replace('"', '\\"')
+            .replace("\n", "\\n")
+            .replace("\t", "\\t")
+        )
 
     def _generate_fallback_main_rs(self, context: dict) -> str:
-
         """Generate a basic main.rs when templates are missing."""
 
-        context['cli']
+        context["cli"]
 
-        package_name = context['package_name'] or 'my-cli'
+        package_name = context["package_name"] or "my-cli"
 
-        command_name = context['command_name'] or package_name
+        command_name = context["command_name"] or package_name
 
         # Get the CLI tagline or fallback to description
-        cli = context.get('cli')
-        if cli and hasattr(cli, 'tagline') and cli.tagline:
+        cli = context.get("cli")
+        if cli and hasattr(cli, "tagline") and cli.tagline:
             description = cli.tagline
         else:
-            description = context.get('description', 'A CLI tool')
+            description = context.get("description", "A CLI tool")
 
-        version = context['version']
-
-        
+        version = context["version"]
 
         from datetime import datetime
-        
-        return f'''//! ╔══════════════════════════════════════════════════════════════════════════╗
+
+        return f"""//! ╔══════════════════════════════════════════════════════════════════════════╗
 //! ║                           AUTO-GENERATED FILE                               ║
 //! ║                                                                              ║
 //! ║  Generated by: goobits-cli v{version}                                       ║
@@ -948,83 +867,84 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
 
 }}
 
-'''
-
-    
+"""
 
     def _generate_subcommand_recursively(self, cmd_data, indent_level=0) -> str:
         """Recursively generate subcommand definitions for nested commands."""
         result = ""
-        
+
         # Add arguments for this command
-        if hasattr(cmd_data, 'args') and cmd_data.args:
+        if hasattr(cmd_data, "args") and cmd_data.args:
             for arg in cmd_data.args:
-                if hasattr(arg, 'nargs') and arg.nargs == "*":
-                    result += f'''
+                if hasattr(arg, "nargs") and arg.nargs == "*":
+                    result += f"""
                     .arg(Arg::new("{arg.name}")
                         .help("{arg.desc}")
                         .num_args(0..)
-                        .value_name("{arg.name.upper()}"))'''
+                        .value_name("{arg.name.upper()}"))"""
                 else:
-                    result += f'''
+                    result += f"""
                     .arg(Arg::new("{arg.name}")
                         .help("{arg.desc}")
                         .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
-                        .value_name("{arg.name.upper()}"))'''
-        
+                        .value_name("{arg.name.upper()}"))"""
+
         # Add options for this command
-        if hasattr(cmd_data, 'options') and cmd_data.options:
+        if hasattr(cmd_data, "options") and cmd_data.options:
             for opt in cmd_data.options:
-                short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
-                if opt.type == 'bool' or opt.type == 'flag':
-                    result += f'''
+                short_part = (
+                    f".short('{opt.short}')"
+                    if hasattr(opt, "short") and opt.short and opt.short != "None"
+                    else ""
+                )
+                if opt.type == "bool" or opt.type == "flag":
+                    result += f"""
                     .arg(Arg::new("{opt.name}")
                         .help("{opt.desc}")
                         {short_part}
                         .long("{opt.name}")
-                        .action(clap::ArgAction::SetTrue))'''
-                elif opt.type == 'int':
-                    result += f'''
+                        .action(clap::ArgAction::SetTrue))"""
+                elif opt.type == "int":
+                    result += f"""
                     .arg(Arg::new("{opt.name}")
                         .help("{opt.desc}")
                         {short_part}
                         .long("{opt.name}")
-                        .value_name("NUMBER"))'''
+                        .value_name("NUMBER"))"""
                 else:
-                    result += f'''
+                    result += f"""
                     .arg(Arg::new("{opt.name}")
                         .help("{opt.desc}")
                         {short_part}
                         .long("{opt.name}")
-                        .value_name("VALUE"))'''
-        
+                        .value_name("VALUE"))"""
+
         # Recursively add subcommands if they exist
-        if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+        if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
             for sub_name, sub_data in cmd_data.subcommands.items():
-                result += f'''
+                result += f"""
             .subcommand(
                 Command::new("{sub_name}")
-                    .about("{sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'}")'''
-                
+                    .about("{sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'}")"""
+
                 # Recursively process this subcommand
-                result += self._generate_subcommand_recursively(sub_data, indent_level + 1)
-                
-                result += '''
-            )'''
-        
+                result += self._generate_subcommand_recursively(
+                    sub_data, indent_level + 1
+                )
+
+                result += """
+            )"""
+
         return result
 
     def _generate_fallback_commands(self, context: dict) -> str:
-
         """Generate command definitions for fallback main.rs."""
 
-        cli_config = context.get('cli')
+        cli_config = context.get("cli")
 
-        if not cli_config or not hasattr(cli_config, 'commands'):
+        if not cli_config or not hasattr(cli_config, "commands"):
 
-            return '// No commands configured'
-
-        
+            return "// No commands configured"
 
         commands = []
 
@@ -1033,90 +953,89 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
             command_count += 1
             if command_count > MAX_COMMANDS:
                 break  # Prevent excessive iteration
-            
+
             # Check if command has subcommands
-            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
-                cmd_def = f'''app = app.subcommand(
+            if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
+                cmd_def = f"""app = app.subcommand(
         Command::new("{cmd_name}")
             .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")
             .subcommand_required(true)
-            .arg_required_else_help(true)'''
-            
+            .arg_required_else_help(true)"""
+
                 # Use recursive helper to generate all nested subcommands
                 cmd_def += self._generate_subcommand_recursively(cmd_data, 0)
-                
-                cmd_def += '''
-    );'''
+
+                cmd_def += """
+    );"""
             else:
                 # Simple command without subcommands
-                cmd_def = f'''app = app.subcommand(
+                cmd_def = f"""app = app.subcommand(
         Command::new("{cmd_name}")
-            .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")'''
+            .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")"""
 
                 # Add arguments
-                if hasattr(cmd_data, 'args') and cmd_data.args:
+                if hasattr(cmd_data, "args") and cmd_data.args:
                     for arg in cmd_data.args:
-                        if hasattr(arg, 'nargs') and arg.nargs == "*":
-                            cmd_def += f'''
+                        if hasattr(arg, "nargs") and arg.nargs == "*":
+                            cmd_def += f"""
             .arg(Arg::new("{arg.name}")
                 .help("{arg.desc}")
                 .num_args(0..)
-                .value_name("{arg.name.upper()}"))'''
+                .value_name("{arg.name.upper()}"))"""
                         else:
-                            cmd_def += f'''
+                            cmd_def += f"""
             .arg(Arg::new("{arg.name}")
                 .help("{arg.desc}")
                 .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
-                .value_name("{arg.name.upper()}"))'''
+                .value_name("{arg.name.upper()}"))"""
 
                 # Add options
-                if hasattr(cmd_data, 'options') and cmd_data.options:
+                if hasattr(cmd_data, "options") and cmd_data.options:
                     for opt in cmd_data.options:
-                        short_part = f".short('{opt.short}')" if hasattr(opt, 'short') and opt.short and opt.short != 'None' else ""
-                        if opt.type == 'bool' or opt.type == 'flag':
-                            cmd_def += f'''
+                        short_part = (
+                            f".short('{opt.short}')"
+                            if hasattr(opt, "short")
+                            and opt.short
+                            and opt.short != "None"
+                            else ""
+                        )
+                        if opt.type == "bool" or opt.type == "flag":
+                            cmd_def += f"""
             .arg(Arg::new("{opt.name}")
                 .help("{opt.desc}")
                 {short_part}
                 .long("{opt.name}")
-                .action(clap::ArgAction::SetTrue))'''
-                        elif opt.type == 'int':
-                            cmd_def += f'''
+                .action(clap::ArgAction::SetTrue))"""
+                        elif opt.type == "int":
+                            cmd_def += f"""
             .arg(Arg::new("{opt.name}")
                 .help("{opt.desc}")
                 {short_part}
                 .long("{opt.name}")
-                .value_name("NUMBER"))'''
+                .value_name("NUMBER"))"""
                         else:
-                            cmd_def += f'''
+                            cmd_def += f"""
             .arg(Arg::new("{opt.name}")
                 .help("{opt.desc}")
                 {short_part}
                 .long("{opt.name}")
-                .value_name("VALUE"))'''
+                .value_name("VALUE"))"""
 
-                cmd_def += '''
-    );'''
-            
+                cmd_def += """
+    );"""
+
             commands.append(cmd_def)
 
-        
-
-        return '\n'.join(commands) if commands else '// No commands configured'
-
-    
+        return "\n".join(commands) if commands else "// No commands configured"
 
     def _generate_fallback_command_handlers(self, context: dict) -> str:
-
         """Generate command handlers for fallback main.rs."""
 
-        cli_config = context.get('cli')
+        cli_config = context.get("cli")
 
-        if not cli_config or not hasattr(cli_config, 'commands'):
+        if not cli_config or not hasattr(cli_config, "commands"):
 
-            return ''
-
-        
+            return ""
 
         handlers = []
         handler_count = 0
@@ -1126,20 +1045,23 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 break  # Prevent excessive iteration
 
             safe_cmd_name = self._to_snake_case(cmd_name)
-            
+
             # Check if command has subcommands
-            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+            if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
                 # Generate handler for command with subcommands
                 subcommand_handlers = []
                 for sub_name, sub_data in cmd_data.subcommands.items():
                     safe_sub_name = self._to_snake_case(sub_name)
                     hook_name = f"on_{safe_cmd_name}_{safe_sub_name}"
-                    
+
                     # Generate parameter extraction for this subcommand
-                    param_extraction = self._generate_parameter_extraction(sub_data, is_subcommand=True)
+                    param_extraction = self._generate_parameter_extraction(
+                        sub_data, is_subcommand=True
+                    )
                     hook_call = self._generate_hook_call(hook_name, sub_data)
-                    
-                    subcommand_handlers.append(f'''Some(("{sub_name}", sub_sub_matches)) => {{
+
+                    subcommand_handlers.append(
+                        f"""Some(("{sub_name}", sub_sub_matches)) => {{
                 let context = create_command_context("{cmd_name}-{sub_name}", &[]);
                 set_context(context);
                 info("main", "Executing {cmd_name} {sub_name} command", None);
@@ -1150,26 +1072,34 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                     std::process::exit(1);
                 }}
                 Ok(())
-            }}''')
-                
-                subcommand_handlers.append('''_ => {
+            }}"""
+                    )
+
+                subcommand_handlers.append(
+                    """_ => {
                 error("main", "Unknown subcommand. Use --help for available options.", None);
                 std::process::exit(1);
-            }''')
-                
-                subcommand_handler_code = '\n            '.join(subcommand_handlers)
-                
-                handlers.append(f'''Some(("{cmd_name}", sub_matches)) => {{
+            }"""
+                )
+
+                subcommand_handler_code = "\n            ".join(subcommand_handlers)
+
+                handlers.append(
+                    f"""Some(("{cmd_name}", sub_matches)) => {{
             match sub_matches.subcommand() {{
                 {subcommand_handler_code}
             }}
-        }}''')
+        }}"""
+                )
             else:
                 # Generate handler for simple command
-                param_extraction = self._generate_parameter_extraction(cmd_data, is_subcommand=False)
+                param_extraction = self._generate_parameter_extraction(
+                    cmd_data, is_subcommand=False
+                )
                 hook_call = self._generate_hook_call(f"on_{safe_cmd_name}", cmd_data)
-                
-                handlers.append(f'''Some(("{cmd_name}", sub_matches)) => {{
+
+                handlers.append(
+                    f"""Some(("{cmd_name}", sub_matches)) => {{
             let context = create_command_context("{cmd_name}", &[]);
             set_context(context);
             info("main", "Executing {cmd_name} command", None);
@@ -1180,100 +1110,116 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 std::process::exit(1);
             }}
             Ok(())
-        }}''')
+        }}"""
+                )
 
-        
+        return "\n        ".join(handlers)
 
-        return '\n        '.join(handlers)
-
-    
-    
     def _generate_parameter_extraction(self, cmd_data, is_subcommand=False) -> str:
         """Generate parameter extraction code from ArgMatches."""
         extractions = []
         matches_var = "sub_sub_matches" if is_subcommand else "sub_matches"
-        
+
         # Collect option names to detect conflicts with global options
         option_names = set()
-        if hasattr(cmd_data, 'options') and cmd_data.options:
+        if hasattr(cmd_data, "options") and cmd_data.options:
             option_names = {opt.name for opt in cmd_data.options}
-        
+
         # Extract arguments
-        if hasattr(cmd_data, 'args') and cmd_data.args:
+        if hasattr(cmd_data, "args") and cmd_data.args:
             for arg in cmd_data.args:
-                if hasattr(arg, 'nargs') and arg.nargs == "*":
-                    extractions.append(f'''let {arg.name}: Vec<&str> = {matches_var}.get_many::<String>("{arg.name}")
+                if hasattr(arg, "nargs") and arg.nargs == "*":
+                    extractions.append(
+                        f"""let {arg.name}: Vec<&str> = {matches_var}.get_many::<String>("{arg.name}")
                     .unwrap_or_default()
                     .map(|s| s.as_str())
-                    .collect();''')
+                    .collect();"""
+                    )
                 else:
-                    extractions.append(f'''let {arg.name} = {matches_var}.get_one::<String>("{arg.name}").map(|s| s.as_str()).unwrap_or("");''')
-        
+                    extractions.append(
+                        f"""let {arg.name} = {matches_var}.get_one::<String>("{arg.name}").map(|s| s.as_str()).unwrap_or("");"""
+                    )
+
         # Extract options with smart naming
-        if hasattr(cmd_data, 'options') and cmd_data.options:
+        if hasattr(cmd_data, "options") and cmd_data.options:
             for opt in cmd_data.options:
-                var_name = f"opt_{opt.name}" if opt.name in ['verbose', 'config'] else opt.name
-                if opt.type == 'bool' or opt.type == 'flag':
-                    extractions.append(f'''let {var_name} = {matches_var}.get_flag("{opt.name}");''')
-                elif opt.type == 'int':
-                    extractions.append(f'''let {var_name}: Option<i32> = {matches_var}.get_one::<String>("{opt.name}")
-                    .and_then(|s| s.parse().ok());''')
+                var_name = (
+                    f"opt_{opt.name}" if opt.name in ["verbose", "config"] else opt.name
+                )
+                if opt.type == "bool" or opt.type == "flag":
+                    extractions.append(
+                        f"""let {var_name} = {matches_var}.get_flag("{opt.name}");"""
+                    )
+                elif opt.type == "int":
+                    extractions.append(
+                        f"""let {var_name}: Option<i32> = {matches_var}.get_one::<String>("{opt.name}")
+                    .and_then(|s| s.parse().ok());"""
+                    )
                 else:
-                    extractions.append(f'''let {var_name}: Option<&str> = {matches_var}.get_one::<String>("{opt.name}").map(|s| s.as_str());''')
-        
+                    extractions.append(
+                        f"""let {var_name}: Option<&str> = {matches_var}.get_one::<String>("{opt.name}").map(|s| s.as_str());"""
+                    )
+
         # Add global options with smart naming to avoid conflicts
         global_verbose = "global_verbose" if "verbose" in option_names else "verbose"
         global_config = "global_config" if "config" in option_names else "config"
-        extractions.append(f'''let {global_verbose} = {matches_var}.get_flag("verbose");''')
-        extractions.append(f'''let {global_config}: Option<&str> = {matches_var}.get_one::<String>("config").map(|s| s.as_str());''')
-        
-        return '\n                '.join(extractions) if extractions else '// No parameters to extract'
-    
+        extractions.append(
+            f"""let {global_verbose} = {matches_var}.get_flag("verbose");"""
+        )
+        extractions.append(
+            f"""let {global_config}: Option<&str> = {matches_var}.get_one::<String>("config").map(|s| s.as_str());"""
+        )
+
+        return (
+            "\n                ".join(extractions)
+            if extractions
+            else "// No parameters to extract"
+        )
+
     def _generate_hook_call(self, hook_name: str, cmd_data) -> str:
         """Generate the hook function call with parameters."""
         params = []
-        
+
         # Collect option names to detect conflicts with global options
         option_names = set()
-        if hasattr(cmd_data, 'options') and cmd_data.options:
+        if hasattr(cmd_data, "options") and cmd_data.options:
             option_names = {opt.name for opt in cmd_data.options}
-        
+
         # Add arguments
-        if hasattr(cmd_data, 'args') and cmd_data.args:
+        if hasattr(cmd_data, "args") and cmd_data.args:
             for arg in cmd_data.args:
-                if hasattr(arg, 'nargs') and arg.nargs == "*":
+                if hasattr(arg, "nargs") and arg.nargs == "*":
                     params.append(f"{arg.name}")
                 else:
                     params.append(f"{arg.name}")
-        
+
         # Add options with smart naming
-        if hasattr(cmd_data, 'options') and cmd_data.options:
+        if hasattr(cmd_data, "options") and cmd_data.options:
             for opt in cmd_data.options:
-                var_name = f"opt_{opt.name}" if opt.name in ['verbose', 'config'] else opt.name
+                var_name = (
+                    f"opt_{opt.name}" if opt.name in ["verbose", "config"] else opt.name
+                )
                 params.append(var_name)
-        
+
         # Always add verbose and config at the end with smart naming
         global_verbose = "global_verbose" if "verbose" in option_names else "verbose"
         global_config = "global_config" if "config" in option_names else "config"
         params.extend([global_verbose, global_config])
-        
+
         return f"{hook_name}({', '.join(params)})"
 
     def _generate_fallback_cargo_toml(self, context: dict) -> str:
-
         """Generate minimal Cargo.toml from context."""
 
-        package_name = context['package_name'].replace('-', '_')
+        package_name = context["package_name"].replace("-", "_")
 
-        context['display_name']
+        context["display_name"]
 
-        description = context.get('description', 'A CLI tool')
+        description = context.get("description", "A CLI tool")
 
-        version = context['version']
+        version = context["version"]
 
-        
-
-        return f'''[package]
+        return f"""[package]
 
 name = "{package_name}"
 
@@ -1307,17 +1253,14 @@ anyhow = "1.0"
 
 thiserror = "1.0"
 
-'''
-
-    
+"""
 
     def _generate_fallback_hooks_rs(self, context: dict) -> str:
-
         """Generate hooks.rs with function stubs."""
 
-        cli_config = context.get('cli')
+        cli_config = context.get("cli")
 
-        hooks_content = f'''//! Hook functions for {context['display_name']}
+        hooks_content = f"""//! Hook functions for {context['display_name']}
 
 //! Auto-generated from {context['file_name']}
 
@@ -1341,13 +1284,11 @@ use std::env;
 
 
 
-'''
-
-        
+"""
 
         # Generate hook functions for each command and subcommand
 
-        if cli_config and hasattr(cli_config, 'commands'):
+        if cli_config and hasattr(cli_config, "commands"):
             hook_count = 0
             for cmd_name, cmd_data in cli_config.commands.items():
                 hook_count += 1
@@ -1355,18 +1296,20 @@ use std::env;
                     break  # Prevent excessive iteration
 
                 safe_cmd_name = self._to_snake_case(cmd_name)
-                
+
                 # Check if command has subcommands
-                if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+                if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
                     # Generate hooks for each subcommand
                     for sub_name, sub_data in cmd_data.subcommands.items():
                         safe_sub_name = self._to_snake_case(sub_name)
                         hook_name = f"on_{safe_cmd_name}_{safe_sub_name}"
-                        
+
                         # Generate function signature based on subcommand
-                        signature = self._generate_hook_signature(cmd_name, sub_name, cmd_data, sub_data)
-                        
-                        hooks_content += f'''/// Hook function for '{cmd_name} {sub_name}' command
+                        signature = self._generate_hook_signature(
+                            cmd_name, sub_name, cmd_data, sub_data
+                        )
+
+                        hooks_content += f"""/// Hook function for '{cmd_name} {sub_name}' command
 
 pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
@@ -1377,13 +1320,15 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
 
 
-'''
+"""
                 else:
                     # Generate hook for the command itself
-                    signature = self._generate_hook_signature(cmd_name, None, cmd_data, None)
+                    signature = self._generate_hook_signature(
+                        cmd_name, None, cmd_data, None
+                    )
                     hook_name = f"on_{safe_cmd_name}"
-                    
-                    hooks_content += f'''/// Hook function for '{cmd_name}' command
+
+                    hooks_content += f"""/// Hook function for '{cmd_name}' command
 
 pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
@@ -1394,63 +1339,65 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
 
 
-'''
-
-        
+"""
 
         return hooks_content
 
-    
-
-    def _generate_hook_signature(self, cmd_name: str, sub_name: str, cmd_data, sub_data) -> str:
+    def _generate_hook_signature(
+        self, cmd_name: str, sub_name: str, cmd_data, sub_data
+    ) -> str:
         """Generate function signature based on command parameters."""
         data = sub_data if sub_data else cmd_data
         params = ["_verbose: bool", "_config: Option<&str>"]
-        
+
         # Add arguments
-        if hasattr(data, 'args') and data.args:
+        if hasattr(data, "args") and data.args:
             for arg in data.args:
-                arg_type = self._get_rust_param_type(arg.type if hasattr(arg, 'type') else 'str', 
-                                                   arg.nargs if hasattr(arg, 'nargs') else None)
+                arg_type = self._get_rust_param_type(
+                    arg.type if hasattr(arg, "type") else "str",
+                    arg.nargs if hasattr(arg, "nargs") else None,
+                )
                 params.insert(-2, f"{arg.name}: {arg_type}")
-        
+
         # Add options
-        if hasattr(data, 'options') and data.options:
+        if hasattr(data, "options") and data.options:
             for opt in data.options:
-                opt_type = self._get_rust_param_type(opt.type if hasattr(opt, 'type') else 'str')
-                if opt.type == 'bool' or opt.type == 'flag':
+                opt_type = self._get_rust_param_type(
+                    opt.type if hasattr(opt, "type") else "str"
+                )
+                if opt.type == "bool" or opt.type == "flag":
                     params.insert(-2, f"{opt.name}: bool")
                 else:
                     params.insert(-2, f"{opt.name}: Option<{opt_type}>")
-        
+
         return f"({', '.join(params)})"
-    
+
     def _get_rust_param_type(self, python_type: str, nargs: str = None) -> str:
         """Convert Python type to Rust parameter type."""
         if nargs == "*":
             return "Vec<&str>"
-        
+
         type_map = {
-            'str': '&str',
-            'string': '&str', 
-            'int': 'i32',
-            'float': 'f64',
-            'bool': 'bool',
-            'flag': 'bool',
+            "str": "&str",
+            "string": "&str",
+            "int": "i32",
+            "float": "f64",
+            "bool": "bool",
+            "flag": "bool",
         }
-        return type_map.get(python_type, '&str')
-    
+        return type_map.get(python_type, "&str")
+
     def _generate_hook_placeholder(self, cmd_name: str, sub_name: str, data) -> str:
         """Generate placeholder implementation based on command type."""
         command_key = f"{cmd_name}_{sub_name}" if sub_name else cmd_name
-        
+
         # Generate specific placeholders for known commands
         if command_key == "hello":
-            return '''let greeting = "Hello";
+            return """let greeting = "Hello";
     println!("{} {}", greeting, name);
-    Ok(())'''
+    Ok(())"""
         elif command_key == "config_get":
-            return '''let theme = env::var("TEST_CLI_THEME").unwrap_or_else(|_| "default".to_string());
+            return """let theme = env::var("TEST_CLI_THEME").unwrap_or_else(|_| "default".to_string());
     
     let value = match key {
         "theme" => theme,
@@ -1463,17 +1410,17 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
     };
     
     println!("{}: {}", key, value);
-    Ok(())'''
+    Ok(())"""
         elif command_key == "config_set":
-            return '''println!("Setting {} to {}", key, value);
-    Ok(())'''
+            return """println!("Setting {} to {}", key, value);
+    Ok(())"""
         elif command_key == "config_list":
-            return '''println!("theme: default");
+            return """println!("theme: default");
     println!("api_key: ");
     println!("timeout: 30");
-    Ok(())'''
+    Ok(())"""
         elif command_key == "config_reset":
-            return '''if !force {
+            return """if !force {
         print!("Are you sure you want to reset the configuration? (y/N): ");
         io::stdout().flush()?;
         
@@ -1487,18 +1434,18 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
     }
     
     println!("Configuration reset to defaults");
-    Ok(())'''
+    Ok(())"""
         elif command_key == "fail":
-            return '''let exit_code = code.unwrap_or(1);
+            return """let exit_code = code.unwrap_or(1);
     eprintln!("Error: Command failed with exit code {}", exit_code);
-    std::process::exit(exit_code);'''
+    std::process::exit(exit_code);"""
         elif command_key == "echo":
-            return '''if !words.is_empty() {
+            return """if !words.is_empty() {
         println!("{}", words.join(" "));
     }
-    Ok(())'''
+    Ok(())"""
         elif command_key == "file_create":
-            return '''let file_path = Path::new(path);
+            return """let file_path = Path::new(path);
     
     if let Some(parent) = file_path.parent() {
         fs::create_dir_all(parent)?;
@@ -1511,9 +1458,9 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
     }
     
     println!("Created file: {}", path);
-    Ok(())'''
+    Ok(())"""
         elif command_key == "file_delete":
-            return '''match fs::remove_file(path) {
+            return """match fs::remove_file(path) {
         Ok(_) => {
             println!("Deleted file: {}", path);
             Ok(())
@@ -1528,17 +1475,16 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
             }
             std::process::exit(1);
         }
-    }'''
+    }"""
         else:
-            return f'''println!("Executing {cmd_name}{" " + sub_name if sub_name else ""} command...");
+            return f"""println!("Executing {cmd_name}{" " + sub_name if sub_name else ""} command...");
     println!("Implement your logic here");
-    Ok(())'''
+    Ok(())"""
 
     def _generate_fallback_cli_rs(self, context: dict) -> str:
-
         """Generate cli.rs module."""
 
-        return '''//! CLI command definitions and parsing logic
+        return """//! CLI command definitions and parsing logic
 
 
 
@@ -1556,15 +1502,12 @@ pub fn build_cli() -> Command {
 
 }
 
-'''
-
-    
+"""
 
     def _generate_fallback_setup_sh(self, context: dict) -> str:
-
         """Generate setup.sh script for Rust CLI."""
 
-        return f'''#!/bin/bash
+        return f"""#!/bin/bash
 
 # Setup script for {context['display_name']}
 
@@ -1644,12 +1587,9 @@ else
 
 fi
 
-'''
-
-    
+"""
 
     def _generate_readme(self, context: dict) -> str:
-
         """Generate README.md for the Rust CLI."""
 
         # Use DocumentationGenerator if available
@@ -1665,8 +1605,6 @@ fi
                 # Fallback to manual generation if doc_generator fails
 
                 pass
-
-        
 
         # Fallback to existing implementation
 
@@ -1784,19 +1722,14 @@ MIT
 
 """
 
-    
-
     def _generate_commands_documentation(self, context: dict) -> str:
-
         """Generate commands documentation for README."""
 
-        cli_config = context.get('cli')
+        cli_config = context.get("cli")
 
-        if not cli_config or not hasattr(cli_config, 'commands'):
+        if not cli_config or not hasattr(cli_config, "commands"):
 
             return "No commands configured."
-
-        
 
         commands_doc = []
         readme_count = 0
@@ -1805,30 +1738,29 @@ MIT
             if readme_count > MAX_COMMANDS:
                 break  # Prevent excessive iteration
 
-            cmd_desc = cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'
+            cmd_desc = (
+                cmd_data.desc if hasattr(cmd_data, "desc") else "Command description"
+            )
 
             commands_doc.append(f"- `{cmd_name}` - {cmd_desc}")
 
-            
-
             # Add subcommands if they exist
 
-            if hasattr(cmd_data, 'subcommands') and cmd_data.subcommands:
+            if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
 
                 for sub_name, sub_data in cmd_data.subcommands.items():
 
-                    sub_desc = sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'
+                    sub_desc = (
+                        sub_data.desc
+                        if hasattr(sub_data, "desc")
+                        else "Subcommand description"
+                    )
 
                     commands_doc.append(f"  - `{cmd_name} {sub_name}` - {sub_desc}")
 
-        
-
-        return '\n'.join(commands_doc) if commands_doc else "No commands configured."
-
-    
+        return "\n".join(commands_doc) if commands_doc else "No commands configured."
 
     def _generate_gitignore(self) -> str:
-
         """Generate .gitignore for Rust project."""
 
         return """# Rust

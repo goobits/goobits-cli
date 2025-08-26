@@ -6,9 +6,6 @@ Provides secure plugin discovery, installation, and management
 
 """
 
-
-
-
 import hashlib
 
 import json
@@ -30,11 +27,7 @@ import aiofiles
 from urllib.parse import urljoin
 
 
-
-
-
 class PluginSecurityLevel(Enum):
-
     """Security levels for plugins"""
 
     VERIFIED = "verified"  # Official or verified plugins
@@ -44,11 +37,7 @@ class PluginSecurityLevel(Enum):
     EXPERIMENTAL = "experimental"  # Unverified plugins
 
 
-
-
-
 class PluginLanguage(Enum):
-
     """Supported plugin languages"""
 
     PYTHON = "python"
@@ -60,13 +49,8 @@ class PluginLanguage(Enum):
     RUST = "rust"
 
 
-
-
-
 @dataclass
-
 class PluginInfo:
-
     """Plugin information from marketplace"""
 
     name: str
@@ -104,13 +88,8 @@ class PluginInfo:
     license: Optional[str] = None
 
 
-
-
-
 @dataclass
-
 class PluginReview:
-
     """User review for a plugin"""
 
     author: str
@@ -126,26 +105,20 @@ class PluginReview:
     verified_purchase: bool
 
 
-
-
-
 class MarketplaceAPIClient:
-
     """Client for interacting with the plugin marketplace API"""
 
-    
-
-    def __init__(self, base_url: str = "https://api.goobits.marketplace", 
-
-                 api_key: Optional[str] = None):
+    def __init__(
+        self,
+        base_url: str = "https://api.goobits.marketplace",
+        api_key: Optional[str] = None,
+    ):
 
         self.base_url = base_url
 
         self.api_key = api_key
 
         self.session: Optional[aiohttp.ClientSession] = None
-
-        
 
     async def __aenter__(self):
 
@@ -155,19 +128,11 @@ class MarketplaceAPIClient:
 
             headers["Authorization"] = f"Bearer {self.api_key}"
 
-            
-
         self.session = aiohttp.ClientSession(
-
-            headers=headers,
-
-            timeout=aiohttp.ClientTimeout(total=30)
-
+            headers=headers, timeout=aiohttp.ClientTimeout(total=30)
         )
 
         return self
-
-    
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
 
@@ -175,39 +140,22 @@ class MarketplaceAPIClient:
 
             await self.session.close()
 
-    
-
-    async def search_plugins(self, query: str = "", 
-
-                           language: Optional[PluginLanguage] = None,
-
-                           security_level: Optional[PluginSecurityLevel] = None,
-
-                           tags: Optional[List[str]] = None,
-
-                           limit: int = 20,
-
-                           offset: int = 0) -> List[PluginInfo]:
-
+    async def search_plugins(
+        self,
+        query: str = "",
+        language: Optional[PluginLanguage] = None,
+        security_level: Optional[PluginSecurityLevel] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> List[PluginInfo]:
         """Search for plugins in the marketplace"""
 
         if not self.session:
 
             raise RuntimeError("Client not initialized. Use async context manager.")
 
-            
-
-        params = {
-
-            "query": query,
-
-            "limit": limit,
-
-            "offset": offset
-
-        }
-
-        
+        params = {"query": query, "limit": limit, "offset": offset}
 
         if language:
 
@@ -221,11 +169,7 @@ class MarketplaceAPIClient:
 
             params["tags"] = ",".join(tags)
 
-            
-
         url = urljoin(self.base_url, "/plugins/search")
-
-        
 
         async with self.session.get(url, params=params) as response:
 
@@ -233,67 +177,37 @@ class MarketplaceAPIClient:
 
             data = await response.json()
 
-            
-
             return [
-
                 PluginInfo(
-
                     name=plugin["name"],
-
                     version=plugin["version"],
-
                     author=plugin["author"],
-
                     description=plugin["description"],
-
                     language=PluginLanguage(plugin["language"]),
-
                     security_level=PluginSecurityLevel(plugin["security_level"]),
-
                     download_url=plugin["download_url"],
-
                     checksum=plugin["checksum"],
-
                     size=plugin["size"],
-
                     rating=plugin["rating"],
-
                     downloads=plugin["downloads"],
-
                     tags=plugin["tags"],
-
                     dependencies=plugin["dependencies"],
-
                     min_goobits_version=plugin["min_goobits_version"],
-
                     homepage=plugin.get("homepage"),
-
                     repository=plugin.get("repository"),
-
-                    license=plugin.get("license")
-
+                    license=plugin.get("license"),
                 )
-
                 for plugin in data["plugins"]
-
             ]
 
-    
-
     async def get_plugin_info(self, name: str) -> PluginInfo:
-
         """Get detailed information about a specific plugin"""
 
         if not self.session:
 
             raise RuntimeError("Client not initialized. Use async context manager.")
 
-            
-
         url = urljoin(self.base_url, f"/plugins/{name}")
-
-        
 
         async with self.session.get(url) as response:
 
@@ -301,67 +215,38 @@ class MarketplaceAPIClient:
 
             plugin = await response.json()
 
-            
-
             return PluginInfo(
-
                 name=plugin["name"],
-
                 version=plugin["version"],
-
                 author=plugin["author"],
-
                 description=plugin["description"],
-
                 language=PluginLanguage(plugin["language"]),
-
                 security_level=PluginSecurityLevel(plugin["security_level"]),
-
                 download_url=plugin["download_url"],
-
                 checksum=plugin["checksum"],
-
                 size=plugin["size"],
-
                 rating=plugin["rating"],
-
                 downloads=plugin["downloads"],
-
                 tags=plugin["tags"],
-
                 dependencies=plugin["dependencies"],
-
                 min_goobits_version=plugin["min_goobits_version"],
-
                 homepage=plugin.get("homepage"),
-
                 repository=plugin.get("repository"),
-
-                license=plugin.get("license")
-
+                license=plugin.get("license"),
             )
 
-    
-
-    async def get_plugin_reviews(self, name: str, 
-
-                               limit: int = 10,
-
-                               offset: int = 0) -> List[PluginReview]:
-
+    async def get_plugin_reviews(
+        self, name: str, limit: int = 10, offset: int = 0
+    ) -> List[PluginReview]:
         """Get reviews for a plugin"""
 
         if not self.session:
 
             raise RuntimeError("Client not initialized. Use async context manager.")
 
-            
-
         url = urljoin(self.base_url, f"/plugins/{name}/reviews")
 
         params = {"limit": limit, "offset": offset}
-
-        
 
         async with self.session.get(url, params=params) as response:
 
@@ -369,49 +254,28 @@ class MarketplaceAPIClient:
 
             data = await response.json()
 
-            
-
             return [
-
                 PluginReview(
-
                     author=review["author"],
-
                     rating=review["rating"],
-
                     title=review["title"],
-
                     comment=review["comment"],
-
                     date=review["date"],
-
-                    verified_purchase=review["verified_purchase"]
-
+                    verified_purchase=review["verified_purchase"],
                 )
-
                 for review in data["reviews"]
-
             ]
 
-    
-
-    async def download_plugin(self, plugin_info: PluginInfo, 
-
-                            target_dir: Path) -> Path:
-
+    async def download_plugin(self, plugin_info: PluginInfo, target_dir: Path) -> Path:
         """Download and verify a plugin"""
 
         if not self.session:
 
             raise RuntimeError("Client not initialized. Use async context manager.")
 
-            
-
         # Create target directory
 
         target_dir.mkdir(parents=True, exist_ok=True)
-
-        
 
         # Determine file extension based on language
 
@@ -431,19 +295,13 @@ class MarketplaceAPIClient:
 
             filename = f"{plugin_info.name}-{plugin_info.version}.zip"
 
-            
-
         target_file = target_dir / filename
-
-        
 
         # Download plugin
 
         async with self.session.get(plugin_info.download_url) as response:
 
             response.raise_for_status()
-
-            
 
             # Stream download with progress
 
@@ -453,21 +311,17 @@ class MarketplaceAPIClient:
 
                 content += chunk
 
-        
-
         # Verify checksum
 
         actual_checksum = hashlib.sha256(content).hexdigest()
 
         if actual_checksum != plugin_info.checksum:
 
-            raise ValueError(f"Checksum mismatch for {plugin_info.name}. "
-
-                           f"Expected: {plugin_info.checksum}, "
-
-                           f"Got: {actual_checksum}")
-
-        
+            raise ValueError(
+                f"Checksum mismatch for {plugin_info.name}. "
+                f"Expected: {plugin_info.checksum}, "
+                f"Got: {actual_checksum}"
+            )
 
         # Write to file
 
@@ -475,27 +329,16 @@ class MarketplaceAPIClient:
 
             await f.write(content)
 
-            
-
         return target_file
 
-    
-
-    async def publish_plugin(self, plugin_path: Path, 
-
-                           manifest: Dict[str, Any]) -> str:
-
+    async def publish_plugin(self, plugin_path: Path, manifest: Dict[str, Any]) -> str:
         """Publish a plugin to the marketplace"""
 
         if not self.session or not self.api_key:
 
             raise RuntimeError("API key required for publishing plugins")
 
-            
-
         url = urljoin(self.base_url, "/plugins/publish")
-
-        
 
         # Read plugin file
 
@@ -503,23 +346,20 @@ class MarketplaceAPIClient:
 
             plugin_content = await f.read()
 
-        
-
         # Create multipart form data
 
         data = aiohttp.FormData()
 
-        data.add_field("manifest", json.dumps(manifest), 
+        data.add_field(
+            "manifest", json.dumps(manifest), content_type="application/json"
+        )
 
-                      content_type="application/json")
-
-        data.add_field("plugin", plugin_content, 
-
-                      filename=plugin_path.name,
-
-                      content_type="application/octet-stream")
-
-        
+        data.add_field(
+            "plugin",
+            plugin_content,
+            filename=plugin_path.name,
+            content_type="application/octet-stream",
+        )
 
         async with self.session.post(url, data=data) as response:
 
@@ -530,57 +370,34 @@ class MarketplaceAPIClient:
             return result["plugin_id"]
 
 
-
-
-
 class PluginSecurityScanner:
-
     """Scans plugins for security vulnerabilities"""
-
-    
 
     def __init__(self):
 
         self.known_vulnerabilities = {}
 
         self.suspicious_patterns = [
-
             r"exec\s*\(",
-
             r"eval\s*\(",
-
             r"subprocess\.",
-
             r"os\.system",
-
             r"__import__",
-
             r"open\s*\(.+['\"]w",
-
             r"requests\.get\s*\(\s*input",
-
-            r"urllib\.request\.urlopen"
-
+            r"urllib\.request\.urlopen",
         ]
 
-    
-
     async def scan_plugin(self, plugin_path: Path) -> Dict[str, Any]:
-
         """Scan a plugin for security issues"""
-
 
         import tarfile
 
         import zipfile
 
-        
-
         vulnerabilities = []
 
         warnings = []
-
-        
 
         try:
 
@@ -592,7 +409,9 @@ class PluginSecurityScanner:
 
                     for member in tar.getmembers():
 
-                        if member.isfile() and member.name.endswith((".py", ".js", ".ts", ".rs")):
+                        if member.isfile() and member.name.endswith(
+                            (".py", ".js", ".ts", ".rs")
+                        ):
 
                             content = tar.extractfile(member).read().decode("utf-8")
 
@@ -601,8 +420,6 @@ class PluginSecurityScanner:
                             vulnerabilities.extend(issues["vulnerabilities"])
 
                             warnings.extend(issues["warnings"])
-
-            
 
             elif plugin_path.suffix == ".zip":
 
@@ -620,47 +437,30 @@ class PluginSecurityScanner:
 
                             warnings.extend(issues["warnings"])
 
-                            
-
         except Exception as e:
 
-            vulnerabilities.append({
-
-                "type": "scan_error",
-
-                "message": f"Failed to scan plugin: {str(e)}",
-
-                "severity": "high"
-
-            })
-
-        
+            vulnerabilities.append(
+                {
+                    "type": "scan_error",
+                    "message": f"Failed to scan plugin: {str(e)}",
+                    "severity": "high",
+                }
+            )
 
         return {
-
             "vulnerabilities": vulnerabilities,
-
             "warnings": warnings,
-
-            "risk_level": self._calculate_risk_level(vulnerabilities, warnings)
-
+            "risk_level": self._calculate_risk_level(vulnerabilities, warnings),
         }
 
-    
-
     def _scan_content(self, content: str, filename: str) -> Dict[str, List[Dict]]:
-
         """Scan file content for security issues"""
 
         import re
 
-        
-
         vulnerabilities = []
 
         warnings = []
-
-        
 
         # Check for suspicious patterns
 
@@ -670,41 +470,29 @@ class PluginSecurityScanner:
 
             for match in matches:
 
-                line_num = content[:match.start()].count("\n") + 1
+                line_num = content[: match.start()].count("\n") + 1
 
-                warnings.append({
-
-                    "type": "suspicious_pattern",
-
-                    "pattern": pattern,
-
-                    "file": filename,
-
-                    "line": line_num,
-
-                    "context": content[max(0, match.start()-50):match.end()+50],
-
-                    "severity": "medium"
-
-                })
-
-        
+                warnings.append(
+                    {
+                        "type": "suspicious_pattern",
+                        "pattern": pattern,
+                        "file": filename,
+                        "line": line_num,
+                        "context": content[
+                            max(0, match.start() - 50) : match.end() + 50
+                        ],
+                        "severity": "medium",
+                    }
+                )
 
         # Check for hardcoded secrets
 
         secret_patterns = [
-
             (r"password\s*=\s*['\"][^'\"]+['\"]", "hardcoded_password"),
-
             (r"api_key\s*=\s*['\"][^'\"]+['\"]", "hardcoded_api_key"),
-
             (r"token\s*=\s*['\"][^'\"]+['\"]", "hardcoded_token"),
-
-            (r"secret\s*=\s*['\"][^'\"]+['\"]", "hardcoded_secret")
-
+            (r"secret\s*=\s*['\"][^'\"]+['\"]", "hardcoded_secret"),
         ]
-
-        
 
         for pattern, vuln_type in secret_patterns:
 
@@ -712,39 +500,31 @@ class PluginSecurityScanner:
 
             for match in matches:
 
-                line_num = content[:match.start()].count("\n") + 1
+                line_num = content[: match.start()].count("\n") + 1
 
-                vulnerabilities.append({
-
-                    "type": vuln_type,
-
-                    "file": filename,
-
-                    "line": line_num,
-
-                    "severity": "high"
-
-                })
-
-        
+                vulnerabilities.append(
+                    {
+                        "type": vuln_type,
+                        "file": filename,
+                        "line": line_num,
+                        "severity": "high",
+                    }
+                )
 
         return {"vulnerabilities": vulnerabilities, "warnings": warnings}
 
-    
-
-    def _calculate_risk_level(self, vulnerabilities: List[Dict], 
-
-                            warnings: List[Dict]) -> str:
-
+    def _calculate_risk_level(
+        self, vulnerabilities: List[Dict], warnings: List[Dict]
+    ) -> str:
         """Calculate overall risk level"""
 
         high_vuln_count = sum(1 for v in vulnerabilities if v.get("severity") == "high")
 
-        medium_vuln_count = sum(1 for v in vulnerabilities if v.get("severity") == "medium")
+        medium_vuln_count = sum(
+            1 for v in vulnerabilities if v.get("severity") == "medium"
+        )
 
         warning_count = len(warnings)
-
-        
 
         if high_vuln_count > 0:
 
@@ -763,14 +543,8 @@ class PluginSecurityScanner:
             return "safe"
 
 
-
-
-
 class PluginInstaller:
-
     """Handles plugin installation and management"""
-
-    
 
     def __init__(self, plugins_dir: Path):
 
@@ -780,10 +554,7 @@ class PluginInstaller:
 
         self.installed_plugins = self._load_installed_plugins()
 
-    
-
     def _load_installed_plugins(self) -> Dict[str, Dict[str, Any]]:
-
         """Load information about installed plugins"""
 
         registry_file = self.plugins_dir / "registry.json"
@@ -796,10 +567,7 @@ class PluginInstaller:
 
         return {}
 
-    
-
     def _save_installed_plugins(self):
-
         """Save information about installed plugins"""
 
         registry_file = self.plugins_dir / "registry.json"
@@ -808,12 +576,9 @@ class PluginInstaller:
 
             json.dump(self.installed_plugins, f, indent=2)
 
-    
-
-    async def install_plugin(self, plugin_info: PluginInfo, 
-
-                           force: bool = False) -> bool:
-
+    async def install_plugin(
+        self, plugin_info: PluginInfo, force: bool = False
+    ) -> bool:
         """Install a plugin"""
 
         # Check if already installed
@@ -826,15 +591,11 @@ class PluginInstaller:
 
                 return False  # Already installed
 
-        
-
         # Download plugin
 
         async with MarketplaceAPIClient() as client:
 
             plugin_file = await client.download_plugin(plugin_info, self.plugins_dir)
-
-        
 
         # Security scan
 
@@ -842,15 +603,12 @@ class PluginInstaller:
 
         scan_results = await scanner.scan_plugin(plugin_file)
 
-        
-
         if scan_results["risk_level"] == "high":
 
-            raise SecurityError(f"Plugin {plugin_info.name} failed security scan: "
-
-                              f"{scan_results['vulnerabilities']}")
-
-        
+            raise SecurityError(
+                f"Plugin {plugin_info.name} failed security scan: "
+                f"{scan_results['vulnerabilities']}"
+            )
 
         # Install plugin based on language
 
@@ -861,8 +619,6 @@ class PluginInstaller:
             import shutil
 
             shutil.rmtree(plugin_dir)
-
-        
 
         if plugin_info.language == PluginLanguage.PYTHON:
 
@@ -880,97 +636,62 @@ class PluginInstaller:
 
             await self._install_rust_plugin(plugin_file, plugin_dir)
 
-        
-
         # Update registry
 
         self.installed_plugins[plugin_info.name] = {
-
             "version": plugin_info.version,
-
             "language": plugin_info.language.value,
-
             "install_date": time.time(),
-
             "security_scan": scan_results,
-
-            "dependencies": plugin_info.dependencies
-
+            "dependencies": plugin_info.dependencies,
         }
 
         self._save_installed_plugins()
-
-        
 
         # Clean up downloaded file
 
         plugin_file.unlink()
 
-        
-
         return True
 
-    
-
     async def _install_python_plugin(self, plugin_file: Path, target_dir: Path):
-
         """Install a Python plugin"""
 
         import tarfile
 
-        
-
         with tarfile.open(plugin_file, "r:gz") as tar:
 
             tar.extractall(target_dir)
 
-    
-
     async def _install_nodejs_plugin(self, plugin_file: Path, target_dir: Path):
-
         """Install a Node.js plugin"""
 
         import tarfile
 
-        
-
         with tarfile.open(plugin_file, "r:gz") as tar:
 
             tar.extractall(target_dir)
 
-    
-
     async def _install_typescript_plugin(self, plugin_file: Path, target_dir: Path):
-
         """Install a TypeScript plugin"""
 
         await self._install_nodejs_plugin(plugin_file, target_dir)
 
-    
-
     async def _install_rust_plugin(self, plugin_file: Path, target_dir: Path):
-
         """Install a Rust plugin"""
 
         import zipfile
-
-        
 
         with zipfile.ZipFile(plugin_file, "r") as zip_file:
 
             zip_file.extractall(target_dir)
 
-    
-
     async def uninstall_plugin(self, name: str) -> bool:
-
         """Uninstall a plugin"""
 
         if name not in self.installed_plugins:
 
             return False
-
-        
 
         plugin_dir = self.plugins_dir / name
 
@@ -980,31 +701,22 @@ class PluginInstaller:
 
             shutil.rmtree(plugin_dir)
 
-        
-
         del self.installed_plugins[name]
 
         self._save_installed_plugins()
 
         return True
 
-    
-
     async def update_plugin(self, name: str) -> bool:
-
         """Update a plugin to the latest version"""
 
         if name not in self.installed_plugins:
 
             return False
 
-        
-
         async with MarketplaceAPIClient() as client:
 
             plugin_info = await client.get_plugin_info(name)
-
-            
 
             current_version = self.installed_plugins[name]["version"]
 
@@ -1012,36 +724,15 @@ class PluginInstaller:
 
                 return False  # Already up to date
 
-            
-
             return await self.install_plugin(plugin_info, force=True)
 
-    
-
     def list_installed_plugins(self) -> List[Dict[str, Any]]:
-
         """List all installed plugins"""
 
-        return [
-
-            {
-
-                "name": name,
-
-                **info
-
-            }
-
-            for name, info in self.installed_plugins.items()
-
-        ]
-
-
-
+        return [{"name": name, **info} for name, info in self.installed_plugins.items()]
 
 
 class SecurityError(Exception):
-
     """Raised when a plugin fails security checks"""
 
     pass

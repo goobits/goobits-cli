@@ -20,6 +20,7 @@ Template Variables Expected:
   },
   "scripts": {
     "start": "node {{ (nodejs.main_entry if nodejs is defined else typescript.main_entry if typescript is defined else 'index.js') | default('index.js') }}",
+    {% if typescript is defined %}"build": "tsc",{% endif %}
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["cli"{{ ', "' + project.keywords | join('", "') + '"' if project.keywords }}],
@@ -30,11 +31,15 @@ Template Variables Expected:
     "chalk": "^5.3.0"
     {%- if (nodejs is defined and nodejs.package_config.dependencies) %}
     {%- for dep, version in nodejs.package_config.dependencies.items() %}
+    {%- if dep != "commander" %}
     ,"{{ dep }}": "{{ version }}"
+    {%- endif %}
     {%- endfor %}
     {%- elif (typescript is defined and typescript.package_config.dependencies) %}
     {%- for dep, version in typescript.package_config.dependencies.items() %}
+    {%- if dep != "commander" %}
     ,"{{ dep }}": "{{ version }}"
+    {%- endif %}
     {%- endfor %}
     {%- endif %}
   },

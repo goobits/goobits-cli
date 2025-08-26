@@ -6,12 +6,13 @@ in the version detection chain used by generated CLIs.
 
 The version detection follows this chain:
 1. importlib.metadata (package metadata)
-2. pyproject.toml parsing 
+2. pyproject.toml parsing
 3. package.json parsing (Node.js/TypeScript)
 4. Cargo.toml parsing (Rust)
 5. __init__.py parsing
 6. Final fallback to "1.0.0"
 """
+
 import pytest
 import tempfile
 import os
@@ -26,32 +27,41 @@ from importlib.metadata import PackageNotFoundError
 
 class TestVersionDetectionEdgeCases:
     """Test edge cases in version detection logic."""
-    
+
     def setup_method(self):
         """Set up test environment."""
         self.temp_dir = Path(tempfile.mkdtemp())
-        
+
     def teardown_method(self):
         """Clean up test environment."""
         if self.temp_dir.exists():
             import shutil
+
             shutil.rmtree(self.temp_dir)
 
     def test_all_version_sources_return_none_or_empty(self):
         """Test scenario where ALL version detection methods fail."""
         # This is the critical gap - we need to test what happens when
         # every single version source returns None or fails
-        
-        with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-             patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-             patch('pathlib.Path.exists', return_value=False), \
-             patch('pathlib.Path.read_text', side_effect=FileNotFoundError()):
-            
+
+        with patch(
+            "importlib.metadata.version",
+            side_effect=PackageNotFoundError("goobits-cli"),
+        ), patch(
+            "pkg_resources.get_distribution",
+            side_effect=Exception("Distribution not found"),
+        ), patch(
+            "pathlib.Path.exists", return_value=False
+        ), patch(
+            "pathlib.Path.read_text", side_effect=FileNotFoundError()
+        ):
+
             # This should test the actual get_version function from generated_cli.py
             # For now, we'll simulate the logic
             from goobits_cli.generated_cli import get_version
+
             result = get_version()
-            
+
             # Should fall back to the final default
             assert result == "1.0.0"
 
@@ -62,27 +72,34 @@ class TestVersionDetectionEdgeCases:
         package_json_path = self.temp_dir / "package.json"
         cargo_toml_path = self.temp_dir / "Cargo.toml"
         init_py_path = self.temp_dir / "__init__.py"
-        
+
         # Create the files with content
         pyproject_path.write_text('[project]\nversion = "3.0.0"')
         package_json_path.write_text('{"version": "3.0.0"}')
         cargo_toml_path.write_text('version = "4.0.0"')
         init_py_path.write_text('__version__ = "5.0.0"')
-        
+
         # Make all files unreadable
         os.chmod(pyproject_path, 0o000)
         os.chmod(package_json_path, 0o000)
         os.chmod(cargo_toml_path, 0o000)
         os.chmod(init_py_path, 0o000)
-        
+
         try:
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should fall back to default when all file reads fail due to permissions
                 assert result == "1.0.0"
         finally:
@@ -99,34 +116,42 @@ class TestVersionDetectionEdgeCases:
         """Test handling of corrupted/malformed version files."""
         malformed_configs = [
             # Malformed JSON
-            ('package.json', '{"version": "1.0.0"'),  # Missing closing brace
-            ('package.json', '{"version": 1.0.0}'),   # Unquoted number
-            ('package.json', '{"version": }'),        # Missing value
-            
+            ("package.json", '{"version": "1.0.0"'),  # Missing closing brace
+            ("package.json", '{"version": 1.0.0}'),  # Unquoted number
+            ("package.json", '{"version": }'),  # Missing value
             # Malformed TOML
-            ('pyproject.toml', '[project\nversion = "1.0.0"'),  # Missing closing bracket
-            ('pyproject.toml', 'version = 1.0.0'),               # Missing quotes in TOML
-            ('Cargo.toml', 'version = "1.0.0'),                 # Missing closing quote
-            
+            (
+                "pyproject.toml",
+                '[project\nversion = "1.0.0"',
+            ),  # Missing closing bracket
+            ("pyproject.toml", "version = 1.0.0"),  # Missing quotes in TOML
+            ("Cargo.toml", 'version = "1.0.0'),  # Missing closing quote
             # Malformed Python
-            ('__init__.py', '__version__ = "1.0.0'),             # Missing closing quote
-            ('__init__.py', '__version__ = 1.0.0'),              # Missing quotes
+            ("__init__.py", '__version__ = "1.0.0'),  # Missing closing quote
+            ("__init__.py", "__version__ = 1.0.0"),  # Missing quotes
         ]
-        
+
         for filename, content in malformed_configs:
             file_path = self.temp_dir / filename
             file_path.write_text(content)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle malformed files gracefully and fall back
                 assert result == "1.0.0"
-            
+
             # Clean up for next iteration
             file_path.unlink()
 
@@ -140,25 +165,32 @@ class TestVersionDetectionEdgeCases:
             b'version = "\xed\xa0\x80surrogate"',
             b'__version__ = "\xfe\xff\x00\x31"',
         ]
-        
+
         for i, bad_content in enumerate(encoding_issues):
             filename = f"test_file_{i}.json"
             file_path = self.temp_dir / filename
-            
+
             # Write bad content as bytes
-            with open(file_path, 'wb') as f:
+            with open(file_path, "wb") as f:
                 f.write(bad_content)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle encoding errors gracefully
                 assert result == "1.0.0"
-            
+
             file_path.unlink()
 
     def test_circular_symlinks_in_file_paths(self):
@@ -167,25 +199,32 @@ class TestVersionDetectionEdgeCases:
         try:
             link1 = self.temp_dir / "link1"
             link2 = self.temp_dir / "link2"
-            
+
             # Create circular symlinks
             link1.symlink_to(link2)
             link2.symlink_to(link1)
-            
+
             # Try to create a pyproject.toml as a symlink to itself
             pyproject_link = self.temp_dir / "pyproject.toml"
             pyproject_link.symlink_to(pyproject_link)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle circular symlinks gracefully
                 assert result == "1.0.0"
-                
+
         except (OSError, NotImplementedError):
             # Skip test on systems that don't support symlinks
             pytest.skip("System doesn't support symlinks")
@@ -197,15 +236,17 @@ class TestVersionDetectionEdgeCases:
             PackageNotFoundError("Package not installed"),
             PackageNotFoundError(""),  # Empty error message
         ]
-        
+
         for error in error_scenarios:
-            with patch('importlib.metadata.version', side_effect=error), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Fallback also fails")), \
-                 patch('pathlib.Path.exists', return_value=False):
-                
+            with patch("importlib.metadata.version", side_effect=error), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Fallback also fails"),
+            ), patch("pathlib.Path.exists", return_value=False):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle all PackageNotFoundError variants
                 assert result == "1.0.0"
 
@@ -219,45 +260,60 @@ class TestVersionDetectionEdgeCases:
             IsADirectoryError("Is a directory"),
             NotADirectoryError("Not a directory"),
         ]
-        
+
         for error in fs_errors:
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.read_text', side_effect=error), \
-                 patch('pathlib.Path.exists', return_value=True):  # Files exist but can't be read
-                
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.read_text", side_effect=error
+            ), patch(
+                "pathlib.Path.exists", return_value=True
+            ):  # Files exist but can't be read
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle all file system errors gracefully
                 assert result == "1.0.0"
 
     def test_json_decode_errors_in_package_json(self):
         """Test specific JSON decode errors in package.json parsing."""
         json_error_scenarios = [
-            '{"version": }',           # Missing value
+            '{"version": }',  # Missing value
             '{"version": "1.0.0",}',  # Trailing comma
-            '{"version": "1.0.0"',    # Missing closing brace
-            '{"version": undefined}', # Invalid value
-            '{version: "1.0.0"}',     # Unquoted key
-            '{"version": NaN}',       # NaN value
+            '{"version": "1.0.0"',  # Missing closing brace
+            '{"version": undefined}',  # Invalid value
+            '{version: "1.0.0"}',  # Unquoted key
+            '{"version": NaN}',  # NaN value
             '{"version": Infinity}',  # Infinity value
         ]
-        
+
         for json_content in json_error_scenarios:
             package_json = self.temp_dir / "package.json"
             package_json.write_text(json_content)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle JSON decode errors gracefully
                 assert result == "1.0.0"
-            
+
             package_json.unlink()
 
     def test_memory_pressure_during_version_detection(self):
@@ -267,37 +323,54 @@ class TestVersionDetectionEdgeCases:
             MemoryError("Out of memory"),
             OverflowError("Integer overflow"),
         ]
-        
+
         for error in memory_errors:
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.exists', return_value=False), \
-                 patch('pathlib.Path.read_text', side_effect=error):
-                
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.exists", return_value=False
+            ), patch(
+                "pathlib.Path.read_text", side_effect=error
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle memory errors gracefully
                 assert result == "1.0.0"
 
     def test_version_detection_with_concurrent_file_modifications(self):
         """Test version detection when files are being modified concurrently."""
+
         # Simulate file being deleted or modified during read
         def file_disappears_during_read(*args, **kwargs):
             # First call succeeds (exists check), second fails (read)
-            if hasattr(file_disappears_during_read, 'called'):
+            if hasattr(file_disappears_during_read, "called"):
                 raise FileNotFoundError("File deleted during read")
             file_disappears_during_read.called = True
             return True
-        
-        with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-             patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-             patch('pathlib.Path.exists', side_effect=file_disappears_during_read), \
-             patch('pathlib.Path.read_text', side_effect=FileNotFoundError("File deleted")):
-            
+
+        with patch(
+            "importlib.metadata.version",
+            side_effect=PackageNotFoundError("goobits-cli"),
+        ), patch(
+            "pkg_resources.get_distribution",
+            side_effect=Exception("Distribution not found"),
+        ), patch(
+            "pathlib.Path.exists", side_effect=file_disappears_during_read
+        ), patch(
+            "pathlib.Path.read_text", side_effect=FileNotFoundError("File deleted")
+        ):
+
             from goobits_cli.generated_cli import get_version
+
             result = get_version()
-            
+
             # Should handle concurrent modifications gracefully
             assert result == "1.0.0"
 
@@ -306,112 +379,138 @@ class TestVersionDetectionEdgeCases:
         # Test files with content that doesn't match expected patterns
         pattern_test_cases = [
             # pyproject.toml cases
-            ('pyproject.toml', '[project]\nversio = "1.0.0"'),    # Typo in 'version'
-            ('pyproject.toml', '[project]\nversion= "1.0.0"'),     # No space after =
-            ('pyproject.toml', '[project]\nversion ="1.0.0"'),     # Space before =
-            ('pyproject.toml', "[project]\nversion = '1.0.0'"),    # Single quotes
-            ('pyproject.toml', '[project]\nversion = 1.0.0'),      # No quotes
-            
-            # Cargo.toml cases  
-            ('Cargo.toml', 'versio = "1.0.0"'),                   # Typo in 'version'
-            ('Cargo.toml', 'version= "1.0.0"'),                   # No space after =
-            ('Cargo.toml', 'version ="1.0.0"'),                   # Space before =
-            ('Cargo.toml', "version = '1.0.0'"),                  # Single quotes
-            ('Cargo.toml', 'version = 1.0.0'),                    # No quotes
-            
+            ("pyproject.toml", '[project]\nversio = "1.0.0"'),  # Typo in 'version'
+            ("pyproject.toml", '[project]\nversion= "1.0.0"'),  # No space after =
+            ("pyproject.toml", '[project]\nversion ="1.0.0"'),  # Space before =
+            ("pyproject.toml", "[project]\nversion = '1.0.0'"),  # Single quotes
+            ("pyproject.toml", "[project]\nversion = 1.0.0"),  # No quotes
+            # Cargo.toml cases
+            ("Cargo.toml", 'versio = "1.0.0"'),  # Typo in 'version'
+            ("Cargo.toml", 'version= "1.0.0"'),  # No space after =
+            ("Cargo.toml", 'version ="1.0.0"'),  # Space before =
+            ("Cargo.toml", "version = '1.0.0'"),  # Single quotes
+            ("Cargo.toml", "version = 1.0.0"),  # No quotes
             # __init__.py cases
-            ('__init__.py', '__versio__ = "1.0.0"'),              # Typo in '__version__'
-            ('__init__.py', '__version__= "1.0.0"'),              # No space after =
-            ('__init__.py', '__version__ ="1.0.0"'),              # Space before =
-            ('__init__.py', "__version__ = '1.0.0'"),             # Single quotes
-            ('__init__.py', '__version__ = 1.0.0'),               # No quotes
+            ("__init__.py", '__versio__ = "1.0.0"'),  # Typo in '__version__'
+            ("__init__.py", '__version__= "1.0.0"'),  # No space after =
+            ("__init__.py", '__version__ ="1.0.0"'),  # Space before =
+            ("__init__.py", "__version__ = '1.0.0'"),  # Single quotes
+            ("__init__.py", "__version__ = 1.0.0"),  # No quotes
         ]
-        
+
         for filename, content in pattern_test_cases:
             file_path = self.temp_dir / filename
             file_path.write_text(content)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle regex pattern matching failures gracefully
                 assert result == "1.0.0"
-            
+
             file_path.unlink()
 
     def test_python_version_compatibility_issues(self):
         """Test version detection when Python version compatibility issues occur."""
         # Test scenarios specific to different Python versions
-        with patch('importlib.metadata.version', side_effect=ImportError("importlib.metadata not available")), \
-             patch('pkg_resources.get_distribution', side_effect=ImportError("pkg_resources not available")), \
-             patch('pathlib.Path.exists', return_value=False):
-            
+        with patch(
+            "importlib.metadata.version",
+            side_effect=ImportError("importlib.metadata not available"),
+        ), patch(
+            "pkg_resources.get_distribution",
+            side_effect=ImportError("pkg_resources not available"),
+        ), patch(
+            "pathlib.Path.exists", return_value=False
+        ):
+
             from goobits_cli.generated_cli import get_version
+
             result = get_version()
-            
+
             # Should handle Python version compatibility issues gracefully
             assert result == "1.0.0"
 
     def test_version_detection_with_empty_version_fields(self):
         """Test handling of files with empty or whitespace-only version fields."""
         empty_version_cases = [
-            ('package.json', '{"version": ""}'),
-            ('package.json', '{"version": "   "}'),
-            ('package.json', '{"version": null}'),
-            ('pyproject.toml', '[project]\nversion = ""'),
-            ('pyproject.toml', '[project]\nversion = "   "'),
-            ('Cargo.toml', 'version = ""'),
-            ('Cargo.toml', 'version = "   "'),
-            ('__init__.py', '__version__ = ""'),
-            ('__init__.py', '__version__ = "   "'),
+            ("package.json", '{"version": ""}'),
+            ("package.json", '{"version": "   "}'),
+            ("package.json", '{"version": null}'),
+            ("pyproject.toml", '[project]\nversion = ""'),
+            ("pyproject.toml", '[project]\nversion = "   "'),
+            ("Cargo.toml", 'version = ""'),
+            ("Cargo.toml", 'version = "   "'),
+            ("__init__.py", '__version__ = ""'),
+            ("__init__.py", '__version__ = "   "'),
         ]
-        
+
         for filename, content in empty_version_cases:
             file_path = self.temp_dir / filename
             file_path.write_text(content)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle empty version fields gracefully
                 # Note: Empty strings might match regex but should still fall back
                 assert result in ["", "1.0.0"]  # Either empty string or fallback
-            
+
             file_path.unlink()
 
     def test_version_detection_with_extremely_long_version_strings(self):
         """Test handling of extremely long version strings."""
         # Create version strings that might cause memory issues
         long_version = "1.0.0" + "." + "0" * 10000  # Very long version string
-        
+
         long_version_cases = [
-            ('package.json', f'{{"version": "{long_version}"}}'),
-            ('pyproject.toml', f'[project]\nversion = "{long_version}"'),
-            ('Cargo.toml', f'version = "{long_version}"'),
-            ('__init__.py', f'__version__ = "{long_version}"'),
+            ("package.json", f'{{"version": "{long_version}"}}'),
+            ("pyproject.toml", f'[project]\nversion = "{long_version}"'),
+            ("Cargo.toml", f'version = "{long_version}"'),
+            ("__init__.py", f'__version__ = "{long_version}"'),
         ]
-        
+
         for filename, content in long_version_cases:
             file_path = self.temp_dir / filename
             file_path.write_text(content)
-            
-            with patch('importlib.metadata.version', side_effect=PackageNotFoundError("goobits-cli")), \
-                 patch('pkg_resources.get_distribution', side_effect=Exception("Distribution not found")), \
-                 patch('pathlib.Path.parent', return_value=self.temp_dir):
-                
+
+            with patch(
+                "importlib.metadata.version",
+                side_effect=PackageNotFoundError("goobits-cli"),
+            ), patch(
+                "pkg_resources.get_distribution",
+                side_effect=Exception("Distribution not found"),
+            ), patch(
+                "pathlib.Path.parent", return_value=self.temp_dir
+            ):
+
                 from goobits_cli.generated_cli import get_version
+
                 result = get_version()
-                
+
                 # Should handle extremely long version strings
                 assert isinstance(result, str)
                 assert len(result) > 0
-            
+
             file_path.unlink()

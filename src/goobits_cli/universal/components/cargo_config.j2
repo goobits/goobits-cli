@@ -9,7 +9,7 @@
    - cli: CLI schema with commands
 #}
 
-{%- if language == 'rust' -%}
+{% if language == 'rust' %}
 [package]
 name = "{{ project.package_name | default(project.command_name) }}"
 version = "{{ project.version | default('0.1.0') }}"
@@ -39,7 +39,7 @@ exclude = [
 name = "{{ project.command_name }}"
 path = "src/main.rs"
 
-{%- set features = feature_requirements | default({}) -%}
+{% set features = feature_requirements | default({}) %}
 
 [dependencies]
 # Core dependencies - always included
@@ -47,20 +47,24 @@ clap = { version = "4.4", features = ["derive"{% if features.color_support %}, "
 anyhow = "1.0"
 thiserror = "1.0"
 
-# Conditional dependencies based on detected features
-{% if features.config_management -%}
+# Serde dependencies - always included because Universal Template System generates code that uses them
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
+
+# Time/date handling - always included because logger uses it
+chrono = { version = "0.4", features = ["serde"] }
+
+# Conditional dependencies based on detected features
+{% if features.config_management -%}
+# Additional config management dependencies (serde already included above)
 {% endif -%}
 
 {% if features.async_features -%}
 tokio = { version = "1.0", features = ["full"], optional = true }
 {% endif -%}
 
-{% if features.file_operations or features.config_management -%}
-chrono = { version = "0.4", features = ["serde"] }
-{% endif -%}
+# Note: chrono is now included in core dependencies above
 
 {% if features.complex_parsing or features.interactive_mode -%}
 once_cell = "1.19"
@@ -160,4 +164,4 @@ opt-level = 0
 {# Python projects don't use Cargo.toml #}
 {%- else -%}
 # Cargo.toml not applicable for {{ language }}
-{%- endif -%}
+{% endif %}

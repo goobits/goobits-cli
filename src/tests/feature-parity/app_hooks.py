@@ -17,9 +17,9 @@ def on_config_get(key, verbose=False, config=None, **kwargs):
     default_config = {
         "theme": os.environ.get("TEST_CLI_THEME", "default"),
         "api_key": "",
-        "timeout": 30
+        "timeout": 30,
     }
-    
+
     if key in default_config:
         print(f"{key}: {default_config[key]}")
         return 0
@@ -36,12 +36,8 @@ def on_config_set(key, value, verbose=False, config=None, **kwargs):
 
 def on_config_list(verbose=False, config=None, **kwargs):
     """List all config values"""
-    default_config = {
-        "theme": "default",
-        "api_key": "",
-        "timeout": 30
-    }
-    
+    default_config = {"theme": "default", "api_key": "", "timeout": 30}
+
     for key, value in default_config.items():
         print(f"{key}: {value}")
     return 0
@@ -50,12 +46,16 @@ def on_config_list(verbose=False, config=None, **kwargs):
 def on_config_reset(force=False, verbose=False, config=None, **kwargs):
     """Reset config to defaults"""
     if not force:
-        print("Are you sure you want to reset the configuration? (y/N): ", end="", flush=True)
+        print(
+            "Are you sure you want to reset the configuration? (y/N): ",
+            end="",
+            flush=True,
+        )
         response = input().strip().lower()
-        if response != 'y':
+        if response != "y":
             print("Reset cancelled")
             return 0
-            
+
     print("Configuration reset to defaults")
     return 0
 
@@ -78,12 +78,12 @@ def on_file_create(path, content=None, verbose=False, config=None, **kwargs):
     try:
         file_path = Path(path)
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         if content:
             file_path.write_text(content)
         else:
             file_path.touch()
-            
+
         print(f"Created file: {path}")
         return 0
     except PermissionError:
@@ -101,7 +101,7 @@ def on_file_delete(path, verbose=False, config=None, **kwargs):
         if not file_path.exists():
             print(f"File not found: {path}", file=sys.stderr)
             return 1
-            
+
         file_path.unlink()
         print(f"Deleted file: {path}")
         return 0

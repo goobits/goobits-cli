@@ -74,7 +74,7 @@ that can be used across all language generators and testing scenarios.
 
 from goobits_cli.shared.test_utils import (
 
-    create_test_config, 
+    create_test_config,
 
     create_isolated_test_env,
 
@@ -111,197 +111,101 @@ comparison = compare_command_outputs(outputs, ['--help'])
 """
 
 from .fixtures import (
-
     TestFixtures,
-
     create_test_config,
-
     create_minimal_cli_config,
-
     create_complex_cli_config,
-
     get_test_command_data,
-
     get_test_option_data,
-
     get_test_argument_data,
-
     get_error_scenario,
-
-    get_expected_patterns
-
+    get_expected_patterns,
 )
 
 from .comparison_tools import (
-
     CrossLanguageComparator,
-
     ComparisonResult,
-
     normalize_cli_output,
-
     compare_command_outputs,
-
     generate_diff_report,
-
     compare_file_structures,
-
     extract_command_help_sections,
-
-    validate_cross_language_consistency
-
+    validate_cross_language_consistency,
 )
 
 from .test_helpers import (
-
     TestEnvironment,
-
     CLITestRunner,
-
     FileSystemHelper,
-
     CommandResult,
-
     cleanup_test_environment,
-
     capture_command_output,
-
     validate_cli_execution,
-
     create_isolated_test_env,
-
     generate_cli_and_test,
-
-    compare_cli_behaviors
-
+    compare_cli_behaviors,
 )
 
 from .phase1_integration import (
-
     Phase1IntegrationRunner,
-
     create_phase1_integration_suite,
-
     run_comprehensive_cross_language_tests,
-
     validate_phase1_compatibility,
-
-    enhance_test_with_cross_language_validation
-
+    enhance_test_with_cross_language_validation,
 )
 
 from .validation import (
-
     ValidationResult,
-
     TestDataValidator,
-
     FrameworkIntegrationValidator,
-
     validate_test_data,
-
     validate_framework_integration,
-
-    run_complete_validation
-
+    run_complete_validation,
 )
 
 
-
 __all__ = [
-
     # Fixtures
-
-    'TestFixtures',
-
-    'create_test_config',
-
-    'create_minimal_cli_config', 
-
-    'create_complex_cli_config',
-
-    'get_test_command_data',
-
-    'get_test_option_data',
-
-    'get_test_argument_data',
-
-    'get_error_scenario',
-
-    'get_expected_patterns',
-
-    
-
+    "TestFixtures",
+    "create_test_config",
+    "create_minimal_cli_config",
+    "create_complex_cli_config",
+    "get_test_command_data",
+    "get_test_option_data",
+    "get_test_argument_data",
+    "get_error_scenario",
+    "get_expected_patterns",
     # Comparison tools
-
-    'CrossLanguageComparator',
-
-    'ComparisonResult',
-
-    'normalize_cli_output',
-
-    'compare_command_outputs',
-
-    'generate_diff_report',
-
-    'compare_file_structures',
-
-    'extract_command_help_sections',
-
-    'validate_cross_language_consistency',
-
-    
-
+    "CrossLanguageComparator",
+    "ComparisonResult",
+    "normalize_cli_output",
+    "compare_command_outputs",
+    "generate_diff_report",
+    "compare_file_structures",
+    "extract_command_help_sections",
+    "validate_cross_language_consistency",
     # Test helpers
-
-    'TestEnvironment',
-
-    'CLITestRunner',
-
-    'FileSystemHelper', 
-
-    'CommandResult',
-
-    'cleanup_test_environment',
-
-    'capture_command_output',
-
-    'validate_cli_execution',
-
-    'create_isolated_test_env',
-
-    'generate_cli_and_test',
-
-    'compare_cli_behaviors',
-
-    
-
+    "TestEnvironment",
+    "CLITestRunner",
+    "FileSystemHelper",
+    "CommandResult",
+    "cleanup_test_environment",
+    "capture_command_output",
+    "validate_cli_execution",
+    "create_isolated_test_env",
+    "generate_cli_and_test",
+    "compare_cli_behaviors",
     # Phase 1 integration
-
-    'Phase1IntegrationRunner',
-
-    'create_phase1_integration_suite',
-
-    'run_comprehensive_cross_language_tests',
-
-    'validate_phase1_compatibility',
-
-    'enhance_test_with_cross_language_validation',
-
-    
-
+    "Phase1IntegrationRunner",
+    "create_phase1_integration_suite",
+    "run_comprehensive_cross_language_tests",
+    "validate_phase1_compatibility",
+    "enhance_test_with_cross_language_validation",
     # Validation
-
-    'ValidationResult',
-
-    'TestDataValidator',
-
-    'FrameworkIntegrationValidator',
-
-    'validate_test_data',
-
-    'validate_framework_integration',
-
-    'run_complete_validation',
-
+    "ValidationResult",
+    "TestDataValidator",
+    "FrameworkIntegrationValidator",
+    "validate_test_data",
+    "validate_framework_integration",
+    "run_complete_validation",
 ]

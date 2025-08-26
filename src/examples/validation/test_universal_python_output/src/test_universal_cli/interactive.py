@@ -8,56 +8,61 @@ import cmd
 import shlex
 import sys
 from typing import List, Optional
+
 try:
-    from .Test CLI_cli import cli
+    from .test_cli import cli
     from .hooks import *  # Import all hook functions
 except ImportError:
     # Fallback imports
-    from Test CLI_cli import cli
+    from test_cli import cli
+
     try:
         from hooks import *
     except ImportError:
         pass
 
+
 class TestuniversalcliInteractive(cmd.Cmd):
     """Interactive CLI for Test Universal CLI"""
-    
+
     intro = "Welcome to Test Universal CLI interactive mode. Type 'help' for commands, 'exit' to quit."
     prompt = "Test CLI> "
-    
+
     def __init__(self):
         super().__init__()
         self.command_history = []
-        
+
     def do_exit(self, arg):
         """Exit the interactive mode"""
         print("Goodbye!")
         return True
-        
+
     def do_quit(self, arg):
         """Exit the interactive mode"""
         return self.do_exit(arg)
-        
+
     def do_EOF(self, arg):
         """Handle Ctrl+D"""
         print()  # New line after ^D
-        return True    
+        return True
+
     def do_hello(self, arg):
         """Say hello to someone
-        
-        Usage: hello NAME [--greeting|-g]        
-        Arguments:            NAME: Name to greet        
-        Options:            --greeting, -g: Custom greeting message        """
+
+        Usage: hello NAME [--greeting|-g]
+        Arguments:            NAME: Name to greet
+        Options:            --greeting, -g: Custom greeting message"""
         try:
             # Parse arguments
             args = shlex.split(arg)
-            
+
             # Call the hook function if it exists
             hook_name = "on_hello"
             if hook_name in globals():
                 hook_func = globals()[hook_name]
                 # Parse and validate arguments according to command definition
                 import inspect
+
                 sig = inspect.signature(hook_func)
                 try:
                     bound_args = sig.bind(*args)
@@ -67,34 +72,38 @@ class TestuniversalcliInteractive(cmd.Cmd):
                     print(f"Error calling {hook_name}: {e}")
                     print(f"Expected signature: {sig}")
             else:
-                print(f"Command 'hello' executed successfully")
-                print(f"To implement custom behavior, add '{hook_name}' function to hooks.py")
+                print("Command 'hello' executed successfully")
+                print(
+                    f"To implement custom behavior, add '{hook_name}' function to hooks.py"
+                )
         except Exception as e:
             print(f"Error: {e}")
-    
+
     def complete_hello(self, text, line, begidx, endidx):
         """Tab completion for hello command"""
         # Basic completion for options
         options = ["--greeting", "-g"]
-        return [opt for opt in options if opt.startswith(text)]    
+        return [opt for opt in options if opt.startswith(text)]
+
     def default(self, line):
         """Handle unknown commands"""
         print(f"Unknown command: {line.split()[0] if line else ''}")
         print("Type 'help' for available commands")
-    
+
     def emptyline(self):
         """Handle empty line (do nothing instead of repeating last command)"""
         pass
-    
+
     def precmd(self, line):
         """Hook before command execution"""
-        if line and not line.startswith('help'):
+        if line and not line.startswith("help"):
             self.command_history.append(line)
         return line
-    
+
     def postcmd(self, stop, line):
         """Hook after command execution"""
         return stop
+
 
 def run_interactive():
     """Launch the interactive mode"""
@@ -103,6 +112,7 @@ def run_interactive():
     except KeyboardInterrupt:
         print("\nInterrupted. Use 'exit' to quit.")
         run_interactive()
+
 
 if __name__ == "__main__":
     run_interactive()

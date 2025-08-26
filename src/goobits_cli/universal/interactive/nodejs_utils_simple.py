@@ -12,89 +12,48 @@ and tab completion for npm packages and Node.js modules.
 
 """
 
-
-
-
-
 from typing import Dict, List, Any
 
 
-
-
-
 class NodeJSInteractiveUtils:
-
     """Utilities for Node.js interactive mode features."""
 
-    
-
     @staticmethod
-
     def get_enhanced_readline_config() -> Dict[str, Any]:
-
         """Get enhanced readline configuration with custom key bindings."""
 
         return {
-
             "completer": "completeCommand.bind(this)",
-
             "terminal": True,
-
             "history_size": 1000,
-
             "completion_append_character": " ",
-
             "key_bindings": {
-
                 "ctrl-l": "clearScreen",
-
-                "ctrl-r": "reverseHistorySearch", 
-
+                "ctrl-r": "reverseHistorySearch",
                 "tab": "complete",
-
                 "up": "historyPrev",
-
                 "down": "historyNext",
-
                 "ctrl-c": "interrupt",
-
-                "ctrl-d": "eof"
-
+                "ctrl-d": "eof",
             },
-
             "colors": {
-
                 "RESET": "\\x1b[0m",
-
-                "BOLD": "\\x1b[1m", 
-
+                "BOLD": "\\x1b[1m",
                 "DIM": "\\x1b[2m",
-
                 "GREEN": "\\x1b[32m",
-
                 "YELLOW": "\\x1b[33m",
-
                 "RED": "\\x1b[31m",
-
                 "BLUE": "\\x1b[34m",
-
                 "MAGENTA": "\\x1b[35m",
-
-                "CYAN": "\\x1b[36m"
-
-            }
-
+                "CYAN": "\\x1b[36m",
+            },
         }
 
-    
-
     @staticmethod
-
     def get_async_command_handler() -> str:
-
         """Generate async command handling code for Node.js."""
 
-        return '''
+        return """
 
     async executeCommand(line) {
 
@@ -152,17 +111,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-'''
-
-    
+"""
 
     @staticmethod
-
     def get_error_formatter() -> str:
-
         """Generate Node.js-specific error formatting code."""
 
-        return '''
+        return """
 
     formatError(error) {
 
@@ -188,17 +143,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-'''
-
-    
+"""
 
     @staticmethod
-
     def get_history_manager() -> str:
-
         """Generate history management code with file persistence."""
 
-        return '''
+        return """
 
     setupHistoryPersistence() {
 
@@ -244,17 +195,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-'''
-
-    
+"""
 
     @staticmethod
-
     def get_completion_engine() -> str:
-
         """Generate advanced tab completion for Node.js-specific features."""
 
-        return '''
+        return """
 
     setupAdvancedCompletion() {
 
@@ -326,17 +273,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-'''
-
-    
+"""
 
     @staticmethod
-
     def get_repl_evaluation() -> str:
-
         """Generate JavaScript expression evaluation support."""
 
-        return '''
+        return """
 
     async evaluateExpression(expression) {
 
@@ -400,17 +343,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-'''
-
-    
+"""
 
     @staticmethod
-
     def get_integration_features() -> str:
-
         """Generate Node.js integration features."""
 
-        return '''
+        return """
 
     setupNodeJSIntegration() {
 
@@ -492,17 +431,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-'''
-
-    
+"""
 
     @classmethod
-
     def generate_enhanced_interactive_template(cls) -> str:
-
         """Generate the complete enhanced Node.js interactive mode template (Simplified)."""
 
-        return '''#!/usr/bin/env node
+        return """#!/usr/bin/env node
 
 /**
 
@@ -972,53 +907,22 @@ if (require.main === module) {
 
 }
 
-'''
-
-
-
+"""
 
 
 def get_nodejs_interactive_dependencies() -> Dict[str, List[str]]:
-
     """Get the dependencies required for enhanced Node.js interactive mode."""
 
     return {
-
-        "builtin": [
-
-            "readline",
-
-            "fs", 
-
-            "path",
-
-            "os",
-
-            "child_process",
-
-            "util"
-
-        ],
-
-        "npm": [
-
-            "chalk@^5.3.0",
-
-            "@types/node@^20.0.0"
-
-        ]
-
+        "builtin": ["readline", "fs", "path", "os", "child_process", "util"],
+        "npm": ["chalk@^5.3.0", "@types/node@^20.0.0"],
     }
 
 
-
-
-
 def get_nodejs_interactive_tests() -> str:
-
     """Generate test cases for Node.js interactive mode."""
 
-    return '''
+    return """
 
 const { spawn } = require('child_process');
 
@@ -1124,4 +1028,4 @@ class InteractiveModeTester {
 
 module.exports = InteractiveModeTester;
 
-'''
+"""

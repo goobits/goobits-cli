@@ -9,15 +9,17 @@ This file contains the actual implementation for CLI commands.
 """
 
 
-
 from pathlib import Path
 
 from typing import Optional
 
 
-
-def on_build(config_path: Optional[str], output_dir: Optional[str], output: Optional[str], backup: bool) -> None:
-
+def on_build(
+    config_path: Optional[str],
+    output_dir: Optional[str],
+    output: Optional[str],
+    backup: bool,
+) -> None:
     """Hook for build command - delegate to main.py implementation."""
 
     try:
@@ -27,15 +29,11 @@ def on_build(config_path: Optional[str], output_dir: Optional[str], output: Opti
         # Fallback to relative import (development mode)
         from . import main  # type: ignore[import-untyped]
 
-    
-
     # Convert string paths to Path objects if needed
 
     config_path_obj = Path(config_path) if config_path else None
 
     output_dir_obj = Path(output_dir) if output_dir else None
-
-    
 
     # Call the actual build function
 
@@ -50,9 +48,7 @@ def on_build(config_path: Optional[str], output_dir: Optional[str], output: Opti
         pass
 
 
-
 def on_init(project_name: Optional[str], template: str, force: bool) -> None:
-
     """Hook for init command - delegate to main.py implementation."""
 
     try:
@@ -61,8 +57,6 @@ def on_init(project_name: Optional[str], template: str, force: bool) -> None:
     except ImportError:
         # Fallback to relative import (development mode)
         from . import main  # type: ignore[import-untyped]
-
-    
 
     try:
 
@@ -75,9 +69,7 @@ def on_init(project_name: Optional[str], template: str, force: bool) -> None:
         pass
 
 
-
 def on_serve(directory: str, host: str, port: int) -> None:
-
     """Hook for serve command - delegate to main.py implementation."""
 
     try:
@@ -87,11 +79,7 @@ def on_serve(directory: str, host: str, port: int) -> None:
         # Fallback to relative import (development mode)
         from . import main  # type: ignore[import-untyped]
 
-    
-
     directory_obj = Path(directory)
-
-    
 
     try:
 
@@ -102,6 +90,3 @@ def on_serve(directory: str, host: str, port: int) -> None:
         # Handle typer.Exit gracefully
 
         pass
-
-
-

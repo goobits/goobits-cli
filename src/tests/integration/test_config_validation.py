@@ -10,9 +10,11 @@ from goobits_cli.schemas import GoobitsConfigSchema
 
 class TestConfigTemplates:
     """Collection of test configuration templates."""
-    
+
     @staticmethod
-    def minimal_config(language: str, package_name: str = "test-minimal-cli") -> GoobitsConfigSchema:
+    def minimal_config(
+        language: str, package_name: str = "test-minimal-cli"
+    ) -> GoobitsConfigSchema:
         """Create a minimal test configuration."""
         config_data = {
             "package_name": package_name,
@@ -27,49 +29,38 @@ class TestConfigTemplates:
             "homepage": "https://github.com/test/test-cli",
             "repository": "https://github.com/test/test-cli",
             "keywords": ["test", "minimal", language],
-            "installation": {
-                "pypi_name": package_name,
-                "development_path": "."
-            },
-            "python": {
-                "minimum_version": "3.8",
-                "maximum_version": "3.13"
-            },
-            "dependencies": {
-                "required": [],
-                "optional": []
-            },
+            "installation": {"pypi_name": package_name, "development_path": "."},
+            "python": {"minimum_version": "3.8", "maximum_version": "3.13"},
+            "dependencies": {"required": [], "optional": []},
             "shell_integration": {
                 "enabled": False,
-                "alias": package_name.replace("_", "-")
+                "alias": package_name.replace("_", "-"),
             },
             "validation": {
                 "check_api_keys": False,
                 "check_disk_space": False,
-                "minimum_disk_space_mb": 1
+                "minimum_disk_space_mb": 1,
             },
             "messages": {
                 "install_success": "Installation completed successfully!",
                 "install_dev_success": "Development installation completed successfully!",
                 "upgrade_success": "Upgrade completed successfully!",
-                "uninstall_success": "Uninstall completed successfully!"
+                "uninstall_success": "Uninstall completed successfully!",
             },
             "cli": {
                 "name": f"TestMinimal{language.title()}CLI",
                 "version": "0.1.0",
                 "tagline": f"Minimal {language} CLI",
-                "commands": {
-                    "hello": {
-                        "desc": "Say hello"
-                    }
-                }
-            }
+                "commands": {"hello": {"desc": "Say hello"}},
+            },
         }
-        
+
         return GoobitsConfigSchema(**config_data)
-    
+
     @staticmethod
-    def complex_config(language: str, package_name: str = "test-complex-cli") -> GoobitsConfigSchema:
+    def complex_config(
+        language: str, package_name: str = "test-complex-cli"
+    ) -> GoobitsConfigSchema:
         """Create a complex test configuration with multiple commands and options."""
         config_data = {
             "package_name": package_name,
@@ -89,32 +80,30 @@ class TestConfigTemplates:
                 "development_path": ".",
                 "extras": {
                     "python": ["dev", "test"] if language == "python" else None,
-                    "npm": ["typescript", "@types/node"] if language in ["nodejs", "typescript"] else None,
-                    "apt": ["git"] if language == "python" else None
-                }
+                    "npm": (
+                        ["typescript", "@types/node"]
+                        if language in ["nodejs", "typescript"]
+                        else None
+                    ),
+                    "apt": ["git"] if language == "python" else None,
+                },
             },
-            "python": {
-                "minimum_version": "3.8",
-                "maximum_version": "3.13"
-            },
-            "dependencies": {
-                "required": [],
-                "optional": []
-            },
+            "python": {"minimum_version": "3.8", "maximum_version": "3.13"},
+            "dependencies": {"required": [], "optional": []},
             "shell_integration": {
                 "enabled": True,
-                "alias": package_name.replace("_", "-")
+                "alias": package_name.replace("_", "-"),
             },
             "validation": {
                 "check_api_keys": False,
                 "check_disk_space": True,
-                "minimum_disk_space_mb": 100
+                "minimum_disk_space_mb": 100,
             },
             "messages": {
                 "install_success": "Installation completed successfully!",
                 "install_dev_success": "Development installation completed successfully!",
                 "upgrade_success": "Upgrade completed successfully!",
-                "uninstall_success": "Uninstall completed successfully!"
+                "uninstall_success": "Uninstall completed successfully!",
             },
             "cli": {
                 "name": f"TestComplex{language.title()}CLI",
@@ -130,7 +119,7 @@ class TestConfigTemplates:
                             {
                                 "name": "name",
                                 "desc": "Name of the person to greet",
-                                "required": True
+                                "required": True,
                             }
                         ],
                         "options": [
@@ -139,23 +128,23 @@ class TestConfigTemplates:
                                 "short": "u",
                                 "type": "bool",
                                 "desc": "Print greeting in uppercase",
-                                "default": False
+                                "default": False,
                             },
                             {
                                 "name": "repeat",
                                 "short": "r",
                                 "type": "int",
                                 "desc": "Number of times to repeat greeting",
-                                "default": 1
+                                "default": 1,
                             },
                             {
                                 "name": "prefix",
                                 "short": "p",
                                 "type": "str",
                                 "desc": "Prefix for the greeting",
-                                "default": "Hello"
-                            }
-                        ]
+                                "default": "Hello",
+                            },
+                        ],
                     },
                     "calculate": {
                         "desc": "Perform basic calculations",
@@ -164,44 +153,42 @@ class TestConfigTemplates:
                                 "name": "operation",
                                 "desc": "Mathematical operation",
                                 "choices": ["add", "subtract", "multiply", "divide"],
-                                "required": True
+                                "required": True,
                             },
                             {
                                 "name": "numbers",
                                 "desc": "Numbers to operate on",
                                 "nargs": "+",
-                                "required": True
-                            }
+                                "required": True,
+                            },
                         ],
                         "options": [
                             {
                                 "name": "precision",
                                 "type": "int",
                                 "desc": "Decimal precision for results",
-                                "default": 2
+                                "default": 2,
                             }
-                        ]
+                        ],
                     },
                     "config": {
                         "desc": "Configuration management",
                         "subcommands": {
-                            "show": {
-                                "desc": "Show current configuration"
-                            },
+                            "show": {"desc": "Show current configuration"},
                             "set": {
                                 "desc": "Set configuration value",
                                 "args": [
                                     {
                                         "name": "key",
                                         "desc": "Configuration key",
-                                        "required": True
+                                        "required": True,
                                     },
                                     {
                                         "name": "value",
                                         "desc": "Configuration value",
-                                        "required": True
-                                    }
-                                ]
+                                        "required": True,
+                                    },
+                                ],
                             },
                             "reset": {
                                 "desc": "Reset configuration to defaults",
@@ -210,11 +197,11 @@ class TestConfigTemplates:
                                         "name": "confirm",
                                         "type": "bool",
                                         "desc": "Confirm reset operation",
-                                        "default": False
+                                        "default": False,
                                     }
-                                ]
-                            }
-                        }
+                                ],
+                            },
+                        },
                     },
                     "file": {
                         "desc": "File operations",
@@ -225,7 +212,7 @@ class TestConfigTemplates:
                                     {
                                         "name": "filepath",
                                         "desc": "Path to file to read",
-                                        "required": True
+                                        "required": True,
                                     }
                                 ],
                                 "options": [
@@ -234,9 +221,9 @@ class TestConfigTemplates:
                                         "short": "n",
                                         "type": "int",
                                         "desc": "Number of lines to read",
-                                        "default": None
+                                        "default": None,
                                     }
-                                ]
+                                ],
                             },
                             "write": {
                                 "desc": "Write content to file",
@@ -244,13 +231,13 @@ class TestConfigTemplates:
                                     {
                                         "name": "filepath",
                                         "desc": "Path to file to write",
-                                        "required": True
+                                        "required": True,
                                     },
                                     {
                                         "name": "content",
                                         "desc": "Content to write",
-                                        "required": True
-                                    }
+                                        "required": True,
+                                    },
                                 ],
                                 "options": [
                                     {
@@ -258,12 +245,12 @@ class TestConfigTemplates:
                                         "short": "a",
                                         "type": "bool",
                                         "desc": "Append to file instead of overwriting",
-                                        "default": False
+                                        "default": False,
                                     }
-                                ]
-                            }
-                        }
-                    }
+                                ],
+                            },
+                        },
+                    },
                 },
                 "options": [
                     {
@@ -271,23 +258,25 @@ class TestConfigTemplates:
                         "short": "v",
                         "type": "bool",
                         "desc": "Enable verbose output",
-                        "default": False
+                        "default": False,
                     },
                     {
                         "name": "config-file",
                         "short": "c",
                         "type": "str",
                         "desc": "Path to configuration file",
-                        "default": None
-                    }
-                ]
-            }
+                        "default": None,
+                    },
+                ],
+            },
         }
-        
+
         return GoobitsConfigSchema(**config_data)
-    
+
     @staticmethod
-    def dependency_heavy_config(language: str, package_name: str = "test-deps-cli") -> GoobitsConfigSchema:
+    def dependency_heavy_config(
+        language: str, package_name: str = "test-deps-cli"
+    ) -> GoobitsConfigSchema:
         """Create a configuration with multiple dependencies."""
         config_data = {
             "package_name": package_name,
@@ -306,46 +295,55 @@ class TestConfigTemplates:
                 "pypi_name": package_name,
                 "development_path": ".",
                 "extras": {
-                    "python": ["requests", "pyyaml", "click", "rich"] if language == "python" else None,
-                    "npm": ["axios", "yaml", "commander", "chalk"] if language in ["nodejs", "typescript"] else None,
-                    "apt": ["curl", "jq"] if language in ["python", "nodejs", "typescript"] else None,
-                    "cargo": ["serde", "tokio"] if language == "rust" else None
-                }
+                    "python": (
+                        ["requests", "pyyaml", "click", "rich"]
+                        if language == "python"
+                        else None
+                    ),
+                    "npm": (
+                        ["axios", "yaml", "commander", "chalk"]
+                        if language in ["nodejs", "typescript"]
+                        else None
+                    ),
+                    "apt": (
+                        ["curl", "jq"]
+                        if language in ["python", "nodejs", "typescript"]
+                        else None
+                    ),
+                    "cargo": ["serde", "tokio"] if language == "rust" else None,
+                },
             },
-            "python": {
-                "minimum_version": "3.8",
-                "maximum_version": "3.13"
-            },
+            "python": {"minimum_version": "3.8", "maximum_version": "3.13"},
             "dependencies": {
                 "required": [
                     {
                         "name": "curl",
                         "type": "command",
-                        "description": "Required for HTTP requests"
+                        "description": "Required for HTTP requests",
                     }
                 ],
                 "optional": [
                     {
                         "name": "jq",
                         "type": "command",
-                        "description": "JSON processing utility"
+                        "description": "JSON processing utility",
                     }
-                ]
+                ],
             },
             "shell_integration": {
                 "enabled": True,
-                "alias": package_name.replace("_", "-")
+                "alias": package_name.replace("_", "-"),
             },
             "validation": {
                 "check_api_keys": True,
                 "check_disk_space": True,
-                "minimum_disk_space_mb": 500
+                "minimum_disk_space_mb": 500,
             },
             "messages": {
                 "install_success": "Installation completed successfully!",
                 "install_dev_success": "Development installation completed successfully!",
                 "upgrade_success": "Upgrade completed successfully!",
-                "uninstall_success": "Uninstall completed successfully!"
+                "uninstall_success": "Uninstall completed successfully!",
             },
             "cli": {
                 "name": f"TestDeps{language.title()}CLI",
@@ -356,11 +354,7 @@ class TestConfigTemplates:
                     "fetch": {
                         "desc": "Fetch data from URL",
                         "args": [
-                            {
-                                "name": "url",
-                                "desc": "URL to fetch",
-                                "required": True
-                            }
+                            {"name": "url", "desc": "URL to fetch", "required": True}
                         ],
                         "options": [
                             {
@@ -368,7 +362,7 @@ class TestConfigTemplates:
                                 "short": "o",
                                 "type": "str",
                                 "desc": "Output file path",
-                                "default": None
+                                "default": None,
                             },
                             {
                                 "name": "format",
@@ -376,9 +370,9 @@ class TestConfigTemplates:
                                 "type": "str",
                                 "desc": "Output format",
                                 "choices": ["json", "yaml", "text"],
-                                "default": "json"
-                            }
-                        ]
+                                "default": "json",
+                            },
+                        ],
                     },
                     "process": {
                         "desc": "Process data files",
@@ -387,7 +381,7 @@ class TestConfigTemplates:
                                 "name": "input_files",
                                 "desc": "Input files to process",
                                 "nargs": "+",
-                                "required": True
+                                "required": True,
                             }
                         ],
                         "options": [
@@ -395,18 +389,20 @@ class TestConfigTemplates:
                                 "name": "output-dir",
                                 "type": "str",
                                 "desc": "Output directory",
-                                "default": "./output"
+                                "default": "./output",
                             }
-                        ]
-                    }
-                }
-            }
+                        ],
+                    },
+                },
+            },
         }
-        
+
         return GoobitsConfigSchema(**config_data)
-    
+
     @staticmethod
-    def edge_case_config(language: str, package_name: str = "test-edge-cli") -> GoobitsConfigSchema:
+    def edge_case_config(
+        language: str, package_name: str = "test-edge-cli"
+    ) -> GoobitsConfigSchema:
         """Create a configuration with edge cases and special characters."""
         config_data = {
             "package_name": package_name,
@@ -421,32 +417,23 @@ class TestConfigTemplates:
             "homepage": "https://github.com/test/edge-case-cli",
             "repository": "https://github.com/test/edge-case-cli",
             "keywords": ["test", "edge-cases", "special-chars", language],
-            "installation": {
-                "pypi_name": package_name,
-                "development_path": "."
-            },
-            "python": {
-                "minimum_version": "3.9",
-                "maximum_version": "3.12"
-            },
-            "dependencies": {
-                "required": [],
-                "optional": []
-            },
+            "installation": {"pypi_name": package_name, "development_path": "."},
+            "python": {"minimum_version": "3.9", "maximum_version": "3.12"},
+            "dependencies": {"required": [], "optional": []},
             "shell_integration": {
                 "enabled": False,
-                "alias": package_name.replace("_", "-")
+                "alias": package_name.replace("_", "-"),
             },
             "validation": {
                 "check_api_keys": False,
                 "check_disk_space": False,
-                "minimum_disk_space_mb": 1
+                "minimum_disk_space_mb": 1,
             },
             "messages": {
                 "install_success": "Installation completed successfully!",
                 "install_dev_success": "Development installation completed successfully!",
                 "upgrade_success": "Upgrade completed successfully!",
-                "uninstall_success": "Uninstall completed successfully!"
+                "uninstall_success": "Uninstall completed successfully!",
             },
             "cli": {
                 "name": f"TestEdge{language.title()}CLI",
@@ -460,7 +447,7 @@ class TestConfigTemplates:
                             {
                                 "name": "input-with-dashes",
                                 "desc": "Input argument with dashes",
-                                "required": False
+                                "required": False,
                             }
                         ],
                         "options": [
@@ -468,9 +455,9 @@ class TestConfigTemplates:
                                 "name": "special-option",
                                 "type": "str",
                                 "desc": "Option with special characters: áéíóú ñ 中文 🎉",
-                                "default": "default-value"
+                                "default": "default-value",
                             }
-                        ]
+                        ],
                     },
                     "unicode-test": {
                         "desc": "Test Unicode support: 🚀 🎯 ⚡ 🔥 💡",
@@ -479,16 +466,16 @@ class TestConfigTemplates:
                                 "name": "emoji-flag",
                                 "type": "bool",
                                 "desc": "Enable emoji output 😊",
-                                "default": False
+                                "default": False,
                             }
-                        ]
-                    }
-                }
-            }
+                        ],
+                    },
+                },
+            },
         }
-        
+
         return GoobitsConfigSchema(**config_data)
-    
+
     @staticmethod
     def get_all_templates() -> Dict[str, callable]:
         """Get all available test configuration templates."""
@@ -496,71 +483,81 @@ class TestConfigTemplates:
             "minimal": TestConfigTemplates.minimal_config,
             "complex": TestConfigTemplates.complex_config,
             "dependency_heavy": TestConfigTemplates.dependency_heavy_config,
-            "edge_case": TestConfigTemplates.edge_case_config
+            "edge_case": TestConfigTemplates.edge_case_config,
         }
-    
+
     @staticmethod
-    def get_template_for_scenario(scenario: str, language: str, package_name: str = None) -> GoobitsConfigSchema:
+    def get_template_for_scenario(
+        scenario: str, language: str, package_name: str = None
+    ) -> GoobitsConfigSchema:
         """Get a test configuration for a specific scenario."""
         templates = TestConfigTemplates.get_all_templates()
-        
+
         if scenario not in templates:
-            raise ValueError(f"Unknown scenario: {scenario}. Available: {list(templates.keys())}")
-        
+            raise ValueError(
+                f"Unknown scenario: {scenario}. Available: {list(templates.keys())}"
+            )
+
         if package_name is None:
             package_name = f"test-{scenario}-{language}-cli"
-        
+
         return templates[scenario](language, package_name)
 
 
 class TestScenarioRunner:
     """Helper class for running test scenarios with different configurations."""
-    
+
     @staticmethod
     def get_test_matrix() -> List[Dict[str, str]]:
         """Get test matrix of language/scenario combinations."""
         languages = ["python", "nodejs", "typescript", "rust"]
         scenarios = ["minimal", "complex", "dependency_heavy", "edge_case"]
-        
+
         matrix = []
         for language in languages:
             for scenario in scenarios:
-                matrix.append({
-                    "language": language,
-                    "scenario": scenario,
-                    "test_id": f"{language}_{scenario}"
-                })
-        
+                matrix.append(
+                    {
+                        "language": language,
+                        "scenario": scenario,
+                        "test_id": f"{language}_{scenario}",
+                    }
+                )
+
         return matrix
-    
+
     @staticmethod
     def get_critical_test_matrix() -> List[Dict[str, str]]:
         """Get a reduced test matrix for critical scenarios only."""
         languages = ["python", "nodejs", "typescript", "rust"]
         critical_scenarios = ["minimal", "complex"]
-        
+
         matrix = []
         for language in languages:
             for scenario in critical_scenarios:
-                matrix.append({
-                    "language": language,
-                    "scenario": scenario,
-                    "test_id": f"{language}_{scenario}_critical"
-                })
-        
+                matrix.append(
+                    {
+                        "language": language,
+                        "scenario": scenario,
+                        "test_id": f"{language}_{scenario}_critical",
+                    }
+                )
+
         return matrix
-    
+
     @staticmethod
     def get_language_specific_matrix(language: str) -> List[Dict[str, str]]:
         """Get test matrix for a specific language."""
         scenarios = ["minimal", "complex", "dependency_heavy", "edge_case"]
-        
+
         matrix = []
         for scenario in scenarios:
-            matrix.append({
-                "language": language,
-                "scenario": scenario,
-                "test_id": f"{language}_{scenario}"
-            })
-        
+            matrix.append(
+                {
+                    "language": language,
+                    "scenario": scenario,
+                    "test_id": f"{language}_{scenario}",
+                }
+            )
+
         return matrix

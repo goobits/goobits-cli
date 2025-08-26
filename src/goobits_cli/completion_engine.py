@@ -9,7 +9,6 @@ Reads goobits.yaml at runtime and provides context-aware completions
 """
 
 
-
 import os
 
 import sys
@@ -22,32 +21,20 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 
-
-
-
 class CompletionEngine:
-
     """Universal completion engine that parses goobits.yaml at runtime"""
 
-    
-
     def __init__(self, config_path: Optional[str] = None):
-
         """Initialize completion engine with goobits.yaml path"""
 
         self.config_path = config_path or self._find_config()
 
         self.config = self._load_config()
 
-        
-
     def _find_config(self) -> str:
-
         """Find goobits.yaml file in current directory or parent directories"""
 
         current = Path.cwd()
-
-        
 
         # Search up the directory tree
 
@@ -59,21 +46,16 @@ class CompletionEngine:
 
                 return str(config_file)
 
-                
-
         # Fallback to current directory
 
         return str(Path.cwd() / "goobits.yaml")
 
-    
-
     def _load_config(self) -> Dict[str, Any]:
-
         """Load and parse goobits.yaml configuration"""
 
         try:
 
-            with open(self.config_path, 'r', encoding='utf-8') as f:
+            with open(self.config_path, "r", encoding="utf-8") as f:
 
                 return yaml.safe_load(f) or {}
 
@@ -81,10 +63,9 @@ class CompletionEngine:
 
             return {}
 
-    
-
-    def get_completions(self, shell: str, current_line: str, cursor_pos: Optional[int] = None) -> List[str]:
-
+    def get_completions(
+        self, shell: str, current_line: str, cursor_pos: Optional[int] = None
+    ) -> List[str]:
         """Get completions for the current shell context"""
 
         try:
@@ -93,29 +74,25 @@ class CompletionEngine:
 
             tokens = self._parse_command_line(current_line, cursor_pos)
 
-            
-
-            # Special case: if the line ends with a space after an option, 
+            # Special case: if the line ends with a space after an option,
 
             # we should be completing the option value
 
-            if current_line.endswith(' ') and len(tokens) > 0 and tokens[-1].startswith('-'):
+            if (
+                current_line.endswith(" ")
+                and len(tokens) > 0
+                and tokens[-1].startswith("-")
+            ):
 
                 # Add empty token to represent the word being completed
 
-                tokens.append('')
-
-            
+                tokens.append("")
 
             context = self._analyze_context(tokens)
-
-            
 
             # Generate completions based on context
 
             completions = self._generate_completions(context)
-
-            
 
             return sorted(set(completions))
 
@@ -123,23 +100,18 @@ class CompletionEngine:
 
             return []
 
-    
-
-    def _parse_command_line(self, line: str, cursor_pos: Optional[int] = None) -> List[str]:
-
+    def _parse_command_line(
+        self, line: str, cursor_pos: Optional[int] = None
+    ) -> List[str]:
         """Parse command line into tokens, handling quoted arguments"""
 
         if cursor_pos is None:
 
             cursor_pos = len(line)
 
-            
-
         # Extract the relevant part of the line up to cursor
 
         relevant_line = line[:cursor_pos]
-
-        
 
         # Simple tokenization (could be enhanced for complex cases)
 
@@ -150,8 +122,6 @@ class CompletionEngine:
         in_quotes = False
 
         quote_char = None
-
-        
 
         for char in relevant_line:
 
@@ -183,29 +153,20 @@ class CompletionEngine:
 
                 current_token += char
 
-        
-
         # Add final token if exists
 
         if current_token:
 
             tokens.append(current_token)
 
-            
-
         return tokens
 
-    
-
     def _analyze_context(self, tokens: List[str]) -> Dict[str, Any]:
-
         """Analyze the current completion context"""
 
         if not tokens:
 
             return {"type": "command", "level": 0}
-
-            
 
         # Skip the program name
 
@@ -213,37 +174,22 @@ class CompletionEngine:
 
             tokens = tokens[1:]
 
-            
-
         if not tokens:
 
             return {"type": "command", "level": 0}
 
-            
-
         context: Dict[str, Any] = {
-
             "type": "unknown",
-
             "level": 0,
-
             "current_command": None,
-
             "subcommand": None,
-
             "last_token": tokens[-1] if tokens else "",
-
             "previous_token": tokens[-2] if len(tokens) > 1 else "",
-
         }
-
-        
 
         # Determine command/subcommand context first
 
         cli_commands = self.config.get("cli", {}).get("commands", {})
-
-        
 
         # Find the current command in the token list
 
@@ -255,8 +201,6 @@ class CompletionEngine:
 
                 break
 
-        
-
         # Check if we're completing an option
 
         if str(context["last_token"]).startswith("-"):
@@ -265,19 +209,17 @@ class CompletionEngine:
 
             return context
 
-            
-
         # Check if previous token was an option that expects a value
 
-        if str(context["previous_token"]).startswith("-") and not str(context["last_token"]).startswith("-"):
+        if str(context["previous_token"]).startswith("-") and not str(
+            context["last_token"]
+        ).startswith("-"):
 
             context["type"] = "option_value"
 
             context["option"] = context["previous_token"]
 
             return context
-
-        
 
         if len(tokens) == 1:
 
@@ -297,9 +239,11 @@ class CompletionEngine:
 
             context["current_command"] = tokens[0]
 
-            
-
-            if "subcommands" in command_config and len(tokens) == 2 and not tokens[1].startswith("-"):
+            if (
+                "subcommands" in command_config
+                and len(tokens) == 2
+                and not tokens[1].startswith("-")
+            ):
 
                 context["type"] = "subcommand"
 
@@ -307,9 +251,15 @@ class CompletionEngine:
 
                 context["partial"] = tokens[1]
 
-            elif "subcommands" in command_config and len(tokens) > 2 and tokens[1] in command_config["subcommands"]:
+            elif (
+                "subcommands" in command_config
+                and len(tokens) > 2
+                and tokens[1] in command_config["subcommands"]
+            ):
 
-                context["type"] = "option" if context["type"] == "unknown" else context["type"]
+                context["type"] = (
+                    "option" if context["type"] == "unknown" else context["type"]
+                )
 
                 context["subcommand"] = tokens[1]
 
@@ -319,7 +269,9 @@ class CompletionEngine:
 
                 # We're in option context for this command
 
-                context["type"] = "option" if context["type"] == "unknown" else context["type"]
+                context["type"] = (
+                    "option" if context["type"] == "unknown" else context["type"]
+                )
 
                 context["level"] = 1
 
@@ -333,19 +285,12 @@ class CompletionEngine:
 
             context["partial"] = tokens[0]
 
-        
-
         return context
 
-    
-
     def _generate_completions(self, context: Dict[str, Any]) -> List[str]:
-
         """Generate completions based on context"""
 
         completions = []
-
-        
 
         if context["type"] == "command":
 
@@ -363,8 +308,6 @@ class CompletionEngine:
 
             completions.extend(self._get_option_value_completions(context))
 
-            
-
         # Filter by partial match if applicable
 
         partial = context.get("partial", "")
@@ -373,19 +316,12 @@ class CompletionEngine:
 
             completions = [c for c in completions if c.startswith(partial)]
 
-            
-
         return completions
 
-    
-
     def _get_command_completions(self, context: Dict[str, Any]) -> List[str]:
-
         """Get top-level command completions"""
 
         commands = []
-
-        
 
         # CLI commands from config
 
@@ -393,13 +329,9 @@ class CompletionEngine:
 
         commands.extend(cli_commands.keys())
 
-        
-
         # Built-in commands
 
         builtin_commands = ["help", "version"]
-
-        
 
         # Check if upgrade is enabled
 
@@ -409,18 +341,11 @@ class CompletionEngine:
 
             builtin_commands.append("upgrade")
 
-            
-
         commands.extend(builtin_commands)
-
-        
 
         return commands
 
-    
-
     def _get_subcommand_completions(self, context: Dict[str, Any]) -> List[str]:
-
         """Get subcommand completions"""
 
         command = context.get("current_command")
@@ -429,27 +354,18 @@ class CompletionEngine:
 
             return []
 
-            
-
         cli_commands = self.config.get("cli", {}).get("commands", {})
 
         command_config = cli_commands.get(command, {})
-
-        
 
         subcommands = command_config.get("subcommands", {})
 
         return list(subcommands.keys())
 
-    
-
     def _get_option_completions(self, context: Dict[str, Any]) -> List[str]:
-
         """Get option completions for current command/subcommand"""
 
         options = []
-
-        
 
         # Global options
 
@@ -463,8 +379,6 @@ class CompletionEngine:
 
                 options.append(f"-{opt['short']}")
 
-        
-
         # Command-specific options
 
         command = context.get("current_command")
@@ -475,8 +389,6 @@ class CompletionEngine:
 
             command_config = cli_commands.get(command, {})
 
-            
-
             # Check if we're in a subcommand
 
             subcommand = context.get("subcommand")
@@ -484,8 +396,6 @@ class CompletionEngine:
             if subcommand and "subcommands" in command_config:
 
                 command_config = command_config["subcommands"].get(subcommand, {})
-
-            
 
             command_options = command_config.get("options", [])
 
@@ -497,25 +407,16 @@ class CompletionEngine:
 
                     options.append(f"-{opt['short']}")
 
-        
-
         # Standard options
 
         options.extend(["--help", "-h", "--version", "-V"])
 
-        
-
         return options
 
-    
-
     def _get_option_value_completions(self, context: Dict[str, Any]) -> List[str]:
-
         """Get completions for option values"""
 
         option = context.get("option", "").lstrip("-")
-
-        
 
         # Find option configuration
 
@@ -525,11 +426,7 @@ class CompletionEngine:
 
             return []
 
-        
-
         option_type = option_config.get("type", "str")
-
-        
 
         # Handle different option types
 
@@ -550,14 +447,11 @@ class CompletionEngine:
 
             return ["true", "false"]
 
-            
-
         return []
 
-    
-
-    def _find_option_config(self, option_name: str, context: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-
+    def _find_option_config(
+        self, option_name: str, context: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Find configuration for a specific option"""
 
         # Check global options
@@ -570,8 +464,6 @@ class CompletionEngine:
 
                 return dict(opt)
 
-        
-
         # Check command-specific options
 
         command = context.get("current_command")
@@ -582,8 +474,6 @@ class CompletionEngine:
 
             command_config = cli_commands.get(command, {})
 
-            
-
             # Check if we're in a subcommand
 
             subcommand = context.get("subcommand")
@@ -591,8 +481,6 @@ class CompletionEngine:
             if subcommand and "subcommands" in command_config:
 
                 command_config = command_config["subcommands"].get(subcommand, {})
-
-            
 
             command_options = command_config.get("options", [])
 
@@ -602,14 +490,9 @@ class CompletionEngine:
 
                     return dict(opt)
 
-        
-
         return None
 
-    
-
     def _get_file_completions(self) -> List[str]:
-
         """Get file completions for current directory"""
 
         try:
@@ -628,10 +511,7 @@ class CompletionEngine:
 
             return []
 
-    
-
     def _get_directory_completions(self) -> List[str]:
-
         """Get directory completions for current directory"""
 
         try:
@@ -651,18 +531,12 @@ class CompletionEngine:
             return []
 
 
-
-
-
 def main():
-
     """Main completion function - called by CLIs with --completion"""
 
     if len(sys.argv) < 3:
 
         sys.exit(1)
-
-        
 
     shell = sys.argv[1]
 
@@ -670,22 +544,15 @@ def main():
 
     cursor_pos = int(sys.argv[3]) if len(sys.argv) > 3 else None
 
-    
-
     engine = CompletionEngine()
 
     completions = engine.get_completions(shell, current_line, cursor_pos)
-
-    
 
     # Output completions one per line
 
     for completion in completions:
 
         print(completion)
-
-
-
 
 
 if __name__ == "__main__":
