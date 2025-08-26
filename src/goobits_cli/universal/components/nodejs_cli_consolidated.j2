@@ -29,9 +29,11 @@ class ConfigManager {
     constructor(configFile = null) {
         this.configFile = configFile || this._getDefaultConfigPath();
         this.config = {
-            {%- for key, value in (cli.default_config | default({})).items() %}
+            {%- if cli.default_config %}
+            {%- for key, value in cli.default_config.items() %}
             {{ key }}: {{ value | tojson }},
             {%- endfor %}
+            {%- endif %}
             debug: false,
             outputFormat: 'text'
         };
@@ -366,29 +368,31 @@ program
     .description('{{ cli.description | default(project.description) }}')
     .version('{{ cli.version | default(project.version) | default("1.0.0") }}');
 
-// Global options
-{%- for option in cli.global_options | default([]) %}
+// Global options from processed commander structure
+{%- if commander_commands and commander_commands.root_command and commander_commands.root_command.options %}
+{%- for option in commander_commands.root_command.options %}
 program.option(
-    '{{ option.short | default("") }}{{ ", " if option.short else "" }}{{ option.long }}{{ " <value>" if option.type != "boolean" else "" }}',
+    '{{ option.flags }}',
     '{{ option.description }}'
     {%- if option.default is defined %},
     {{ option.default | tojson }}
     {%- endif %}
 );
 {%- endfor %}
+{%- endif %}
 
-// Commands - handle both old (cli.commands) and new (cli.root_command.subcommands) formats
-{%- if cli.commands %}
-  {%- for cmd_name, cmd_data in cli.commands.items() %}
+// Commands - use processed commander structure
+{%- if commander_commands and commander_commands.subcommands %}
+  {%- for cmd_data in commander_commands.subcommands %}
 program
-    .command('{{ cmd_name }}')
-    .description('{{ cmd_data.desc | default(cmd_data.description) }}')
+    .command('{{ cmd_data.name }}')
+    .description('{{ cmd_data.description }}')
     {%- for arg in cmd_data.arguments | default([]) %}
-    .argument('{{ arg.format | default(arg.name) }}', '{{ arg.description }}')
+    .argument('{{ arg.pattern }}', '{{ arg.description }}')
     {%- endfor %}
     {%- for option in cmd_data.options | default([]) %}
     .option(
-        '{{ option.short | default("") }}{{ ", " if option.short else "" }}{{ option.long }}{{ " <value>" if option.type != "boolean" else "" }}',
+        '{{ option.flags }}',
         '{{ option.description }}'
         {%- if option.default is defined %},
         {{ option.default | tojson }}
@@ -403,7 +407,7 @@ program
             }
             
             // Call the hook function
-            const hookName = 'on{{ cmd_name | capitalize }}';
+            const hookName = '{{ cmd_data.hook_name | default("on" + cmd_data.name | title) }}';
             if (hooks && typeof hooks[hookName] === 'function') {
                 await hooks[hookName](...args);
             } else {
@@ -411,21 +415,21 @@ program
                 process.exit(1);
             }
         } catch (error) {
-            errorHandler.handleError(error, '{{ cmd_name }} command');
+            errorHandler.handleError(error, '{{ cmd_data.name }} command');
         }
     });
     
-    {%- if cmd_data.subcommands %}
-    // Nested subcommands for {{ cmd_name }}
-    {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
-    program.command('{{ cmd_name }} {{ sub_name }}')
-        .description('{{ sub_data.desc | default(sub_data.description) }}')
+    {%- if cmd_data.subcommands and cmd_data.subcommands|length > 0 %}
+    // Nested subcommands for {{ cmd_data.name }}
+    {%- for sub_data in cmd_data.subcommands %}
+    program.command('{{ cmd_data.name }} {{ sub_data.name }}')
+        .description('{{ sub_data.description }}')
         .action(async (...args) => {
             try {
                 if (!hooks) {
                     await loadHooks();
                 }
-                const hookName = 'on{{ cmd_name | capitalize }}{{ sub_name | capitalize }}';
+                const hookName = '{{ sub_data.hook_name | default("on" + cmd_data.name | title + sub_data.name | title) }}';
                 if (hooks && typeof hooks[hookName] === 'function') {
                     await hooks[hookName](...args);
                 } else {
@@ -433,52 +437,14 @@ program
                     process.exit(1);
                 }
             } catch (error) {
-                errorHandler.handleError(error, '{{ cmd_name }} {{ sub_name }} command');
+                errorHandler.handleError(error, '{{ cmd_data.name }} {{ sub_data.name }} command');
             }
         });
     {%- endfor %}
     {%- endif %}
   {%- endfor %}
-{%- elif cli.root_command and cli.root_command.subcommands %}
-  {%- for command in cli.root_command.subcommands %}
-program
-    .command('{{ command.name }}')
-    {%- if command.aliases %}
-    .aliases({{ command.aliases | tojson }})
-    {%- endif %}
-    .description('{{ command.description }}')
-    {%- for arg in command.arguments | default([]) %}
-    .argument('{{ arg.format | default(arg.name) }}', '{{ arg.description }}')
-    {%- endfor %}
-    {%- for option in command.options | default([]) %}
-    .option(
-        '{{ option.short | default("") }}{{ ", " if option.short else "" }}{{ option.long }}{{ " <value>" if option.type != "boolean" else "" }}',
-        '{{ option.description }}'
-        {%- if option.default is defined %},
-        {{ option.default | tojson }}
-        {%- endif %}
-    )
-    {%- endfor %}
-    .action(async (...args) => {
-        try {
-            // Load hooks if not already loaded
-            if (!hooks) {
-                await loadHooks();
-            }
-            
-            // Call the hook function
-            const hookName = 'on{{ command.name | capitalize }}';
-            if (hooks && typeof hooks[hookName] === 'function') {
-                await hooks[hookName](...args);
-            } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
-                process.exit(1);
-            }
-        } catch (error) {
-            errorHandler.handleError(error, '{{ command.name }} command');
-        }
-    });
-  {%- endfor %}
+{%- else %}
+// No commands defined
 {%- endif %}
 
 // Interactive mode support

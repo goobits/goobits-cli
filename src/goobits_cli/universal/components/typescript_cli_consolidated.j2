@@ -475,83 +475,19 @@ program.option(
 );
 {%- endfor %}
 
-// Commands - handle both old (cli.commands) and new (cli.root_command.subcommands) formats
-{%- if cli.commands %}
-  {%- for cmd_name, cmd_data in cli.commands.items() %}
-program
-    .command('{{ cmd_name }}')
-    .description('{{ cmd_data.desc | default(cmd_data.description) }}')
-    {%- for arg in cmd_data.arguments | default([]) %}
-    .argument('{{ arg.format | default(arg.name) }}', '{{ arg.description }}')
-    {%- endfor %}
-    {%- for option in cmd_data.options | default([]) %}
-    .option(
-        '{{ option.short | default("") }}{{ ", " if option.short else "" }}{{ option.long }}{{ " <value>" if option.type != "boolean" else "" }}',
-        '{{ option.description }}'
-        {%- if option.default is defined %},
-        {{ option.default | tojson }}
-        {%- endif %}
-    )
-    {%- endfor %}
-    .action(async (...args: any[]) => {
-        try {
-            // Load hooks if not already loaded
-            if (!hooks) {
-                await loadHooks();
-            }
-            
-            // Call the hook function
-            const hookName = 'on{{ cmd_name | capitalize }}';
-            if (hooks && typeof (hooks as any)[hookName] === 'function') {
-                await (hooks as any)[hookName](...args);
-            } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
-                process.exit(1);
-            }
-        } catch (error: any) {
-            errorHandler.handleError(error, '{{ cmd_name }} command');
-        }
-    });
-    
-    {%- if cmd_data.subcommands %}
-    // Nested subcommands for {{ cmd_name }}
-    {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
-    program.command('{{ cmd_name }} {{ sub_name }}')
-        .description('{{ sub_data.desc | default(sub_data.description) }}')
-        .action(async (...args: any[]) => {
-            try {
-                if (!hooks) {
-                    await loadHooks();
-                }
-                const hookName = 'on{{ cmd_name | capitalize }}{{ sub_name | capitalize }}';
-                if (hooks && typeof (hooks as any)[hookName] === 'function') {
-                    await (hooks as any)[hookName](...args);
-                } else {
-                    console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
-                    process.exit(1);
-                }
-            } catch (error: any) {
-                errorHandler.handleError(error, '{{ cmd_name }} {{ sub_name }} command');
-            }
-        });
-    {%- endfor %}
-    {%- endif %}
-  {%- endfor %}
-{%- elif cli.root_command and cli.root_command.subcommands %}
+// Commands - use safer access pattern for CLI data
+{%- if cli.root_command and cli.root_command.subcommands %}
   {%- for command in cli.root_command.subcommands %}
 program
     .command('{{ command.name }}')
-    {%- if command.aliases %}
-    .aliases({{ command.aliases | tojson }})
-    {%- endif %}
     .description('{{ command.description }}')
     {%- for arg in command.arguments | default([]) %}
-    .argument('{{ arg.format | default(arg.name) }}', '{{ arg.description }}')
+    .argument('{{ arg.name | default("arg") }}', '{{ arg.description | default("") }}')
     {%- endfor %}
     {%- for option in command.options | default([]) %}
     .option(
-        '{{ option.short | default("") }}{{ ", " if option.short else "" }}{{ option.long }}{{ " <value>" if option.type != "boolean" else "" }}',
-        '{{ option.description }}'
+        '{{ ("-" + option.short + ", ") if option.short else "" }}--{{ option.name }}{{ " <value>" if option.type != "boolean" and option.type != "flag" else "" }}',
+        '{{ option.description | default("") }}'
         {%- if option.default is defined %},
         {{ option.default | tojson }}
         {%- endif %}
@@ -565,7 +501,7 @@ program
             }
             
             // Call the hook function
-            const hookName = 'on{{ command.name | capitalize }}';
+            const hookName = '{{ command.hook_name | default("on" + command.name | title) }}';
             if (hooks && typeof (hooks as any)[hookName] === 'function') {
                 await (hooks as any)[hookName](...args);
             } else {
@@ -576,7 +512,33 @@ program
             errorHandler.handleError(error, '{{ command.name }} command');
         }
     });
+    
+    {%- if command.subcommands and command.subcommands|length > 0 %}
+    // Nested subcommands for {{ command.name }}
+    {%- for subcommand in command.subcommands %}
+    program.command('{{ command.name }} {{ subcommand.name }}')
+        .description('{{ subcommand.description | default("") }}')
+        .action(async (...args: any[]) => {
+            try {
+                if (!hooks) {
+                    await loadHooks();
+                }
+                const hookName = '{{ subcommand.hook_name | default("on" + command.name | title + subcommand.name | title) }}';
+                if (hooks && typeof (hooks as any)[hookName] === 'function') {
+                    await (hooks as any)[hookName](...args);
+                } else {
+                    console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
+                    process.exit(1);
+                }
+            } catch (error: any) {
+                errorHandler.handleError(error, '{{ command.name }} {{ subcommand.name }} command');
+            }
+        });
+    {%- endfor %}
+    {%- endif %}
   {%- endfor %}
+{%- else %}
+// No commands defined
 {%- endif %}
 
 // Interactive mode support
