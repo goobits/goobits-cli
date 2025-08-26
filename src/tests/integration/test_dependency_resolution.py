@@ -192,6 +192,9 @@ class TestDependencyResolution:
 
         # Initialize PATH manager for clean PATH handling
         self.path_manager = PathManagerUtil()
+        
+        # Track PATH additions for cleanup
+        self._path_additions = []
 
         # Store original NODE_PATH if it exists
         self._original_node_path = os.environ.get("NODE_PATH", "")
