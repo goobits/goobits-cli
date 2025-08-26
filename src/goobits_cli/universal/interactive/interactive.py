@@ -9,11 +9,11 @@ import shlex
 import sys
 from typing import List, Optional
 try:
-    from .Goobits CLI_cli import cli
+    from .goobits_cli import cli
     from .hooks import *  # Import all hook functions
 except ImportError:
     # Fallback imports
-    from Goobits CLI_cli import cli
+    from goobits_cli import cli
     try:
         from hooks import *
     except ImportError:
