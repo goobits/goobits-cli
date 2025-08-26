@@ -267,7 +267,7 @@ class NodeJSRenderer(LanguageRenderer):
     def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
         """
 
-        Define the output file structure for Node.js CLI.
+        Define the output file structure for Node.js CLI (minimal consolidation).
 
 
 
@@ -283,34 +283,11 @@ class NodeJSRenderer(LanguageRenderer):
 
         """
 
-        cli_name = (
-            ir.get("cli", {})
-            .get("root_command", {})
-            .get("name", "cli")
-            .replace("-", "_")
-        )
-
+        # Minimal file generation - only 2 files
         output = {
-            "command_handler": "cli.js",
-            # Don't generate hook_system - user provides their own hooks.js
-            # Instead generate a template showing the correct format
-            "hooks_template": "src/hooks.js",
-            "config_manager": "lib/config.js",
-            "completion_engine": "completion_engine.js",
-            "error_handler": "lib/errors.js",
-            "logger": "lib/logger.js",
-            # Additional Node.js specific files
-            "package_config": "package.json",
-            "bin_entry": "bin/cli.js",
-            "postinstall_script": "scripts/postinstall.js",
-            "setup_script": "setup.sh",
+            "nodejs_cli_consolidated": "cli.mjs",  # ES6 module with everything embedded
+            "setup_script": "setup.sh",  # Smart setup with package.json merging
         }
-
-        # Add interactive mode if enabled (unified template approach)
-
-        if self._has_interactive_features(ir):
-
-            output["interactive_mode"] = f"{cli_name}_interactive.js"
 
         return output
 
