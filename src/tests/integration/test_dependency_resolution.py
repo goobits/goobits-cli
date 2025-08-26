@@ -1084,9 +1084,20 @@ process.exit(0);
                 command_name = self._generate_and_install_cli(config, temp_dir)
 
                 # Test 1: Verify CLI is actually callable
-                help_result = subprocess.run(
-                    [command_name, "--help"], capture_output=True, text=True, timeout=60
-                )
+                # Use full path resolution for reliable CLI access
+                executable_path = self._find_cli_executable(command_name, temp_dir, language)
+                if executable_path:
+                    help_result = subprocess.run(
+                        [executable_path, "--help"], capture_output=True, text=True, timeout=60
+                    )
+                else:
+                    # Fallback to PATH-based resolution with current environment
+                    help_result = subprocess.run(
+                        [command_name, "--help"], 
+                        capture_output=True, 
+                        text=True, 
+                        timeout=60
+                    )
                 assert (
                     help_result.returncode == 0
                 ), f"{language} CLI help failed: {help_result.stderr}"
@@ -1097,12 +1108,20 @@ process.exit(0);
                 # Test 2: Execute a real command to verify dependencies work
                 if language == "python":
                     # Test that Click dependency works
-                    version_result = subprocess.run(
-                        [command_name, "--version"],
-                        capture_output=True,
-                        text=True,
-                        timeout=60,
-                    )
+                    if executable_path:
+                        version_result = subprocess.run(
+                            [executable_path, "--version"],
+                            capture_output=True,
+                            text=True,
+                            timeout=60,
+                        )
+                    else:
+                        version_result = subprocess.run(
+                            [command_name, "--version"],
+                            capture_output=True,
+                            text=True,
+                            timeout=60,
+                        )
                     # Should either show version or fail gracefully (not crash with ImportError)
                     if version_result.returncode != 0:
                         error_text = version_result.stderr.lower()
@@ -1116,12 +1135,20 @@ process.exit(0);
                 elif language == "nodejs":
                     # Test that commander dependency works
                     # Try to run with invalid argument to trigger commander error handling
-                    invalid_result = subprocess.run(
-                        [command_name, "--nonexistent-flag"],
-                        capture_output=True,
-                        text=True,
-                        timeout=60,
-                    )
+                    if executable_path:
+                        invalid_result = subprocess.run(
+                            [executable_path, "--nonexistent-flag"],
+                            capture_output=True,
+                            text=True,
+                            timeout=60,
+                        )
+                    else:
+                        invalid_result = subprocess.run(
+                            [command_name, "--nonexistent-flag"],
+                            capture_output=True,
+                            text=True,
+                            timeout=60,
+                        )
                     # Should get commander error, not "Cannot find module"
                     if invalid_result.returncode != 0:
                         error_text = invalid_result.stderr.lower()
