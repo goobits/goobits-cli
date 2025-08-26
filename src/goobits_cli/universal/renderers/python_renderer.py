@@ -925,55 +925,25 @@ setup(
         cli_schema = ir.get("cli", {})
         features = ir.get("features", {})
         
-        # Start with default Python features (rich_interface is default for Python)
-        feature_requirements = {
-            "rich_interface": True,  # Enable rich-click by default for Python
+        # RESPECT the analyzed feature requirements from template engine
+        template_engine_features = ir.get("feature_requirements", {})
+        
+        # Start with the analyzed requirements (DO NOT OVERRIDE rich_interface!)
+        feature_requirements = template_engine_features.copy()
+        
+        # Add Python-specific features that don't conflict with analysis
+        feature_requirements.update({
             "click_framework": True,
             "python_language": True,
-        }
+        })
         
-        # Detect configuration management features
-        if self._has_config_features(cli_schema):
-            feature_requirements["config_management"] = True
+        # Note: Most feature detection is now handled by the template engine.
+        # Only add Python-specific features or fill in gaps where needed.
         
-        # Detect async features
-        if self._has_async_features(cli_schema):
-            feature_requirements["async_support"] = True
-        
-        # Detect completion features
-        if self._has_completion_features(cli_schema):
-            feature_requirements["shell_completion"] = True
-        
-        # Detect interactive mode features
-        if self._has_interactive_features(cli_schema):
-            feature_requirements["interactive_mode"] = True
-        
-        # Check for advanced CLI features that might need complex parsing
-        commands = cli_schema.get("commands", {})
-        if isinstance(commands, dict) and len(commands) > 3:
-            feature_requirements["complex_parsing"] = True
-        
-        # Check command hierarchy depth for nesting features
-        hierarchy = cli_schema.get("command_hierarchy", {})
-        if hierarchy.get("max_depth", 0) > 2:
-            feature_requirements["nested_commands"] = True
-        
-        # Check for table/formatting features based on command patterns
-        for cmd_name, cmd_data in commands.items() if isinstance(commands, dict) else []:
-            if isinstance(cmd_data, dict):
-                cmd_desc = cmd_data.get("description", "").lower()
-                if any(word in cmd_desc for word in ["table", "list", "format", "display"]):
-                    feature_requirements["table_formatting"] = True
-                    break
-        
-        # Check for progress/status features
-        if any(cmd_name in ["build", "install", "deploy", "upload", "download"] 
-               for cmd_name in commands.keys() if isinstance(commands, dict)):
-            feature_requirements["progress_features"] = True
-        
-        # Color support is enabled by default for rich interfaces
-        if feature_requirements.get("rich_interface"):
-            feature_requirements["color_support"] = True
+        # Add shell completion if not already analyzed
+        if "completion_system" not in feature_requirements:
+            if self._has_completion_features(cli_schema):
+                feature_requirements["shell_completion"] = True
         
         return feature_requirements
 

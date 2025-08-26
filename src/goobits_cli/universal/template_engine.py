@@ -1949,6 +1949,17 @@ class UniversalTemplateEngine:
             'commander_help_formatting': self._needs_commander_help_formatting(cli_config)
         }
         
+        # CRITICAL FIX: rich_interface should be True if ANY rich-specific features are needed
+        # This ensures CLIs that need table formatting, colors, or progress use rich_click
+        rich_features = [
+            'table_formatting',
+            'progress_features', 
+            'color_support'
+        ]
+        
+        if any(requirements.get(feature, False) for feature in rich_features):
+            requirements['rich_interface'] = True
+        
         return requirements
 
     def _needs_rich_formatting(self, cli_config: Dict[str, Any], full_config: Dict[str, Any]) -> bool:
