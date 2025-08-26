@@ -308,7 +308,6 @@ def upgrade(check, version, pre, dry_run):
     """Upgrade Goobits CLI Framework to the latest version"""
     import subprocess
     import shutil
-    from pathlib import Path
     
     package_name = "goobits-cli"
     command_name = "goobits"

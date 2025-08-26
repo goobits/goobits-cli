@@ -10,10 +10,9 @@ a complete advanced interactive mode experience.
 
 import asyncio
 import json
-import re
 import shlex
 import time
-from typing import Dict, List, Optional, Any, Union, Tuple, AsyncIterator
+from typing import Dict, List, Optional, Any, Tuple, AsyncIterator
 from dataclasses import dataclass, asdict
 from threading import Lock
 import logging

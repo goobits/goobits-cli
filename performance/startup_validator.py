@@ -4,21 +4,14 @@ Startup Time Validation Framework for Goobits CLI
 Validates <100ms startup times with detailed analysis and optimization recommendations
 """
 
-import asyncio
 import json
-import os
 import subprocess
 import statistics
-import sys
-import tempfile
 import time
-import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from contextlib import contextmanager
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-import yaml
+from typing import Dict, List, Any
 
 try:
     from rich.console import Console

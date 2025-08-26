@@ -7,9 +7,7 @@ helpers.py and test_helpers.py files.
 """
 
 import pytest
-import yaml
-from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 from goobits_cli.schemas import (
     GoobitsConfigSchema,
     CLISchema,

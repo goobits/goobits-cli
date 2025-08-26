@@ -4,9 +4,7 @@ Comprehensive Performance Benchmarking Suite for Goobits CLI Framework
 Validates <100ms startup times across all supported languages and features
 """
 
-import asyncio
 import json
-import os
 import shutil
 import statistics
 import subprocess
@@ -18,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional
 import yaml
 
 try:

@@ -7,7 +7,6 @@ file system operations, and test execution helpers.
 import json
 import os
 import shutil
-import signal
 import subprocess
 import sys
 import tempfile
@@ -16,7 +15,7 @@ import venv
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, ContextManager, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import yaml
 

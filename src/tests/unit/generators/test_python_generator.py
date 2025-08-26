@@ -1,9 +1,7 @@
 """Unit tests for Python generator."""
 
 import pytest
-import json
-from unittest.mock import patch, MagicMock
-from pathlib import Path
+from unittest.mock import patch
 
 from goobits_cli.generators.python import PythonGenerator
 from goobits_cli.generators import TemplateError
@@ -15,7 +13,6 @@ from goobits_cli.schemas import (
     ArgumentSchema,
     OptionSchema,
 )
-from goobits_cli.main import load_goobits_config
 
 
 class TestPythonGenerator:

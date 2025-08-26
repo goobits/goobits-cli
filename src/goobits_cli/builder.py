@@ -7,7 +7,7 @@ loading, validation, and routing to appropriate language-specific generators.
 """
 
 import yaml
-from typing import Union, Optional
+from typing import Optional
 
 from pydantic import ValidationError
 import typer

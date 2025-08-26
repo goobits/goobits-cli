@@ -9,16 +9,9 @@ This module tests configuration-related functionality including:
 """
 
 import pytest
-import tempfile
-import shutil
-from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
-import yaml
 import typer
-from typer.testing import CliRunner
 
 from goobits_cli.main import load_goobits_config
-from goobits_cli.schemas import GoobitsConfigSchema
 from .test_base import TestMainCLIBase
 
 

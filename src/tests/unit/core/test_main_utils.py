@@ -7,15 +7,12 @@ This module tests utility functionality including:
 - Helper functions and formatters
 """
 
-import shutil
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 import typer
 import yaml
-from typer.testing import CliRunner
 
 from goobits_cli.main import (
     normalize_dependencies_for_template,
@@ -31,7 +28,6 @@ from goobits_cli.main import (
     generate_text_processor_template,
     version_callback,
 )
-from goobits_cli.schemas import GoobitsConfigSchema
 from .test_base import TestMainCLIBase
 
 

@@ -10,9 +10,8 @@ check framework integration, and ensure test data quality.
 
 import yaml
 
-import json
 
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional
 
 from pathlib import Path
 
@@ -396,11 +395,7 @@ class FrameworkIntegrationValidator:
 
             from goobits_cli.shared.test_utils.fixtures import TestFixtures
 
-            from goobits_cli.shared.test_utils.comparison_tools import (
-                CrossLanguageComparator,
-            )
 
-            from goobits_cli.shared.test_utils.test_helpers import TestEnvironment
 
             # Test basic functionality
 

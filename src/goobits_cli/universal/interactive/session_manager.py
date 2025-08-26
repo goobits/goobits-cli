@@ -8,14 +8,11 @@ patterns as the subprocess cache system for consistency and reliability.
 
 import json
 import time
-import hashlib
-from typing import Dict, List, Optional, Any, Union, TYPE_CHECKING
+from typing import Dict, List, Optional, Any, TYPE_CHECKING
 from pathlib import Path
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, asdict
 from threading import Lock
 import logging
-import os
-from datetime import datetime
 
 if TYPE_CHECKING:
     from .variable_store import VariableStore

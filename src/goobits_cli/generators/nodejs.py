@@ -25,7 +25,6 @@ Generated Structure:
 """
 
 import json
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -68,18 +67,16 @@ from ..universal.renderers.nodejs_renderer import (
 from ..universal.interactive import integrate_interactive_mode
 from ..universal.completion import (
     integrate_completion_system,
-    get_completion_files_for_language,
 )
 from ..universal.plugins import integrate_plugin_system
 
 # Phase 2 shared components
-from ..shared.components.validation_framework import ValidationRunner, ValidationMode
+from ..shared.components.validation_framework import ValidationRunner
 from ..shared.components.validators import (
     CommandValidator,
     ArgumentValidator,
     OptionValidator,
     ConfigValidator,
-    HookValidator,
 )
 
 try:

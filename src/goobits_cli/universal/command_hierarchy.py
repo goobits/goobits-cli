@@ -5,9 +5,8 @@ This module implements the flat generation + post-processing approach for
 unlimited depth nested command support in the Goobits CLI Framework.
 """
 
-from typing import Dict, List, Any, Optional, Tuple, Callable
+from typing import Dict, List, Any, Tuple, Callable
 from dataclasses import dataclass
-from pathlib import Path
 
 
 @dataclass

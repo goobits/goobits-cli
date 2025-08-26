@@ -8,10 +8,9 @@ Extends the existing completion system with intelligent features:
 - Backward compatible with existing DynamicCompletionRegistry
 """
 
-import re
 import time
 from collections import defaultdict, Counter
-from typing import List, Dict, Any, Set, Optional
+from typing import List, Dict
 from dataclasses import dataclass, field
 import logging
 

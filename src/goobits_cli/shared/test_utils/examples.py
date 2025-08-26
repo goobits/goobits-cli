@@ -10,7 +10,6 @@ for different testing scenarios.
 
 import pytest
 
-from typing import Dict, List, Any
 
 
 # Import the shared test utilities
@@ -20,22 +19,16 @@ from goobits_cli.shared.test_utils import (
     TestFixtures,
     create_test_config,
     create_minimal_cli_config,
-    get_test_command_data,
     get_error_scenario,
     # Comparison tools
-    CrossLanguageComparator,
     compare_command_outputs,
     compare_file_structures,
     normalize_cli_output,
     # Test helpers
-    TestEnvironment,
     CLITestRunner,
     create_isolated_test_env,
-    CommandResult,
-    generate_cli_and_test,
     compare_cli_behaviors,
     # Phase 1 integration
-    Phase1IntegrationRunner,
     run_comprehensive_cross_language_tests,
     # Validation
     validate_test_data,

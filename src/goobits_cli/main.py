@@ -1217,7 +1217,7 @@ def validate(
 
         typer.echo("\n💡 Ready to build! Run: goobits build")
 
-    except Exception as e:
+    except Exception:
         # Errors are already formatted nicely by load_goobits_config
         # Just exit with error code (error message already printed)
         raise typer.Exit(1)

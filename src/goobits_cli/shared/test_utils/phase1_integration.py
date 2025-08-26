@@ -12,19 +12,17 @@ testing capabilities while preserving existing functionality.
 
 import yaml
 
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 
 from pathlib import Path
 
 
-from goobits_cli.main import load_goobits_config
 
 from goobits_cli.schemas import GoobitsConfigSchema
 
 
 # Import from the test conftest.py file
 
-import sys
 
 from pathlib import Path
 
@@ -34,16 +32,12 @@ from pathlib import Path
 # Use direct generator imports instead
 
 
-from .fixtures import TestFixtures, fixtures
+from .fixtures import TestFixtures
 
 from .comparison_tools import CrossLanguageComparator, ComparisonResult
 
 from .test_helpers import (
-    TestEnvironment,
-    CLITestRunner,
-    create_isolated_test_env,
     CommandResult,
-    generate_cli_and_test,
     compare_cli_behaviors,
 )
 
@@ -603,8 +597,6 @@ def validate_phase1_compatibility():
 
         from conftest import (
             generate_cli,
-            determine_language,
-            create_test_goobits_config,
         )
 
         # Test basic fixture integration

@@ -10,7 +10,7 @@ Converts legacy YAML configurations to new standardized format:
 import yaml
 import shutil
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Tuple
 import click
 from rich.console import Console
 from rich.table import Table

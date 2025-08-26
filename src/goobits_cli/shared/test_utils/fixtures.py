@@ -5,8 +5,7 @@ that can be reused across different test scenarios and language generators.
 """
 
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from goobits_cli.schemas import (
     ArgumentSchema,

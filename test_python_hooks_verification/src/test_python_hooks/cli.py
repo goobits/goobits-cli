@@ -262,7 +262,6 @@ def upgrade(check, version, pre, dry_run):
     """Upgrade Python Hooks Test CLI to the latest version"""
     import subprocess
     import shutil
-    from pathlib import Path
     
     package_name = "test-python-hooks"
     command_name = "test-python"

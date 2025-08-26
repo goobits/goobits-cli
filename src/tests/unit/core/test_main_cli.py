@@ -18,14 +18,11 @@ and provide comprehensive coverage in a single organized file.
 """
 
 import pytest
-import tempfile
-import shutil
 import subprocess
 from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open
 import yaml
 import typer
-from typer.testing import CliRunner
 
 from goobits_cli.main import (
     app,

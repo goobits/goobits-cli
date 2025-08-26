@@ -12,8 +12,8 @@ that integrates with the existing session management. Features include:
 import json
 import re
 import time
-from typing import Dict, List, Optional, Any, Union, Tuple
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass
 from threading import Lock
 import logging
 from enum import Enum

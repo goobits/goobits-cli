@@ -4,12 +4,9 @@ Memory Usage Profiler for Goobits CLI Framework
 Provides detailed memory analysis, leak detection, and optimization recommendations
 """
 
-import asyncio
 import gc
 import json
-import os
 import subprocess
-import sys
 import threading
 import time
 import tracemalloc
@@ -18,8 +15,7 @@ from collections import defaultdict, deque
 from contextlib import contextmanager
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple, Callable, Union
-import tempfile
+from typing import Dict, List, Any, Optional
 
 try:
     import psutil

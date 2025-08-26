@@ -2,8 +2,7 @@
 
 import pytest
 import json
-from unittest.mock import patch, MagicMock
-from pathlib import Path
+from unittest.mock import patch
 
 from goobits_cli.generators.typescript import TypeScriptGenerator
 from goobits_cli.schemas import (
@@ -14,7 +13,6 @@ from goobits_cli.schemas import (
     ArgumentSchema,
     OptionSchema,
 )
-from goobits_cli.main import load_goobits_config
 
 
 class TestTypeScriptGenerator:

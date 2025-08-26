@@ -18,7 +18,6 @@ from dataclasses import dataclass
 
 import shlex
 
-import sys
 
 import time
 
@@ -1064,7 +1063,7 @@ class SessionREPL(BasicREPL):
         try:
             result = super().execute_command(line)
             return result
-        except Exception as e:
+        except Exception:
             # Mark last command as failed
             if self.session_history.entries:
                 self.session_history.entries[-1].success = False

@@ -5,8 +5,6 @@ This module tests the cross-language logger component generation that provides
 consistent logging functionality across Python, Node.js, TypeScript, and Rust.
 """
 
-import os
-import tempfile
 import pytest
 from pathlib import Path
 

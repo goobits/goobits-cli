@@ -19,7 +19,7 @@ Generated Structure:
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 # Lazy imports for heavy dependencies
 typer = None
@@ -45,9 +45,7 @@ def _lazy_imports():
 # Base generator and error imports
 from . import (
     BaseGenerator,
-    ConfigurationError,
     DependencyError,
-    GeneratorError,
     TemplateError,
     ValidationError,
     _safe_to_dict,
@@ -61,7 +59,6 @@ from ..universal.renderers.python_renderer import PythonRenderer
 from ..universal.interactive import integrate_interactive_mode
 from ..universal.completion import (
     integrate_completion_system,
-    get_completion_files_for_language,
 )
 from ..universal.plugins import integrate_plugin_system
 

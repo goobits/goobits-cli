@@ -10,26 +10,16 @@ This module tests the primary CLI commands including:
 """
 
 import pytest
-import tempfile
-import shutil
 import subprocess
 import os
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
-import yaml
+from unittest.mock import patch, MagicMock
 import typer
-from typer.testing import CliRunner
 
 from goobits_cli.main import (
     app,
-    load_goobits_config,
-    generate_basic_template,
-    generate_advanced_template,
-    generate_api_client_template,
-    generate_text_processor_template,
     version_callback,
 )
-from goobits_cli.schemas import GoobitsConfigSchema
 from .test_base import TestMainCLIBase
 
 
@@ -310,7 +300,7 @@ class TestFastVersionHelp(TestMainCLIBase):
             if "goobits_cli.main" in sys.modules:
                 importlib.reload(sys.modules["goobits_cli.main"])
             else:
-                import goobits_cli.main
+                pass
 
         mock_exit.assert_called_once_with(0)
 

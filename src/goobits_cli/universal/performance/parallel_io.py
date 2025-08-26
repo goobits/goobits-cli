@@ -5,10 +5,9 @@ Provides concurrent file operations to improve performance by 30-50%
 """
 
 import asyncio
-import os
 from pathlib import Path
 from typing import List, Dict, Any, Tuple, Optional
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import logging
 
 # Try to import aiofiles, but work without it

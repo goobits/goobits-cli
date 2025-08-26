@@ -294,7 +294,6 @@ def upgrade(check, version, pre, dry_run):
     """Upgrade Test Universal CLI to the latest version"""
     import subprocess
     import shutil
-    from pathlib import Path
 
     package_name = "test-universal-cli"
     command_name = "test-cli"

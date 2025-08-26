@@ -1,6 +1,5 @@
 """Rust CLI generator implementation."""
 
-import json
 
 
 from pathlib import Path
@@ -39,12 +38,9 @@ def _lazy_imports():
 
 from . import (
     BaseGenerator,
-    GeneratorError,
-    ConfigurationError,
     TemplateError,
     DependencyError,
     ValidationError,
-    _safe_to_dict,
 )
 
 from ..schemas import ConfigSchema, GoobitsConfigSchema
@@ -66,7 +62,6 @@ from ..universal.renderers.rust_renderer import RustRenderer
 from ..universal.interactive import integrate_interactive_mode
 from ..universal.completion import (
     integrate_completion_system,
-    get_completion_files_for_language,
 )
 from ..universal.plugins import integrate_plugin_system
 

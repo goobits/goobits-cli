@@ -6,12 +6,8 @@ observability and debugging capabilities across the framework and generated CLIs
 """
 
 import os
-import sys
 import tempfile
 import logging
-from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
-from pathlib import Path
 
 import pytest
 

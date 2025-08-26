@@ -14,7 +14,7 @@ import logging
 import os
 import sys
 from contextvars import ContextVar
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from pathlib import Path
 
 # Context variables for structured logging
