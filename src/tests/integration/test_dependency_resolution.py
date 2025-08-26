@@ -17,7 +17,7 @@ import pytest
 from .package_manager_utils import (
     PackageManagerRegistry, validate_installation_environment,
     PipManager, NpmManager, CargoManager, TestEnvironmentManager,
-    TestPathManager
+    PathManagerUtil
 )
 from .test_configs import TestConfigTemplates
 from goobits_cli.schemas import GoobitsConfigSchema
@@ -176,7 +176,7 @@ class TestDependencyResolution:
         self.env_info = validate_installation_environment()
         
         # Initialize PATH manager for clean PATH handling
-        self.path_manager = TestPathManager()
+        self.path_manager = PathManagerUtil()
         
         # Store original NODE_PATH if it exists
         self._original_node_path = os.environ.get('NODE_PATH', '')

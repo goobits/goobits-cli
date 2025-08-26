@@ -737,7 +737,7 @@ def cleanup_global_packages(packages_to_clean: List[Dict[str, str]]):
     return cleanup_results
 
 
-class TestPathManager:
+class PathManagerUtil:
     """Utility for managing PATH modifications during tests."""
     
     def __init__(self):
