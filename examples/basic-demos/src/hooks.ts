@@ -1,67 +1,33 @@
 /**
- * Hook functions for Demo TypeScript CLI
- * Auto-generated from typescript-example.yaml
+ * Hook implementations for Demo TypeScript CLI
  * 
- * Implement your business logic in these hook functions.
- * Each command will call its corresponding hook function.
+ * This file contains the business logic for your CLI commands.
+ * Implement the hook functions below to handle your CLI commands.
+ * 
+ * IMPORTANT: Hook names must use snake_case with 'on_' prefix
+ * Example:
+ * - Command 'hello' -> Hook function 'on_hello'
+ * - Command 'hello-world' -> Hook function 'on_hello_world'
  */
 
-// Type definitions for hook arguments
-interface CommandArgs {
-  commandName: string;
-  rawArgs?: Record<string, any>;
-  [key: string]: any;
-}
-
+// Import any modules you need here
+import * as fs from 'fs';
+import * as path from 'path';
 /**
- * Hook function for unknown commands
- * @param args - Command arguments and options
- * @returns Promise<void>
+ * Greet someone with style * @param name Name to greet * @param message Custom greeting message * @param options Command options * @param options.style Greeting style * @param options.count Repeat greeting N times * @param options.uppercase Convert to uppercase * @param options.language Language code * @returns Promise<number> - Exit code (0 for success)
  */
-export async function onUnknownCommand(args: CommandArgs): Promise<void> {
-  console.log(`🤔 Unknown command: ${args.commandName}`);
-  console.log('   Use --help to see available commands');
+export async function on_greet(    name: string,    message: string,    options: {        style?: string;        count?: string;        uppercase?: string;        language?: string;    }): Promise<number> {
+    // Add your business logic here
+    console.log('Hook on_greet called');    console.log('Arguments:', { name, message });    console.log('Options:', options);    
+    // Return 0 for success, non-zero for error
+    return 0;
 }
-
-
 /**
- * Hook function for 'greet' command
- * @param args - Command arguments and options
- * @returns Promise<void>
+ * Display system and environment information * @param options Command options * @param options.format Output format * @param options.verbose Show detailed information * @param options.sections Comma-separated sections to show * @returns Promise<number> - Exit code (0 for success)
  */
-export async function onGreet(args: CommandArgs): Promise<void> {
-    // TODO: Implement your 'greet' command logic here
-    console.log('🚀 Executing greet command...');
-    console.log('   Command:', args.commandName);
-    
-    // Example: access raw arguments
-    if (args.rawArgs) {
-        console.log('   Raw arguments:');
-        Object.entries(args.rawArgs).forEach(([key, value]) => {
-            console.log(`   ${key}: ${value}`);
-        });
-    }
-    
-    console.log('✅ greet command completed successfully!');
-}
-
-/**
- * Hook function for 'info' command
- * @param args - Command arguments and options
- * @returns Promise<void>
- */
-export async function onInfo(args: CommandArgs): Promise<void> {
-    // TODO: Implement your 'info' command logic here
-    console.log('🚀 Executing info command...');
-    console.log('   Command:', args.commandName);
-    
-    // Example: access raw arguments
-    if (args.rawArgs) {
-        console.log('   Raw arguments:');
-        Object.entries(args.rawArgs).forEach(([key, value]) => {
-            console.log(`   ${key}: ${value}`);
-        });
-    }
-    
-    console.log('✅ info command completed successfully!');
+export async function on_info(    options: {        format?: string;        verbose?: string;        sections?: string;    }): Promise<number> {
+    // Add your business logic here
+    console.log('Hook on_info called');    console.log('Options:', options);    
+    // Return 0 for success, non-zero for error
+    return 0;
 }

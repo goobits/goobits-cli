@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/**
+ * Universal completion engine for goobits-generated CLIs (TypeScript)
+ * Reads goobits.yaml at runtime and provides context-aware completions
+ */
 export declare class CompletionEngine {
     private configPath;
     private config;

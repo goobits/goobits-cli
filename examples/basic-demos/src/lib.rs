@@ -1,8 +1,8 @@
-//! demo-rust-complex
+//! demo-rust-cli
 //!
-//! A feature-rich Rust CLI built with Goobits
+//! A sample Rust CLI built with Goobits
 //!
-//! This library provides the core functionality for the demo_rust_complex CLI tool.
+//! This library provides the core functionality for the demo_rust CLI tool.
 
 #![warn(missing_docs)]
 #![warn(clippy::all)]

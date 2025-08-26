@@ -28,7 +28,7 @@ def _get_version():
 
             _version = v
         except ImportError:
-            _version = "3.0.0-alpha.1"
+            _version = "3.0.0"
     return _version
 
 

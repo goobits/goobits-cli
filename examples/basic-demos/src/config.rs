@@ -35,7 +35,7 @@ impl ConfigManager {
         let home_dir = env::var("HOME").unwrap_or_else(|_| ".".to_string());
         let config_dir = PathBuf::from(home_dir)
             .join(".config")
-            .join("demo-rust-complex-cli");
+            .join("demo-rust-cli");
         
         if let Err(_) = fs::create_dir_all(&config_dir) {
             eprintln!("Warning: Could not create config directory");
@@ -62,7 +62,7 @@ impl ConfigManager {
         }
 
         // Override with environment variables
-        let env_prefix = "DEMO_RUST_COMPLEX_CLI_";        if let Ok(val) = env::var(format!("{}DEBUG", env_prefix)) {
+        let env_prefix = "DEMO_RUST_CLI_";        if let Ok(val) = env::var(format!("{}DEBUG", env_prefix)) {
             self.config.debug = ["true", "1", "yes", "on"].contains(&val.to_lowercase().as_str());
         }
         if let Ok(val) = env::var(format!("{}OUTPUT_FORMAT", env_prefix)) {

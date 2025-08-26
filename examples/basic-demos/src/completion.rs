@@ -31,38 +31,49 @@ struct CompletionArgument {
 impl CompletionEngine {
     pub fn new() -> Self {
         Self {
-            cli_name: "demo_rust_complex".to_string(),
+            cli_name: "demo_rust".to_string(),
             commands: vec![                CompletionCommand {
-                    name: "process".to_string(),
-                    description: "Process data with progress bars and table output".to_string(),
+                    name: "greet".to_string(),
+                    description: "Greet someone with style".to_string(),
+                    options: vec![                        CompletionOption {
+                            name: "style".to_string(),
+                            short: Some("s".to_string()),
+                            description: "Greeting style".to_string(),
+                        },                        CompletionOption {
+                            name: "count".to_string(),
+                            short: Some("c".to_string()),
+                            description: "Repeat greeting N times".to_string(),
+                        },                        CompletionOption {
+                            name: "uppercase".to_string(),
+                            short: Some("u".to_string()),
+                            description: "Convert to uppercase".to_string(),
+                        },                        CompletionOption {
+                            name: "language".to_string(),
+                            short: Some("l".to_string()),
+                            description: "Language code".to_string(),
+                        },                    ],
+                    arguments: vec![                        CompletionArgument {
+                            name: "name".to_string(),
+                            description: "Name to greet".to_string(),
+                        },                        CompletionArgument {
+                            name: "message".to_string(),
+                            description: "Custom greeting message".to_string(),
+                        },                    ],
+                },                CompletionCommand {
+                    name: "info".to_string(),
+                    description: "Display system and environment information".to_string(),
                     options: vec![                        CompletionOption {
                             name: "format".to_string(),
                             short: Some("f".to_string()),
                             description: "Output format".to_string(),
                         },                        CompletionOption {
-                            name: "progress".to_string(),
-                            short: None,
-                            description: "Show progress bar".to_string(),
-                        },                        CompletionOption {
                             name: "verbose".to_string(),
                             short: Some("v".to_string()),
-                            description: "Verbose output".to_string(),
-                        },                    ],
-                    arguments: vec![                        CompletionArgument {
-                            name: "input".to_string(),
-                            description: "Input file path".to_string(),
-                        },                    ],
-                },                CompletionCommand {
-                    name: "config".to_string(),
-                    description: "Manage configuration settings".to_string(),
-                    options: vec![                        CompletionOption {
-                            name: "get".to_string(),
-                            short: None,
-                            description: "Get configuration value".to_string(),
+                            description: "Show detailed information".to_string(),
                         },                        CompletionOption {
-                            name: "set".to_string(),
-                            short: None,
-                            description: "Set configuration value".to_string(),
+                            name: "sections".to_string(),
+                            short: Some("s".to_string()),
+                            description: "Comma-separated sections to show".to_string(),
                         },                    ],
                     arguments: vec![                    ],
                 },            ],

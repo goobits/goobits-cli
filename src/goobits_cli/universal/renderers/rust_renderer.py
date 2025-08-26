@@ -17,7 +17,7 @@ import re
 try:
     from ... import __version__ as _version
 except ImportError:
-    _version = "3.0.0-alpha.1"  # Fallback version
+    _version = "3.0.0"  # Fallback version
 
 import json
 

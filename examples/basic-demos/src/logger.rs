@@ -1,5 +1,5 @@
 
-//! Structured logging infrastructure for Demo Rust Complex CLI.
+//! Structured logging infrastructure for Demo Rust CLI.
 //! 
 //! This module provides structured logging with context management and error handling.
 //! Environment variables:
@@ -177,7 +177,7 @@ impl Logger {
                 String::new()
             };
             
-            format!("{} {:8} Demo Rust Complex CLI.{}.{}{}{}\n",
+            format!("{} {:8} Demo Rust CLI.{}.{}{}{}\n",
                 timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
                 level.to_string(),
                 module,
@@ -217,7 +217,7 @@ impl Logger {
     }
 }
 
-/// Initialize structured logging for Demo Rust Complex CLI.
+/// Initialize structured logging for Demo Rust CLI.
 /// 
 /// Environment Variables:
 /// - LOG_LEVEL: Set logging level (debug, info, warn, error) - default: info

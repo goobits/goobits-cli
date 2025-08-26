@@ -24,7 +24,7 @@ import jinja2
 try:
     from ... import __version__ as _version
 except ImportError:
-    _version = "3.0.0-alpha.1"  # Fallback version
+    _version = "3.0.0"  # Fallback version
 
 
 from ..template_engine import LanguageRenderer

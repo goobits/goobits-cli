@@ -4,7 +4,7 @@
 //! ║  ⚠️  DO NOT EDIT - Changes will be overwritten                           ║
 //! ╚══════════════════════════════════════════════════════════════════════════╝
 //!
-//! CLI module for demo-rust-complex
+//! CLI module for demo-rust-cli
 //! This module contains the CLI command structure and argument parsing logic.
 
 use clap::{Arg, Command, ArgMatches, value_parser};
@@ -13,30 +13,36 @@ use crate::errors::{CliError, ExitCode};
 
 /// Build the main CLI application
 pub fn build_cli() -> Command {
-    Command::new("demo_rust_complex")
+    Command::new("demo_rust")
         .version(crate::VERSION)
-        .about("Complex Rust CLI with tables, progress, and more")
+        .about("Rust CLI demonstration")
         .author("Demo User")
         .subcommand(
-            Command::new("process")
+            Command::new("greet")
+                .about("No description provided")                .arg(
+                    Arg::new("style")
+                        .long("style")
+.short('s')                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                        .default_value("casual")                )                .arg(
+                    Arg::new("count")
+                        .long("count")
+.short('c')                        .help("No description provided")                        .value_parser(value_parser!(i32))                        .default_value("1")                )                .arg(
+                    Arg::new("uppercase")
+                        .long("uppercase")
+.short('u')                        .help("No description provided")                        .action(clap::ArgAction::SetTrue)                )                .arg(
+                    Arg::new("language")
+                        .long("language")
+.short('l')                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                        .default_value("en")                )        )        .subcommand(
+            Command::new("info")
                 .about("No description provided")                .arg(
                     Arg::new("format")
                         .long("format")
-.short('f')                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                        .default_value("table")                )                .arg(
-                    Arg::new("progress")
-                        .long("progress")
-                        .help("No description provided")                        .action(clap::ArgAction::SetTrue)                )                .arg(
+.short('f')                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                        .default_value("text")                )                .arg(
                     Arg::new("verbose")
                         .long("verbose")
-.short('v')                        .help("No description provided")                        .action(clap::ArgAction::SetTrue)                )        )        .subcommand(
-            Command::new("config")
-                .about("No description provided")                .arg(
-                    Arg::new("get")
-                        .long("get")
-                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                )                .arg(
-                    Arg::new("set")
-                        .long("set")
-                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                )        )        .arg(
+.short('v')                        .help("No description provided")                        .action(clap::ArgAction::SetTrue)                )                .arg(
+                    Arg::new("sections")
+                        .long("sections")
+.short('s')                        .help("No description provided")                        .value_parser(clap::value_parser!(String))                        .default_value("all")                )        )        .arg(
             Arg::new("verbose")
                 .long("verbose")
                 .short('v')
@@ -49,10 +55,10 @@ pub fn build_cli() -> Command {
 /// Note: This is a stub function as hook execution is handled in main.rs
 pub fn execute_command(matches: &ArgMatches) -> Result<()> {
     match matches.subcommand() {
-        Some(("process", _sub_matches)) => {
+        Some(("greet", _sub_matches)) => {
             // Hook execution is handled directly in main.rs
             // This function is provided for CLI structure definition only
-        }        Some(("config", _sub_matches)) => {
+        }        Some(("info", _sub_matches)) => {
             // Hook execution is handled directly in main.rs
             // This function is provided for CLI structure definition only
         }        _ => {

@@ -1,15 +1,15 @@
 
-# demo-rust-complex
+# demo-rust-cli
 
-A feature-rich Rust CLI built with Goobits
+A sample Rust CLI built with Goobits
 
 ## Installation
 ### From Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/demo-rust-complex
-cd demo-rust-complex
+git clone https://github.com/user/demo-rust-cli
+cd demo-rust-cli
 
 # Build and install
 cargo build --release
@@ -19,27 +19,27 @@ cargo install --path .
 ### Using Cargo
 
 ```bash
-cargo install demo-rust-complex
+cargo install demo-rust-cli
 ```
 ## Usage
 
-demo_rust_complex is a command-line tool with the following commands:
+demo_rust is a command-line tool with the following commands:
 
-### `demo_rust_complex process`
-
-No description provided
-**Usage:**
-```bash
-demo_rust_complex process [OPTIONS]```
-**Options:**
-- `--format`, `-f`: No description provided (default: table)- `--progress`: No description provided (default: True)- `--verbose`, `-v`: No description provided### `demo_rust_complex config`
+### `demo_rust greet`
 
 No description provided
 **Usage:**
 ```bash
-demo_rust_complex config [OPTIONS]```
+demo_rust greet [OPTIONS]```
 **Options:**
-- `--get`: No description provided- `--set`: No description provided
+- `--style`, `-s`: No description provided (default: casual)- `--count`, `-c`: No description provided (default: 1)- `--uppercase`, `-u`: No description provided- `--language`, `-l`: No description provided (default: en)### `demo_rust info`
+
+No description provided
+**Usage:**
+```bash
+demo_rust info [OPTIONS]```
+**Options:**
+- `--format`, `-f`: No description provided (default: text)- `--verbose`, `-v`: No description provided- `--sections`, `-s`: No description provided (default: all)
 ### Global Options
 
 - `--help`, `-h`: Show help message
@@ -47,10 +47,10 @@ demo_rust_complex config [OPTIONS]```
 ## Examples
 ```bash
 # Example usage
-demo_rust_complex process```
+demo_rust greet```
 ```bash
 # Example usage
-demo_rust_complex config```
+demo_rust info```
 ## Development
 ### Building
 

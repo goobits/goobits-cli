@@ -1,16 +1,55 @@
 #!/usr/bin/env node
-import * as fs from 'fs';
-import * as path from 'path';
-import * as yaml from 'js-yaml';
-export class CompletionEngine {
-    configPath;
-    config;
+"use strict";
+/**
+ * Universal completion engine for goobits-generated CLIs (TypeScript)
+ * Reads goobits.yaml at runtime and provides context-aware completions
+ */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CompletionEngine = void 0;
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
+const yaml = __importStar(require("js-yaml"));
+class CompletionEngine {
     constructor(configPath) {
         this.configPath = configPath || this.findConfig();
         this.config = this.loadConfig();
     }
     findConfig() {
         let current = process.cwd();
+        // Search up the directory tree
         while (current !== path.dirname(current)) {
             const configFile = path.join(current, 'goobits.yaml');
             if (fs.existsSync(configFile)) {
@@ -18,6 +57,7 @@ export class CompletionEngine {
             }
             current = path.dirname(current);
         }
+        // Fallback to current directory
         return path.join(process.cwd(), 'goobits.yaml');
     }
     loadConfig() {
@@ -28,13 +68,16 @@ export class CompletionEngine {
             }
         }
         catch (error) {
+            // Silent fallback for config loading errors
         }
         return {};
     }
     getCompletions(shell, currentLine, cursorPos) {
         try {
+            // Parse the command line
             const tokens = this.parseCommandLine(currentLine, cursorPos);
             const context = this.analyzeContext(tokens);
+            // Generate completions based on context
             const completions = this.generateCompletions(context);
             return [...new Set(completions)].sort();
         }
@@ -46,7 +89,9 @@ export class CompletionEngine {
         if (cursorPos === undefined) {
             cursorPos = line.length;
         }
+        // Extract the relevant part of the line up to cursor
         const relevantLine = line.substring(0, cursorPos);
+        // Simple tokenization (could be enhanced for complex cases)
         const tokens = [];
         let currentToken = "";
         let inQuotes = false;
@@ -73,6 +118,7 @@ export class CompletionEngine {
                 currentToken += char;
             }
         }
+        // Add final token if exists
         if (currentToken) {
             tokens.push(currentToken);
         }
@@ -82,6 +128,7 @@ export class CompletionEngine {
         if (!tokens.length) {
             return { type: "command", level: 0, lastToken: "", previousToken: "" };
         }
+        // Skip the program name
         if (tokens.length > 0) {
             tokens = tokens.slice(1);
         }
@@ -96,22 +143,27 @@ export class CompletionEngine {
             lastToken: tokens[tokens.length - 1] || "",
             previousToken: tokens.length > 1 ? tokens[tokens.length - 2] : "",
         };
+        // Check if we're completing an option
         if (context.lastToken.startsWith("-")) {
             context.type = "option";
             return context;
         }
+        // Check if previous token was an option that expects a value
         if (context.previousToken.startsWith("-")) {
             context.type = "option_value";
             context.option = context.previousToken;
             return context;
         }
+        // Determine command/subcommand context
         const cliCommands = this.config.cli?.commands || {};
         if (tokens.length === 1) {
+            // Completing top-level command
             context.type = "command";
             context.level = 0;
             context.partial = tokens[0];
         }
         else if (tokens[0] in cliCommands) {
+            // We have a valid command, check for subcommands
             const commandConfig = cliCommands[tokens[0]];
             context.currentCommand = tokens[0];
             if (commandConfig.subcommands && tokens.length === 2) {
@@ -147,6 +199,7 @@ export class CompletionEngine {
                 completions.push(...this.getOptionValueCompletions(context));
                 break;
         }
+        // Filter by partial match if applicable
         const partial = context.partial || "";
         if (partial) {
             return completions.filter(c => c.startsWith(partial));
@@ -155,9 +208,12 @@ export class CompletionEngine {
     }
     getCommandCompletions(context) {
         const commands = [];
+        // CLI commands from config
         const cliCommands = this.config.cli?.commands || {};
         commands.push(...Object.keys(cliCommands));
+        // Built-in commands
         const builtinCommands = ["help", "version"];
+        // Check if upgrade is enabled
         const cliConfig = this.config.cli || {};
         if (cliConfig.enable_upgrade_command !== false) {
             builtinCommands.push("upgrade");
@@ -177,6 +233,7 @@ export class CompletionEngine {
     }
     getOptionCompletions(context) {
         const options = [];
+        // Global options
         const globalOptions = this.config.cli?.options || [];
         for (const opt of globalOptions) {
             options.push(`--${opt.name}`);
@@ -184,10 +241,12 @@ export class CompletionEngine {
                 options.push(`-${opt.short}`);
             }
         }
+        // Command-specific options
         const command = context.currentCommand;
         if (command) {
             const cliCommands = this.config.cli?.commands || {};
             let commandConfig = cliCommands[command] || {};
+            // Check if we're in a subcommand
             const subcommand = context.subcommand;
             if (subcommand && commandConfig.subcommands) {
                 commandConfig = commandConfig.subcommands[subcommand] || {};
@@ -200,16 +259,19 @@ export class CompletionEngine {
                 }
             }
         }
+        // Standard options
         options.push("--help", "-h", "--version", "-V");
         return options;
     }
     getOptionValueCompletions(context) {
         const option = (context.option || "").replace(/^-+/, "");
+        // Find option configuration
         const optionConfig = this.findOptionConfig(option, context);
         if (!optionConfig) {
             return [];
         }
         const optionType = optionConfig.type || "str";
+        // Handle different option types
         if (optionType === "choice" && optionConfig.choices) {
             return optionConfig.choices;
         }
@@ -225,16 +287,19 @@ export class CompletionEngine {
         return [];
     }
     findOptionConfig(optionName, context) {
+        // Check global options
         const globalOptions = this.config.cli?.options || [];
         for (const opt of globalOptions) {
             if (opt.name === optionName || opt.short === optionName) {
                 return opt;
             }
         }
+        // Check command-specific options
         const command = context.currentCommand;
         if (command) {
             const cliCommands = this.config.cli?.commands || {};
             let commandConfig = cliCommands[command] || {};
+            // Check if we're in a subcommand
             const subcommand = context.subcommand;
             if (subcommand && commandConfig.subcommands) {
                 commandConfig = commandConfig.subcommands[subcommand] || {};
@@ -281,6 +346,8 @@ export class CompletionEngine {
         }
     }
 }
+exports.CompletionEngine = CompletionEngine;
+// Main completion function - called by CLIs with _completion command
 function main() {
     if (process.argv.length < 4) {
         process.exit(1);
@@ -290,6 +357,7 @@ function main() {
     const cursorPos = process.argv.length > 4 ? parseInt(process.argv[4]) : undefined;
     const engine = new CompletionEngine();
     const completions = engine.getCompletions(shell, currentLine, cursorPos);
+    // Output completions one per line
     for (const completion of completions) {
         console.log(completion);
     }

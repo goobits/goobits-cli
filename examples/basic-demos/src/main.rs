@@ -3,7 +3,6 @@ use std::process;
 use anyhow::{Result, anyhow};
 
 // Conditional imports based on detected features
-use serde_json::json;
 #[cfg(feature = "colored")]
 use colored::*;
 #[cfg(feature = "indicatif")]
@@ -43,7 +42,7 @@ fn main() {
 
     let app = Command::new("")
         .version("None")
-        .about("Complex Rust CLI with tables, progress, and more")
+        .about("Rust CLI demonstration")
         .arg_required_else_help(true)        .arg(
             Arg::new("verbose")
                 .long("verbose")
@@ -57,7 +56,7 @@ fn main() {
         // Built-in upgrade subcommand
         .subcommand(
             Command::new("upgrade")
-                .about("Upgrade Demo Rust Complex CLI to the latest version")
+                .about("Upgrade Demo Rust CLI to the latest version")
                 .arg(
                     Arg::new("check")
                         .long("check")
@@ -84,38 +83,55 @@ fn main() {
                 )
         )
         .subcommand(
-            Command::new("process")
-                .about("Process data with progress bars and table output")
+            Command::new("greet")
+                .about("Greet someone with style")
                 .arg(
-                    Arg::new("input")
+                    Arg::new("name")
                         .help("No description")                        .required(true)
                         .action(clap::ArgAction::Set)
                 )
+                .arg(
+                    Arg::new("message")
+                        .help("No description")                        .action(clap::ArgAction::Set)
+                )
+                .arg(
+                    Arg::new("style")
+                        .long("style")                        .short('s')
+                        .help("Greeting style")                        .action(clap::ArgAction::Set)
+                )
+                .arg(
+                    Arg::new("count")
+                        .long("count")                        .short('c')
+                        .help("Repeat greeting N times")                        .action(clap::ArgAction::Set)
+                )
+                .arg(
+                    Arg::new("uppercase")
+                        .long("uppercase")                        .short('u')
+                        .help("Convert to uppercase")                        .action(clap::ArgAction::Set)
+                )
+                .arg(
+                    Arg::new("language")
+                        .long("language")                        .short('l')
+                        .help("Language code")                        .action(clap::ArgAction::Set)
+                )
+        )
+        .subcommand(
+            Command::new("info")
+                .about("Display system and environment information")
                 .arg(
                     Arg::new("format")
                         .long("format")                        .short('f')
                         .help("Output format")                        .action(clap::ArgAction::Set)
                 )
                 .arg(
-                    Arg::new("progress")
-                        .long("progress")                        .help("Show progress bar")                        .action(clap::ArgAction::Set)
-                )
-                .arg(
                     Arg::new("verbose")
                         .long("verbose")                        .short('v')
-                        .help("Verbose output")                        .action(clap::ArgAction::Set)
-                )
-        )
-        .subcommand(
-            Command::new("config")
-                .about("Manage configuration settings")
-                .arg(
-                    Arg::new("get")
-                        .long("get")                        .help("Get configuration value")                        .action(clap::ArgAction::Set)
+                        .help("Show detailed information")                        .action(clap::ArgAction::Set)
                 )
                 .arg(
-                    Arg::new("set")
-                        .long("set")                        .help("Set configuration value")                        .action(clap::ArgAction::Set)
+                    Arg::new("sections")
+                        .long("sections")                        .short('s')
+                        .help("Comma-separated sections to show")                        .action(clap::ArgAction::Set)
                 )
         )
 ;
@@ -130,9 +146,9 @@ fn main() {
             let context = create_command_context("upgrade", &[]);
             set_context(context);
             info("main", "Executing upgrade command", None);
-            let package_name = "demo-rust-complex";
-            let command_name = "demo_rust_complex";
-            let display_name = "Demo Rust Complex CLI";
+            let package_name = "demo-rust-cli";
+            let command_name = "demo_rust";
+            let display_name = "Demo Rust CLI";
             
             // Get current version (simple fallback for Rust)
             let current_version = "None";
@@ -194,19 +210,19 @@ fn main() {
                 }
             }
         }
-        Some(("process", sub_matches)) => {
+        Some(("greet", sub_matches)) => {
             // Enhanced error handling for Rust commands with structured logging
-            let context = create_command_context("process", &[]);
+            let context = create_command_context("greet", &[]);
             set_context(context);
-            info("main", "Executing process command", None);
+            info("main", "Executing greet command", None);
             
-            let hook_name = "on_process";
-            match hooks::on_process(sub_matches) {
+            let hook_name = "on_greet";
+            match hooks::on_greet(sub_matches) {
                 Ok(_) => {
-                    info("main", "Command process executed successfully", None);
+                    info("main", "Command greet executed successfully", None);
                 }
                 Err(e) => {
-                    let error_context = format!("Command 'process' execution");
+                    let error_context = format!("Command 'greet' execution");
                     
                     // Check for specific error types
                     if e.to_string().contains("not implemented") {
@@ -222,19 +238,19 @@ fn main() {
                 }
             }
         }
-        Some(("config", sub_matches)) => {
+        Some(("info", sub_matches)) => {
             // Enhanced error handling for Rust commands with structured logging
-            let context = create_command_context("config", &[]);
+            let context = create_command_context("info", &[]);
             set_context(context);
-            info("main", "Executing config command", None);
+            info("main", "Executing info command", None);
             
-            let hook_name = "on_config";
-            match hooks::on_config(sub_matches) {
+            let hook_name = "on_info";
+            match hooks::on_info(sub_matches) {
                 Ok(_) => {
-                    info("main", "Command config executed successfully", None);
+                    info("main", "Command info executed successfully", None);
                 }
                 Err(e) => {
-                    let error_context = format!("Command 'config' execution");
+                    let error_context = format!("Command 'info' execution");
                     
                     // Check for specific error types
                     if e.to_string().contains("not implemented") {
