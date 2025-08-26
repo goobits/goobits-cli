@@ -6,9 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 For rapid project understanding, see **CODEMAP.md** - a comprehensive project map designed for LLM quick comprehension.
 
-**Note**: The framework has two CLI interfaces:
-- **Generated CLI** (`goobits`): Built from goobits.yaml with 4 core commands (build, init, serve, upgrade)
-- **Development CLI** (`python -m goobits_cli.main`): Full framework interface with additional commands (migrate, validate, upgrade)
+**Note**: After installation, the framework provides the `goobits` command with 6 core commands:
+- `build` - Generate CLI from goobits.yaml
+- `init` - Create initial goobits.yaml
+- `validate` - Validate configuration without generating
+- `migrate` - Migrate configs to v3.0.0 format
+- `serve` - Serve local PyPI package index
+- `upgrade` - Upgrade goobits-cli
 
 ## Project Overview
 

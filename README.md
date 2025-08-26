@@ -57,6 +57,9 @@ goobits build
   - `--template`: Choose template (basic, advanced, api-client)
   - `--force`: Overwrite existing configuration
 
+- `goobits validate [config_path]` - Validate goobits.yaml without generating files
+  - `--verbose`: Show detailed validation information
+
 - `goobits migrate <path>` - Migrate YAML configurations to 3.0.0 format
   - `--backup`: Create backup files (.bak)
   - `--dry-run`: Show changes without applying

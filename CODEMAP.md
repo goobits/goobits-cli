@@ -9,10 +9,10 @@ PROJECT SUMMARY
   Type:         Multi-language CLI generator
   Language:     Python (core), Node.js, TypeScript, Rust (targets)
   Framework:    Click/rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
-  Entry Point:  goobits_cli.generated_cli:cli_entry (self-hosted)
+  Entry Point:  goobits_cli.main:app
   
-  Total Files:  4 generator files + __init__.py, 55 test files
-  Total LOC:    ~60,000+ lines of Python code
+  Total Files:  4 generators + universal system + 55 test files  
+  Total LOC:    ~55,000 lines of Python code
 
 ================================================================================
 
