@@ -417,43 +417,39 @@ class TestUnicodeInYamlParsing:
                 # Use a temporary directory for output instead of the YAML file path
                 with tempfile.TemporaryDirectory() as temp_output_dir:
                     result = generator.generate_to_directory(config, temp_output_dir, yaml_file, "1.0.0")
-                    # Get CLI content - should be in the CLI file, not setup/config files
+                    # Check that Unicode content is preserved in the appropriate files
                     if result:
-                        # Look for the actual CLI Python file with the Unicode content
-                        cli_content = None
+                        # Verify package description Unicode is in configuration files (pyproject.toml)
+                        package_description_found = False
+                        command_content_found = False
+                        all_content = ""
+                        
                         for path, content in result.items():
-                            # Prioritize cli.py files or Python files with CLI logic
-                            if (path.endswith('cli.py') or 
-                                (path.endswith('.py') and ('click' in content.lower() or 'argparse' in content.lower() or 'command' in content.lower()))):
-                                cli_content = content
-                                break
-                            # Also check for files with our Unicode content (command names or descriptions)
-                            elif '东西' in content or '漢字' in content or 'кириллица' in content:
-                                cli_content = content
-                                break
+                            all_content += content + "\n"
+                            # Package description should be in pyproject.toml or other config files
+                            if ('漢字' in content and 'кириллица' in content):
+                                package_description_found = True
+                            # Command content should be in CLI files
+                            if '东西' in content:
+                                command_content_found = True
                         
-                        # If still not found, look for any Python file (excluding setup/config files)
-                        if cli_content is None:
-                            for path, content in result.items():
-                                if path.endswith('.py') and not any(x in path.lower() for x in ['setup', '__init__', 'pyproject']):
-                                    cli_content = content
-                                    break
+                        # Verify Unicode is preserved through the entire pipeline
+                        # Check that package description Unicode appears somewhere
+                        assert package_description_found or '漢字' in all_content, "Package description Unicode characters (漢字) not found in generated files"
+                        assert package_description_found or 'кириллица' in all_content, "Package description Unicode characters (кириллица) not found in generated files"
                         
-                        # Use the found CLI content or fallback to the largest Python file
-                        result = cli_content if cli_content is not None else max(
-                            (content for path, content in result.items() if path.endswith('.py')), 
-                            key=len, default=""
-                        )
+                        # Command names with Unicode should be preserved in CLI logic files
+                        assert command_content_found or '东西' in all_content, "Command Unicode content (东西) not found in generated files"
+                        
+                        # Set result to the combined content for final verification
+                        result = all_content
                     else:
                         result = generator.generate(config, "test.yaml", "1.0.0")
                 
-                # Verify Unicode is preserved through the entire pipeline in the CLI code
-                # These characters should appear in the CLI help/description content
+                # Final verification that all Unicode content is preserved somewhere
                 assert '漢字' in result  # Chinese characters from package description
                 assert 'кириллица' in result  # Russian characters from package description
-                # Command names with Unicode should also be preserved in the CLI logic
-                if '东西' in result:  # Chinese command name, if present in CLI file
-                    assert '东西' in result
+                assert '东西' in result  # Chinese command name
                 # Test that the generated code handles Unicode without errors
                 assert isinstance(result, str)
                 assert len(result) > 0
