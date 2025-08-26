@@ -6,6 +6,8 @@ Build professional command-line tools with YAML configuration. Generate producti
 
 - **Multi-language support**: Python, Node.js, TypeScript, Rust
 - **Zero boilerplate**: Define CLI structure in YAML, get working code
+- **Minimal file generation**: Only 2-3 files per language, no repository clutter
+- **Smart manifest merging**: Non-destructive package.json/Cargo.toml updates
 - **Production ready**: Generates setup scripts, package configs, completions
 - **Universal Template System**: Single template generates for all languages
 - **Self-hosting**: Framework uses itself for its own CLI
@@ -96,6 +98,32 @@ cli:
           desc: "Custom greeting"
           default: "Hello"
 ```
+
+## Minimal File Generation
+
+Goobits generates only essential files to keep your repository clean:
+
+### Generated Files by Language
+
+| Language   | Files Generated | Description |
+|------------|----------------|-------------|
+| Python     | 2 files | `cli.py` (everything embedded), `setup.sh` |
+| Node.js    | 2 files | `cli.mjs` (ES6 module), `setup.sh` |
+| TypeScript | 3 files | `cli.ts`, `types.d.ts`, `setup.sh` |
+| Rust       | 2 files | `src/main.rs` (inline modules), `setup.sh` |
+
+### Smart Manifest Handling
+
+- **No overwriting**: Existing `package.json`, `Cargo.toml`, or `pyproject.toml` are preserved
+- **Smart merging**: Dependencies are added without destroying your configuration
+- **User control**: You maintain full control over project metadata
+
+### What's NOT Generated
+
+- ❌ No README.md (preserves your documentation)
+- ❌ No .gitignore (respects your version control)
+- ❌ No auxiliary lib/ folders
+- ❌ No separate config/error/util files (all embedded)
 
 ## Language Support
 

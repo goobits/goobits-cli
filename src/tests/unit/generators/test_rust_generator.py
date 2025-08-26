@@ -893,18 +893,20 @@ class TestRustGeneratorIntegration:
             config, "complete.yaml", version="1.2.3"
         )
 
-        # Verify all expected files are generated
+        # Verify consolidated file structure (only 2 files now)
         expected_files = [
-            "src/main.rs",
-            "Cargo.toml",
-            "src/hooks.rs",
-            "setup.sh",
-            "README.md",
-            ".gitignore",
+            "src/main.rs",  # Everything consolidated with inline modules
+            "setup.sh",      # Smart setup script with Cargo.toml merging
         ]
         for expected_file in expected_files:
             assert expected_file in output_files
             assert len(output_files[expected_file]) > 0
+        
+        # Ensure NO auxiliary files are generated
+        assert "README.md" not in output_files  # Bug fix: no README overwrite
+        assert "src/hooks.rs" not in output_files  # Hooks are inlined
+        assert "Cargo.toml" not in output_files  # Merged by setup.sh
+        assert ".gitignore" not in output_files  # User manages this
 
         # Verify content quality (relaxed checks for fallback generation)
         main_content = output_files["src/main.rs"]
@@ -914,19 +916,15 @@ class TestRustGeneratorIntegration:
         assert "database" in main_content
         # Note: fallback generation may not include all subcommands
 
-        cargo_content = output_files["Cargo.toml"]
-        assert 'version = "1.2.3"' in cargo_content
-        assert "clap" in cargo_content
-
-        hooks_content = output_files["src/hooks.rs"]
-        assert "on_build" in hooks_content
-        assert "on_deploy" in hooks_content
-        assert "on_database" in hooks_content
-
-        readme_content = output_files["README.md"]
-        assert "complete-cli" in readme_content
-        assert "Installation" in readme_content
-        assert "build" in readme_content
+        # Hooks are now inlined in main.rs
+        assert "on_build" in main_content  # Hook functions inlined
+        assert "on_deploy" in main_content
+        assert "on_database" in main_content
+        
+        # Setup.sh handles Cargo.toml creation/merging
+        setup_content = output_files["setup.sh"]
+        assert "cargo" in setup_content.lower() or "Cargo.toml" in setup_content
+        assert "clap" in setup_content.lower()  # Dependencies listed in setup
 
 
 class TestRustLanguageDetection:

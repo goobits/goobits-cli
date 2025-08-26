@@ -198,10 +198,17 @@ The setup.sh script automatically installs all specified dependencies:
 - APT packages prompt for sudo password when needed
 - NPM packages are installed globally
 
-### Generated Files
+### Generated Files (Minimal Consolidation)
 
-- **generated_cli.py**: Created by `goobits build`, should not be edited manually
-- **setup.sh**: Platform-aware installation script with dependency checking
+As of v3.0.0, the framework generates minimal files to avoid repository clutter:
+
+- **Python**: Single `cli.py` file with all utilities embedded inline
+- **Node.js**: Single `cli.mjs` ES6 module with embedded components
+- **TypeScript**: `cli.ts` + `types.d.ts` for type safety
+- **Rust**: Single `src/main.rs` with inline modules
+- **setup.sh**: Smart installation script that merges dependencies without overwriting manifests
+
+**IMPORTANT**: No README.md files are generated to prevent overwriting user documentation
 
 ### File Generation Guidelines
 
