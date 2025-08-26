@@ -87,7 +87,7 @@ class ConfigManager {
     }
 
     private _getDefaultConfigPath(): string {
-        const configDir = join(homedir(), '.config', '{{ cli.name | default(project.command_name) }}');
+        const configDir = join(homedir(), '.config', '{{ cli.root_command.name | default(project.command_name) | default('cli') }}');
         if (!existsSync(configDir)) {
             mkdirSync(configDir, { recursive: true });
         }
@@ -107,7 +107,7 @@ class ConfigManager {
         
         // Environment variable overrides
         for (const key of Object.keys(this.config)) {
-            const envKey = `{{ (cli.name | default(project.command_name)).upper().replace('-', '_') }}_${key.toUpperCase()}`;
+            const envKey = `{{ (cli.root_command.name | default(project.command_name) | default('cli')).upper().replace('-', '_') }}_${key.toUpperCase()}`;
             if (process.env[envKey]) {
                 const value = process.env[envKey];
                 this.config[key] = value === 'true' ? true : 
@@ -399,7 +399,7 @@ function generateCompletion(program: Command, shell: string = 'bash'): string {
     
     if (shell === 'bash') {
         return `#!/bin/bash
-_{{ cli.name.replace('-', '_') }}_completions() {
+_{{ (cli.root_command.name | default(project.command_name) | default('cli')).replace('-', '_') }}_completions() {
     local cur prev commands
     cur="\${COMP_WORDS[COMP_CWORD]}"
     prev="\${COMP_WORDS[COMP_CWORD-1]}"
@@ -410,7 +410,7 @@ _{{ cli.name.replace('-', '_') }}_completions() {
     fi
 }
 
-complete -F _{{ cli.name.replace('-', '_') }}_completions {{ cli.name }}`;
+complete -F _{{ (cli.root_command.name | default(project.command_name) | default('cli')).replace('-', '_') }}_completions {{ cli.root_command.name | default(project.command_name) | default('cli') }}`;
     }
     
     return '# Completion not implemented for this shell';
@@ -460,7 +460,7 @@ const progress = new ProgressManager();
 const program = new Command();
 
 program
-    .name('{{ cli.name | default(project.command_name) }}')
+    .name('{{ cli.root_command.name | default(project.command_name) | default('cli') }}')
     .description('{{ cli.description | default(project.description) }}')
     .version('{{ cli.version | default(project.version) | default("1.0.0") }}');
 
