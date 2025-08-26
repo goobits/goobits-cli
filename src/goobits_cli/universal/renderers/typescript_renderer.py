@@ -17,12 +17,28 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import re
 
-try:
-    from ... import __version__ as _version
-except ImportError:
-    _version = "3.0.0-alpha.1"  # Fallback version
+# Lazy import for version to avoid early import overhead
+_version = None
 
-import jinja2
+def _get_version():
+    global _version
+    if _version is None:
+        try:
+            from ... import __version__ as v
+            _version = v
+        except ImportError:
+            _version = "3.0.0-alpha.1"
+    return _version
+
+# Lazy import Jinja2 to avoid startup overhead
+_jinja2 = None
+
+def _get_jinja2():
+    global _jinja2
+    if _jinja2 is None:
+        import jinja2 as j2
+        _jinja2 = j2
+    return _jinja2
 
 
 
@@ -58,14 +74,14 @@ class TypeScriptRenderer(LanguageRenderer):
 
     def _get_version(self) -> str:
         """Get current version for generator metadata."""
-        return _version
+        return _get_version()
     
     def __init__(self):
 
         """Initialize the TypeScript renderer."""
 
         # Setup Jinja2 environment with custom filters and Unicode support
-
+        jinja2 = _get_jinja2()
         self._env = jinja2.Environment(
             trim_blocks=True,
             lstrip_blocks=True,

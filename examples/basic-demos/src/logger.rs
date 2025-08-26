@@ -1,5 +1,5 @@
 
-//! Structured logging infrastructure for Demo Rust CLI.
+//! Structured logging infrastructure for Demo Rust Complex CLI.
 //! 
 //! This module provides structured logging with context management and error handling.
 //! Environment variables:
@@ -177,7 +177,7 @@ impl Logger {
                 String::new()
             };
             
-            format!("{} {:8} Demo Rust CLI.{}.{}{}{}\n",
+            format!("{} {:8} Demo Rust Complex CLI.{}.{}{}{}\n",
                 timestamp.format("%Y-%m-%d %H:%M:%S%.3f"),
                 level.to_string(),
                 module,
@@ -217,7 +217,7 @@ impl Logger {
     }
 }
 
-/// Initialize structured logging for Demo Rust CLI.
+/// Initialize structured logging for Demo Rust Complex CLI.
 /// 
 /// Environment Variables:
 /// - LOG_LEVEL: Set logging level (debug, info, warn, error) - default: info
@@ -379,6 +379,21 @@ pub fn remove_context_keys(keys: &[&str]) {
             current_context.remove(*key);
         }
     });
+}
+
+/// Create a command context for logging
+pub fn create_command_context(command: &str, args: &[&str]) -> LogContext {
+    let mut context = HashMap::new();
+    context.insert("command".to_string(), json!(command));
+    if !args.is_empty() {
+        context.insert("args".to_string(), json!(args));
+    }
+    context
+}
+
+/// Log an error with context
+pub fn log_error(context: &str, err: &anyhow::Error) {
+    error(context, &format!("{:#}", err), None);
 }
 
 /// Convenience macro for logging with automatic module detection

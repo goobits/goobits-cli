@@ -1,73 +1,73 @@
 
-# demo-typescript-cli
+# demo-rust-complex
 
-A sample TypeScript CLI built with Goobits
+A feature-rich Rust CLI built with Goobits
 
 ## Installation
-### Using npm
+### From Source
 
 ```bash
-npm install -g demo-typescript-cli
+# Clone the repository
+git clone https://github.com/user/demo-rust-complex
+cd demo-rust-complex
+
+# Build and install
+cargo build --release
+cargo install --path .
 ```
 
-### Using yarn
+### Using Cargo
 
 ```bash
-yarn global add demo-typescript-cli
+cargo install demo-rust-complex
 ```
 ## Usage
 
-demo_ts is a command-line tool with the following commands:
+demo_rust_complex is a command-line tool with the following commands:
 
-### `demo_ts greet`
-
-No description provided
-**Usage:**
-```bash
-demo_ts greet [OPTIONS]```
-**Options:**
-- `--style`, `-s`: No description provided (default: casual)- `--count`, `-c`: No description provided (default: 1)- `--uppercase`, `-u`: No description provided- `--language`, `-l`: No description provided (default: en)### `demo_ts info`
+### `demo_rust_complex process`
 
 No description provided
 **Usage:**
 ```bash
-demo_ts info [OPTIONS]```
+demo_rust_complex process [OPTIONS]```
 **Options:**
-- `--format`, `-f`: No description provided (default: text)- `--verbose`, `-v`: No description provided- `--sections`, `-s`: No description provided (default: all)
+- `--format`, `-f`: No description provided (default: table)- `--progress`: No description provided (default: True)- `--verbose`, `-v`: No description provided### `demo_rust_complex config`
+
+No description provided
+**Usage:**
+```bash
+demo_rust_complex config [OPTIONS]```
+**Options:**
+- `--get`: No description provided- `--set`: No description provided
 ### Global Options
 
 - `--help`, `-h`: Show help message
-- `--version`, `-V`: Show version information
+- `--version`, `-V`: Show version information- `--verbose`, `-v`: Enable verbose output
 ## Examples
 ```bash
 # Example usage
-demo_ts greet```
+demo_rust_complex process```
 ```bash
 # Example usage
-demo_ts info```
+demo_rust_complex config```
 ## Development
-### Setup
+### Building
 
 ```bash
-npm install
-```
-
-### Building (TypeScript)
-
-```bash
-npm run build
+cargo build
 ```
 
 ### Testing
 
 ```bash
-npm test
+cargo test
 ```
 
 ### Running
 
 ```bash
-npm start <command> [args...]
+cargo run -- <command> [args...]
 ```
 ## License
 

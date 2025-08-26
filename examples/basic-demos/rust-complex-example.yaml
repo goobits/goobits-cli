@@ -1,0 +1,52 @@
+# Rust Complex CLI Example (many features)
+package_name: demo-rust-complex
+command_name: demo_rust_complex
+display_name: "Demo Rust Complex CLI"
+description: "A feature-rich Rust CLI built with Goobits"
+version: "3.0.0-alpha.1"
+language: rust
+author: "Demo User"
+email: "demo@example.com"
+license: "MIT"
+
+cli:
+  name: demo_rust_complex
+  tagline: "Complex Rust CLI with tables, progress, and more"
+  features:
+    interactive_mode:
+      enabled: true
+    async:
+      enabled: true
+  commands:
+    process:
+      desc: "Process data with progress bars and table output"
+      args:
+        - name: input
+          desc: "Input file path"
+          required: true
+          type: path
+      options:
+        - name: format
+          short: f
+          type: str
+          desc: "Output format"
+          choices: ["table", "json", "csv"]
+          default: "table"
+        - name: progress
+          type: flag
+          desc: "Show progress bar"
+          default: true
+        - name: verbose
+          short: v
+          type: flag
+          desc: "Verbose output"
+          default: false
+    config:
+      desc: "Manage configuration settings"
+      options:
+        - name: get
+          type: str
+          desc: "Get configuration value"
+        - name: set
+          type: str
+          desc: "Set configuration value"

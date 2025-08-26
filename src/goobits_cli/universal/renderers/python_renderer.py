@@ -219,7 +219,9 @@ class PythonRenderer(LanguageRenderer):
             "consolidation_mode": self.consolidate,
 
             # Make datetime available to templates
-            "datetime": datetime
+            "datetime": datetime,
+            # Add feature requirements for template compatibility
+            "feature_requirements": self._get_feature_requirements(ir),
 
         })
 
@@ -904,6 +906,76 @@ setup(
         """Check if CLI uses shell completion."""
 
         return cli_schema.get("completion", {}).get("enabled", True)
+
+    
+    def _get_feature_requirements(self, ir: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate feature requirements for template rendering.
+        
+        This method analyzes the IR and determines which features are needed,
+        setting appropriate flags that templates can use to conditionally
+        include imports and functionality.
+        
+        Args:
+            ir: Intermediate representation
+            
+        Returns:
+            Dictionary of feature flags for template usage
+        """
+        cli_schema = ir.get("cli", {})
+        features = ir.get("features", {})
+        
+        # Start with default Python features (rich_interface is default for Python)
+        feature_requirements = {
+            "rich_interface": True,  # Enable rich-click by default for Python
+            "click_framework": True,
+            "python_language": True,
+        }
+        
+        # Detect configuration management features
+        if self._has_config_features(cli_schema):
+            feature_requirements["config_management"] = True
+        
+        # Detect async features
+        if self._has_async_features(cli_schema):
+            feature_requirements["async_support"] = True
+        
+        # Detect completion features
+        if self._has_completion_features(cli_schema):
+            feature_requirements["shell_completion"] = True
+        
+        # Detect interactive mode features
+        if self._has_interactive_features(cli_schema):
+            feature_requirements["interactive_mode"] = True
+        
+        # Check for advanced CLI features that might need complex parsing
+        commands = cli_schema.get("commands", {})
+        if isinstance(commands, dict) and len(commands) > 3:
+            feature_requirements["complex_parsing"] = True
+        
+        # Check command hierarchy depth for nesting features
+        hierarchy = cli_schema.get("command_hierarchy", {})
+        if hierarchy.get("max_depth", 0) > 2:
+            feature_requirements["nested_commands"] = True
+        
+        # Check for table/formatting features based on command patterns
+        for cmd_name, cmd_data in commands.items() if isinstance(commands, dict) else []:
+            if isinstance(cmd_data, dict):
+                cmd_desc = cmd_data.get("description", "").lower()
+                if any(word in cmd_desc for word in ["table", "list", "format", "display"]):
+                    feature_requirements["table_formatting"] = True
+                    break
+        
+        # Check for progress/status features
+        if any(cmd_name in ["build", "install", "deploy", "upload", "download"] 
+               for cmd_name in commands.keys() if isinstance(commands, dict)):
+            feature_requirements["progress_features"] = True
+        
+        # Color support is enabled by default for rich interfaces
+        if feature_requirements.get("rich_interface"):
+            feature_requirements["color_support"] = True
+        
+        return feature_requirements
 
     
 

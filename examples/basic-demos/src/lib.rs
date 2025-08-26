@@ -1,8 +1,8 @@
-//! demo-rust-cli
+//! demo-rust-complex
 //!
-//! A sample Rust CLI built with Goobits
+//! A feature-rich Rust CLI built with Goobits
 //!
-//! This library provides the core functionality for the demo_rust CLI tool.
+//! This library provides the core functionality for the demo_rust_complex CLI tool.
 
 #![warn(missing_docs)]
 #![warn(clippy::all)]
@@ -28,7 +28,6 @@ pub mod logger;
 // Re-export main types for convenience
 pub use errors::{CliError, ExitCode, CliResult};
 pub use config::Config;
-pub use hooks::HookManager;
 
 /// Version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
