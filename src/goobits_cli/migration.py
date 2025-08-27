@@ -1,8 +1,9 @@
 """
-YAML Migration Tool for Goobits CLI Framework 3.0.0
+YAML Migration Tool for Goobits CLI Framework
 
-Converts legacy YAML configurations to new standardized format:
-- Array subcommands → Object subcommands
+Converts legacy YAML configurations to current standardized format:
+- Array subcommands → Object subcommands (v3.0.0)
+- Field name standardization (v3.0.2) 
 - Validates new structure compatibility
 - Creates backup files for safety
 """
@@ -98,80 +99,22 @@ class YAMLMigrationTool:
     def _migrate_structure(
         self, data: Dict[str, Any], file_path: Path
     ) -> Dict[str, Any]:
-        """Apply migration transformations to YAML structure."""
+        """Apply all migration transformations to YAML structure."""
+        from .migrations import apply_all_migrations
+        
         if not isinstance(data, dict):
             return data
+        
+        # Apply all applicable migrations using the registry system
+        migrated_data, changes, warnings = apply_all_migrations(data, file_path)
+        
+        # Add changes and warnings to our tracking
+        self.changes_made.extend(changes)
+        self.warnings.extend(warnings)
+        
+        return migrated_data
 
-        # Deep copy to avoid modifying original
-        migrated = {}
-        for key, value in data.items():
-            migrated[key] = self._migrate_value(value, key, file_path)
 
-        return migrated
-
-    def _migrate_value(self, value: Any, key: str, file_path: Path) -> Any:
-        """Recursively migrate values, handling subcommands conversion."""
-        if isinstance(value, dict):
-            # Check for subcommands array → object conversion
-            if key == "subcommands" and isinstance(value, dict):
-                # Already object format, recurse into subcommands
-                migrated_subcommands = {}
-                for sub_key, sub_value in value.items():
-                    migrated_subcommands[sub_key] = self._migrate_value(
-                        sub_value, sub_key, file_path
-                    )
-                return migrated_subcommands
-            else:
-                # Regular dict, recurse
-                migrated = {}
-                for sub_key, sub_value in value.items():
-                    migrated[sub_key] = self._migrate_value(
-                        sub_value, sub_key, file_path
-                    )
-                return migrated
-
-        elif isinstance(value, list):
-            # Check for subcommands array format
-            if key == "subcommands" and self._is_subcommands_array(value):
-                return self._convert_subcommands_array_to_object(value, file_path)
-            else:
-                # Regular list, recurse
-                return [
-                    self._migrate_value(item, f"{key}[{i}]", file_path)
-                    for i, item in enumerate(value)
-                ]
-
-        else:
-            # Primitive value, return as-is
-            return value
-
-    def _is_subcommands_array(self, value: List[Any]) -> bool:
-        """Check if list is a subcommands array format."""
-        if not isinstance(value, list) or not value:
-            return False
-
-        # Check if list items have 'name' field (indicating subcommand objects)
-        return all(isinstance(item, dict) and "name" in item for item in value)
-
-    def _convert_subcommands_array_to_object(
-        self, subcommands_array: List[Dict[str, Any]], file_path: Path
-    ) -> Dict[str, Any]:
-        """Convert subcommands array to object format."""
-        subcommands_object = {}
-
-        for subcmd in subcommands_array:
-            if not isinstance(subcmd, dict) or "name" not in subcmd:
-                self.warnings.append(f"Invalid subcommand in {file_path}: {subcmd}")
-                continue
-
-            name = subcmd.pop("name")  # Remove 'name' field
-
-            # Recursively migrate the subcommand structure
-            migrated_subcmd = self._migrate_structure(subcmd, file_path)
-            subcommands_object[name] = migrated_subcmd
-
-        self.changes_made.append(f"Converted subcommands array → object in {file_path}")
-        return subcommands_object
 
     def _show_migration_summary(
         self, file_path: Path, original: Dict[str, Any], migrated: Dict[str, Any]
@@ -308,7 +251,7 @@ class YAMLMigrationTool:
             console.print(Panel(panel_content, title="❌ Errors", border_style="red"))
 
         if not (self.changes_made or self.warnings or self.errors):
-            console.print("✨ [green]All files are already in 3.0.0 format![/green]")
+            console.print("✨ [green]All files are already up to date![/green]")
 
 
 @click.command()
@@ -320,18 +263,18 @@ class YAMLMigrationTool:
 )
 def migrate_yaml(path: Path, backup: bool, dry_run: bool, pattern: str):
     """
-    Migrate Goobits YAML configurations to 3.0.0 format.
+    Migrate Goobits YAML configurations to latest format.
 
-    Converts legacy array-based subcommands to object format:
-
+    Applies all applicable migrations:
+    
     \b
-    BEFORE: subcommands: [{name: "start", ...}, {name: "stop", ...}]
-    AFTER:  subcommands: {start: {...}, stop: {...}}
+    v3.0.0: subcommands: [{name: "start", ...}] → {start: {...}}
+    v3.0.2: cli_output_path → cli_path, hooks_output_path → cli_hooks_path
 
     PATH can be a single YAML file or directory containing YAML files.
     """
-    console.print("🚀 [bold]Goobits CLI Framework 3.0.0 Migration Tool[/bold]")
-    console.print("Converting YAML configurations to new standardized format...")
+    console.print("🚀 [bold]Goobits CLI Framework Migration Tool[/bold]")
+    console.print("Converting YAML configurations to current standardized format...")
 
     migrator = YAMLMigrationTool()
 
