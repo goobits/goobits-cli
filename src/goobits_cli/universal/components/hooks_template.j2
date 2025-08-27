@@ -592,6 +592,34 @@ pub fn on_{{ cmd_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()>
     Ok(())
 }
 
+{%- if cmd.subcommands %}
+{%- for sub_name, sub_cmd in cmd.subcommands.items() %}
+/// {{ sub_cmd.description | default(sub_cmd.desc) | default('Handle ' + cmd_name + ' ' + sub_name + ' subcommand') }}
+pub fn on_{{ cmd_name | replace('-', '_') }}_{{ sub_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
+    // Add your business logic here
+    println!("Executing {{ cmd_name }} {{ sub_name }} subcommand");
+    {%- if sub_cmd.args %}
+    // Access arguments
+    {%- for arg in sub_cmd.args %}
+    if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
+        println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
+    }
+    {%- endfor %}
+    {%- endif %}
+    {%- if sub_cmd.options %}
+    // Access options
+    {%- for opt in sub_cmd.options %}
+    if let Some({{ opt.name | replace('-', '_') }}) = matches.get_one::<String>("{{ opt.name }}") {
+        println!("{{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
+    }
+    {%- endfor %}
+    {%- endif %}
+    
+    Ok(())
+}
+
+{%- endfor %}
+{%- endif %}
 {% endfor -%}
 {%- else %}
 /// Default handler when no commands are defined

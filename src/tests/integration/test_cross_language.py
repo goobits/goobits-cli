@@ -390,7 +390,7 @@ use serde_json::{json, Value};
 
 pub fn on_hello(matches: &ArgMatches) -> Result<Value> {
     let name = matches.get_one::<String>("name").unwrap();
-    let greeting = matches.get_one::<String>("greeting").unwrap_or(&"Hello".to_string());
+    let greeting = matches.get_one::<String>("greeting").unwrap_or("Hello");
     let uppercase = matches.get_flag("uppercase");
     
     let mut message = format!("{} {}!", greeting, name);
@@ -407,7 +407,7 @@ pub fn on_count(matches: &ArgMatches) -> Result<Value> {
         .unwrap_or_default()
         .cloned()
         .collect();
-    let count_type = matches.get_one::<String>("type").unwrap_or(&"words".to_string());
+    let count_type = matches.get_one::<String>("type").unwrap_or("words");
     
     let count = match count_type.as_str() {
         "words" => {

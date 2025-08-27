@@ -244,7 +244,7 @@ def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cm
                 '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
                 {%- endfor %}
             }
-            hooks.on_{{ cmd_name.replace("-", "_") }}(ctx, **kwargs)
+            hooks.on_{{ cmd_name.replace("-", "_") }}(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -285,7 +285,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
                 '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
                 {%- endfor %}
             }
-            hooks.on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}(ctx, **kwargs)
+            hooks.on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -318,7 +318,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
                 '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
                 {%- endfor %}
             }
-            hooks.{{ sub_data.hook_name }}(ctx, **kwargs)
+            hooks.{{ sub_data.hook_name }}(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook '{{ sub_data.hook_name }}' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -354,7 +354,7 @@ def {{ command.name.replace('-', '_') }}(ctx{% for arg in command.arguments | de
                 '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
                 {%- endfor %}
             }
-            hooks.on_{{ command.name.replace("-", "_") }}(ctx, **kwargs)
+            hooks.on_{{ command.name.replace("-", "_") }}(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_{{ command.name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)
