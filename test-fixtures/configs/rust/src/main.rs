@@ -4,14 +4,14 @@
 // This is a consolidated Rust CLI file with all modules inline.
 // Generated from: 
 
-use clap::{Command, Arg};
+use clap::{Command, Arg, ArgMatches};
 use anyhow::{Result, Context, bail};
 use serde::{Serialize, Deserialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use dirs;
-use log::debug;
+use log::{debug, info, warn, error};
 use env_logger;
 use colored::*;
 use chrono::Local;
@@ -289,7 +289,7 @@ fn main() -> Result<()> {
     logger::init_logger(verbose, debug);
     
     // Load configuration
-    let _config_manager = config::ConfigManager::new()
+    let mut config_manager = config::ConfigManager::new()
         .context("Failed to initialize configuration")?;
     
     // Handle commands
@@ -319,3 +319,11 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// Handle errors properly
+#[cfg(not(test))]
+fn main_wrapper() {
+    if let Err(e) = main() {
+        let verbose = std::env::args().any(|arg| arg == "--verbose" || arg == "-v");
+        errors::handle_error(e, verbose);
+    }
+}

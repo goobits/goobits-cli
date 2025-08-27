@@ -14,12 +14,12 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import yaml from 'js-yaml';
+import { fileURLToPath } from 'url';
 import { AsyncLocalStorage } from 'async_hooks';
-import * as winston from 'winston';
+import winston from 'winston';
 
-// Use Node.js globals for CommonJS compatibility
-declare const __filename: string;
-declare const __dirname: string;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // ============================================================================
 // TYPE DEFINITIONS
