@@ -252,7 +252,7 @@ class CLITestHelper:
                     "cli" in filename or "main" in filename or "index" in filename
                 ):
                     result["cli_file"] = str(file_path)
-                elif filename.endswith(".rs") and ("main" in filename):
+                elif filename.endswith(".rs") and ("main" in filename or "cli" in filename):
                     result["cli_file"] = str(file_path)
                 elif filename == "package.json":
                     result["package_file"] = str(file_path)
