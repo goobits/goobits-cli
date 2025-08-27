@@ -5,6 +5,7 @@
 // Generated from: {{ config_filename }}
 
 use clap::{Command, Arg, ArgMatches};
+use clap_complete;
 use anyhow::{Result, Context, bail};
 use serde::{Serialize, Deserialize};
 use std::fs;
@@ -13,7 +14,7 @@ use std::collections::HashMap;
 use dirs;
 use log::{debug, info, warn, error};
 use env_logger;
-use colored::*;
+use colored::Colorize;
 use chrono::Local;
 use std::io::Write;
 

@@ -46,6 +46,53 @@ fi
 
 echo -e "${GREEN}✓ Rust and Cargo are installed${NC}"
 
+# Check if Cargo.toml exists
+if [ ! -f Cargo.toml ]; then
+    echo -e "${YELLOW}⚠ Cargo.toml not found, creating minimal configuration...${NC}"
+    cat > Cargo.toml << 'EOF'
+[package]
+name = "{{ project.package_name | default('cli') }}"
+version = "{{ project.version | default('0.1.0') }}"
+edition = "2021"
+
+[[bin]]
+name = "{{ project.command_name | default('cli') }}"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive", "color"] }
+clap_complete = "4.4"
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5.0"
+log = "0.4"
+env_logger = "0.10"
+colored = "2.0"
+EOF
+    echo -e "${GREEN}✓ Created Cargo.toml with essential dependencies${NC}"
+fi
+
+# Check if src/hooks.rs exists
+if [ ! -f src/hooks.rs ]; then
+    echo -e "${YELLOW}⚠ src/hooks.rs not found, creating stub...${NC}"
+    mkdir -p src
+    cat > src/hooks.rs << 'EOF'
+use clap::ArgMatches;
+use anyhow::Result;
+
+// Add your command implementations here
+pub fn on_default(_matches: &ArgMatches) -> Result<()> {
+    println!("Command not yet implemented");
+    Ok(())
+}
+EOF
+    echo -e "${GREEN}✓ Created src/hooks.rs stub${NC}"
+fi
+
 # Build the project
 echo -e "${BLUE}Building ${PACKAGE_NAME}...${NC}"
 if cargo build --release; then

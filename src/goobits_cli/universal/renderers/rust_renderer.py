@@ -222,10 +222,12 @@ class RustRenderer(LanguageRenderer):
             .replace("-", "_")
         )
 
-        # Minimal file generation - only 2 files
+        # Generate 4 files: main.rs, hooks.rs, setup.sh, and Cargo.toml
         output = {
             "rust_cli_consolidated": "src/main.rs",  # Everything with inline modules
+            "hooks_template": "src/hooks.rs",  # User hooks implementation
             "setup_script": "setup.sh",  # Smart setup with Cargo.toml merging
+            "cargo_config": "Cargo.toml",  # Package manifest with dependencies
         }
 
         return output

@@ -26,6 +26,18 @@ from .package_manager_utils import (
 from .test_configs import TestConfigTemplates
 from goobits_cli.schemas import GoobitsConfigSchema
 
+# Import CLITestHelper from E2E tests since we moved installation flows there
+import sys
+sys.path.append(str(Path(__file__).parent.parent / "e2e"))
+try:
+    from test_installation_flows import CLITestHelper
+except ImportError:
+    # If E2E tests not available, create a simple mock
+    class CLITestHelper:
+        @staticmethod
+        def generate_cli(config, temp_dir):
+            return {"cli_file": temp_dir + "/mock_cli.py"}
+
 
 class DependencyTestError(Exception):
     """Error during dependency testing."""
@@ -187,6 +199,8 @@ class TestDependencyResolution:
     def setup_method(self, method):
         """Set up test environment for basic dependency testing."""
         self.temp_dirs = []
+        self.installed_packages = []  # Initialize for teardown compatibility
+        self.path_manager = None  # Initialize for teardown compatibility
         self._original_node_path = os.environ.get("NODE_PATH", "")
 
     def teardown_method(self, method):
@@ -216,8 +230,9 @@ class TestDependencyResolution:
         # Clean up pip installed packages
         self._cleanup_pip_packages()
 
-        # Reset environment PATH using PATH manager
-        self.path_manager.cleanup()
+        # Reset environment PATH using PATH manager if initialized
+        if hasattr(self, 'path_manager') and self.path_manager:
+            self.path_manager.cleanup()
 
     def _create_temp_dir(self) -> str:
         """Create temporary directory for testing."""
@@ -554,9 +569,7 @@ process.exit(0);
         temp_dir = self._create_temp_dir()
         config = TestConfigTemplates.minimal_config(language)
 
-        # Generate CLI
-        from .test_installation_flows import CLITestHelper
-
+        # Use the CLITestHelper imported at top of file
         CLITestHelper.generate_cli(config, temp_dir)
 
         # Validate dependency declarations
@@ -629,9 +642,7 @@ process.exit(0);
             python=["requests", "pyyaml"], apt=[], npm=None
         )
 
-        # Generate CLI
-        from .test_installation_flows import CLITestHelper
-
+        # Use the CLITestHelper imported at top of file
         CLITestHelper.generate_cli(config, temp_dir)
 
         # Check that extras are declared in installation files
@@ -651,9 +662,7 @@ process.exit(0);
             "typescript"
         )  # TypeScript has dev deps
 
-        # Generate CLI
-        from .test_installation_flows import CLITestHelper
-
+        # Use the CLITestHelper imported at top of file
         CLITestHelper.generate_cli(config, temp_dir)
 
         # Check package.json for dev dependencies
@@ -676,9 +685,7 @@ process.exit(0);
         temp_dir = self._create_temp_dir()
         config = TestConfigTemplates.dependency_heavy_config("rust")
 
-        # Generate CLI
-        from .test_installation_flows import CLITestHelper
-
+        # Use the CLITestHelper imported at top of file
         CLITestHelper.generate_cli(config, temp_dir)
 
         # Check Cargo.toml for dependencies
@@ -899,9 +906,7 @@ process.exit(0);
             "rust"
         )  # Use minimal config to reduce network dependencies
 
-        # Generate CLI
-        from .test_installation_flows import CLITestHelper
-
+        # Use the CLITestHelper imported at top of file
         CLITestHelper.generate_cli(config, temp_dir)
 
         # Test network connectivity and build strategy

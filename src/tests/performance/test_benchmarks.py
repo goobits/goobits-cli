@@ -179,8 +179,8 @@ class TestPerformanceBenchmarks:
                 self._last_memory_mb < 150
             )  # Increased memory limit for complex generation
 
-            # Verify files were generated (check for either main file types)
-            main_files = ["cli.js", "index.js"]
+            # Verify files were generated (check for actual generated file types)
+            main_files = ["cli.js", "cli.mjs", "index.js"]
             assert any(
                 (tmp_path / f).exists() for f in main_files
             ), f"No main CLI file found in {list(tmp_path.iterdir())}"

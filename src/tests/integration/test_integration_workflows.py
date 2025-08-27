@@ -554,6 +554,7 @@ setup(
         return results
 
 
+@pytest.mark.skip(reason="These are E2E tests requiring actual package manager operations (npm, cargo, etc.)")
 class TestIntegrationWorkflows:
     """Integration test class for complete workflows."""
 

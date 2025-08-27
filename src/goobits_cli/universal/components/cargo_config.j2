@@ -43,7 +43,8 @@ path = "src/main.rs"
 
 [dependencies]
 # Core dependencies - always included
-clap = { version = "4.4", features = ["derive"{% if features.color_support %}, "color"{% endif %}{% if features.complex_parsing %}, "suggestions"{% endif %}] }
+clap = { version = "4.4", features = ["derive", "color"] }
+clap_complete = "4.4"
 anyhow = "1.0"
 thiserror = "1.0"
 
@@ -54,6 +55,12 @@ serde_yaml = "0.9"
 
 # Time/date handling - always included because logger uses it
 chrono = { version = "0.4", features = ["serde"] }
+
+# Essential dependencies always used by generated code
+dirs = "5.0"
+log = "0.4"
+env_logger = "0.10"
+colored = "2.0"
 
 # Conditional dependencies based on detected features
 {% if features.config_management -%}
@@ -75,9 +82,6 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 {% endif -%}
 
 # Optional dependencies for advanced features
-{% if features.color_support -%}
-colored = { version = "2.0", optional = true }
-{% endif -%}
 
 {% if features.interactive_mode -%}
 dialoguer = { version = "0.11", optional = true }
@@ -108,7 +112,7 @@ comfy-table = { version = "7.0", optional = true }
 
 [features]
 # Feature flags based on detected CLI requirements
-default = [{% if features.color_support %}"colored"{% endif %}]
+default = []
 
 # Granular feature sets
 {% if features.async_features -%}
@@ -116,11 +120,11 @@ async = ["tokio"]
 {% endif -%}
 
 {% if features.interactive_mode -%}
-interactive = ["dialoguer"{% if features.color_support %}, "colored"{% endif %}]
+interactive = ["dialoguer"]
 {% endif -%}
 
 {% if features.progress_features -%}
-progress = ["indicatif"{% if features.color_support %}, "colored"{% endif %}]
+progress = ["indicatif"]
 {% endif -%}
 
 {% if features.table_formatting -%}
@@ -130,7 +134,6 @@ tables = ["tabled", "comfy-table"]
 # Convenience feature combinations
 {% set full_features = [] -%}
 {% if features.async_features -%}{% set _ = full_features.append("tokio") -%}{% endif -%}
-{% if features.color_support -%}{% set _ = full_features.append("colored") -%}{% endif -%}
 {% if features.interactive_mode -%}{% set _ = full_features.append("dialoguer") -%}{% endif -%}
 {% if features.progress_features -%}{% set _ = full_features.append("indicatif") -%}{% endif -%}
 {% if features.table_formatting -%}

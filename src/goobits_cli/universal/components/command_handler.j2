@@ -1171,7 +1171,7 @@ use serde_json::json;
 
 {% if features.color_support -%}
 #[cfg(feature = "colored")]
-use colored::*;
+use colored::Colorize;
 {% endif -%}
 
 {% if features.interactive_mode -%}

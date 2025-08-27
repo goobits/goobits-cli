@@ -478,4 +478,53 @@ export async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | rep
 {%- endif %}
 {%- endfor %}
 
+{%- elif language == 'rust' -%}
+// Hook implementations for {{ project.name }}
+//
+// This file contains the business logic for your CLI commands.
+// Implement the hook functions below to handle your CLI commands.
+//
+// IMPORTANT: Hook names must use snake_case with 'on_' prefix
+// Example:
+// - Command 'hello' -> Hook function 'on_hello'
+// - Command 'hello-world' -> Hook function 'on_hello_world'
+
+use clap::ArgMatches;
+use anyhow::Result;
+
+{% if cli.commands -%}
+{%- for cmd_name, cmd in cli.commands.items() %}
+/// {{ cmd.description | default('Handle ' + cmd_name + ' command') }}
+pub fn on_{{ cmd_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
+    // Add your business logic here
+    println!("Executing {{ cmd_name }} command");
+    {% if cmd.args %}
+    // Access arguments
+    {% for arg in cmd.args %}
+    if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
+        println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
+    }
+    {% endfor %}
+    {% endif %}
+    {% if cmd.options %}
+    // Access options
+    {% for opt in cmd.options %}
+    if let Some({{ opt.name | replace('-', '_') }}) = matches.get_one::<String>("{{ opt.name }}") {
+        println!("{{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
+    }
+    {% endfor %}
+    {% endif %}
+    
+    Ok(())
+}
+
+{% endfor -%}
+{%- else %}
+/// Default handler when no commands are defined
+pub fn on_default(_matches: &ArgMatches) -> Result<()> {
+    println!("No commands defined yet");
+    Ok(())
+}
+{%- endif %}
+
 {%- endif -%}

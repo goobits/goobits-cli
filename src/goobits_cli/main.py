@@ -1154,6 +1154,33 @@ def build(
                 "ℹ️  Package source directory not found, setup.sh not copied to package"
             )
 
+    # Update package manifests for Node.js and Rust
+    if language in ["nodejs", "rust"]:
+        from goobits_cli.manifest_updater import update_manifests_for_build
+        
+        # Get CLI output path from generated files
+        if language == "nodejs":
+            cli_output_path = Path("cli.mjs")  # Node.js generates cli.mjs
+        else:
+            cli_output_path = Path("src/main.rs")  # Rust always uses src/main.rs
+        manifest_result = update_manifests_for_build(
+            config=goobits_config.model_dump(),
+            output_dir=output_dir,
+            cli_output_path=cli_output_path
+        )
+        
+        if manifest_result.is_err():
+            typer.echo(f"⚠️  Warning: {manifest_result.err()}", err=True)
+            typer.echo("✅ CLI generated successfully, but manifest update failed")
+        else:
+            manifest_file = "package.json" if language == "nodejs" else "Cargo.toml"
+            typer.echo(f"✅ Updated {manifest_file} with CLI configuration")
+            
+            # Display any warnings from the manifest update
+            warnings = manifest_result.value or []
+            for warning in warnings:
+                typer.echo(f"⚠️  {warning}", err=True)
+
     logger.info("Build operation completed successfully")
     typer.echo("🎉 Build completed successfully!")
 

@@ -17,7 +17,8 @@ from tests.integration.package_manager_utils import (
     PackageManagerRegistry,
 )
 from tests.integration.test_configs import TestConfigTemplates, TestScenarioRunner
-from tests.integration.test_installation_flows import CLITestHelper
+# CLITestHelper moved to E2E tests
+from tests.e2e.test_installation_flows import CLITestHelper
 
 
 def main():
