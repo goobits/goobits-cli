@@ -374,13 +374,13 @@ class HookValidator(BaseValidator):
         commands = self.get_field_value(cli_config, "commands", {})
 
         # Check for hook file existence if specified
-        hooks_path = self.get_field_value(context.config, "hooks_path")
+        hooks_path = self.get_field_value(context.config, "cli_hooks_path")
         if hooks_path and context.working_dir:
             full_path = Path(context.working_dir) / hooks_path
             if not full_path.exists():
                 result.add_warning(
                     f"Hooks file not found: {hooks_path}",
-                    "hooks_path",
+                    "cli_hooks_path",
                     "Hook file will be created during generation",
                 )
 
@@ -1145,38 +1145,38 @@ class ConfigValidator(BaseValidator):
     ) -> None:
         """Validate file paths and references."""
 
-        # Validate CLI output path - now required
-        cli_output_path = self.get_field_value(config, "cli_output_path")
-        if not cli_output_path:
+        # Validate CLI path - now required
+        cli_path = self.get_field_value(config, "cli_path")
+        if not cli_path:
             result.add_error(
-                "cli_output_path is required to prevent root directory pollution",
-                "cli_output_path",
+                "cli_path is required to prevent root directory pollution",
+                "cli_path",
                 "Specify explicit output path like 'src/my_package/cli.py'",
             )
         else:
-            if not cli_output_path.endswith(".py"):
+            if not cli_path.endswith(".py"):
                 result.add_warning(
-                    f"CLI output path '{cli_output_path}' should end with .py",
-                    "cli_output_path",
+                    f"CLI output path '{cli_path}' should end with .py",
+                    "cli_path",
                 )
 
             # Prevent root directory generation
-            path_obj = Path(cli_output_path)
+            path_obj = Path(cli_path)
             if len(path_obj.parts) == 1:  # File directly in root
                 result.add_error(
-                    f"CLI output path '{cli_output_path}' cannot be in root directory",
-                    "cli_output_path",
+                    f"CLI output path '{cli_path}' cannot be in root directory",
+                    "cli_path",
                     "Use subdirectory like 'src/my_package/cli.py'",
                 )
 
             # Check if directory exists (if working directory is available)
             if context.working_dir:
-                full_path = Path(context.working_dir) / cli_output_path
+                full_path = Path(context.working_dir) / cli_path
                 parent_dir = full_path.parent
                 if not parent_dir.exists():
                     result.add_warning(
                         f"Output directory does not exist: {parent_dir}",
-                        "cli_output_path",
+                        "cli_path",
                         "Directory will be created during generation",
                     )
 

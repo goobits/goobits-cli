@@ -688,7 +688,7 @@ class TestConfigValidator:
             "display_name": "My Awesome CLI",
             "description": "A great CLI tool",
             "language": "python",
-            "cli_output_path": "src/my_package/cli.py",
+            "cli_path": "src/my_package/cli.py",
             "installation": {"pypi_name": "my-awesome-cli", "development_path": "."},
         }
 
@@ -748,7 +748,7 @@ class TestConfigValidator:
             "display_name": "Test CLI",
             "description": "Test CLI",
             "language": "python",
-            "cli_output_path": "src/test_package/cli.py",
+            "cli_path": "src/test_package/cli.py",
             "installation": {"pypi_name": "test-cli", "development_path": "."},
             "python": {
                 "minimum_version": "3.12",
@@ -918,7 +918,7 @@ class TestIntegrationScenarios:
             "display_name": "Goobits CLI Framework",
             "description": "Build professional command-line tools with YAML configuration",
             "language": "python",
-            "cli_output_path": "src/goobits_cli/generated_cli.py",
+            "cli_path": "src/goobits_cli/generated_cli.py",
             "python": {"minimum_version": "3.8", "maximum_version": "3.13"},
             "installation": {
                 "pypi_name": "goobits-cli",
@@ -1021,7 +1021,7 @@ class TestIntegrationScenarios:
             "command_name": "test",
             "display_name": "Test CLI",
             "description": "A test CLI application",
-            "cli_output_path": "src/test_package/cli.py",
+            "cli_path": "src/test_package/cli.py",
             "installation": {"pypi_name": "test-cli", "development_path": "."},
             "cli": {
                 "name": "Test CLI",

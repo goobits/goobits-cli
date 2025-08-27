@@ -256,7 +256,7 @@ class PythonGenerator(BaseGenerator):
             self._generated_files = {}
             for file_path, content in generated_files.items():
                 # Keep the relative path from output_dir, not just the filename
-                # This preserves the cli_output_path configuration
+                # This preserves the cli_path configuration
                 path_obj = Path(file_path)
                 if path_obj.is_absolute():
                     # Convert absolute path to relative from output_dir
