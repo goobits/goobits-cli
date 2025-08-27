@@ -173,7 +173,7 @@ class TestNodeJSGeneratorE2E:
 
         # Verify key files were generated (consolidated approach)
         cli_file = tmp_path / "cli.ts"  # TypeScript generator creates cli.ts
-        types_file = tmp_path / "types.d.ts"
+        types_file = tmp_path / "cli_types.d.ts"  # Updated for consistent naming
         setup_file = tmp_path / "setup.sh"
 
         assert cli_file.exists()
@@ -185,7 +185,7 @@ class TestNodeJSGeneratorE2E:
         assert "hello" in cli_content
         assert "test-nodejs-cli" in cli_content  # CLI name should be in content
 
-        # Verify types.d.ts content
+        # Verify cli_types.d.ts content
         types_content = types_file.read_text()
         assert "export" in types_content or "declare" in types_content
 

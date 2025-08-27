@@ -345,9 +345,11 @@ class TestNodeJSCLICompilation:
                 file_path.parent.mkdir(parents=True, exist_ok=True)
                 file_path.write_text(content)
 
-                # Look for .mjs or .js files with "cli" in the name
+                # Look for main CLI file (not hooks file)
                 if (filename.endswith(".js") or filename.endswith(".mjs")) and (
-                    "cli" in filename or "main" in filename
+                    filename == "cli.js" or filename == "cli.mjs" or
+                    filename == "main.js" or filename == "main.mjs" or
+                    (("cli" in filename or "main" in filename) and "hooks" not in filename)
                 ):
                     cli_file = file_path
                     cli_file.chmod(0o755)
