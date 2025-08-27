@@ -67,7 +67,7 @@ class HookError(CLIError):
     """Hook execution error."""
     def __init__(self, message: str, hook_name: str = None):
         self.hook_name = hook_name
-        super().__init__(message, exit_code=3, suggestion=f"Check the '{hook_name}' function in your app_hooks.py file" if hook_name else None)
+        super().__init__(message, exit_code=3, suggestion=f"Check the '{hook_name}' function in your cli_hooks.py file" if hook_name else None)
 
 # Global error handler
 def handle_cli_error(error: Exception, verbose: bool = False) -> int:
@@ -173,7 +173,7 @@ def _find_and_import_hooks():
     
     {% else -%}
     # No hooks path configured, try default locations
-    default_module_name = "app_hooks"
+    default_module_name = "cli_hooks"
     
     # Strategy 1: Try package-relative import
     try:
@@ -563,18 +563,18 @@ def {{ '_'.join(cmd.path).replace('-', '_') }}_cmd(ctx{% for arg in cmd.argument
             # Provide helpful error with search paths
             package_name = "{{ project.package_name if project.package_name else 'unknown' }}"
             
-            error_msg = f"Hook implementation not found. Expected: app_hooks.py"
+            error_msg = f"Hook implementation not found. Expected: cli_hooks.py"
             
             raise ConfigError(
                 error_msg,
-                suggestion=f"Create app_hooks.py with function: def {{ cmd.hook_name }}(...): pass"
+                suggestion=f"Create cli_hooks.py with function: def {{ cmd.hook_name }}(...): pass"
             )
         
         hook_name = '{{ cmd.hook_name }}'
         if not hasattr(hooks, hook_name):
             available_hooks = [name for name in dir(hooks) if not name.startswith('_') and callable(getattr(hooks, name))]
             raise ConfigError(
-                f"Hook function '{hook_name}' not found in app_hooks.py",
+                f"Hook function '{hook_name}' not found in cli_hooks.py",
                 suggestion=f"Available functions: {', '.join(available_hooks) if available_hooks else 'none'}"
             )
         

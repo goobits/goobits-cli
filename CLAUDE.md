@@ -102,14 +102,14 @@ Without Cargo, Rust-related tests will skip automatically with appropriate messa
 
 ### Code Generation Flow
 
-The framework generates language-specific CLIs:
+The framework generates language-specific CLIs with standardized file structure:
 ```
 goobits.yaml → goobits build → [Language-specific output] → Install → Working CLI
 
-Python:     cli.py + setup.sh → pipx install
-Node.js:    cli.js + package.json → npm install  
-TypeScript: cli.ts + package.json → npm install
-Rust:       main.rs + Cargo.toml → cargo install
+Python:     cli.py + cli_hooks.py + setup.sh → pipx install
+Node.js:    cli.mjs + cli_hooks.mjs + setup.sh → npm install  
+TypeScript: cli.ts + cli_hooks.ts + cli_types.d.ts + setup.sh → npm install
+Rust:       src/cli.rs + src/cli_hooks.rs + Cargo.toml + setup.sh → cargo install
 ```
 
 ### Key Components
@@ -148,23 +148,30 @@ The framework uses two configuration formats:
 
 ### Hook System
 
-User projects implement business logic in language-specific hook files:
+User projects implement business logic in language-specific hook files (all auto-generated with templates):
 
-**Python** - `app_hooks.py`:
+**Python** - `cli_hooks.py`:
 ```python
 def on_command_name(*args, **kwargs):
     # Business logic here
     pass
 ```
 
-**Node.js/TypeScript** - `src/hooks.js` or `src/hooks.ts`:
+**Node.js** - `cli_hooks.mjs`:
 ```javascript
-export async function onCommandName(args) {
+export async function on_command_name(args) {
     // Business logic here
 }
 ```
 
-**Rust** - `src/hooks.rs`:
+**TypeScript** - `cli_hooks.ts`:
+```typescript
+export async function on_command_name(args: any): Promise<any> {
+    // Business logic here
+}
+```
+
+**Rust** - `src/cli_hooks.rs`:
 ```rust
 use clap::ArgMatches;
 use anyhow::Result;
@@ -266,11 +273,11 @@ language: rust        # Rust with Clap for high performance
 
 1. Update the CLI section in `goobits.yaml`
 2. Run `goobits build goobits.yaml`
-3. Create and implement the hook in your language-specific hook file (not auto-generated):
-   - Python: `app_hooks.py`
-   - Node.js: `src/hooks.js`
-   - TypeScript: `src/hooks.ts`
-   - Rust: `src/hooks.rs`
+3. Implement the hook in your language-specific hook file (auto-generated with templates):
+   - Python: `cli_hooks.py`
+   - Node.js: `cli_hooks.mjs`
+   - TypeScript: `cli_hooks.ts`
+   - Rust: `src/cli_hooks.rs`
 
 ### Debugging Generated Code
 

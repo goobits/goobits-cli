@@ -62,11 +62,11 @@ const getVersion = asyncErrorHandler(async function getVersion() {
   }
 });
 
-// Hooks system - try to import app_hooks module
+// Hooks system - try to import cli_hooks module
 let appHooks = null;
 // No hooks path configured, try default locations
 try {
-  const hooksPath = join(__dirname, 'app_hooks.js');
+  const hooksPath = join(__dirname, 'cli_hooks.js');
   if (existsSync(hooksPath)) {
     appHooks = await import(hooksPath);
   }
@@ -583,9 +583,9 @@ export const cli = asyncErrorHandler(async function cli() {
         }
       } else {
         const missingCommandError = new CLIError(
-          `Managed command 'deploy' requires '${commandInstanceName}' export in app_hooks.js`,
+          `Managed command 'deploy' requires '${commandInstanceName}' export in cli_hooks.js`,
           'COMMAND_HOOK_MISSING',
-          `Command 'deploy' is not properly configured. Missing '${commandInstanceName}' in app_hooks.js`,
+          `Command 'deploy' is not properly configured. Missing '${commandInstanceName}' in cli_hooks.js`,
           1
         );
         handleError(missingCommandError);

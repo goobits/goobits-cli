@@ -15,7 +15,7 @@
 Hook system interface for {{ project.name }}
 
 This module defines the interface between the generated CLI and user-defined hooks.
-Users should implement hook functions in app_hooks.py to provide business logic.
+Users should implement hook functions in cli_hooks.py to provide business logic.
 """
 
 import importlib
@@ -27,7 +27,7 @@ from pathlib import Path
 class HookManager:
     """Manages loading and execution of user-defined hooks."""
     
-    def __init__(self, hooks_module_name: str = "app_hooks"):
+    def __init__(self, hooks_module_name: str = "cli_hooks"):
         self.hooks_module_name = hooks_module_name
         self.hooks_module = None
         self.hooks_cache: Dict[str, Callable] = {}

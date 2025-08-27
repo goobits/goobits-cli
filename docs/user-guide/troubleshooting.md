@@ -188,7 +188,7 @@ goobits build --verbose goobits.yaml
 
 **Debug Steps**:
 1. Test basic functionality: `./cli.py --help`
-2. Check hook file syntax: `python -m py_compile app_hooks.py`
+2. Check hook file syntax: `python -m py_compile cli_hooks.py`
 3. Verify entry point: Check `pyproject.toml` or `package.json`
 4. Test installation: `./setup.sh install --dev`
 
@@ -199,7 +199,7 @@ goobits build --verbose goobits.yaml
 **Solutions**:
 1. Check hook function naming: Must match command names
 2. Verify hook file path in `goobits.yaml`
-3. Test hook import: `python -c "from app_hooks import on_command_name"`
+3. Test hook import: `python -c "from cli_hooks import on_command_name"`
 
 ## Getting Help
 

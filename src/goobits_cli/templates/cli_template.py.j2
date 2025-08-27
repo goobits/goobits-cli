@@ -50,7 +50,7 @@ class HookError(CLIError):
     """Hook execution error."""
     def __init__(self, message: str, hook_name: Optional[str] = None):
         self.hook_name = hook_name
-        super().__init__(message, exit_code=3, suggestion=f"Check the '{hook_name}' function in your app_hooks.py file" if hook_name else None)
+        super().__init__(message, exit_code=3, suggestion=f"Check the '{hook_name}' function in your cli_hooks.py file" if hook_name else None)
 
 
 class DependencyError(CLIError):
@@ -493,7 +493,7 @@ def _find_and_import_hooks():
     
     {% else %}
     # No hooks path configured, try default locations
-    default_module_name = "app_hooks"
+    default_module_name = "cli_hooks"
     
     # Strategy 1: Try package-relative import
     try:
@@ -537,7 +537,7 @@ def _find_and_import_hooks():
     return None
 
 # Initialize hooks module
-app_hooks = _find_and_import_hooks()
+cli_hooks = _find_and_import_hooks()
 
 # Built-in commands
 {% if cli %}
@@ -696,7 +696,7 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
     {% if cmd_data.lifecycle == "managed" %}
     # Managed command - expect an instance of ManagedCommand with context management
     command_instance_name = f"{{ cmd_name }}_command"
-    if app_hooks and hasattr(app_hooks, command_instance_name):
+    if cli_hooks and hasattr(cli_hooks, command_instance_name):
         # Set managed command execution context
         set_cli_context(
             command='{{ cmd_name }}',
@@ -717,7 +717,7 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
         })
         
         # Get the command instance
-        command_instance = getattr(app_hooks, command_instance_name)
+        command_instance = getattr(cli_hooks, command_instance_name)
         
         # Prepare arguments including global options and logging utilities
         kwargs = {
@@ -774,7 +774,7 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
                 command_options=None
             )
     else:
-        click.echo(f"Error: Managed command '{{ cmd_name }}' requires '{{ cmd_name }}_command' instance in app_hooks.py")
+        click.echo(f"Error: Managed command '{{ cmd_name }}' requires '{{ cmd_name }}_command' instance in cli_hooks.py")
         sys.exit(1)
     {% else %}
     # Check for built-in commands first
@@ -821,7 +821,7 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
     {% else %}
     # Standard command - use the existing hook pattern with context management
     hook_name = f"on_{{ cmd_name }}"
-    if app_hooks and hasattr(app_hooks, hook_name):
+    if cli_hooks and hasattr(cli_hooks, hook_name):
         # Set command execution context
         set_cli_context(
             command='{{ cmd_name }}',
@@ -840,7 +840,7 @@ def {{ cmd_name }}(ctx{% if cmd_data.args or cmd_data.options %}, {% endif %}{% 
         })
         
         # Call the hook with all parameters (including logger)
-        hook_func = getattr(app_hooks, hook_name)
+        hook_func = getattr(cli_hooks, hook_name)
         
         # Prepare arguments including global options and logging utilities
         kwargs = {
@@ -1212,7 +1212,7 @@ def {{ subcmd_name }}(ctx{% if subcmd_data.args or subcmd_data.options %}, {% en
     """{% if subcmd_data.icon %}{{ subcmd_data.icon | format_icon }}{% endif %}{{ subcmd_data.desc }}"""
     # Check if hook function exists with context management
     hook_name = f"on_{{ cmd_name }}_{{ subcmd_name }}"
-    if app_hooks and hasattr(app_hooks, hook_name):
+    if cli_hooks and hasattr(cli_hooks, hook_name):
         # Set subcommand execution context
         set_cli_context(
             command=f'{{ cmd_name }}.{{ subcmd_name }}',
@@ -1234,7 +1234,7 @@ def {{ subcmd_name }}(ctx{% if subcmd_data.args or subcmd_data.options %}, {% en
         })
         
         # Call the hook with all parameters (including logger)
-        hook_func = getattr(app_hooks, hook_name)
+        hook_func = getattr(cli_hooks, hook_name)
         
         # Prepare arguments including global options and logging utilities
         kwargs = {

@@ -879,7 +879,7 @@ export default cli;
         return self._generated_files.copy() if self._generated_files else {}
 
     def _generate_simple_hooks(self, context: dict) -> str:
-        """Generate a simple hooks.js file similar to Python's app_hooks.py."""
+        """Generate a simple hooks.js file similar to Python's cli_hooks.py."""
 
         cli_config = context.get("cli")
 

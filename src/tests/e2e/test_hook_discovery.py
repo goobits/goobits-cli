@@ -44,7 +44,7 @@ class TestHookDiscoveryE2E:
     # REMOVED: test_custom_hooks_path_discovery
     # This test was checking for the deprecated hooks_path feature which is not
     # implemented in the Universal Template System and will be removed in v4.0.0.
-    # The Universal Template System uses a fixed app_hooks.py pattern.
+    # The Universal Template System uses a fixed cli_hooks.py pattern.
 
     def test_hook_discovery_from_different_directories(
         self, test_config_default_hooks, tmp_path
@@ -191,14 +191,14 @@ if __name__ == "__main__":
             os.chdir(original_cwd)
 
     def test_default_hooks_fallback(self, test_config_default_hooks, tmp_path):
-        """Test that default hooks path (app_hooks.py) still works."""
+        """Test that default hooks path (cli_hooks.py) still works."""
 
         # Create test directory structure
         test_dir = tmp_path / "default_test"
         test_dir.mkdir()
 
-        # Create default hooks file (app_hooks.py)
-        hooks_file = test_dir / "app_hooks.py"
+        # Create default hooks file (cli_hooks.py)
+        hooks_file = test_dir / "cli_hooks.py"
         hooks_file.write_text(
             """
 def on_hello(name, **kwargs):
@@ -223,7 +223,7 @@ from pathlib import Path
 
 def _find_and_import_hooks():
     # No hooks path configured, try default locations
-    default_module_name = "app_hooks"
+    default_module_name = "cli_hooks"
     
     # Strategy 1: Try package-relative import
     try:
@@ -310,7 +310,7 @@ if __name__ == "__main__":
                 "testpackage.cli.cli_hooks",
                 "cli_hooks",
             ),
-            ("app_hooks.py", "app_hooks", "app_hooks"),
+            ("cli_hooks.py", "cli_hooks", "cli_hooks"),
             ("cli_hooks.py", "cli_hooks", "cli_hooks"),
             ("myproject/hooks.py", "myproject.hooks", "hooks"),
         ]

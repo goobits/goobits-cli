@@ -110,20 +110,20 @@ class ParityTestRunner:
             raise RuntimeError(f"Failed to generate {language} CLI: {result.stderr}")
 
         # Copy hook file to the generated directory
-        hook_source = config_path.parent / "app_hooks.py"
+        hook_source = config_path.parent / "cli_hooks.py"
         if language == "python" and hook_source.exists():
             # Copy to root and to src/demo_cli for basic-demos examples
-            shutil.copy(hook_source, output_dir / language / "app_hooks.py")
+            shutil.copy(hook_source, output_dir / language / "cli_hooks.py")
             if (output_dir / language / "src" / "demo_cli").exists():
                 shutil.copy(
                     hook_source,
-                    output_dir / language / "src" / "demo_cli" / "app_hooks.py",
+                    output_dir / language / "src" / "demo_cli" / "cli_hooks.py",
                 )
         elif language in ["nodejs", "typescript"]:
             hook_source = config_path.parent / "hooks.js"
             if hook_source.exists():
-                # Copy to the root directory as app_hooks.js (what the CLI looks for)
-                shutil.copy(hook_source, output_dir / language / "app_hooks.js")
+                # Copy to the root directory as cli_hooks.js (what the CLI looks for)
+                shutil.copy(hook_source, output_dir / language / "cli_hooks.js")
                 # Also copy to src/hooks.js to replace generated template
                 src_dir = output_dir / language / "src"
                 src_dir.mkdir(parents=True, exist_ok=True)

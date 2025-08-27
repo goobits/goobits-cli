@@ -9,7 +9,81 @@
    - cli: CLI schema with commands
 #}
 
-{%- if language == 'nodejs' -%}
+{%- if language == 'python' -%}
+"""
+Hook implementations for {{ project.name | default(project.package_name) }}.
+
+This file contains the business logic for your CLI commands.
+Implement the hook functions below to handle your CLI commands.
+
+IMPORTANT: Hook names must use snake_case with 'on_' prefix
+Example:
+- Command 'hello' -> Hook function 'on_hello'
+- Command 'hello-world' -> Hook function 'on_hello_world'
+"""
+
+# Import any modules you need here
+import sys
+import json
+from typing import Any, Dict, Optional
+
+{%- if cli.commands %}
+{%- for cmd_name, cmd in cli.commands.items() %}
+
+def on_{{ cmd_name | replace('-', '_') }}(
+{%- if cmd.args %}
+{%- for arg in cmd.args %}
+    {{ arg.name }}: {{ 'str' if arg.type == 'string' else arg.type | default('str') }},
+{%- endfor %}
+{%- endif %}
+{%- if cmd.options %}
+{%- for option in cmd.options %}
+    {{ option.name | replace('-', '_') }}: {{ 'bool' if option.type == 'flag' or option.type == 'boolean' else 'Optional[' + (option.type | default('str')) + ']' }} = {{ 'False' if option.type == 'flag' or option.type == 'boolean' else 'None' }},
+{%- endfor %}
+{%- endif %}
+    **kwargs
+) -> Dict[str, Any]:
+    """
+    Handle {{ cmd_name }} command.
+    
+{%- if cmd.args %}
+    Args:
+{%- for arg in cmd.args %}
+        {{ arg.name }}: {{ arg.desc | default(arg.description) | default('No description') }}
+{%- endfor %}
+{%- endif %}
+{%- if cmd.options %}
+{%- for option in cmd.options %}
+        {{ option.name | replace('-', '_') }}: {{ option.desc | default(option.description) | default('No description') }}
+{%- endfor %}
+{%- endif %}
+    
+    Returns:
+        Dictionary with status and optional results
+    """
+    # Add your business logic here
+    print(f"Executing {{ cmd_name }} command")
+    
+{%- if cmd.args %}
+{%- for arg in cmd.args %}
+    print(f"  {{ arg.name }}: {{ '{' }}{{ arg.name }}{{ '}' }}")
+{%- endfor %}
+{%- endif %}
+    
+    return {
+        "status": "success",
+        "message": "{{ cmd_name }} completed successfully"
+    }
+{%- endfor %}
+{%- else %}
+# Add your command hook implementations here
+# Example:
+# def on_hello(name: str, **kwargs) -> Dict[str, Any]:
+#     print(f"Hello {name}!")
+#     return {"status": "success"}
+{%- endif %}
+
+{%- elif language == 'nodejs' -%}
 /**
  * Hook implementations for {{ project.name }}
  * 

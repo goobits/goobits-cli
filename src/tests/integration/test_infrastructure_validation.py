@@ -119,7 +119,7 @@ class TestInfrastructureValidation:
 
     def test_cli_test_helper_file_generation(self):
         """Test that CLI test helper generates files correctly."""
-        from .test_installation_flows import CLITestHelper
+        from tests.e2e.test_installation_flows import CLITestHelper
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Test Python CLI generation

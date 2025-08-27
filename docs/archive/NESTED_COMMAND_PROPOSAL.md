@@ -256,7 +256,7 @@ class SmartHookDiscovery:
 - Optimized hook resolution
 
 #### **3.3 Developer Experience**
-- Auto-generate hook templates in `app_hooks.py`
+- Auto-generate hook templates in `cli_hooks.py`
 - Rich help text with command hierarchy
 - Intelligent error messages
 
@@ -387,7 +387,7 @@ def grant(ctx, user_id, permission):
 
 ### **Hook Implementation (Target)**
 ```python
-# app_hooks.py
+# cli_hooks.py
 def on_database_users_create(username, email, admin=False, format=None):
     """Create a new user with specified permissions."""
     print(f"Creating user {username} with email {email}")

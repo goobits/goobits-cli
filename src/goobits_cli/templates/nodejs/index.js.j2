@@ -113,7 +113,7 @@ const getVersion = asyncErrorHandler(async function getVersion() {
   }
 });
 
-// Hooks system - try to import app_hooks module
+// Hooks system - try to import cli_hooks module
 let appHooks = null;
 {% if hooks_path %}
 // Using configured hooks path: {{ hooks_path }}
@@ -130,14 +130,14 @@ try {
 {% else %}
 // No hooks path configured, try default locations
 try {
-  const hooksPath = join(__dirname, 'app_hooks.js');
+  const hooksPath = join(__dirname, 'cli_hooks.js');
   if (existsSync(hooksPath)) {
     appHooks = await import(hooksPath);
   }
 } catch (error) {
   // No hooks module found, use default behavior
   const log = await getLogger();
-  log.debug('Hooks module not found', { error: error.message, hookPath: 'app_hooks.js' });
+  log.debug('Hooks module not found', { error: error.message, hookPath: 'cli_hooks.js' });
 }
 {% endif %}
 
@@ -657,9 +657,9 @@ export const cli = asyncErrorHandler(async function cli() {
         }
       } else {
         const missingCommandError = new CLIError(
-          `Managed command '{{ cmd_name }}' requires '${commandInstanceName}' export in app_hooks.js`,
+          `Managed command '{{ cmd_name }}' requires '${commandInstanceName}' export in cli_hooks.js`,
           'COMMAND_HOOK_MISSING',
-          `Command '{{ cmd_name }}' is not properly configured. Missing '${commandInstanceName}' in app_hooks.js`,
+          `Command '{{ cmd_name }}' is not properly configured. Missing '${commandInstanceName}' in cli_hooks.js`,
           1
         );
         handleError(missingCommandError);

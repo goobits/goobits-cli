@@ -417,12 +417,12 @@ let hooks: HookModule | null = null;
 
 async function loadHooks(): Promise<void> {
     try {
-        const hookModule = await import('./src/hooks.js');
+        const hookModule = await import('./cli_hooks.js');
         hooks = hookModule as HookModule;
     } catch (error: any) {
         if (error.code === 'ERR_MODULE_NOT_FOUND') {
             console.error(chalk.red('Hook implementation not found.'));
-            console.error('Please create \'src/hooks.ts\' with your command implementations.');
+            console.error('Please create \'cli_hooks.ts\' with your command implementations.');
             console.error('Example:');
             console.error(chalk.gray(`
 export async function onBuild(args: any): Promise<void> {
@@ -502,7 +502,7 @@ const {{ cmd_data.name }}Command = program
             if (hooks && typeof (hooks as any)[hookName] === 'function') {
                 await (hooks as any)[hookName](...args);
             } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
+                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.ts`));
                 process.exit(1);
             }
         } catch (error: any) {
@@ -524,7 +524,7 @@ const {{ cmd_data.name }}Command = program
             if (hooks && typeof (hooks as any)[hookName] === 'function') {
                 await (hooks as any)[hookName](...args);
             } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
+                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.ts`));
                 process.exit(1);
             }
         } catch (error: any) {
@@ -561,7 +561,7 @@ program
             if (hooks && typeof (hooks as any)[hookName] === 'function') {
                 await (hooks as any)[hookName](...args);
             } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
+                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.ts`));
                 process.exit(1);
             }
         } catch (error: any) {

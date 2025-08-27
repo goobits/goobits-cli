@@ -354,6 +354,35 @@ class TestNodeJSCLICompilation:
 
             assert cli_file is not None, "No main CLI JavaScript/ES module file found"
 
+            # Create package.json with dependencies required by the generated CLI
+            package_json = {
+                "name": config.package_name,
+                "type": "module",
+                "version": "1.0.0",
+                "dependencies": {
+                    "chalk": "^5.0.0",
+                    "commander": "^12.0.0",
+                    "ora": "^8.0.0",
+                    "inquirer": "^9.0.0",
+                    "js-yaml": "^4.0.0",
+                    "winston": "^3.0.0"
+                }
+            }
+            package_json_path = Path(temp_dir) / "package.json"
+            package_json_path.write_text(json.dumps(package_json, indent=2))
+
+            # Install dependencies
+            npm_install = subprocess.run(
+                ["npm", "install"],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                cwd=temp_dir,
+            )
+            
+            if npm_install.returncode != 0:
+                pytest.skip(f"npm install failed: {npm_install.stderr}")
+
             # Test CLI execution
             help_result = subprocess.run(
                 ["node", str(cli_file), "--help"],

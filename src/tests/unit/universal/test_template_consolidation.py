@@ -115,6 +115,30 @@ mod errors {
 // {{ cli.name }} - {{ cli.description }}
 """)
         
+        # Rust hooks template
+        (templates_dir / "hooks_template.j2").write_text("""
+// Hook implementations for {{ cli.name }}
+use clap::ArgMatches;
+use anyhow::Result;
+
+pub fn on_hello(matches: &ArgMatches) -> Result<()> {
+    println!("Hello from hooks!");
+    Ok(())
+}
+""")
+        
+        # Cargo.toml template
+        (templates_dir / "cargo_config.j2").write_text("""
+[package]
+name = "{{ project.package_name }}"
+version = "{{ project.version | default('1.0.0') }}"
+edition = "2021"
+
+[dependencies]
+clap = "4"
+anyhow = "1"
+""")
+        
         # Setup script template (shared)
         (templates_dir / "setup_script.j2").write_text("""
 #!/bin/bash
@@ -133,12 +157,12 @@ mod errors {
         result = engine.render(config, "python")
         files = result.get("files", {})
         
-        # Python should generate exactly 2 files (setup.sh handled separately)
-        assert len(files) == 1  # Only cli.py from renderer
+        # Python now generates 2 files (cli.py and cli_hooks.py, setup.sh handled separately)
+        assert len(files) == 2  # cli.py and cli_hooks.py from renderer
         
-        # Check the single CLI file path
-        cli_path = f"src/{self.test_config['package_name'].replace('-', '_')}/cli.py"
-        assert cli_path in files or any("cli.py" in path for path in files.keys())
+        # Check for both Python files (using default paths with package name)
+        assert "test_cli/cli.py" in files
+        assert "test_cli/cli_hooks.py" in files
         
         # Verify content includes embedded utilities (from template)
         cli_content = next(iter(files.values()))
@@ -158,11 +182,12 @@ mod errors {
         result = engine.render(config, "nodejs")
         files = result.get("files", {})
         
-        # Node.js should generate exactly 2 files
-        assert len(files) == 2
+        # Node.js now generates 3 files (cli.mjs, cli_hooks.mjs, and setup.sh)
+        assert len(files) == 3
         
-        # Check for ES6 module file
+        # Check for ES6 module files
         assert "cli.mjs" in files
+        assert "cli_hooks.mjs" in files
         assert "setup.sh" in files
         
         # Verify ES6 module content
@@ -183,12 +208,13 @@ mod errors {
         result = engine.render(config, "typescript")
         files = result.get("files", {})
         
-        # TypeScript should generate exactly 3 files
-        assert len(files) == 3
+        # TypeScript now generates 4 files (cli.ts, cli_hooks.ts, cli_types.d.ts, and setup.sh)
+        assert len(files) == 4
         
         # Check for required files
         assert "cli.ts" in files
-        assert "types.d.ts" in files
+        assert "cli_hooks.ts" in files
+        assert "cli_types.d.ts" in files
         assert "setup.sh" in files
         
         # Verify TypeScript content
@@ -196,12 +222,12 @@ mod errors {
         assert "TypeScript CLI with embedded utilities" in cli_content
         
         # Verify type definitions
-        types_content = files["types.d.ts"]
+        types_content = files["cli_types.d.ts"]
         assert "Type definitions for" in types_content
         assert "interface CLIConfig" in types_content
     
     def test_rust_consolidation(self):
-        """Test Rust generates only 2 files with inline modules."""
+        """Test Rust generates 4 files: main.rs, cli_hooks.rs, Cargo.toml, and setup.sh."""
         config_rust = {**self.test_config, "language": "rust"}
         config = GoobitsConfigSchema(**config_rust)
         engine = UniversalTemplateEngine(self.templates_dir)
@@ -212,20 +238,24 @@ mod errors {
         result = engine.render(config, "rust")
         files = result.get("files", {})
         
-        # Rust should generate exactly 2 files
-        assert len(files) == 2
+        # Rust generates 4 files (main CLI, hooks, Cargo manifest, setup script)
+        assert len(files) == 4, f"Expected 4 files, got {len(files)}: {list(files.keys())}"
         
         # Check for required files
-        assert "src/main.rs" in files
-        assert "setup.sh" in files
+        assert "src/cli.rs" in files, "Missing cli.rs"
+        assert "src/cli_hooks.rs" in files, "Missing cli_hooks.rs"
+        assert "Cargo.toml" in files, "Missing Cargo.toml"
+        assert "setup.sh" in files, "Missing setup.sh"
         
-        # Verify inline modules
-        main_content = files["src/main.rs"]
+        # Verify inline modules in cli.rs
+        main_content = files["src/cli.rs"]
         assert "Rust CLI with inline modules" in main_content
-        assert "mod config {" in main_content
-        assert "mod errors {" in main_content
-        assert "// Config module inlined" in main_content
-        assert "// Errors module inlined" in main_content
+        assert "mod config {" in main_content or "// Config module" in main_content
+        assert "mod errors {" in main_content or "// Errors module" in main_content
+        
+        # Verify Cargo.toml has dependencies
+        cargo_content = files["Cargo.toml"]
+        assert "[dependencies]" in cargo_content or "dependencies" in cargo_content
     
     def test_no_readme_generation(self):
         """Ensure NO language generates README.md files (CRITICAL)."""

@@ -9,13 +9,25 @@
   },
   "scripts": {
     "start": "node index.ts",
-"build": "tsc",    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["cli"],
+  "keywords": [
+    "cli"
+  ],
   "author": "Demo User",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^5.6.0",
     "commander": "^11.1.0",
-    "chalk": "^5.3.0"  },  "devDependencies": {    "typescript": "^5.0.0",    "@types/node": "^18.0.0",    "ts-node": "^10.0.0"  },  "engines": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
     "node": ">=14.0.0"
-  }}
+  }
+}

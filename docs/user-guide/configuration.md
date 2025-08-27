@@ -14,7 +14,7 @@ language: python  # python, nodejs, typescript, or rust
 
 # CLI generation
 cli_output_path: "src/my_cli/cli.py"  # Optional, language-specific defaults
-cli_hooks: "app_hooks.py"  # Hook file path (language-specific)
+cli_hooks: "cli_hooks.py"  # Hook file path (language-specific)
 
 # CLI definition
 cli:
@@ -36,7 +36,7 @@ cli:
 ### Python Configuration
 ```yaml
 language: python
-cli_hooks: "app_hooks.py"
+cli_hooks: "cli_hooks.py"
 cli_output_path: "cli.py"  # Default
 
 python:

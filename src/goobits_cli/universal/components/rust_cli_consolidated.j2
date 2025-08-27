@@ -247,7 +247,7 @@ mod completion {
 // ============================================================================
 
 // Import user hooks directly
-mod hooks;
+mod cli_hooks;
 
 // ============================================================================
 // CLI BUILDER
@@ -405,19 +405,19 @@ fn main() -> Result<()> {
                 {%- for sub_data in cmd_data.subcommands %}
                 Some(("{{ sub_data.name }}", sub_sub_matches)) => {
                     debug!("Executing {{ cmd_data.name }} {{ sub_data.name }} command");
-                    hooks::on_{{ cmd_data.name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(sub_sub_matches)
+                    cli_hooks::on_{{ cmd_data.name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(sub_sub_matches)
                         .context("Failed to execute {{ cmd_data.name }} {{ sub_data.name }}")?;
                 }
                 {%- endfor %}
                 _ => {
                     debug!("Executing {{ cmd_data.name }} command");
-                    hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches)
+                    cli_hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches)
                         .context("Failed to execute {{ cmd_data.name }}")?;
                 }
             }
             {%- else %}
             debug!("Executing {{ cmd_data.name }} command");
-            hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches)
+            cli_hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches)
                 .context("Failed to execute {{ cmd_data.name }}")?;
             {%- endif %}
         }
@@ -426,7 +426,7 @@ fn main() -> Result<()> {
           {%- for command in cli.root_command.subcommands %}
         Some(("{{ command.name }}", sub_matches)) => {
             debug!("Executing {{ command.name }} command");
-            hooks::on_{{ command.name.replace('-', '_') }}(sub_matches)
+            cli_hooks::on_{{ command.name.replace('-', '_') }}(sub_matches)
                 .context("Failed to execute {{ command.name }}")?;
         }
           {%- endfor %}

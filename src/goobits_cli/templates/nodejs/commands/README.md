@@ -40,7 +40,7 @@ Commands integrate with user-defined hooks following these patterns:
 ## Example Usage
 
 ```javascript
-// app_hooks.js
+// cli_hooks.js
 export async function onBuild({ source, output, verbose }) {
   console.log(`Building from ${source} to ${output}`);
   // Implementation here

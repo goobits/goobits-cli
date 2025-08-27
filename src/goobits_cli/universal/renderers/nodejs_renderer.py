@@ -283,9 +283,14 @@ class NodeJSRenderer(LanguageRenderer):
 
         """
 
-        # Minimal file generation - only 2 files
+        # Use user-defined paths if specified, otherwise use defaults
+        cli_path = ir["project"].get("cli_output_path") or "cli.mjs"
+        hooks_path = ir["project"].get("hooks_output_path") or "cli_hooks.mjs"
+
+        # Node.js generates 3 files (cli, hooks, setup.sh)
         output = {
-            "nodejs_cli_consolidated": "cli.mjs",  # ES6 module with everything embedded
+            "nodejs_cli_consolidated": cli_path,  # ES6 module with everything embedded
+            "hooks_template": hooks_path,  # RENAMED from src/hooks.js to cli_hooks.mjs
             "setup_script": "setup.sh",  # Smart setup with package.json merging
         }
 

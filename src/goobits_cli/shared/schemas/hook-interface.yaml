@@ -63,7 +63,7 @@ hook_registration:
     file_based:
       description: "Hooks defined in specific files"
       files:
-        python: "app_hooks.py"
+        python: "cli_hooks.py"
         nodejs: "src/hooks.js"
         typescript: "src/hooks.ts"
         rust: "src/hooks.rs"
@@ -78,7 +78,7 @@ hook_registration:
       
   discovery_patterns:
     python:
-      - "Import app_hooks module"
+      - "Import cli_hooks module"
       - "Use getattr() to find functions"
       - "Fallback to default behavior"
       

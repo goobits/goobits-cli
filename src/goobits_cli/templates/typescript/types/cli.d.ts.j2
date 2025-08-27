@@ -229,17 +229,17 @@ export type ConfigSchema = DeepReadonly<{
 
 // === Module Declarations ===
 
-declare module 'app_hooks' {
+declare module 'cli_hooks' {
   const hooks: HookRegistry;
   export = hooks;
 }
 
-declare module '*/app_hooks' {
+declare module '*/cli_hooks' {
   const hooks: HookRegistry;
   export = hooks;
 }
 
-declare module '*/app_hooks.js' {
+declare module '*/cli_hooks.js' {
   const hooks: HookRegistry;
   export = hooks;
 }

@@ -52,7 +52,7 @@ YAML Configuration → CLI Generation → Installation → Execution → Hook In
 ### 2. Hook Implementation Generator
 Creates working hook files for all languages:
 
-#### Python (`app_hooks.py`)
+#### Python (`cli_hooks.py`)
 ```python
 def on_hello(name: str, greeting: str = "Hello", uppercase: bool = False, **kwargs):
     message = f"{greeting} {name}!"

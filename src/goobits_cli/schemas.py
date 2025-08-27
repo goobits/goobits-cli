@@ -333,9 +333,9 @@ class GoobitsConfigSchema(BaseModel):
     language: Literal["python", "nodejs", "typescript", "rust"] = "python"
 
     # CLI generation configuration
-    cli_output_path: str = "src/{package_name}/cli.py"
-    hooks_path: Optional[str] = None  # Deprecated, use cli_hooks
-    cli_hooks: Optional[str] = None
+    cli_output_path: Optional[str] = None  # Path for main CLI file
+    hooks_output_path: Optional[str] = None  # Path for hooks file
+    types_output_path: Optional[str] = None  # Path for TypeScript types file (TypeScript only)
 
     # Python configuration
     python: Optional[PythonConfigSchema] = Field(default_factory=PythonConfigSchema)

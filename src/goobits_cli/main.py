@@ -950,9 +950,14 @@ def build(
 
             # Use configured output path for Python
 
-            cli_output_path = goobits_config.cli_output_path.format(
-                package_name=goobits_config.package_name.replace("goobits-", "")
-            )
+            if goobits_config.cli_output_path:
+                cli_output_path = goobits_config.cli_output_path.format(
+                    package_name=goobits_config.package_name.replace("goobits-", "")
+                )
+            else:
+                # Generate default path when none specified
+                package_name_safe = goobits_config.package_name.replace("-", "_")
+                cli_output_path = f"{package_name_safe}/cli.py"
 
             # Extract the actual module name from the CLI output path
 
@@ -1112,9 +1117,14 @@ def build(
 
         # Find the package source directory
 
-        cli_output_path = goobits_config.cli_output_path.format(
-            package_name=goobits_config.package_name.replace("goobits-", "")
-        )
+        if goobits_config.cli_output_path:
+            cli_output_path = goobits_config.cli_output_path.format(
+                package_name=goobits_config.package_name.replace("goobits-", "")
+            )
+        else:
+            # Generate default path when none specified
+            package_name_safe = goobits_config.package_name.replace("-", "_")
+            cli_output_path = f"{package_name_safe}/cli.py"
 
         cli_path_parts = Path(cli_output_path).parts
 
@@ -1375,7 +1385,7 @@ language: python
 
 # CLI generation configuration
 cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
-cli_hooks: "app_hooks.py"
+cli_hooks: "cli_hooks.py"
 
 
 
@@ -1448,7 +1458,7 @@ language: python
 
 # CLI generation configuration
 cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
-cli_hooks: "app_hooks.py"
+cli_hooks: "cli_hooks.py"
 
 
 
@@ -1601,7 +1611,7 @@ language: python
 
 # CLI generation configuration
 cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
-cli_hooks: "app_hooks.py"
+cli_hooks: "cli_hooks.py"
 
 
 
@@ -1742,7 +1752,7 @@ language: python
 
 # CLI generation configuration
 cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
-cli_hooks: "app_hooks.py"
+cli_hooks: "cli_hooks.py"
 
 
 

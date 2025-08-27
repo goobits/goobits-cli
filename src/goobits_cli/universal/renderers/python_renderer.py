@@ -545,18 +545,24 @@ setup(
         """
         package_name = ir["project"]["package_name"].replace("-", "_")
 
-        # Use cli_output_path if specified in the config
-        if "cli_output_path" in ir["project"] and ir["project"]["cli_output_path"]:
-            cli_path = ir["project"]["cli_output_path"]
-            # Handle any template variables in the path
-            cli_path = cli_path.format(package_name=package_name)
-        else:
-            # Default Python package structure
-            cli_path = f"src/{package_name}/cli.py"
+        # Use user-defined paths if specified, otherwise use defaults
+        # For backward compatibility, include package name in default path
+        default_cli_path = f"{package_name}/cli.py"
+        default_hooks_path = f"{package_name}/cli_hooks.py"
+        
+        cli_path = ir["project"].get("cli_output_path") or default_cli_path
+        hooks_path = ir["project"].get("hooks_output_path") or default_hooks_path
 
-        # Consolidated file structure - only 2 files (cli.py includes everything)
+        # Handle any template variables in the paths
+        if cli_path and "{package_name}" in cli_path:
+            cli_path = cli_path.format(package_name=package_name)
+        if hooks_path and "{package_name}" in hooks_path:
+            hooks_path = hooks_path.format(package_name=package_name)
+
+        # Python now generates 3 files (cli, hooks, setup.sh)
         output_structure = {
             "python_cli_consolidated": cli_path,  # Everything embedded in single file
+            "hooks_template": hooks_path,  # NEW: Python hooks template
             # setup.sh is handled by the main build system
         }
 

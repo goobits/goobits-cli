@@ -329,12 +329,12 @@ let hooks = null;
 
 async function loadHooks() {
     try {
-        const hookModule = await import('./src/hooks.mjs');
+        const hookModule = await import('./cli_hooks.mjs');
         hooks = hookModule.default || hookModule;
     } catch (error) {
         if (error.code === 'ERR_MODULE_NOT_FOUND') {
             console.error(chalk.red('Hook implementation not found.'));
-            console.error('Please create \'src/hooks.mjs\' with your command implementations.');
+            console.error('Please create \'cli_hooks.mjs\' with your command implementations.');
             console.error('Example:');
             console.error(chalk.gray(`
 export async function onBuild(args) {
@@ -416,7 +416,7 @@ const {{ cmd_data.name }}Command = program
             if (hooks && typeof hooks[hookName] === 'function') {
                 await hooks[hookName](...args);
             } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
+                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.mjs`));
                 process.exit(1);
             }
         } catch (error) {
@@ -438,7 +438,7 @@ const {{ cmd_data.name }}Command = program
             if (hooks && typeof hooks[hookName] === 'function') {
                 await hooks[hookName](...args);
             } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
+                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.mjs`));
                 process.exit(1);
             }
         } catch (error) {
@@ -475,7 +475,7 @@ program
             if (hooks && typeof hooks[hookName] === 'function') {
                 await hooks[hookName](...args);
             } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
+                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.mjs`));
                 process.exit(1);
             }
         } catch (error) {

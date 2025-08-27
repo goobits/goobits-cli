@@ -9,7 +9,7 @@ description: "Build professional command-line tools with YAML configuration"
 
 # CLI generation configuration
 cli_output_path: "src/goobits_cli/generated_cli.py"
-cli_hooks: "app_hooks.py"  # Path to hooks file with business logic
+cli_hooks: "cli_hooks.py"  # Path to hooks file with business logic
 
 python:
   minimum_version: "3.8"
@@ -96,7 +96,7 @@ cli:
       items:
         - { item: "1. Edit goobits.yaml", desc: "Define your CLI structure", style: "setup" }
         - { item: "2. goobits build", desc: "Generate implementation files", style: "setup" }
-        - { item: "3. Edit app_hooks.py", desc: "Add your business logic", style: "setup" }
+        - { item: "3. Edit cli_hooks.py", desc: "Add your business logic", style: "setup" }
   
   footer_note: "📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6]"
   

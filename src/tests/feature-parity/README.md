@@ -27,7 +27,7 @@ tests/feature-parity/
 │   └── parity_runner.py     # Test runner implementation
 ├── run_parity_tests.py      # Main test execution script
 ├── test-cli-config.yaml     # Test CLI configuration
-├── app_hooks.py             # Python hook implementations
+├── cli_hooks.py             # Python hook implementations
 ├── hooks.js                 # Node.js/TypeScript hook implementations
 └── hooks.rs                 # Rust hook implementations
 ```

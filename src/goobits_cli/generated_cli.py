@@ -186,10 +186,10 @@ class CLIContext:
 def load_hooks():
     """Load user-defined hooks."""
     try:
-        import app_hooks
-        return app_hooks
+        import cli_hooks
+        return cli_hooks
     except ImportError:
-        logger.warning("No app_hooks.py found. Please create one with your command implementations.")
+        logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
         logger.warning("Example:")
         logger.warning("  def on_build(ctx, **kwargs):")
         logger.warning("      print('Build command implementation')")
@@ -225,7 +225,7 @@ def build(ctx, config_path, output_dir, output, backup):
             kwargs = {                'config_path': config_path,                'output_dir': output_dir,                'output': output,                'backup': backup,            }
             hooks.on_build(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_build' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_build' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -241,7 +241,7 @@ def init(ctx, project_name, template, force):
             kwargs = {                'project_name': project_name,                'template': template,                'force': force,            }
             hooks.on_init(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_init' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_init' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -257,7 +257,7 @@ def serve(ctx, directory, host, port):
             kwargs = {                'directory': directory,                'host': host,                'port': port,            }
             hooks.on_serve(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_serve' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_serve' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -272,7 +272,7 @@ def validate(ctx, config_path, verbose):
             kwargs = {                'config_path': config_path,                'verbose': verbose,            }
             hooks.on_validate(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_validate' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_validate' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -289,7 +289,7 @@ def migrate(ctx, path, backup, dry_run, pattern):
             kwargs = {                'path': path,                'backup': backup,                'dry_run': dry_run,                'pattern': pattern,            }
             hooks.on_migrate(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_migrate' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_migrate' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)

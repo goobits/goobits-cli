@@ -375,12 +375,12 @@ class CLITestHelper:
                 pyproject_file.write_text(pyproject_content)
             result["pyproject_file"] = str(pyproject_file)
 
-        # Generate app_hooks.py for Python (business logic)
-        if "app_hooks_file" not in result:
-            app_hooks_file = output_path / "app_hooks.py"
-            app_hooks_content = CLITestHelper._generate_python_app_hooks(config)
-            app_hooks_file.write_text(app_hooks_content)
-            result["app_hooks_file"] = str(app_hooks_file)
+        # Generate cli_hooks.py for Python (business logic)
+        if "cli_hooks_file" not in result:
+            cli_hooks_file = output_path / "cli_hooks.py"
+            cli_hooks_content = CLITestHelper._generate_python_cli_hooks(config)
+            cli_hooks_file.write_text(cli_hooks_content)
+            result["cli_hooks_file"] = str(cli_hooks_file)
 
     @staticmethod
     def _generate_python_setup(config: GoobitsConfigSchema) -> str:
@@ -496,8 +496,8 @@ Repository = "{config.repository}"
 """
 
     @staticmethod
-    def _generate_python_app_hooks(config: GoobitsConfigSchema) -> str:
-        """Generate app_hooks.py content for Python CLI."""
+    def _generate_python_cli_hooks(config: GoobitsConfigSchema) -> str:
+        """Generate cli_hooks.py content for Python CLI."""
         # Get the commands from the CLI config
         commands = []
         if hasattr(config.cli, "commands") and config.cli.commands:
@@ -1284,7 +1284,7 @@ class TestRustInstallation(TestInstallationWorkflows):
         # Test cargo build with timeout
         try:
             result = PackageManagerHelper.run_command(
-                ["cargo", "build"], cwd=temp_dir, timeout=300
+                ["cargo", "build"], cwd=temp_dir, timeout=600  # 10 minutes for first build
             )
             assert result.returncode == 0
         except PackageManagerError as e:
@@ -1309,7 +1309,7 @@ class TestRustInstallation(TestInstallationWorkflows):
         # Test cargo install --path . with timeout
         try:
             result = PackageManagerHelper.run_command(
-                ["cargo", "install", "--path", "."], cwd=temp_dir, timeout=300
+                ["cargo", "install", "--path", "."], cwd=temp_dir, timeout=600  # 10 minutes for install
             )
             assert result.returncode == 0
         except PackageManagerError as e:

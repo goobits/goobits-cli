@@ -191,10 +191,10 @@ class CLIContext:
 def load_hooks():
     """Load user-defined hooks."""
     try:
-        import app_hooks
-        return app_hooks
+        import cli_hooks
+        return cli_hooks
     except ImportError:
-        logger.warning("No app_hooks.py found. Please create one with your command implementations.")
+        logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
         logger.warning("Example:")
         logger.warning("  def on_build(ctx, **kwargs):")
         logger.warning("      print('Build command implementation')")
@@ -246,7 +246,7 @@ def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cm
             }
             hooks.on_{{ cmd_name.replace("-", "_") }}(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -287,7 +287,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
             }
             hooks.on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -320,7 +320,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
             }
             hooks.{{ sub_data.hook_name }}(ctx, **kwargs)
         else:
-            logger.error(f"Hook '{{ sub_data.hook_name }}' not implemented in app_hooks.py")
+            logger.error(f"Hook '{{ sub_data.hook_name }}' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -356,7 +356,7 @@ def {{ command.name.replace('-', '_') }}(ctx{% for arg in command.arguments | de
             }
             hooks.on_{{ command.name.replace("-", "_") }}(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_{{ command.name.replace("-", "_") }}' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_{{ command.name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)

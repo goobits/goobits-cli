@@ -213,19 +213,20 @@ class RustRenderer(LanguageRenderer):
 
         """
 
-        ir.get("project", {}).get("package_name", "cli").replace("-", "_")
+        # Use user-defined paths if specified, otherwise use defaults
+        cli_path = ir["project"].get("cli_output_path") or "src/cli.rs"
+        hooks_path = ir["project"].get("hooks_output_path") or "src/cli_hooks.rs"
+        
+        # Ensure src/ prefix for Rust files
+        if cli_path and not cli_path.startswith("src/"):
+            cli_path = f"src/{cli_path}"
+        if hooks_path and not hooks_path.startswith("src/"):
+            hooks_path = f"src/{hooks_path}"
 
-        cli_name = (
-            ir.get("cli", {})
-            .get("root_command", {})
-            .get("name", "cli")
-            .replace("-", "_")
-        )
-
-        # Generate 4 files: main.rs, hooks.rs, setup.sh, and Cargo.toml
+        # Generate 4 files: cli.rs, cli_hooks.rs, setup.sh, and Cargo.toml
         output = {
-            "rust_cli_consolidated": "src/main.rs",  # Everything with inline modules
-            "hooks_template": "src/hooks.rs",  # User hooks implementation
+            "rust_cli_consolidated": cli_path,  # RENAMED from src/main.rs to src/cli.rs
+            "hooks_template": hooks_path,  # User hooks implementation
             "setup_script": "setup.sh",  # Smart setup with Cargo.toml merging
             "cargo_config": "Cargo.toml",  # Package manifest with dependencies
         }

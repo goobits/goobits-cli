@@ -10,7 +10,7 @@ import chalk from 'chalk';
 // Try to import app hooks if available
 let appHooks = null;
 try {
-  appHooks = await import('../app_hooks.js');
+  appHooks = await import('../cli_hooks.js');
 } catch (error) {
   // No hooks module found
 }
@@ -62,7 +62,7 @@ export default function registerCommand(program) {
           {% endif %}
           
           console.log('');
-          console.log(chalk.yellow(`To implement this command, export a function named '${hookName}' from app_hooks.js`));
+          console.log(chalk.yellow(`To implement this command, export a function named '${hookName}' from cli_hooks.js`));
         }
       } catch (error) {
         console.error(chalk.red(`Error in {{ cmd_name }} command: ${error.message}`));

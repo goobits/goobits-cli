@@ -8,7 +8,7 @@ export default function(program) {
   let appHooks = null;
   try {
     // Try to import hooks from parent directory
-    const hooksModule = await import('../app_hooks.js');
+    const hooksModule = await import('../cli_hooks.js');
     appHooks = hooksModule;
   } catch (error) {
     // No hooks module found
@@ -59,7 +59,7 @@ export default function(program) {
             throw new Error(`Managed command '{{ cmd_name }}' instance must have an execute() method`);
           }
         } else {
-          throw new Error(`Managed command '{{ cmd_name }}' requires '${commandInstanceName}' export in app_hooks.js`);
+          throw new Error(`Managed command '{{ cmd_name }}' requires '${commandInstanceName}' export in cli_hooks.js`);
         }
         {% else %}
         // Standard command with hook pattern
@@ -88,7 +88,7 @@ export default function(program) {
           {% for opt in (cmd_data.options or []) %}
           console.log(`  {{ opt.name }}: ${options.{{ opt.name|replace('-', '_') }}}`);
           {% endfor %}
-          console.log('\nNote: No hook function found. Define {{ hookName }}() in app_hooks.js to implement this command.');
+          console.log('\nNote: No hook function found. Define {{ hookName }}() in cli_hooks.js to implement this command.');
         }
         {% endif %}
       } catch (error) {

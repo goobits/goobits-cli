@@ -33,7 +33,7 @@ The `goobits.yaml` file defines your CLI structure, commands, and behavior. See 
 
 ### Hook Files
 Business logic is implemented in language-specific hook files:
-- **Python**: `app_hooks.py`
+- **Python**: `cli_hooks.py`
 - **Node.js**: `src/hooks.js`
 - **TypeScript**: `src/hooks.ts`  
 - **Rust**: `src/hooks.rs`

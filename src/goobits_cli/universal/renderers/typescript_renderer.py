@@ -273,10 +273,16 @@ class TypeScriptRenderer(LanguageRenderer):
 
         """
 
-        # Minimal file generation - only 3 files
+        # Use user-defined paths if specified, otherwise use defaults
+        cli_path = ir["project"].get("cli_output_path") or "cli.ts"
+        hooks_path = ir["project"].get("hooks_output_path") or "cli_hooks.ts"
+        types_path = ir["project"].get("types_output_path") or "cli_types.d.ts"
+
+        # TypeScript generates 4 files (cli, hooks, types, setup.sh)
         output = {
-            "typescript_cli_consolidated": "cli.ts",  # TypeScript with everything embedded
-            "typescript_types": "types.d.ts",  # Type definitions for IDE support
+            "typescript_cli_consolidated": cli_path,  # TypeScript with everything embedded
+            "hooks_template": hooks_path,  # RENAMED from src/hooks.ts to cli_hooks.ts
+            "typescript_types": types_path,  # RENAMED from types.d.ts to cli_types.d.ts
             "setup_script": "setup.sh",  # Smart setup with package.json/tsconfig merging
         }
 
