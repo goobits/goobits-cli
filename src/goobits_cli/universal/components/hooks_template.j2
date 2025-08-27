@@ -593,6 +593,7 @@ pub fn on_{{ cmd_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()>
 }
 
 {%- if cmd.subcommands %}
+{%- if cmd.subcommands is mapping %}
 {%- for sub_name, sub_cmd in cmd.subcommands.items() %}
 /// {{ sub_cmd.description | default(sub_cmd.desc) | default('Handle ' + cmd_name + ' ' + sub_name + ' subcommand') }}
 pub fn on_{{ cmd_name | replace('-', '_') }}_{{ sub_name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
@@ -619,6 +620,34 @@ pub fn on_{{ cmd_name | replace('-', '_') }}_{{ sub_name | replace('-', '_') }}(
 }
 
 {%- endfor %}
+{%- else %}
+{%- for sub_cmd in cmd.subcommands %}
+/// {{ sub_cmd.description | default(sub_cmd.desc) | default('Handle ' + cmd_name + ' ' + sub_cmd.name + ' subcommand') }}
+pub fn on_{{ cmd_name | replace('-', '_') }}_{{ sub_cmd.name | replace('-', '_') }}(matches: &ArgMatches) -> Result<()> {
+    // Add your business logic here
+    println!("Executing {{ cmd_name }} {{ sub_cmd.name }} subcommand");
+    {%- if sub_cmd.args %}
+    // Access arguments
+    {%- for arg in sub_cmd.args %}
+    if let Some({{ arg.name | replace('-', '_') }}) = matches.get_one::<String>("{{ arg.name }}") {
+        println!("{{ arg.name }}: {}", {{ arg.name | replace('-', '_') }});
+    }
+    {%- endfor %}
+    {%- endif %}
+    {%- if sub_cmd.options %}
+    // Access options
+    {%- for opt in sub_cmd.options %}
+    if let Some({{ opt.name | replace('-', '_') }}) = matches.get_one::<String>("{{ opt.name }}") {
+        println!("{{ opt.name }}: {}", {{ opt.name | replace('-', '_') }});
+    }
+    {%- endfor %}
+    {%- endif %}
+    
+    Ok(())
+}
+
+{%- endfor %}
+{%- endif %}
 {%- endif %}
 {% endfor -%}
 {%- else %}

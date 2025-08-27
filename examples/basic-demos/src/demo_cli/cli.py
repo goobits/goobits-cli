@@ -225,7 +225,7 @@ def greet(ctx, name, message, style, count, uppercase, language):
     try:
         if hooks and hasattr(hooks, 'on_greet'):
             kwargs = {                'name': name,                'message': message,                'style': style,                'count': count,                'uppercase': uppercase,                'language': language,            }
-            hooks.on_greet(ctx, **kwargs)
+            hooks.on_greet(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_greet' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -241,7 +241,7 @@ def info(ctx, format, verbose, sections):
     try:
         if hooks and hasattr(hooks, 'on_info'):
             kwargs = {                'format': format,                'verbose': verbose,                'sections': sections,            }
-            hooks.on_info(ctx, **kwargs)
+            hooks.on_info(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_info' not implemented in cli_hooks.py")
             sys.exit(1)
