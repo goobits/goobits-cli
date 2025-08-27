@@ -1,0 +1,356 @@
+/**
+ * Error handling utilities for Nested Command Demo
+ * Provides consistent error types and handling patterns
+ */
+
+import chalk from 'chalk';
+import process from 'process';
+
+// Exit codes
+export const EXIT_CODES = {
+  SUCCESS: 0,
+  GENERAL_ERROR: 1,
+  MISUSE: 2,
+  CONFIG_ERROR: 3,
+  HOOK_ERROR: 4,
+  PLUGIN_ERROR: 5,
+  DEPENDENCY_ERROR: 6,
+  NETWORK_ERROR: 7,
+  CANCELLED: 130
+};
+
+// Base CLI error class
+export class CLIError extends Error {
+  constructor(message, code = EXIT_CODES.GENERAL_ERROR, cause = null) {
+    super(message);
+    this.name = this.constructor.name;
+    this.code = code;
+    this.cause = cause;
+    this.timestamp = new Date().toISOString();
+
+    // Maintain proper stack trace
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      timestamp: this.timestamp,
+      stack: this.stack
+    };
+  }
+}
+
+// Configuration errors
+export class ConfigError extends CLIError {
+  constructor(message, cause = null) {
+    super(`Configuration Error: ${message}`, EXIT_CODES.CONFIG_ERROR, cause);
+  }
+}
+
+// Hook execution errors
+export class HookError extends CLIError {
+  constructor(hookName, message, cause = null) {
+    super(`Hook Error (${hookName}): ${message}`, EXIT_CODES.HOOK_ERROR, cause);
+    this.hookName = hookName;
+  }
+}
+
+// Plugin loading/execution errors
+export class PluginLoadError extends CLIError {
+  constructor(pluginName, message, cause = null) {
+    super(`Plugin Error (${pluginName}): ${message}`, EXIT_CODES.PLUGIN_ERROR, cause);
+    this.pluginName = pluginName;
+  }
+}
+
+// Command not found errors
+export class CommandNotFoundError extends CLIError {
+  constructor(command, availableCommands = []) {
+    const suggestion = availableCommands.length > 0 
+      ? `\n\nAvailable commands: ${availableCommands.join(', ')}`
+      : '';
+    super(`Command not found: ${command}${suggestion}`, EXIT_CODES.MISUSE);
+    this.command = command;
+    this.availableCommands = availableCommands;
+  }
+}
+
+// Dependency errors
+export class DependencyError extends CLIError {
+  constructor(dependency, message, cause = null) {
+    super(`Dependency Error (${dependency}): ${message}`, EXIT_CODES.DEPENDENCY_ERROR, cause);
+    this.dependency = dependency;
+  }
+}
+
+// Network/API errors
+export class NetworkError extends CLIError {
+  constructor(message, cause = null) {
+    super(`Network Error: ${message}`, EXIT_CODES.NETWORK_ERROR, cause);
+  }
+}
+
+// User cancellation
+export class CancelledError extends CLIError {
+  constructor(message = 'Operation cancelled by user') {
+    super(message, EXIT_CODES.CANCELLED);
+  }
+}
+
+// Validation errors
+export class ValidationError extends CLIError {
+  constructor(field, value, message) {
+    super(`Validation Error: ${field} = "${value}" - ${message}`, EXIT_CODES.MISUSE);
+    this.field = field;
+    this.value = value;
+  }
+}
+
+/**
+ * Format error message for display
+ */
+function formatErrorMessage(error, options = {}) {
+  const { showStack = false, colorize = true } = options;
+  
+  let message = '';
+  
+  if (colorize) {
+    message += chalk.red('✗ ') + chalk.bold(error.message);
+    
+    if (error instanceof CLIError && error.cause) {
+      message += '\n' + chalk.gray('  Caused by: ') + chalk.white(error.cause.message);
+    }
+    
+    if (showStack && error.stack) {
+      message += '\n' + chalk.gray(error.stack);
+    }
+  } else {
+    message += '✗ ' + error.message;
+    
+    if (error instanceof CLIError && error.cause) {
+      message += '\n  Caused by: ' + error.cause.message;
+    }
+    
+    if (showStack && error.stack) {
+      message += '\n' + error.stack;
+    }
+  }
+  
+  return message;
+}
+
+/**
+ * Handle CLI error with verbose flag (matches CLI template interface)
+ */
+export function handleCLIError(error, verbose = false) {
+  if (error instanceof CLIError) {
+    console.error(chalk.red('❌ Error: ') + error.message);
+    
+    if (error.cause) {
+      console.error(chalk.gray('  Caused by: ') + chalk.white(error.cause.message));
+    }
+    
+    if (verbose && error.stack) {
+      console.error('\n' + chalk.blue('🔍 Verbose traceback:'));
+      console.error(chalk.gray(error.stack));
+    }
+    
+    return error.code;
+  } else {
+    // Unexpected errors
+    console.error(chalk.red('❌ Unexpected error: ') + error.message);
+    console.error(chalk.yellow('💡 This may be a bug. Please report it with the following details:'));
+    
+    if (verbose && error.stack) {
+      console.error(chalk.gray(error.stack));
+    } else {
+      console.error(chalk.gray('   Error type: ') + error.constructor.name);
+      console.error(chalk.gray('   Error message: ') + error.message);
+      console.error(chalk.gray('   Run with --verbose for full traceback'));
+    }
+    
+    return EXIT_CODES.GENERAL_ERROR;
+  }
+}
+
+/**
+ * Handle and display error
+ */
+export function handleError(error, options = {}) {
+  const { exit = true, log = true, verbose = false } = options;
+  
+  if (log) {
+    console.error(formatErrorMessage(error, { ...options, showStack: verbose }));
+  }
+  
+  if (exit) {
+    const exitCode = error instanceof CLIError ? error.code : EXIT_CODES.GENERAL_ERROR;
+    process.exit(exitCode);
+  }
+  
+  return error;
+}
+
+/**
+ * Async error handler wrapper
+ */
+export function asyncErrorHandler(fn) {
+  return async function wrappedAsyncFunction(...args) {
+    try {
+      return await fn(...args);
+    } catch (error) {
+      if (error instanceof CLIError) {
+        throw error;
+      }
+      
+      // Wrap unknown errors
+      throw new CLIError(
+        `Unexpected error in ${fn.name || 'async function'}: ${error.message}`,
+        EXIT_CODES.GENERAL_ERROR,
+        error
+      );
+    }
+  };
+}
+
+/**
+ * Sync error handler wrapper
+ */
+export function errorHandler(fn) {
+  return function wrappedFunction(...args) {
+    try {
+      return fn(...args);
+    } catch (error) {
+      if (error instanceof CLIError) {
+        throw error;
+      }
+      
+      // Wrap unknown errors
+      throw new CLIError(
+        `Unexpected error in ${fn.name || 'function'}: ${error.message}`,
+        EXIT_CODES.GENERAL_ERROR,
+        error
+      );
+    }
+  };
+}
+
+/**
+ * Setup global error handlers
+ */
+export function setupGlobalErrorHandlers(options = {}) {
+  const {
+    verbose = process.env.NODE_ENV === 'development',
+    colorize = true,
+    exitOnError = true
+  } = options;
+  
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error(chalk.red('\n💥 Uncaught Exception:'));
+    handleError(error, { verbose: true, colorize, exit: exitOnError });
+  });
+  
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error(chalk.red('\n💥 Unhandled Promise Rejection:'));
+    const error = reason instanceof Error ? reason : new Error(String(reason));
+    handleError(error, { verbose: true, colorize, exit: exitOnError });
+  });
+  
+  // Handle process signals
+  process.on('SIGINT', () => {
+    console.log('\n' + chalk.yellow('👋 Received SIGINT. Shutting down gracefully...'));
+    process.exit(EXIT_CODES.CANCELLED);
+  });
+  
+  process.on('SIGTERM', () => {
+    console.log('\n' + chalk.yellow('👋 Received SIGTERM. Shutting down gracefully...'));
+    process.exit(EXIT_CODES.SUCCESS);
+  });
+  
+  return {
+    handleError: (error, opts = {}) => handleError(error, { verbose, colorize, exit: exitOnError, ...opts }),
+    asyncErrorHandler,
+    errorHandler
+  };
+}
+
+/**
+ * Create error with suggestions
+ */
+export function createErrorWithSuggestions(message, suggestions = []) {
+  let fullMessage = message;
+  
+  if (suggestions.length > 0) {
+    fullMessage += '\n\nSuggestions:';
+    suggestions.forEach((suggestion, index) => {
+      fullMessage += `\n  ${index + 1}. ${suggestion}`;
+    });
+  }
+  
+  return new CLIError(fullMessage);
+}
+
+/**
+ * Validate required dependencies
+ */
+export function validateDependencies(dependencies) {
+  const missing = [];
+  
+  for (const dep of dependencies) {
+    try {
+      require.resolve(dep);
+    } catch (error) {
+      missing.push(dep);
+    }
+  }
+  
+  if (missing.length > 0) {
+    throw new DependencyError(
+      missing.join(', '),
+      `Missing required dependencies. Install with: npm install ${missing.join(' ')}`
+    );
+  }
+}
+
+/**
+ * Retry with exponential backoff
+ */
+export async function retryOperation(operation, options = {}) {
+  const {
+    maxRetries = 3,
+    baseDelay = 1000,
+    maxDelay = 30000,
+    backoffFactor = 2
+  } = options;
+  
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      
+      if (attempt === maxRetries) {
+        break;
+      }
+      
+      const delay = Math.min(baseDelay * Math.pow(backoffFactor, attempt - 1), maxDelay);
+      console.warn(chalk.yellow(`Attempt ${attempt} failed, retrying in ${delay}ms...`));
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw new CLIError(
+    `Operation failed after ${maxRetries} attempts: ${lastError.message}`,
+    EXIT_CODES.GENERAL_ERROR,
+    lastError
+  );
+}

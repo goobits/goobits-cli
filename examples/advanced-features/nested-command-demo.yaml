@@ -1,0 +1,99 @@
+# Nested Command Demonstration
+# This example showcases unlimited nested command capabilities (fully supported)
+
+package_name: nested-demo
+command_name: demo
+display_name: "Nested Command Demo"
+description: "Demonstration of deep nested command capabilities"
+language: python
+
+cli:
+  name: demo
+  version: "3.0.0-alpha.1"
+  tagline: "Deep nesting demo"
+  
+  commands:
+    # Level 1: Works perfectly (current system)
+    simple:
+      desc: "Simple command that works today"
+      args:
+        - name: message
+          desc: "Message to display"
+      options:
+        - name: verbose
+          type: flag
+          desc: "Verbose output"
+    
+    # Level 2: Works but has formatting issues (current system)
+    database:
+      desc: "Database operations"
+      subcommands:
+        users:
+          desc: "User management" 
+          args:
+            - name: action
+              desc: "Action to perform"
+          options:
+            - name: format
+              type: str
+              desc: "Output format"
+              default: "table"
+        
+        backup:
+          desc: "Database backup operations"
+          options:
+            - name: compress
+              type: flag
+              desc: "Compress backup file"
+    
+    # Level 3+: ✅ FULLY SUPPORTED - Unlimited nested command depth
+    api:
+      desc: "API management"
+      subcommands:
+        v1:
+          desc: "API v1 endpoints"
+          subcommands:
+            users:
+              desc: "User API endpoints"
+              subcommands:
+                create:
+                  desc: "Create user via API"
+                  args:
+                    - name: username
+                      desc: "Username for new user"
+                    - name: email
+                      desc: "User email address"
+                  options:
+                    - name: admin
+                      type: flag
+                      desc: "Create as admin user"
+                    - name: send-email
+                      type: flag
+                      desc: "Send welcome email"
+                
+                permissions:
+                  desc: "Manage user permissions"
+                  subcommands:
+                    grant:
+                      desc: "Grant permission to user"
+                      args:
+                        - name: user_id
+                          desc: "User ID"
+                        - name: permission
+                          desc: "Permission name"
+                      options:
+                        - name: expires
+                          type: str
+                          desc: "Permission expiration"
+                    
+                    revoke:
+                      desc: "Revoke permission from user"
+                      args:
+                        - name: user_id
+                          desc: "User ID"
+                        - name: permission
+                          desc: "Permission name"
+                      options:
+                        - name: force
+                          type: flag
+                          desc: "Force revocation"
