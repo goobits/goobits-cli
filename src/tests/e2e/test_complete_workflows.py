@@ -340,9 +340,9 @@ class TestCompleteWorkflowValidation:
 
         # Verify basic structure (consolidated approach)
         assert result is not None
-        assert (tmp_path / "src" / "main.rs").exists()  # Rust generator creates src/main.rs
+        assert (tmp_path / "src" / "cli.rs").exists()  # Rust generator creates src/cli.rs
         assert (tmp_path / "setup.sh").exists()  # Setup script
 
         # Verify content
-        main_content = (tmp_path / "src" / "main.rs").read_text()
+        main_content = (tmp_path / "src" / "cli.rs").read_text()
         assert "status" in main_content
