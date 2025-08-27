@@ -307,7 +307,7 @@ class TestCompleteWorkflowValidation:
         # Verify basic structure (consolidated approach)
         assert result is not None
         assert (tmp_path / "cli.ts").exists()  # TypeScript generator creates cli.ts
-        assert (tmp_path / "types.d.ts").exists()  # Type definitions
+        assert (tmp_path / "cli_types.d.ts").exists()  # Type definitions
         assert (tmp_path / "setup.sh").exists()  # Setup script
 
         # Verify content

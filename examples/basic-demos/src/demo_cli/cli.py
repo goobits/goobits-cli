@@ -186,10 +186,10 @@ class CLIContext:
 def load_hooks():
     """Load user-defined hooks."""
     try:
-        import app_hooks
-        return app_hooks
+        import cli_hooks
+        return cli_hooks
     except ImportError:
-        logger.warning("No app_hooks.py found. Please create one with your command implementations.")
+        logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
         logger.warning("Example:")
         logger.warning("  def on_build(ctx, **kwargs):")
         logger.warning("      print('Build command implementation')")
@@ -227,7 +227,7 @@ def greet(ctx, name, message, style, count, uppercase, language):
             kwargs = {                'name': name,                'message': message,                'style': style,                'count': count,                'uppercase': uppercase,                'language': language,            }
             hooks.on_greet(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_greet' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_greet' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
@@ -243,7 +243,7 @@ def info(ctx, format, verbose, sections):
             kwargs = {                'format': format,                'verbose': verbose,                'sections': sections,            }
             hooks.on_info(ctx, **kwargs)
         else:
-            logger.error(f"Hook 'on_info' not implemented in app_hooks.py")
+            logger.error(f"Hook 'on_info' not implemented in cli_hooks.py")
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
