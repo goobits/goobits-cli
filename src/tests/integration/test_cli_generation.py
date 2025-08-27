@@ -280,8 +280,8 @@ class TestCLIGenerationIntegration:
         # Verify generation was successful
         assert result is not None
 
-        # Check that key files were generated (UTS generates src/main.rs and setup.sh)
-        main_file = tmp_path / "src" / "main.rs"
+        # Check that key files were generated (UTS generates src/cli.rs and setup.sh)
+        main_file = tmp_path / "src" / "cli.rs"
         setup_file = tmp_path / "setup.sh"
 
         assert main_file.exists()
