@@ -669,6 +669,7 @@ class TemplateCache:
             env.filters["rust_type"] = lambda x: x  # Rust type system (pass-through)
             env.filters["ts_type"] = lambda x: x  # TypeScript types (pass-through)
             env.filters["repr"] = repr  # Python repr() for default values
+            env.filters["python_repr"] = repr  # Python repr() for default values (alias)
             env.filters["tojson"] = str  # JSON serialization (pass-through)
 
             # Enable auto-reloading in development

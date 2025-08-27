@@ -11,8 +11,8 @@ PROJECT SUMMARY
   Framework:    Click/rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.main:app
   
-  Total Files:  4 generators + universal system + 55 test files  
-  Total LOC:    ~55,000 lines of Python code
+  Total Files:  5 generators (including __init__.py) + universal system + 56 test files  
+  Total LOC:    ~54,600 lines of Python code
 
 ================================================================================
 
@@ -62,7 +62,7 @@ Key Patterns:
 │   │   ├── performance/     [Performance monitoring]
 │   │   └── completion/      [Dynamic completion system]
 │   └── shared/              [Cross-language utilities]
-├── src/tests/               [Comprehensive test suite - 55 test files]
+├── src/tests/               [Comprehensive test suite - 56 test files]
 │   ├── unit/                [Unit tests by component]
 │   ├── integration/         [Cross-language integration]
 │   ├── e2e/                 [End-to-end CLI testing]

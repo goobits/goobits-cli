@@ -5,17 +5,28 @@
   "main": "cli.js",
   "type": "module",
   "bin": {
-    "testnode": "./bin/cli.js"
+    "testnode": "bin/cli.js"
   },
   "scripts": {
     "start": "node cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["cli"],
+  "keywords": [
+    "cli"
+  ],
   "author": "Unknown Author",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^5.6.0",
     "commander": "^11.1.0",
-    "chalk": "^5.3.0"    ,"chalk": "^5.3.0"  },  "engines": {
+    "js-yaml": "^4.1.0",
+    "ora": "^8.2.0",
+    "winston": "^3.17.0"
+  },
+  "engines": {
     "node": ">=14.0.0"
-  }}
+  },
+  "directories": {
+    "lib": "lib"
+  }
+}

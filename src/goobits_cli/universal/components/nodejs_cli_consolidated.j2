@@ -387,7 +387,9 @@ program.option(
 {% if commander_commands and commander_commands.subcommands %}
   {% for cmd_data in commander_commands.subcommands %}
 
-program
+    {%- if cmd_data.subcommands and cmd_data.subcommands|length > 0 %}
+// Command with subcommands: {{ cmd_data.name }}
+const {{ cmd_data.name }}Command = program
     .command('{{ cmd_data.name }}')
     .description('{{ cmd_data.description }}')
     {%- for arg in cmd_data.arguments | default([]) %}
@@ -421,29 +423,65 @@ program
             errorHandler.handleError(error, '{{ cmd_data.name }} command');
         }
     });
-    
-    {%- if cmd_data.subcommands and cmd_data.subcommands|length > 0 %}
-    // Nested subcommands for {{ cmd_data.name }}
-    {%- for sub_data in cmd_data.subcommands %}
-    program.command('{{ cmd_data.name }} {{ sub_data.name }}')
-        .description('{{ sub_data.description }}')
-        .action(async (...args) => {
-            try {
-                if (!hooks) {
-                    await loadHooks();
-                }
-                const hookName = '{{ sub_data.hook_name | default("on" + cmd_data.name | title + sub_data.name | title) }}';
-                if (hooks && typeof hooks[hookName] === 'function') {
-                    await hooks[hookName](...args);
-                } else {
-                    console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
-                    process.exit(1);
-                }
-            } catch (error) {
-                errorHandler.handleError(error, '{{ cmd_data.name }} {{ sub_data.name }} command');
+
+// Add subcommands
+    {% for sub_data in cmd_data.subcommands %}
+{{ cmd_data.name }}Command
+    .command('{{ sub_data.name }}')
+    .description('{{ sub_data.description }}')
+    .action(async (...args) => {
+        try {
+            if (!hooks) {
+                await loadHooks();
             }
-        });
+            const hookName = '{{ sub_data.hook_name | default("on_" + sub_data.name) }}';
+            if (hooks && typeof hooks[hookName] === 'function') {
+                await hooks[hookName](...args);
+            } else {
+                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
+                process.exit(1);
+            }
+        } catch (error) {
+            errorHandler.handleError(error, '{{ sub_data.name }} command');
+        }
+    });
+    {% endfor %}
+    {%- else %}
+// Simple command: {{ cmd_data.name }}
+program
+    .command('{{ cmd_data.name }}')
+    .description('{{ cmd_data.description }}')
+    {%- for arg in cmd_data.arguments | default([]) %}
+    .argument('{{ arg.pattern }}', '{{ arg.description }}')
     {%- endfor %}
+    {%- for option in cmd_data.options | default([]) %}
+    .option(
+        '{{ option.flags }}',
+        '{{ option.description }}'
+        {%- if option.default is defined %},
+        {{ option.default | tojson }}
+        {%- endif %}
+    )
+    {%- endfor %}
+    .action(async (...args) => {
+        try {
+            // Load hooks if not already loaded
+            if (!hooks) {
+                await loadHooks();
+            }
+            
+            // Call the hook function
+            const hookName = '{{ cmd_data.hook_name | default("on_" + cmd_data.name) }}';
+            if (hooks && typeof hooks[hookName] === 'function') {
+                await hooks[hookName](...args);
+            } else {
+                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.mjs`));
+                process.exit(1);
+            }
+        } catch (error) {
+            errorHandler.handleError(error, '{{ cmd_data.name }} command');
+        }
+    });
     {%- endif %}
 
   {% endfor %}

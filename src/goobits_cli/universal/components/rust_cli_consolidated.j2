@@ -32,10 +32,12 @@ mod config {
         pub verbose: bool,
         #[serde(default = "default_output_format")]
         pub output_format: String,
-        {%- for key, value in (cli.default_config | default({})).items() %}
+        {%- if cli.default_config %}
+          {%- for key, value in cli.default_config.items() %}
         #[serde(default)]
         pub {{ key }}: {{ 'bool' if value is sameas true or value is sameas false else 'String' if value is string else 'i64' if value is number else 'serde_json::Value' }},
-        {%- endfor %}
+          {%- endfor %}
+        {%- endif %}
         #[serde(flatten)]
         pub extra: HashMap<String, serde_json::Value>,
     }
@@ -50,9 +52,11 @@ mod config {
                 debug: false,
                 verbose: false,
                 output_format: default_output_format(),
-                {%- for key, value in (cli.default_config | default({})).items() %}
+                {%- if cli.default_config %}
+          {%- for key, value in cli.default_config.items() %}
                 {{ key }}: {{ value | tojson }},
-                {%- endfor %}
+                  {%- endfor %}
+                {%- endif %}
                 extra: HashMap::new(),
             }
         }
@@ -238,18 +242,11 @@ mod completion {
 }
 
 // ============================================================================
-// INLINE HOOKS MODULE
+// HOOKS MODULE
 // ============================================================================
 
-mod hooks {
-    use super::*;
-    
-    // Import user hooks if they exist
-    #[path = "../hooks.rs"]
-    mod user_hooks;
-    
-    pub use user_hooks::*;
-}
+// Import user hooks directly
+mod hooks;
 
 // ============================================================================
 // CLI BUILDER
@@ -287,11 +284,11 @@ fn build_cli() -> Command {
                 {%- endif %}
         )
         {%- endfor %}
-        {%- if cli.commands %}
-          {%- for cmd_name, cmd_data in cli.commands.items() %}
+        {%- if clap_commands and clap_commands.subcommands %}
+          {%- for cmd_data in clap_commands.subcommands %}
         .subcommand(
-            Command::new("{{ cmd_name }}")
-                .about("{{ cmd_data.desc | default(cmd_data.description) }}")
+            Command::new("{{ cmd_data.name }}")
+                .about("{{ cmd_data.description }}")
                 {%- for arg in cmd_data.arguments | default([]) %}
                 .arg(
                     Arg::new("{{ arg.name }}")
@@ -316,10 +313,10 @@ fn build_cli() -> Command {
                 )
                 {%- endfor %}
                 {%- if cmd_data.subcommands %}
-                  {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
+                  {%- for sub_data in cmd_data.subcommands %}
                 .subcommand(
-                    Command::new("{{ sub_name }}")
-                        .about("{{ sub_data.desc | default(sub_data.description) }}")
+                    Command::new("{{ sub_data.name }}")
+                        .about("{{ sub_data.description }}")
                         {%- for arg in sub_data.arguments | default([]) %}
                         .arg(
                             Arg::new("{{ arg.name }}")
@@ -399,35 +396,35 @@ fn main() -> Result<()> {
             let shell = sub_matches.get_one::<String>("shell").unwrap();
             completion::print_completion(shell)?;
         }
-        {%- if cli.commands %}
-          {%- for cmd_name, cmd_data in cli.commands.items() %}
-        Some(("{{ cmd_name }}", sub_matches)) => {
+        {%- if clap_commands and clap_commands.subcommands %}
+          {%- for cmd_data in clap_commands.subcommands %}
+        Some(("{{ cmd_data.name }}", sub_matches)) => {
             {%- if cmd_data.subcommands %}
             match sub_matches.subcommand() {
-                {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
-                Some(("{{ sub_name }}", sub_sub_matches)) => {
-                    info!("Executing {{ cmd_name }} {{ sub_name }} command");
-                    hooks::on_{{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(sub_sub_matches)
-                        .context("Failed to execute {{ cmd_name }} {{ sub_name }}")?;
+                {%- for sub_data in cmd_data.subcommands %}
+                Some(("{{ sub_data.name }}", sub_sub_matches)) => {
+                    debug!("Executing {{ cmd_data.name }} {{ sub_data.name }} command");
+                    hooks::on_{{ cmd_data.name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(sub_sub_matches)
+                        .context("Failed to execute {{ cmd_data.name }} {{ sub_data.name }}")?;
                 }
                 {%- endfor %}
                 _ => {
-                    info!("Executing {{ cmd_name }} command");
-                    hooks::on_{{ cmd_name.replace('-', '_') }}(sub_matches)
-                        .context("Failed to execute {{ cmd_name }}")?;
+                    debug!("Executing {{ cmd_data.name }} command");
+                    hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches)
+                        .context("Failed to execute {{ cmd_data.name }}")?;
                 }
             }
             {%- else %}
-            info!("Executing {{ cmd_name }} command");
-            hooks::on_{{ cmd_name.replace('-', '_') }}(sub_matches)
-                .context("Failed to execute {{ cmd_name }}")?;
+            debug!("Executing {{ cmd_data.name }} command");
+            hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches)
+                .context("Failed to execute {{ cmd_data.name }}")?;
             {%- endif %}
         }
           {%- endfor %}
         {%- elif cli.root_command and cli.root_command.subcommands %}
           {%- for command in cli.root_command.subcommands %}
         Some(("{{ command.name }}", sub_matches)) => {
-            info!("Executing {{ command.name }} command");
+            debug!("Executing {{ command.name }} command");
             hooks::on_{{ command.name.replace('-', '_') }}(sub_matches)
                 .context("Failed to execute {{ command.name }}")?;
         }

@@ -98,6 +98,11 @@ class RustRenderer(LanguageRenderer):
 
         context = ir.copy()
         context["language"] = "rust"
+        
+        # Add clap structure (similar to commander_commands)
+        context["clap_commands"] = self._build_clap_structure(
+            ir.get("cli", {})
+        )
 
         # Add Rust-specific transformations
 
@@ -643,6 +648,37 @@ class RustRenderer(LanguageRenderer):
             return f"r#{safe_name}"
 
         return safe_name
+    
+    def _build_clap_structure(self, cli_schema: Dict[str, Any]) -> Dict[str, Any]:
+        """Build Clap-specific command structure for Rust."""
+        root_command = cli_schema.get("root_command", {})
+        
+        clap_data = {
+            "root_command": {
+                "name": root_command.get("name", "cli"),
+                "description": root_command.get("description", "CLI application"),
+                "version": root_command.get("version", self._get_version()),
+                "options": [],
+                "commands": [],
+            },
+            "subcommands": [],
+        }
+        
+        # Convert commands to Clap format
+        for command in root_command.get("subcommands", []):
+            clap_cmd = {
+                "name": command.get("name", "command"),
+                "description": command.get("description", ""),
+                "arguments": command.get("arguments", []),
+                "options": command.get("options", []),
+                "hook_name": command.get(
+                    "hook_name", f"on_{command.get('name', 'command')}"
+                ),
+                "subcommands": command.get("subcommands", []),
+            }
+            clap_data["subcommands"].append(clap_cmd)
+        
+        return clap_data
 
     def _rust_optional_filter(self, rust_type: str) -> str:
         """Wrap Rust type in Option if needed."""

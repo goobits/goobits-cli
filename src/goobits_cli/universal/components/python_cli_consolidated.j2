@@ -217,9 +217,10 @@ def cli(ctx, verbose, debug, config):
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
 
-{%- if cli.commands %}
+{% if cli.commands %}
   {%- for cmd_name, cmd_data in cli.commands.items() %}
 
+    {%- if not cmd_data.subcommands %}
 @cli.command('{{ cmd_name }}')
 {% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) -%}
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
@@ -229,7 +230,7 @@ def cli(ctx, verbose, debug, config):
               {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help='{{ opt.desc | default(opt.description) }}')
-{% endfor -%}
+{% endfor %}
 @click.pass_obj
 def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in cmd_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
     """{{ cmd_data.desc | default(cmd_data.description) }}"""
@@ -249,6 +250,7 @@ def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cm
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
+    {% endif %}
 
     {%- if cmd_data.subcommands %}
 @cli.group('{{ cmd_name }}')
@@ -290,9 +292,42 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
     except Exception as e:
         handle_error(e, ctx.verbose)
         {%- endfor %}
-      {%- endif %}
-    {%- endif %}
-  {%- endfor %}
+      {%- else %}
+        {%- for sub_data in cmd_data.subcommands %}
+
+@{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_data.name }}')
+          {% for arg in sub_data.arguments | default([]) %}
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+          {% endfor %}
+          {% for opt in sub_data.options | default([]) %}
+@click.option('{{ opt.long }}', '{{ opt.short }}',
+              {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
+              {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
+              help='{{ opt.description }}')
+          {% endfor %}
+@click.pass_obj
+def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{% for arg in sub_data.arguments | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in sub_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
+    """{{ sub_data.description }}"""
+    try:
+        if hooks and hasattr(hooks, '{{ sub_data.hook_name }}'):
+            kwargs = {
+                {%- for arg in sub_data.arguments | default([]) %}
+                '{{ arg.name }}': {{ arg.name }},
+                {%- endfor %}
+                {%- for opt in sub_data.options | default([]) %}
+                '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
+                {%- endfor %}
+            }
+            hooks.{{ sub_data.hook_name }}(ctx, **kwargs)
+        else:
+            logger.error(f"Hook '{{ sub_data.hook_name }}' not implemented in app_hooks.py")
+            sys.exit(1)
+    except Exception as e:
+        handle_error(e, ctx.verbose)
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
 {%- elif cli.root_command and cli.root_command.subcommands %}
   {%- for command in cli.root_command.subcommands %}
 
@@ -325,7 +360,7 @@ def {{ command.name.replace('-', '_') }}(ctx{% for arg in command.arguments | de
             sys.exit(1)
     except Exception as e:
         handle_error(e, ctx.verbose)
-  {%- endfor %}
+  {% endfor %}
 {%- endif %}
 
 # ============================================================================

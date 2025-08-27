@@ -693,64 +693,54 @@ class NodeJSRenderer(LanguageRenderer):
 
         content = content.rstrip()
 
-        # Convert fluent interface style to individual method calls
-
-        # This handles cases like:
-
-        # program
-
-        #   .name('cli')
-
-        #   .version('1.0.0');
-
-        # becomes:
-
-        # program.name('cli');
-
-        # program.version('1.0.0');
+        # Convert fluent interface style to individual method calls for specific cases
+        # BUT preserve fluent interface for command definitions (they need chaining)
 
         lines = content.split("\n")
-
         processed_lines = []
-
         i = 0
 
         while i < len(lines):
-
             line = lines[i].strip()
 
-            if line == "program":
-
-                # Start of fluent interface - collect all chained calls
-
-                method_calls = []
-
-                i += 1
-
-                # Collect all subsequent method calls
-
-                while i < len(lines) and lines[i].strip().startswith("."):
-
-                    method_call = lines[i].strip()
-
-                    method_calls.append(method_call)
-
+            # Check if this is a program declaration that should be converted
+            if line == "program" and i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                
+                # Check if this is a command definition (should keep fluent interface)
+                if next_line.startswith(".command("):
+                    # Keep fluent interface for command definitions
+                    # Just combine the lines properly
+                    combined = f"program\n    {next_line}"
+                    i += 2
+                    
+                    # Continue collecting chained methods for this command
+                    while i < len(lines) and lines[i].strip().startswith("."):
+                        combined += f"\n    {lines[i].strip()}"
+                        i += 1
+                    
+                    processed_lines.append(combined)
+                    continue
+                elif next_line.startswith("."):
+                    # This is config like .name() or .version() - convert to individual calls
+                    method_calls = []
                     i += 1
-
-                # Convert each method call to individual program.method() statements
-
-                for method_call in method_calls:
-
-                    processed_lines.append(f"program{method_call}")
-
-                # Don't increment i again since we've already processed multiple lines
-
-                continue
-
+                    
+                    while i < len(lines) and lines[i].strip().startswith("."):
+                        method_call = lines[i].strip()
+                        method_calls.append(method_call)
+                        i += 1
+                    
+                    # Convert to individual statements
+                    for method_call in method_calls:
+                        processed_lines.append(f"program{method_call}")
+                    continue
+                else:
+                    # Just a standalone "program" - keep it
+                    processed_lines.append(lines[i])
+                    i += 1
             else:
-
                 processed_lines.append(lines[i])
-
                 i += 1
 
         content = "\n".join(processed_lines)

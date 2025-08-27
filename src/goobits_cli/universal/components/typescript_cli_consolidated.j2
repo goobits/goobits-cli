@@ -50,18 +50,14 @@ interface Logger {
 }
 
 interface HookModule {
-    {%- if cli.commands %}
-      {%- for cmd_name, cmd_data in cli.commands.items() %}
-    on{{ cmd_name | capitalize }}?: (...args: any[]) => Promise<void>;
+    {%- if commander_commands and commander_commands.subcommands %}
+      {%- for cmd_data in commander_commands.subcommands %}
+    on{{ cmd_data.name | capitalize }}?: (...args: any[]) => Promise<void>;
         {%- if cmd_data.subcommands %}
-          {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
-    on{{ cmd_name | capitalize }}{{ sub_name | capitalize }}?: (...args: any[]) => Promise<void>;
+          {%- for sub_data in cmd_data.subcommands %}
+    on{{ sub_data.name | capitalize }}?: (...args: any[]) => Promise<void>;
           {%- endfor %}
         {%- endif %}
-      {%- endfor %}
-    {%- elif cli.root_command and cli.root_command.subcommands %}
-      {%- for command in cli.root_command.subcommands %}
-    on{{ command.name | capitalize }}?: (...args: any[]) => Promise<void>;
       {%- endfor %}
     {%- endif %}
 }
@@ -77,9 +73,6 @@ class ConfigManager {
     constructor(configFile: string | null = null) {
         this.configFile = configFile || this._getDefaultConfigPath();
         this.config = {
-            {%- for key, value in (cli.default_config | default({})).items() %}
-            {{ key }}: {{ value | tojson }},
-            {%- endfor %}
             debug: false,
             outputFormat: 'text'
         };
@@ -425,7 +418,7 @@ let hooks: HookModule | null = null;
 async function loadHooks(): Promise<void> {
     try {
         const hookModule = await import('./src/hooks.js');
-        hooks = hookModule.default || hookModule;
+        hooks = hookModule as HookModule;
     } catch (error: any) {
         if (error.code === 'ERR_MODULE_NOT_FOUND') {
             console.error(chalk.red('Hook implementation not found.'));
@@ -475,21 +468,23 @@ program.option(
 );
 {%- endfor %}
 
-// Commands - use safer access pattern for CLI data
+// Commands - use processed commander structure
 
-{% if cli.root_command and cli.root_command.subcommands %}
-  {% for command in cli.root_command.subcommands %}
+{% if commander_commands and commander_commands.subcommands %}
+  {% for cmd_data in commander_commands.subcommands %}
 
-program
-    .command('{{ command.name }}')
-    .description('{{ command.description }}')
-    {%- for arg in command.arguments | default([]) %}
-    .argument('{{ arg.name | default("arg") }}', '{{ arg.description | default("") }}')
+    {%- if cmd_data.subcommands and cmd_data.subcommands|length > 0 %}
+// Command with subcommands: {{ cmd_data.name }}
+const {{ cmd_data.name }}Command = program
+    .command('{{ cmd_data.name }}')
+    .description('{{ cmd_data.description }}')
+    {%- for arg in cmd_data.arguments | default([]) %}
+    .argument('{{ arg.pattern }}', '{{ arg.description }}')
     {%- endfor %}
-    {%- for option in command.options | default([]) %}
+    {%- for option in cmd_data.options | default([]) %}
     .option(
-        '{{ ("-" + option.short + ", ") if option.short else "" }}--{{ option.name }}{{ " <value>" if option.type != "boolean" and option.type != "flag" else "" }}',
-        '{{ option.description | default("") }}'
+        '{{ option.flags }}',
+        '{{ option.description }}'
         {%- if option.default is defined %},
         {{ option.default | tojson }}
         {%- endif %}
@@ -503,7 +498,7 @@ program
             }
             
             // Call the hook function
-            const hookName = '{{ command.hook_name | default("on" + command.name | title) }}';
+            const hookName = '{{ cmd_data.hook_name | default("on_" + cmd_data.name) }}';
             if (hooks && typeof (hooks as any)[hookName] === 'function') {
                 await (hooks as any)[hookName](...args);
             } else {
@@ -511,35 +506,71 @@ program
                 process.exit(1);
             }
         } catch (error: any) {
-            errorHandler.handleError(error, '{{ command.name }} command');
+            errorHandler.handleError(error, '{{ cmd_data.name }} command');
         }
     });
-    
-    {%- if command.subcommands and command.subcommands|length > 0 %}
-    // Nested subcommands for {{ command.name }}
-    {%- for subcommand in command.subcommands %}
-    program.command('{{ command.name }} {{ subcommand.name }}')
-        .description('{{ subcommand.description | default("") }}')
-        .action(async (...args: any[]) => {
-            try {
-                if (!hooks) {
-                    await loadHooks();
-                }
-                const hookName = '{{ subcommand.hook_name | default("on" + command.name | title + subcommand.name | title) }}';
-                if (hooks && typeof (hooks as any)[hookName] === 'function') {
-                    await (hooks as any)[hookName](...args);
-                } else {
-                    console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
-                    process.exit(1);
-                }
-            } catch (error: any) {
-                errorHandler.handleError(error, '{{ command.name }} {{ subcommand.name }} command');
+
+// Add subcommands
+    {% for sub_data in cmd_data.subcommands %}
+{{ cmd_data.name }}Command
+    .command('{{ sub_data.name }}')
+    .description('{{ sub_data.description }}')
+    .action(async (...args: any[]) => {
+        try {
+            if (!hooks) {
+                await loadHooks();
             }
-        });
+            const hookName = '{{ sub_data.hook_name | default("on_" + sub_data.name) }}';
+            if (hooks && typeof (hooks as any)[hookName] === 'function') {
+                await (hooks as any)[hookName](...args);
+            } else {
+                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
+                process.exit(1);
+            }
+        } catch (error: any) {
+            errorHandler.handleError(error, '{{ sub_data.name }} command');
+        }
+    });
+    {% endfor %}
+    {%- else %}
+// Simple command: {{ cmd_data.name }}
+program
+    .command('{{ cmd_data.name }}')
+    .description('{{ cmd_data.description }}')
+    {%- for arg in cmd_data.arguments | default([]) %}
+    .argument('{{ arg.pattern }}', '{{ arg.description }}')
     {%- endfor %}
+    {%- for option in cmd_data.options | default([]) %}
+    .option(
+        '{{ option.flags }}',
+        '{{ option.description }}'
+        {%- if option.default is defined %},
+        {{ option.default | tojson }}
+        {%- endif %}
+    )
+    {%- endfor %}
+    .action(async (...args: any[]) => {
+        try {
+            // Load hooks if not already loaded
+            if (!hooks) {
+                await loadHooks();
+            }
+            
+            // Call the hook function
+            const hookName = '{{ cmd_data.hook_name | default("on_" + cmd_data.name) }}';
+            if (hooks && typeof (hooks as any)[hookName] === 'function') {
+                await (hooks as any)[hookName](...args);
+            } else {
+                console.error(chalk.red(`Hook function '${hookName}' not found in src/hooks.ts`));
+                process.exit(1);
+            }
+        } catch (error: any) {
+            errorHandler.handleError(error, '{{ cmd_data.name }} command');
+        }
+    });
     {%- endif %}
-    
-  {%- endfor %}
+
+  {% endfor %}
 {%- else %}
 // No commands defined
 {%- endif %}

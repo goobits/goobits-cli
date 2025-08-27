@@ -127,6 +127,11 @@ class TypeScriptRenderer(LanguageRenderer):
 
         context = ir.copy()
         context["language"] = "typescript"
+        
+        # Add commander.js structure (same as Node.js)
+        context["commander_commands"] = self._build_commander_structure(
+            ir.get("cli", {})
+        )
 
         # Add TypeScript-specific transformations
 
@@ -624,6 +629,100 @@ class TypeScriptRenderer(LanguageRenderer):
             flags += f" <{self._ts_type_filter(type_str)}>"
 
         return f".option('{flags}', '{desc}')"
+
+    def _build_commander_structure(self, cli_schema: Dict[str, Any]) -> Dict[str, Any]:
+        """Build Commander.js specific command structure."""
+        root_command = cli_schema.get("root_command", {})
+        
+        commander_data = {
+            "root_command": {
+                "name": root_command.get("name", "cli"),
+                "description": root_command.get("description", "CLI application"),
+                "version": root_command.get("version", self._get_version()),
+                "options": [],
+                "commands": [],
+            },
+            "subcommands": [],
+        }
+        
+        # Convert options to Commander format
+        for option in root_command.get("options", []):
+            commander_option = {
+                "flags": self._build_option_flags(option),
+                "description": option.get("description", ""),
+                "default": option.get("default"),
+                "type": self._js_type_from_option(option),
+            }
+            commander_data["root_command"]["options"].append(commander_option)
+        
+        # Convert commands to Commander format
+        for command in root_command.get("subcommands", []):
+            commander_cmd = {
+                "name": command.get("name", "command"),
+                "description": command.get("description", ""),
+                "arguments": [
+                    self._build_commander_argument(arg)
+                    for arg in command.get("arguments", [])
+                ],
+                "options": [
+                    self._build_commander_option(opt)
+                    for opt in command.get("options", [])
+                ],
+                "hook_name": command.get(
+                    "hook_name", f"on_{command.get('name', 'command')}"
+                ),
+                "subcommands": command.get("subcommands", []),
+            }
+            commander_data["subcommands"].append(commander_cmd)
+        
+        return commander_data
+    
+    def _build_option_flags(self, option: Dict[str, Any]) -> str:
+        """Build option flags for Commander.js."""
+        name = option.get("name", "option")
+        short = option.get("short")
+        type_str = option.get("type", "string")
+        
+        if short:
+            flags = f"-{short}, --{name}"
+        else:
+            flags = f"--{name}"
+        
+        # Add value placeholder for non-boolean types
+        if type_str not in ("boolean", "flag"):
+            flags += f" <{name}>"
+        
+        return flags
+    
+    def _js_type_from_option(self, option: Dict[str, Any]) -> str:
+        """Convert option type to JavaScript type."""
+        type_str = option.get("type", "string")
+        type_mapping = {
+            "string": "String",
+            "number": "Number",
+            "integer": "Number",
+            "boolean": "Boolean",
+            "flag": "Boolean",
+            "array": "Array",
+        }
+        return type_mapping.get(type_str, "String")
+    
+    def _build_commander_argument(self, arg: Dict[str, Any]) -> Dict[str, Any]:
+        """Build Commander.js argument structure."""
+        return {
+            "pattern": f"<{arg.get('name', 'arg')}>",
+            "description": arg.get("description", ""),
+            "type": arg.get("type", "string"),
+        }
+    
+    def _build_commander_option(self, opt: Dict[str, Any]) -> Dict[str, Any]:
+        """Build Commander.js option structure."""
+        return {
+            "flags": self._build_option_flags(opt),
+            "description": opt.get("description", ""),
+            "default": opt.get("default"),
+            "type": self._js_type_from_option(opt),
+        }
 
     def _camel_case_filter(self, text: str) -> str:
         """Convert text to camelCase."""

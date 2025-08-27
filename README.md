@@ -217,11 +217,9 @@ mypy src/goobits_cli/
 
 ## Examples
 
-See the `examples/` directory for sample configurations:
-- `basic.yaml` - Simple CLI with basic commands
-- `advanced.yaml` - Complex CLI with subcommands
-- `api-client.yaml` - REST API client CLI
-- `multi-language/` - Same CLI in all 4 languages
+See the `src/examples/` directory for sample configurations and test outputs:
+- `validation/` - Generated CLI examples in all 4 languages
+- `installation/` - Installation demos
 
 ## License
 
@@ -235,7 +233,6 @@ Contributions welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
 - Issues: [GitHub Issues](https://github.com/goobits/goobits-cli/issues)
 - Discussions: [GitHub Discussions](https://github.com/goobits/goobits-cli/discussions)
-- Documentation: [https://docs.goobits.io](https://docs.goobits.io)
 
 ---
 
