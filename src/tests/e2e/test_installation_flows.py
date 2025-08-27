@@ -1,19 +1,23 @@
-"""Installation workflow validation tests.
+"""E2E Installation workflow validation tests.
 
-This module provides comprehensive tests for validating that generated CLIs
-install correctly across all supported package managers and languages.
+This module provides comprehensive end-to-end tests for validating that generated CLIs
+install correctly across all supported package managers and languages. These are 
+system-level tests that interact with real package managers and system state.
 
 Tests cover:
 - Python: pip, pipx installation workflows
-- Node.js: npm, yarn installation workflows
+- Node.js: npm, yarn installation workflows  
 - TypeScript: build + npm/yarn installation workflows
 - Rust: cargo installation workflows
 
-Each test validates the full installation pipeline:
+Each E2E test validates the complete installation pipeline:
 1. Generate CLI from test configuration
-2. Install via package manager
-3. Verify CLI is available and functional
-4. Test uninstallation
+2. Install via package manager (real system installation)
+3. Verify CLI is available and functional in system
+4. Test uninstallation and cleanup
+
+Note: These tests require system dependencies and may be slow/flaky due to
+network conditions, package manager state, and system permissions.
 """
 
 import json
@@ -28,6 +32,34 @@ import pytest
 
 from goobits_cli.builder import Builder
 from goobits_cli.schemas import GoobitsConfigSchema
+
+# Import test configs from integration tests
+import sys
+integration_path = str(Path(__file__).parent.parent / "integration")
+if integration_path not in sys.path:
+    sys.path.append(integration_path)
+
+try:
+    from test_configs import TestConfigTemplates
+except ImportError:
+    # Fallback: create minimal test configs here
+    from goobits_cli.schemas import GoobitsConfigSchema
+    
+    class TestConfigTemplates:
+        @staticmethod
+        def minimal_config(language):
+            return GoobitsConfigSchema(
+                package_name=f"test-{language}-cli",
+                command_name=f"test{language}cli",
+                display_name=f"Test {language.title()} CLI",
+                description=f"Test CLI for {language}",
+                language=language,
+                dependencies={"required": [], "optional": []},
+                installation={"pypi_name": f"test-{language}-cli", "development_path": "."},
+                cli={"name": f"test{language}cli", "tagline": f"Test {language} CLI", "commands": {
+                    "hello": {"desc": "Say hello", "args": [], "options": []}
+                }}
+            )
 
 
 # Package manager availability and installation methods

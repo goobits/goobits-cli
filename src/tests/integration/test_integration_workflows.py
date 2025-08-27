@@ -18,7 +18,10 @@ from .package_manager_utils import (
     cleanup_global_packages,
 )
 from .test_configs import TestConfigTemplates, TestScenarioRunner
-from .test_installation_flows import CLITestHelper
+# Import CLITestHelper from E2E tests since we moved installation flows there
+import sys
+sys.path.append(str(Path(__file__).parent.parent / "e2e"))
+from test_installation_flows import CLITestHelper
 
 
 class IntegrationTestRunner:
