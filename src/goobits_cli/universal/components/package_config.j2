@@ -28,7 +28,10 @@ Template Variables Expected:
   "license": "{{ project.license | default('MIT') }}",
   "dependencies": {
     "commander": "^11.1.0",
-    "chalk": "^5.3.0"
+    "chalk": "^5.3.0",
+    "ora": "^7.0.1",
+    "winston": "^3.11.0",
+    "js-yaml": "^4.1.0"
     {%- if (nodejs is defined and nodejs.package_config.dependencies) %}
     {%- for dep, version in nodejs.package_config.dependencies.items() %}
     {%- if dep != "commander" %}
