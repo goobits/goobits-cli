@@ -390,8 +390,13 @@ class PythonGenerator(BaseGenerator):
                     # For tests, flatten the structure - write CLI files directly to output_directory
                     file_name = Path(relative_path).name
                     if file_name.endswith(".py"):
-                        # Main CLI file goes to root as expected by tests
-                        file_path = output_path / "cli.py"
+                        # Distinguish between main CLI file and hooks file to avoid collision
+                        if "hooks" in file_name:
+                            # Hooks file keeps its name to avoid overwriting main CLI
+                            file_path = output_path / file_name
+                        else:
+                            # Main CLI file goes to root as expected by tests
+                            file_path = output_path / "cli.py"
                     else:
                         # Other files keep their names
                         file_path = output_path / file_name
