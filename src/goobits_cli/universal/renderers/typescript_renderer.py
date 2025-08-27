@@ -274,9 +274,9 @@ class TypeScriptRenderer(LanguageRenderer):
         """
 
         # Use user-defined paths if specified, otherwise use defaults
-        cli_path = ir["project"].get("cli_output_path") or "cli.ts"
-        hooks_path = ir["project"].get("hooks_output_path") or "cli_hooks.ts"
-        types_path = ir["project"].get("types_output_path") or "cli_types.d.ts"
+        cli_path = ir["project"].get("cli_path") or "cli.ts"
+        hooks_path = ir["project"].get("cli_hooks_path") or "cli_hooks.ts"
+        types_path = ir["project"].get("cli_types_path") or "cli_types.d.ts"
 
         # TypeScript generates 4 files (cli, hooks, types, setup.sh)
         output = {

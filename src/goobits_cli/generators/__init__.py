@@ -138,8 +138,8 @@ class BaseGenerator(ABC):
                 "command_name": config.command_name,
                 "display_name": config.display_name,
                 "installation": config.installation,
-                "hooks_path": config.cli_hooks
-                or config.hooks_path,  # Use cli_hooks, fallback to deprecated hooks_path
+                "hooks_path": config.cli_hooks_path
+                or config.hooks_path,  # Use cli_hooks_path, fallback to deprecated hooks_path
                 # Add additional metadata fields
                 "author": getattr(config, "author", ""),
                 "email": getattr(config, "email", ""),

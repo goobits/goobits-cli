@@ -298,14 +298,14 @@ class ManifestUpdater:
 
 def update_manifests_for_build(config: Dict[str, Any], 
                               output_dir: Path, 
-                              cli_output_path: Path):
+                              cli_path: Path):
     """
     Update package manifests after CLI generation.
     
     Args:
         config: The goobits configuration
         output_dir: Directory where files are generated
-        cli_output_path: Path to the generated CLI file
+        cli_path: Path to the generated CLI file
     """
     updater = ManifestUpdater()
     language = config.get('language', 'python').lower()
@@ -315,7 +315,7 @@ def update_manifests_for_build(config: Dict[str, Any],
     try:
         if language == 'nodejs':
             package_json_path = output_dir / "package.json"
-            cli_file = cli_output_path.name
+            cli_file = cli_path.name
             
             # Extract additional dependencies from config if present
             extra_deps = config.get('installation', {}).get('extras', {}).get('npm', {})

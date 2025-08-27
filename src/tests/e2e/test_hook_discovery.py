@@ -2,7 +2,7 @@
 E2E tests for hook discovery functionality.
 
 Tests the bug fixes for:
-1. Hook discovery using configured hooks_path instead of hardcoded paths
+1. Hook discovery using configured cli_hooks_path instead of hardcoded paths
 2. Hook discovery working from different directories (package-relative imports)
 """
 
@@ -15,19 +15,19 @@ import pytest
 class TestHookDiscoveryE2E:
     """End-to-end tests for hook discovery functionality."""
 
-    # REMOVED: test_config_with_custom_hooks_path fixture
-    # This was only used by the removed test_custom_hooks_path_discovery test
+    # REMOVED: test_config_with_custom_cli_hooks_path fixture
+    # This was only used by the removed test_custom_cli_hooks_path_discovery test
 
     @pytest.fixture(scope="class")
     def test_config_default_hooks(self):
-        """Test configuration with default hooks path."""
+        """Test configuration with default cli_hooks_path."""
         return {
             "package_name": "defaultcli",
             "command_name": "defaultcli",
             "display_name": "Default CLI",
             "description": "Test CLI with default hooks",
             "language": "python",
-            # No hooks_path specified - should use default
+            # No cli_hooks_path specified - should use default
             "cli": {
                 "name": "defaultcli",
                 "tagline": "Testing default hook discovery",
@@ -41,8 +41,8 @@ class TestHookDiscoveryE2E:
             "installation": {"pypi_name": "defaultcli", "development_path": "."},
         }
 
-    # REMOVED: test_custom_hooks_path_discovery
-    # This test was checking for the deprecated hooks_path feature which is not
+    # REMOVED: test_custom_cli_hooks_path_discovery
+    # This test was checking for the deprecated cli_hooks_path feature which is not
     # implemented in the Universal Template System and will be removed in v4.0.0.
     # The Universal Template System uses a fixed cli_hooks.py pattern.
 
@@ -191,7 +191,7 @@ if __name__ == "__main__":
             os.chdir(original_cwd)
 
     def test_default_hooks_fallback(self, test_config_default_hooks, tmp_path):
-        """Test that default hooks path (cli_hooks.py) still works."""
+        """Test that default cli_hooks_path (cli_hooks.py) still works."""
 
         # Create test directory structure
         test_dir = tmp_path / "default_test"
@@ -222,7 +222,7 @@ import importlib.util
 from pathlib import Path
 
 def _find_and_import_hooks():
-    # No hooks path configured, try default locations
+    # No cli_hooks_path configured, try default locations
     default_module_name = "cli_hooks"
     
     # Strategy 1: Try package-relative import

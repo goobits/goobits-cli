@@ -13,8 +13,8 @@ description: "A description of what my CLI does"
 language: python  # python, nodejs, typescript, or rust
 
 # CLI generation
-cli_output_path: "src/my_cli/cli.py"  # Optional, language-specific defaults
-cli_hooks: "cli_hooks.py"  # Hook file path (language-specific)
+cli_path: "src/my_cli/cli.py"  # Optional, language-specific defaults
+cli_hooks_path: "cli_hooks.py"  # Hook file path (language-specific)
 
 # CLI definition
 cli:
@@ -36,8 +36,8 @@ cli:
 ### Python Configuration
 ```yaml
 language: python
-cli_hooks: "cli_hooks.py"
-cli_output_path: "cli.py"  # Default
+cli_hooks_path: "cli_hooks.py"
+cli_path: "cli.py"  # Default
 
 python:
   minimum_version: "3.8"
@@ -47,22 +47,22 @@ python:
 ### Node.js Configuration
 ```yaml
 language: nodejs
-cli_hooks: "src/hooks.js"
-cli_output_path: "cli.js"  # Default
+cli_hooks_path: "src/hooks.js"
+cli_path: "cli.js"  # Default
 ```
 
 ### TypeScript Configuration
 ```yaml
 language: typescript
-cli_hooks: "src/hooks.ts"
-cli_output_path: "cli.ts"  # Default
+cli_hooks_path: "src/hooks.ts"
+cli_path: "cli.ts"  # Default
 ```
 
 ### Rust Configuration
 ```yaml
 language: rust
-cli_hooks: "src/hooks.rs"
-cli_output_path: "src/main.rs"  # Default
+cli_hooks_path: "src/hooks.rs"
+cli_path: "src/main.rs"  # Default
 ```
 
 ## Advanced Configuration

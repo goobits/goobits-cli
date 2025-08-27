@@ -372,7 +372,7 @@ class TestBackwardCompatibility:
     """Test that old configs still work with consolidated generation."""
     
     def test_legacy_config_support(self):
-        """Ensure configs without cli_output_path still work."""
+        """Ensure configs without cli_path still work."""
         legacy_config = {
             "package_name": "legacy-cli",
             "command_name": "legacy",

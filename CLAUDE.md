@@ -223,9 +223,9 @@ As of v3.0.1, the framework generates minimal files to avoid repository clutter:
 
 ### File Generation Guidelines
 
-**Always specify `cli_output_path`** in your goobits.yaml to prevent root directory pollution:
+**Always specify `cli_path`** in your goobits.yaml to prevent root directory pollution:
 ```yaml
-cli_output_path: "src/my_package/cli.py"  # Required - prevents files in project root
+cli_path: "src/my_package/cli.py"  # Required - prevents files in project root
 ```
 
 ### Template System

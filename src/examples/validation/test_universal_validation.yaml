@@ -9,7 +9,7 @@ version: "1.0.0"
 language: python
 
 # Required CLI output path to prevent root directory pollution
-cli_output_path: "src/test_cli/generated_cli.py"
+cli_path: "src/test_cli/generated_cli.py"
 
 # Required installation section
 installation:

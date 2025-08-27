@@ -7,8 +7,8 @@ display_name: "Test Universal CLI"
 description: "Test CLI for validating universal template system"
 language: python
 
-cli_output_path: "src/test_universal_cli/cli.py"
-cli_hooks: "app_hooks.py"
+cli_path: "src/test_universal_cli/cli.py"
+cli_hooks_path: "app_hooks.py"
 
 python:
   minimum_version: "3.8"

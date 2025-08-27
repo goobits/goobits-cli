@@ -786,19 +786,19 @@ def build(
     if (
         hasattr(goobits_config, "hooks_path")
         and goobits_config.hooks_path
-        and not goobits_config.cli_hooks
+        and not goobits_config.cli_hooks_path
     ):
         typer.echo(
             "⚠️  WARNING: 'hooks_path' is deprecated and will be removed in v4.0.0 (Q2 2025)",
             err=True,
         )
         typer.echo(
-            "   Please use 'cli_hooks' instead in your configuration file.", err=True
+            "   Please use 'cli_hooks_path' instead in your configuration file.", err=True
         )
         typer.echo(
             f'   Current value: hooks_path: "{goobits_config.hooks_path}"', err=True
         )
-        typer.echo(f'   Change to: cli_hooks: "{goobits_config.hooks_path}"', err=True)
+        typer.echo(f'   Change to: cli_hooks_path: "{goobits_config.hooks_path}"', err=True)
         typer.echo(
             "   📖 Migration guide: docs/migration_guides/hooks_path_deprecation.md",
             err=True,
@@ -950,20 +950,20 @@ def build(
 
             # Use configured output path for Python
 
-            if goobits_config.cli_output_path:
-                cli_output_path = goobits_config.cli_output_path.format(
+            if goobits_config.cli_path:
+                cli_path = goobits_config.cli_path.format(
                     package_name=goobits_config.package_name.replace("goobits-", "")
                 )
             else:
                 # Generate default path when none specified
                 package_name_safe = goobits_config.package_name.replace("-", "_")
-                cli_output_path = f"{package_name_safe}/cli.py"
+                cli_path = f"{package_name_safe}/cli.py"
 
             # Extract the actual module name from the CLI output path
 
             # e.g., "src/ttt/cli.py" -> "ttt"
 
-            cli_path_parts = Path(cli_output_path).parts
+            cli_path_parts = Path(cli_path).parts
 
             if "src" in cli_path_parts:
 
@@ -987,7 +987,7 @@ def build(
 
             # Extract the full module path relative to the package root
 
-            cli_path_obj = Path(cli_output_path)
+            cli_path_obj = Path(cli_path)
 
             cli_path_parts = cli_path_obj.parts
 
@@ -1117,16 +1117,16 @@ def build(
 
         # Find the package source directory
 
-        if goobits_config.cli_output_path:
-            cli_output_path = goobits_config.cli_output_path.format(
+        if goobits_config.cli_path:
+            cli_path = goobits_config.cli_path.format(
                 package_name=goobits_config.package_name.replace("goobits-", "")
             )
         else:
             # Generate default path when none specified
             package_name_safe = goobits_config.package_name.replace("-", "_")
-            cli_output_path = f"{package_name_safe}/cli.py"
+            cli_path = f"{package_name_safe}/cli.py"
 
-        cli_path_parts = Path(cli_output_path).parts
+        cli_path_parts = Path(cli_path).parts
 
         # Determine package source directory
 
@@ -1170,13 +1170,13 @@ def build(
         
         # Get CLI output path from generated files
         if language == "nodejs":
-            cli_output_path = Path("cli.mjs")  # Node.js generates cli.mjs
+            cli_path = Path("cli.mjs")  # Node.js generates cli.mjs
         else:
-            cli_output_path = Path("src/main.rs")  # Rust always uses src/main.rs
+            cli_path = Path("src/main.rs")  # Rust always uses src/main.rs
         manifest_result = update_manifests_for_build(
             config=goobits_config.model_dump(),
             output_dir=output_dir,
-            cli_output_path=cli_output_path
+            cli_path=cli_path
         )
         
         if manifest_result.is_err():
@@ -1384,7 +1384,7 @@ description: "A CLI tool built with Goobits"
 language: python
 
 # CLI generation configuration
-cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace('-', '_')}/cli.py"
 cli_hooks: "cli_hooks.py"
 
 
@@ -1457,7 +1457,7 @@ description: "An advanced CLI tool built with Goobits"
 language: python
 
 # CLI generation configuration
-cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace('-', '_')}/cli.py"
 cli_hooks: "cli_hooks.py"
 
 
@@ -1610,7 +1610,7 @@ description: "API client CLI tool built with Goobits"
 language: python
 
 # CLI generation configuration
-cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace('-', '_')}/cli.py"
 cli_hooks: "cli_hooks.py"
 
 
@@ -1751,7 +1751,7 @@ description: "Text processing CLI tool built with Goobits"
 language: python
 
 # CLI generation configuration
-cli_output_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace('-', '_')}/cli.py"
 cli_hooks: "cli_hooks.py"
 
 

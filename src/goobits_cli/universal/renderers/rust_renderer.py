@@ -214,8 +214,8 @@ class RustRenderer(LanguageRenderer):
         """
 
         # Use user-defined paths if specified, otherwise use defaults
-        cli_path = ir["project"].get("cli_output_path") or "src/cli.rs"
-        hooks_path = ir["project"].get("hooks_output_path") or "src/cli_hooks.rs"
+        cli_path = ir["project"].get("cli_path") or "src/cli.rs"
+        hooks_path = ir["project"].get("cli_hooks_path") or "src/cli_hooks.rs"
         
         # Ensure src/ prefix for Rust files
         if cli_path and not cli_path.startswith("src/"):

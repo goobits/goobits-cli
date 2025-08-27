@@ -550,8 +550,8 @@ setup(
         default_cli_path = f"{package_name}/cli.py"
         default_hooks_path = f"{package_name}/cli_hooks.py"
         
-        cli_path = ir["project"].get("cli_output_path") or default_cli_path
-        hooks_path = ir["project"].get("hooks_output_path") or default_hooks_path
+        cli_path = ir["project"].get("cli_path") or default_cli_path
+        hooks_path = ir["project"].get("cli_hooks_path") or default_hooks_path
 
         # Handle any template variables in the paths
         if cli_path and "{package_name}" in cli_path:

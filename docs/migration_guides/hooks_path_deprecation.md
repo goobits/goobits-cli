@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `hooks_path` field is deprecated and will be removed in **v4.0.0** (planned for Q2 2025). Please migrate to `cli_hooks` for future compatibility.
+The `hooks_path` field is deprecated and will be removed in **v4.0.0** (planned for Q2 2025). Please migrate to `cli_hooks_path` for future compatibility.
 
 ## Migration Steps
 
@@ -26,7 +26,7 @@ cli:
 # goobits.yaml
 package_name: my-cli
 command_name: mycli
-cli_hooks: "src/my_hooks.py"  # ✅ Recommended
+cli_hooks_path: "src/my_hooks.py"  # ✅ Recommended
 
 cli:
   name: mycli
@@ -48,15 +48,15 @@ goobits build goobits.yaml
 | Version | Status |
 |---------|--------|
 | v3.0.0+ | `hooks_path` deprecated, warning shown |
-| v3.x.x  | Both `hooks_path` and `cli_hooks` supported |
-| v4.0.0  | `hooks_path` removed, only `cli_hooks` supported |
+| v3.x.x  | Both `hooks_path` and `cli_hooks_path` supported |
+| v4.0.0  | `hooks_path` removed, only `cli_hooks_path` supported |
 
 ## Backward Compatibility
 
 During the transition period (v3.x.x):
-- Both `hooks_path` and `cli_hooks` are supported
-- `cli_hooks` takes precedence if both are specified
-- Warning only shown if `hooks_path` is used without `cli_hooks`
+- Both `hooks_path` and `cli_hooks_path` are supported
+- `cli_hooks_path` takes precedence if both are specified
+- Warning only shown if `hooks_path` is used without `cli_hooks_path`
 
 ## Language Support
 
@@ -75,4 +75,4 @@ If you encounter issues during migration:
 
 ## Example Migration
 
-For a complete example, see the [advanced-features demo](../../examples/advanced-features/) which uses the modern `cli_hooks` field.
+For a complete example, see the [advanced-features demo](../../examples/advanced-features/) which uses the modern `cli_hooks_path` field.

@@ -284,8 +284,8 @@ class NodeJSRenderer(LanguageRenderer):
         """
 
         # Use user-defined paths if specified, otherwise use defaults
-        cli_path = ir["project"].get("cli_output_path") or "cli.mjs"
-        hooks_path = ir["project"].get("hooks_output_path") or "cli_hooks.mjs"
+        cli_path = ir["project"].get("cli_path") or "cli.mjs"
+        hooks_path = ir["project"].get("cli_hooks_path") or "cli_hooks.mjs"
 
         # Node.js generates 3 files (cli, hooks, setup.sh)
         output = {

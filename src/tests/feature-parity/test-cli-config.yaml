@@ -2,7 +2,7 @@ package_name: test-cli
 command_name: test-cli
 display_name: "Test CLI"
 description: "Test CLI for feature parity testing"
-cli_output_path: "src/test_cli/cli.py"
+cli_path: "src/test_cli/cli.py"
 
 language: python  # Will be overridden per test run
 
