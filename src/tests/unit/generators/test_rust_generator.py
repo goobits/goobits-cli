@@ -21,8 +21,8 @@ import shutil
 import threading
 from functools import wraps
 
-from goobits_cli.generators.rust import (
-    RustGenerator,
+from goobits_cli.generators.rust import RustGenerator
+from goobits_cli.generators import (
     ConfigurationError,
     TemplateError,
     ValidationError,

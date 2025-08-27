@@ -4,7 +4,6 @@
 //!
 //! This library provides the core functionality for the testrust CLI tool.
 
-#![warn(missing_docs)]
 #![warn(clippy::all)]
 
 /// Error types and handling

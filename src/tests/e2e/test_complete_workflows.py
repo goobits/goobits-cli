@@ -146,22 +146,22 @@ class TestNodeJSGeneratorE2E:
         result = generator.generate(sample_nodejs_config, str(tmp_path))
         assert result is not None
 
-        # Verify key files were generated
-        cli_file = tmp_path / "cli.js"
-        package_file = tmp_path / "package.json"
+        # Verify key files were generated (consolidated approach)
+        cli_file = tmp_path / "cli.mjs"  # Node.js generator creates .mjs files
+        setup_file = tmp_path / "setup.sh"
 
         assert cli_file.exists()
-        assert package_file.exists()
+        assert setup_file.exists()
 
         # Verify CLI content
         cli_content = cli_file.read_text()
         assert "hello" in cli_content
-        assert "test" in cli_content
+        assert "test-nodejs-cli" in cli_content  # CLI name should be in the content
 
-        # Verify package.json content
-        package_content = package_file.read_text()
-        assert "test-nodejs-cli" in package_content
-        assert "1.0.0" in package_content
+        # Verify setup.sh content
+        setup_content = setup_file.read_text()
+        assert "#!/bin/bash" in setup_content
+        assert "npm" in setup_content  # Should contain npm-related setup
 
     def test_typescript_generator_e2e(self, sample_nodejs_config, tmp_path):
         """Test TypeScript generator end-to-end workflow."""
@@ -171,24 +171,23 @@ class TestNodeJSGeneratorE2E:
         result = generator.generate(sample_nodejs_config, str(tmp_path))
         assert result is not None
 
-        # Verify key files were generated
-        index_file = tmp_path / "index.ts"
-        generated_index_file = tmp_path / "generated_index.ts"
-        package_file = tmp_path / "package.json"
-        tsconfig_file = tmp_path / "tsconfig.json"
+        # Verify key files were generated (consolidated approach)
+        cli_file = tmp_path / "cli.ts"  # TypeScript generator creates cli.ts
+        types_file = tmp_path / "types.d.ts"
+        setup_file = tmp_path / "setup.sh"
 
-        # Check for either index.ts or generated_index.ts
-        cli_file = index_file if index_file.exists() else generated_index_file
-        assert (
-            cli_file.exists()
-        ), f"Neither {index_file} nor {generated_index_file} exists"
-        assert package_file.exists()
-        assert tsconfig_file.exists()
+        assert cli_file.exists()
+        assert types_file.exists()
+        assert setup_file.exists()
 
         # Verify CLI content
         cli_content = cli_file.read_text()
         assert "hello" in cli_content
-        assert "test" in cli_content
+        assert "test-nodejs-cli" in cli_content  # CLI name should be in content
+
+        # Verify types.d.ts content
+        types_content = types_file.read_text()
+        assert "export" in types_content or "declare" in types_content
 
         # Verify TypeScript-specific content or syntax
         # The Universal Template System generates functional TypeScript
@@ -206,7 +205,7 @@ class TestNodeJSGeneratorE2E:
         generator = NodeJSGenerator()
         generator.generate(sample_nodejs_config, str(tmp_path))
 
-        cli_file = tmp_path / "cli.js"
+        cli_file = tmp_path / "cli.mjs"  # Node.js generator creates .mjs files
 
         # Try to run Node.js syntax check
         try:
@@ -276,13 +275,13 @@ class TestCompleteWorkflowValidation:
         generator = NodeJSGenerator()
         result = generator.generate(config, str(tmp_path))
 
-        # Verify basic structure
+        # Verify basic structure (consolidated approach)
         assert result is not None
-        assert (tmp_path / "cli.js").exists()
-        assert (tmp_path / "package.json").exists()
+        assert (tmp_path / "cli.mjs").exists()  # Node.js generator creates .mjs files
+        assert (tmp_path / "setup.sh").exists()  # Setup script
 
         # Verify content
-        cli_content = (tmp_path / "cli.js").read_text()
+        cli_content = (tmp_path / "cli.mjs").read_text()
         assert "status" in cli_content
 
     def test_minimal_workflow_typescript(self, tmp_path):
@@ -305,13 +304,14 @@ class TestCompleteWorkflowValidation:
         generator = TypeScriptGenerator()
         result = generator.generate(config, str(tmp_path))
 
-        # Verify basic structure
+        # Verify basic structure (consolidated approach)
         assert result is not None
-        assert (tmp_path / "index.ts").exists()
-        assert (tmp_path / "package.json").exists()
+        assert (tmp_path / "cli.ts").exists()  # TypeScript generator creates cli.ts
+        assert (tmp_path / "types.d.ts").exists()  # Type definitions
+        assert (tmp_path / "setup.sh").exists()  # Setup script
 
         # Verify content
-        cli_content = (tmp_path / "index.ts").read_text()
+        cli_content = (tmp_path / "cli.ts").read_text()
         assert "status" in cli_content
 
     @pytest.mark.skipif(
@@ -338,10 +338,10 @@ class TestCompleteWorkflowValidation:
         generator = RustGenerator()
         result = generator.generate(config, str(tmp_path))
 
-        # Verify basic structure
+        # Verify basic structure (consolidated approach)
         assert result is not None
-        assert (tmp_path / "Cargo.toml").exists()
-        assert (tmp_path / "src" / "main.rs").exists()
+        assert (tmp_path / "src" / "main.rs").exists()  # Rust generator creates src/main.rs
+        assert (tmp_path / "setup.sh").exists()  # Setup script
 
         # Verify content
         main_content = (tmp_path / "src" / "main.rs").read_text()

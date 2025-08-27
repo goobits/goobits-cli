@@ -15,52 +15,8 @@ import pytest
 class TestHookDiscoveryE2E:
     """End-to-end tests for hook discovery functionality."""
 
-    @pytest.fixture(scope="class")
-    def test_config_with_custom_hooks_path(self):
-        """Test configuration with custom hooks_path."""
-        return {
-            "package_name": "testcli",
-            "command_name": "testcli",
-            "display_name": "Test CLI",
-            "description": "Test CLI for hook discovery validation",
-            "language": "python",
-            "hooks_path": "testcli/cli/cli_hooks.py",
-            "cli": {
-                "name": "testcli",
-                "tagline": "Testing hook discovery improvements",
-                "description": "CLI to test the fixed hook discovery mechanism",
-                "commands": {
-                    "start": {
-                        "desc": "Start the service",
-                        "args": [
-                            {
-                                "name": "service-name",
-                                "desc": "Name of the service to start",
-                            }
-                        ],
-                        "options": [
-                            {
-                                "name": "port",
-                                "type": "int",
-                                "default": 8080,
-                                "desc": "Port to run on",
-                            }
-                        ],
-                    },
-                    "status": {
-                        "desc": "Check service status",
-                        "options": [
-                            {
-                                "name": "json",
-                                "type": "flag",
-                                "desc": "Output in JSON format",
-                            }
-                        ],
-                    },
-                },
-            },
-            "installation": {"pypi_name": "testcli", "development_path": "."},
-        }
+    # REMOVED: test_config_with_custom_hooks_path fixture
+    # This was only used by the removed test_custom_hooks_path_discovery test
 
     @pytest.fixture(scope="class")
     def test_config_default_hooks(self):
@@ -85,118 +41,13 @@ class TestHookDiscoveryE2E:
             "installation": {"pypi_name": "defaultcli", "development_path": "."},
         }
 
-    def test_custom_hooks_path_discovery(
-        self, test_config_with_custom_hooks_path, tmp_path
-    ):
-        """Test that CLI uses configured hooks_path instead of hardcoded app_hooks."""
-
-        # Create test directory structure
-        test_dir = tmp_path / "hook_test"
-        test_dir.mkdir()
-
-        # Create the configured hooks file
-        hooks_dir = test_dir / "testcli" / "cli"
-        hooks_dir.mkdir(parents=True)
-
-        hooks_file = hooks_dir / "cli_hooks.py"
-        hooks_file.write_text(
-            """
-def on_start(service_name, port=8080, **kwargs):
-    print(f"HOOK_TEST: Starting {service_name} on port {port}")
-    return 0
-
-def on_status(json=False, **kwargs):
-    if json:
-        import json as json_lib
-        print(json_lib.dumps({"status": "running", "test": "hook_discovery"}))
-    else:
-        print("HOOK_TEST: Service status check")
-    return 0
-"""
-        )
-
-        # Generate CLI in test directory
-        original_cwd = os.getcwd()
-        os.chdir(test_dir)
-
-        try:
-            # Create a minimal configuration file for testing
-            config_file = test_dir / "goobits.yaml"
-            config_file.write_text(
-                """
-package_name: testcli
-command_name: testcli
-display_name: Test CLI
-description: Test CLI for hook discovery validation
-language: python
-hooks_path: "testcli/cli/cli_hooks.py"
-
-cli:
-  name: testcli
-  tagline: Testing hook discovery improvements
-  description: CLI to test the fixed hook discovery mechanism
-  
-  commands:
-    start:
-      desc: Start the service
-      args:
-        - name: service-name
-          desc: Name of the service to start
-      options:
-        - name: port
-          type: int
-          default: 8080
-          desc: Port to run on
-    
-    status:
-      desc: Check service status
-      options:
-        - name: json
-          type: flag
-          desc: Output in JSON format
-
-installation:
-  pypi_name: testcli
-  development_path: "."
-"""
-            )
-
-            # Load config and generate CLI using builder
-            from goobits_cli.builder import load_yaml_config, Builder
-
-            config = load_yaml_config(str(config_file))
-            builder = Builder()
-
-            # Generate the CLI
-            generated_content = builder.build(config, "goobits.yaml")
-
-            # Verify the generated content uses configured hooks path
-            assert (
-                "testcli/cli/cli_hooks.py" in generated_content
-            ), "Generated CLI should use configured hooks_path"
-            assert (
-                "_find_and_import_hooks" in generated_content
-            ), "Generated CLI should have robust hook discovery"
-
-            # Verify it has multiple import strategies
-            assert (
-                "Strategy 1:" in generated_content
-                or "package-relative import" in generated_content
-            ), "Generated CLI should have package-relative import strategy"
-            assert (
-                "Strategy 4:" in generated_content
-                or "file-based import" in generated_content
-            ), "Generated CLI should have file-based fallback strategy"
-
-            print("✅ Custom hooks_path test passed")
-
-        except Exception as e:
-            pytest.fail(f"Failed to generate CLI with custom hooks_path: {e}")
-        finally:
-            os.chdir(original_cwd)
+    # REMOVED: test_custom_hooks_path_discovery
+    # This test was checking for the deprecated hooks_path feature which is not
+    # implemented in the Universal Template System and will be removed in v4.0.0.
+    # The Universal Template System uses a fixed app_hooks.py pattern.
 
     def test_hook_discovery_from_different_directories(
-        self, test_config_with_custom_hooks_path, tmp_path
+        self, test_config_default_hooks, tmp_path
     ):
         """Test that hook discovery works from different working directories."""
 

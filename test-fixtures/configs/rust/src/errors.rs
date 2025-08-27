@@ -1,25 +1,34 @@
 use std::fmt;
 use std::process;
-use std::any::Any;
 
 #[derive(Debug, Clone, Copy)]
+/// Application exit codes
 pub enum ExitCode {
+    /// Successful execution
     Success = 0,
+    /// General error
     GeneralError = 1,
+    /// Usage error
     UsageError = 2,
+    /// Configuration error
     ConfigError = 3,
+    /// Network error
     NetworkError = 4,
+    /// Permission error
     PermissionError = 5,
+    /// File not found error
     FileNotFound = 6,
 }
 
 impl ExitCode {
+    /// Convert exit code to i32
     pub fn as_i32(&self) -> i32 {
         *self as i32
     }
 }
 
 #[derive(Debug)]
+/// CLI error structure
 pub struct CliError {
     message: String,
     exit_code: ExitCode,
@@ -84,13 +93,13 @@ pub fn file_not_found_error(message: String) -> CliError {
 }
 
 pub struct ErrorHandler {
-    debug: bool,
+    _debug: bool,
     verbose: bool,
 }
 
 impl ErrorHandler {
     pub fn new(debug: bool, verbose: bool) -> Self {
-        Self { debug, verbose: verbose || debug }  // verbose includes debug functionality
+        Self { _debug: debug, verbose: verbose || debug }  // verbose includes debug functionality
     }
 
     pub fn handle_error(&self, error: &dyn std::error::Error, context: Option<&str>) -> ! {

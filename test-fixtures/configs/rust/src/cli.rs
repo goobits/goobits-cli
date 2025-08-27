@@ -7,9 +7,8 @@
 //! CLI module for test-rust-cli
 //! This module contains the CLI command structure and argument parsing logic.
 
-use clap::{Arg, Command, ArgMatches, value_parser};
+use clap::{Arg, Command, ArgMatches};
 use anyhow::Result;
-use crate::errors::{CliError, ExitCode};
 
 /// Build the main CLI application
 pub fn build_cli() -> Command {

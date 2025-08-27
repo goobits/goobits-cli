@@ -16,7 +16,7 @@ use std::sync::Mutex;
 use std::thread_local;
 
 use serde_json::{json, Value};
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 
 /// Log levels supported by the logger
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

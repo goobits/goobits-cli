@@ -25,7 +25,7 @@ struct CompletionOption {
 #[derive(Clone)]
 struct CompletionArgument {
     name: String,
-    description: String,
+    _description: String,
 }
 
 impl CompletionEngine {
