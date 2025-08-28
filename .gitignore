@@ -34,6 +34,9 @@ venv.bak/
 virtualenv/
 pipenv-venv/
 
+# Project-specific directories to ignore
+.links/
+
 # PyInstaller
 *.manifest
 *.spec
