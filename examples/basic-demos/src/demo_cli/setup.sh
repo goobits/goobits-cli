@@ -65,11 +65,11 @@ else
 fi
 
 # Project-specific configuration
-readonly PACKAGE_NAME="demo-python-cli"
-readonly COMMAND_NAME="demo_py"
-readonly DISPLAY_NAME="Demo Python CLI"
-readonly DESCRIPTION="A sample Python CLI built with Goobits"
-readonly PYPI_NAME="demo-python-cli"
+readonly PACKAGE_NAME="demo-multi-cli"
+readonly COMMAND_NAME="demo_multi"
+readonly DISPLAY_NAME="Multi-Language Demo CLI"
+readonly DESCRIPTION="A sample multi-language CLI built with Goobits"
+readonly PYPI_NAME="demo-multi-cli"
 readonly DEVELOPMENT_PATH="."
 readonly REQUIRED_VERSION="3.8"
 readonly MAXIMUM_VERSION="3.13"
@@ -77,7 +77,7 @@ readonly CHECK_API_KEYS="False"
 readonly CHECK_DISK_SPACE="True"
 readonly REQUIRED_MB="100"
 readonly SHELL_INTEGRATION="False"
-readonly SHELL_ALIAS="demo_py"
+readonly SHELL_ALIAS="demo_multi"
 
 # Dependencies
 readonly REQUIRED_DEPS=()

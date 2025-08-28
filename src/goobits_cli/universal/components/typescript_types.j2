@@ -11,30 +11,30 @@
   {%- for cmd_data in commander_commands.subcommands %}
 
 export interface {{ cmd_data.name | capitalize }}Options {
-    {%- for option in cmd_data.options | default([]) %}
+    {% for option in cmd_data.options | default([]) -%}
     {{ option.name }}?: {{ 'boolean' if option.type == 'boolean' else 'string' if option.type == 'string' else 'number' if option.type == 'number' else 'any' }};
-    {%- endfor %}
+    {% endfor -%}
 }
 
 export interface {{ cmd_data.name | capitalize }}Arguments {
-    {%- for arg in cmd_data.arguments | default([]) %}
+    {% for arg in cmd_data.arguments | default([]) -%}
     {{ arg.name }}: {{ 'string' if arg.type == 'string' else 'number' if arg.type == 'number' else 'any' }};
-    {%- endfor %}
+    {% endfor -%}
 }
 
     {%- if cmd_data.subcommands %}
       {%- for sub_data in cmd_data.subcommands %}
 
 export interface {{ cmd_data.name | capitalize }}{{ sub_data.name | capitalize }}Options {
-    {%- for option in sub_data.options | default([]) %}
+    {% for option in sub_data.options | default([]) -%}
     {{ option.name }}?: {{ 'boolean' if option.type == 'boolean' else 'string' if option.type == 'string' else 'number' if option.type == 'number' else 'any' }};
-    {%- endfor %}
+    {% endfor -%}
 }
 
 export interface {{ cmd_data.name | capitalize }}{{ sub_data.name | capitalize }}Arguments {
-    {%- for arg in sub_data.arguments | default([]) %}
+    {% for arg in sub_data.arguments | default([]) -%}
     {{ arg.name }}: {{ 'string' if arg.type == 'string' else 'number' if arg.type == 'number' else 'any' }};
-    {%- endfor %}
+    {% endfor -%}
 }
       {%- endfor %}
     {%- endif %}
@@ -43,15 +43,15 @@ export interface {{ cmd_data.name | capitalize }}{{ sub_data.name | capitalize }
   {%- for command in cli.root_command.subcommands %}
 
 export interface {{ command.name | capitalize }}Options {
-    {%- for option in command.options | default([]) %}
+    {% for option in command.options | default([]) -%}
     {{ option.name }}?: {{ 'boolean' if option.type == 'boolean' else 'string' if option.type == 'string' else 'number' if option.type == 'number' else 'any' }};
-    {%- endfor %}
+    {% endfor -%}
 }
 
 export interface {{ command.name | capitalize }}Arguments {
-    {%- for arg in command.arguments | default([]) %}
+    {% for arg in command.arguments | default([]) -%}
     {{ arg.name }}: {{ 'string' if arg.type == 'string' else 'number' if arg.type == 'number' else 'any' }};
-    {%- endfor %}
+    {% endfor -%}
 }
   {%- endfor %}
 {%- endif %}

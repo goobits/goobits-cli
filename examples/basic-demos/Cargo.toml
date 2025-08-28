@@ -15,7 +15,7 @@ exclude = [
 
 [[bin]]
 name = "demo_rust"
-path = "src/main.rs"
+path = "src/cli.rs"
 
 
 [dependencies]

@@ -284,8 +284,19 @@ class NodeJSRenderer(LanguageRenderer):
         """
 
         # Use user-defined paths if specified, otherwise use defaults
-        cli_path = ir["project"].get("cli_path") or "cli.mjs"
-        hooks_path = ir["project"].get("cli_hooks_path") or "cli_hooks.mjs"
+        base_cli_path = ir["project"].get("cli_path")
+        base_hooks_path = ir["project"].get("cli_hooks_path")
+        
+        # Transform file extensions for Node.js if they have Python extensions
+        if base_cli_path and base_cli_path.endswith('.py'):
+            cli_path = base_cli_path.replace('.py', '.mjs')
+        else:
+            cli_path = base_cli_path or "cli.mjs"
+            
+        if base_hooks_path and base_hooks_path.endswith('.py'):
+            hooks_path = base_hooks_path.replace('.py', '.mjs')
+        else:
+            hooks_path = base_hooks_path or "cli_hooks.mjs"
 
         # Node.js generates 3 files (cli, hooks, setup.sh)
         output = {

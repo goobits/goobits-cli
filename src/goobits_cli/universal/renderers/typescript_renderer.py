@@ -274,9 +274,22 @@ class TypeScriptRenderer(LanguageRenderer):
         """
 
         # Use user-defined paths if specified, otherwise use defaults
-        cli_path = ir["project"].get("cli_path") or "cli.ts"
-        hooks_path = ir["project"].get("cli_hooks_path") or "cli_hooks.ts"
-        types_path = ir["project"].get("cli_types_path") or "cli_types.d.ts"
+        base_cli_path = ir["project"].get("cli_path")
+        base_hooks_path = ir["project"].get("cli_hooks_path")
+        base_types_path = ir["project"].get("cli_types_path")
+        
+        # Transform file extensions for TypeScript if they have Python extensions
+        if base_cli_path and base_cli_path.endswith('.py'):
+            cli_path = base_cli_path.replace('.py', '.ts')
+        else:
+            cli_path = base_cli_path or "cli.ts"
+            
+        if base_hooks_path and base_hooks_path.endswith('.py'):
+            hooks_path = base_hooks_path.replace('.py', '.ts')
+        else:
+            hooks_path = base_hooks_path or "cli_hooks.ts"
+            
+        types_path = base_types_path or "cli_types.d.ts"
 
         # TypeScript generates 4 files (cli, hooks, types, setup.sh)
         output = {
@@ -719,6 +732,7 @@ class TypeScriptRenderer(LanguageRenderer):
             "pattern": f"<{arg.get('name', 'arg')}>",
             "description": arg.get("description", ""),
             "type": arg.get("type", "string"),
+            "name": arg.get("name"),
         }
     
     def _build_commander_option(self, opt: Dict[str, Any]) -> Dict[str, Any]:
@@ -728,6 +742,7 @@ class TypeScriptRenderer(LanguageRenderer):
             "description": opt.get("description", ""),
             "default": opt.get("default"),
             "type": self._js_type_from_option(opt),
+            "name": opt.get("name"),
         }
 
     def _camel_case_filter(self, text: str) -> str:

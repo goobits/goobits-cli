@@ -215,8 +215,8 @@ def cli(ctx, verbose, debug, config):
 @cli.command('build')
 @click.argument('config_path', type=click.STRING)
 @click.option('--output-dir', '-o', default=None,              help='📁 Output directory (defaults to same directory as config file)')
-@click.option('--output', '-None', default=None,              help='📝 Output filename for generated CLI (defaults to 'generated_cli.py')')
-@click.option('--backup', '-None', default=None,              help='💾 Create backup files (.bak) when overwriting existing files')
+@click.option('--output', default=None,              help='📝 Output filename for generated CLI (defaults to generated_cli.py)')
+@click.option('--backup', default=None,              help='💾 Create backup files (.bak) when overwriting existing files')
 @click.pass_obj
 def build(ctx, config_path, output_dir, output, backup):
     """Build CLI and setup scripts from goobits.yaml configuration"""
@@ -232,7 +232,7 @@ def build(ctx, config_path, output_dir, output, backup):
 @cli.command('init')
 @click.argument('project_name', type=click.STRING)
 @click.option('--template', '-t', default='basic',              help='🎯 Template type')
-@click.option('--force', '-None', default=None,              help='🔥 Overwrite existing goobits.yaml file')
+@click.option('--force', default=None,              help='🔥 Overwrite existing goobits.yaml file')
 @click.pass_obj
 def init(ctx, project_name, template, force):
     """Create initial goobits.yaml template"""
@@ -247,7 +247,7 @@ def init(ctx, project_name, template, force):
         handle_error(e, ctx.verbose)
 @cli.command('serve')
 @click.argument('directory', type=click.STRING)
-@click.option('--host', '-None', default='localhost',              help='🌍 Host to bind the server to')
+@click.option('--host', default='localhost',              help='🌍 Host to bind the server to')
 @click.option('--port', '-p', default=8080,              help='🔌 Port to run the server on')
 @click.pass_obj
 def serve(ctx, directory, host, port):
@@ -278,9 +278,9 @@ def validate(ctx, config_path, verbose):
         handle_error(e, ctx.verbose)
 @cli.command('migrate')
 @click.argument('path', type=click.STRING)
-@click.option('--backup', '-None', default=True,              help='💾 Create backup files (.bak)')
-@click.option('--dry-run', '-None', default=None,              help='👁️ Show changes without applying them')
-@click.option('--pattern', '-None', default='*.yaml',              help='🔍 File pattern for directory migration')
+@click.option('--backup', default=True,              help='💾 Create backup files (.bak)')
+@click.option('--dry-run', default=None,              help='👁️ Show changes without applying them')
+@click.option('--pattern', default='*.yaml',              help='🔍 File pattern for directory migration')
 @click.pass_obj
 def migrate(ctx, path, backup, dry_run, pattern):
     """Migrate YAML configurations to 3.0.0 format"""

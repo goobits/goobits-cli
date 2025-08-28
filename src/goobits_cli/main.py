@@ -804,23 +804,26 @@ def build(
             err=True,
         )
 
-    # Detect language from configuration
+    # Detect target languages from configuration
+    target_languages = goobits_config.get_target_languages()
 
-    language = goobits_config.language
+    # Add package name to context
+    set_context(package_name=goobits_config.package_name)
 
-    # Add language to context
-    set_context(language=language, package_name=goobits_config.package_name)
-    logger.info(f"Detected language: {language}")
-
-    typer.echo(f"Detected language: {language}")
+    if len(target_languages) == 1:
+        logger.info(f"Detected language: {target_languages[0]}")
+        typer.echo(f"Detected language: {target_languages[0]}")
+    else:
+        logger.info(f"Detected multi-language targets: {', '.join(target_languages)}")
+        typer.echo(f"Detected multi-language targets: {', '.join(target_languages)}")
 
     # Universal Template System is now the default
     typer.echo("✅ Using Universal Template System (production-ready)")
     typer.echo("   Generating optimized cross-language CLI with enhanced features.")
 
-    typer.echo("Generating CLI script...")
+    typer.echo("Generating CLI scripts...")
 
-    # Generate cli.py if CLI configuration exists
+    # Generate CLI for each target language
 
     if goobits_config.cli:
 
@@ -834,119 +837,91 @@ def build(
 
             version = extract_version_from_pyproject(output_dir)
 
-        # Route to different generators based on language
+        # Multi-language generation loop
+        
+        for language in target_languages:
+            # Add current language to context
+            set_context(language=language)
+            
+            if len(target_languages) > 1:
+                typer.echo(f"🚀 Generating {language} CLI using Universal Template System")
+            
+            # Route to appropriate generator based on language
+            if language == "nodejs":
+                from goobits_cli.generators.nodejs import NodeJSGenerator
+                generator = NodeJSGenerator()
+            elif language == "typescript":
+                from goobits_cli.generators.typescript import TypeScriptGenerator
+                generator = TypeScriptGenerator()
+            elif language == "rust":
+                from goobits_cli.generators.rust import RustGenerator
+                generator = RustGenerator()
+            else:  # python (default)
+                from goobits_cli.generators.python import PythonGenerator
+                generator = PythonGenerator()
 
-        if language == "nodejs":
-
-            from goobits_cli.generators.nodejs import NodeJSGenerator
-
-            generator = NodeJSGenerator()
-
-            # Node.js generates multiple files
-
+            # Generate all files for this language
             all_files = generator.generate_all_files(
                 goobits_config, config_path.name, version
             )
 
-        elif language == "typescript":
+            # Determine output directory for this language
+            if len(target_languages) > 1:
+                # Multi-language: organize by language subdirectories
+                lang_output_dir = output_dir / language
+                lang_output_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                # Single language: use the main output directory
+                lang_output_dir = output_dir
 
-            from goobits_cli.generators.typescript import TypeScriptGenerator
-
-            generator = TypeScriptGenerator()
-
-            # TypeScript generates multiple files
-
-            all_files = generator.generate_all_files(
-                goobits_config, config_path.name, version
-            )
-
-        elif language == "rust":
-
-            from goobits_cli.generators.rust import RustGenerator
-
-            generator = RustGenerator()
-
-            # Rust generates multiple files
-
-            all_files = generator.generate_all_files(
-                goobits_config, config_path.name, version
-            )
-
-        else:
-
-            # Use Python generator (default)
-
-            from goobits_cli.generators.python import PythonGenerator
-
-            generator = PythonGenerator()
-
-            # Python now also generates multiple files
-
-            all_files = generator.generate_all_files(
-                goobits_config, config_path.name, version
-            )
-
-        # Handle multi-file generation for all languages
-
-        if language in ["python", "nodejs", "typescript", "rust"]:
-
-            # Write all generated files
-
+            # Write all generated files for this language
             executable_files = all_files.pop("__executable__", [])
 
             for file_path, content in all_files.items():
-
                 # Skip pyproject.toml when building goobits itself (self-hosting)
-                # We maintain our own pyproject.toml manually with proper metadata
-
                 if (
                     file_path == "pyproject.toml"
                     and goobits_config.package_name == "goobits-cli"
                 ):
-
                     typer.echo(
                         "⏭️  Skipping pyproject.toml for self-hosted goobits-cli"
                     )
-
                     continue
 
-                full_path = output_dir / file_path
+                full_path = lang_output_dir / file_path
 
                 # Ensure parent directories exist
-
                 full_path.parent.mkdir(parents=True, exist_ok=True)
 
                 # Backup existing file if requested
-
                 backup_path = backup_file(full_path, backup)
-
                 if backup_path:
-
                     typer.echo(f"📋 Backed up existing file: {backup_path}")
 
                 # Write file
-
                 with open(full_path, "w") as f:
-
                     f.write(content)
 
                 # Make files executable as needed
-
                 if (
                     file_path.startswith("bin/")
                     or file_path in executable_files
                     or file_path == "setup.sh"
                 ):
-
                     full_path.chmod(0o755)
 
                 typer.echo(f"✅ Generated: {full_path}")
 
-            # All languages now use multi-file generation
+            # Show summary for this language
+            file_count = len(all_files) + len(executable_files)
+            if len(target_languages) > 1:
+                typer.echo(f"✅ Generated {file_count} files for {language}")
+
+        # Multi-language generation complete
 
         # Extract package name and filename for pyproject.toml update (Python only)
 
-        if language == "python":
+        if "python" in target_languages:
 
             # Use configured output path for Python
 
@@ -1089,7 +1064,7 @@ def build(
 
     # Generate setup.sh (Python only - Node.js generates its own)
 
-    if language == "python":
+    if "python" in target_languages and goobits_config.cli:
 
         typer.echo("Generating setup script...")
 
@@ -1113,7 +1088,7 @@ def build(
 
     # Copy setup.sh to package source directory for package-data inclusion (Python only)
 
-    if language == "python" and goobits_config.cli:  # Only copy if CLI is configured
+    if "python" in target_languages and goobits_config.cli:  # Only copy if CLI is configured
 
         # Find the package source directory
 
@@ -1165,26 +1140,34 @@ def build(
             )
 
     # Update package manifests for Node.js and Rust
-    if language in ["nodejs", "rust"]:
-        from goobits_cli.manifest_updater import update_manifests_for_build
-        
-        # Get CLI output path from generated files
-        if language == "nodejs":
-            cli_path = Path("cli.mjs")  # Node.js generates cli.mjs
-        else:
-            cli_path = Path("src/main.rs")  # Rust always uses src/main.rs
-        manifest_result = update_manifests_for_build(
-            config=goobits_config.model_dump(),
-            output_dir=output_dir,
-            cli_path=cli_path
-        )
-        
-        if manifest_result.is_err():
-            typer.echo(f"⚠️  Warning: {manifest_result.err()}", err=True)
-            typer.echo("✅ CLI generated successfully, but manifest update failed")
-        else:
-            manifest_file = "package.json" if language == "nodejs" else "Cargo.toml"
-            typer.echo(f"✅ Updated {manifest_file} with CLI configuration")
+    for language in target_languages:
+        if language in ["nodejs", "rust"]:
+            from goobits_cli.manifest_updater import update_manifests_for_build
+            
+            # Get CLI output path from generated files
+            if language == "nodejs":
+                cli_path = Path("cli.mjs")  # Node.js generates cli.mjs
+            else:
+                cli_path = Path("src/main.rs")  # Rust always uses src/main.rs
+                
+            # Determine correct output directory for multi-language
+            if len(target_languages) > 1:
+                manifest_output_dir = output_dir / language
+            else:
+                manifest_output_dir = output_dir
+                
+            manifest_result = update_manifests_for_build(
+                config=goobits_config.model_dump(),
+                output_dir=manifest_output_dir,
+                cli_path=cli_path
+            )
+            
+            if manifest_result.is_err():
+                typer.echo(f"⚠️  Warning: {manifest_result.err()}", err=True)
+                typer.echo("✅ CLI generated successfully, but manifest update failed")
+            else:
+                manifest_file = "package.json" if language == "nodejs" else "Cargo.toml"
+                typer.echo(f"✅ Updated {manifest_file} with CLI configuration")
             
             # Display any warnings from the manifest update
             warnings = manifest_result.value or []

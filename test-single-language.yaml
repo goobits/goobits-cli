@@ -1,0 +1,20 @@
+package_name: test-single-cli
+command_name: testsingle
+display_name: "Single Language Test CLI"
+description: "Testing single language generation (backward compatibility)"
+
+# Single language (backward compatibility)
+language: typescript
+
+cli:
+  name: testsingle
+  version: "1.0.0"
+  tagline: "Single language test CLI"
+  
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        - name: name
+          desc: "Name to greet"
+          type: string

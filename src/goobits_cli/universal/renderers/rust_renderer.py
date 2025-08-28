@@ -106,12 +106,17 @@ class RustRenderer(LanguageRenderer):
 
         # Add Rust-specific transformations
 
+        # Get the actual CLI path from output structure
+        output_structure = self.get_output_structure(ir)
+        actual_cli_path = output_structure.get("rust_cli_consolidated", "src/cli.rs")
+        
         context["rust"] = {
             "structs": self._generate_structs(ir),
             "type_mappings": self._get_type_mappings(),
             "imports": self._generate_imports(ir),
             "dependencies": self._generate_dependencies(ir),
             "modules": self._generate_modules(ir),
+            "bin_path": actual_cli_path,  # Add actual CLI path for Cargo.toml
         }
 
         # Transform CLI schema for Rust
@@ -214,8 +219,19 @@ class RustRenderer(LanguageRenderer):
         """
 
         # Use user-defined paths if specified, otherwise use defaults
-        cli_path = ir["project"].get("cli_path") or "src/cli.rs"
-        hooks_path = ir["project"].get("cli_hooks_path") or "src/cli_hooks.rs"
+        base_cli_path = ir["project"].get("cli_path")
+        base_hooks_path = ir["project"].get("cli_hooks_path")
+        
+        # Transform file extensions for Rust if they have Python extensions
+        if base_cli_path and base_cli_path.endswith('.py'):
+            cli_path = base_cli_path.replace('.py', '.rs')
+        else:
+            cli_path = base_cli_path or "src/cli.rs"
+            
+        if base_hooks_path and base_hooks_path.endswith('.py'):
+            hooks_path = base_hooks_path.replace('.py', '.rs')
+        else:
+            hooks_path = base_hooks_path or "src/cli_hooks.rs"
         
         # Ensure src/ prefix for Rust files
         if cli_path and not cli_path.startswith("src/"):

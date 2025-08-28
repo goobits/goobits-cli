@@ -244,7 +244,7 @@ class TestPerformanceBenchmarks:
 
         # Verify files were generated
         assert (tmp_path / "Cargo.toml").exists()
-        assert (tmp_path / "src" / "main.rs").exists()
+        assert (tmp_path / "src" / "cli.rs").exists()
 
     def test_cross_language_performance_comparison(self, tmp_path):
         """Compare performance across all supported languages."""

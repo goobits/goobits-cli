@@ -330,7 +330,10 @@ class GoobitsConfigSchema(BaseModel):
     keywords: Optional[List[str]] = Field(default_factory=list)
 
     # Language selection (rust support now available)
-    language: Literal["python", "nodejs", "typescript", "rust"] = "python"
+    language: Optional[Literal["python", "nodejs", "typescript", "rust"]] = "python"
+    
+    # Multi-language target support
+    languages: Optional[List[Literal["python", "nodejs", "typescript", "rust"]]] = None
 
     # CLI generation configuration
     cli_path: Optional[str] = None  # Path for main CLI file
@@ -362,3 +365,48 @@ class GoobitsConfigSchema(BaseModel):
 
     # Optional CLI configuration (for backward compatibility)
     cli: Optional[CLISchema] = None
+
+    @model_validator(mode="after")
+    def validate_language_configuration(self):
+        """Validate language/languages field consistency and set defaults."""
+        # If languages is provided, ensure it's not empty
+        if self.languages is not None:
+            if not self.languages:
+                raise ValueError("'languages' field cannot be empty. Provide at least one target language.")
+            
+            # Remove duplicates while preserving order
+            seen = set()
+            unique_languages = []
+            for lang in self.languages:
+                if lang not in seen:
+                    seen.add(lang)
+                    unique_languages.append(lang)
+            self.languages = unique_languages
+            
+            # If both language and languages are provided, languages takes precedence
+            if self.language is not None and self.language != "python":
+                # Only warn if the single language isn't in the languages list
+                if self.language not in self.languages:
+                    raise ValueError(
+                        f"Conflicting language configuration: 'language: {self.language}' "
+                        f"not found in 'languages: {self.languages}'. "
+                        f"Use either 'language' OR 'languages', not both."
+                    )
+        
+        # If neither is provided, default to Python
+        elif self.language is None:
+            self.language = "python"
+            
+        return self
+
+    def get_target_languages(self) -> List[str]:
+        """Get the list of target languages for generation.
+        
+        Returns:
+            List of target languages. If 'languages' is specified, returns that list.
+            Otherwise, returns a single-item list with the 'language' value.
+        """
+        if self.languages is not None:
+            return self.languages
+        else:
+            return [self.language or "python"]
