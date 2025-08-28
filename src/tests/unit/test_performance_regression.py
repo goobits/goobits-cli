@@ -99,20 +99,28 @@ if __name__ == "__main__":
     def test_no_eager_universal_imports(self):
         """Test that Universal Template imports are not loaded eagerly."""
         # This test ensures we don't regress to eager loading
-        start = time.perf_counter()
-
-        # These imports should be available but not automatically trigger heavy loads
+        import sys
+        import importlib
+        
+        # Store original module state
+        module_name = "goobits_cli.universal.template_engine" 
+        was_loaded = module_name in sys.modules
+        original_module = sys.modules.get(module_name)
+        
         try:
-            # Test that we can import the template engine module without triggering
-            # expensive operations
-            import sys
-
-            if "goobits_cli.universal.template_engine" in sys.modules:
-                # If already loaded, this test isn't meaningful
-                pytest.skip("Universal template engine already loaded - test environment already initialized")
-
+            # Clear the module if it was already loaded to get accurate timing
+            if was_loaded:
+                del sys.modules[module_name]
+                # Also clear any submodules that might have been loaded
+                to_remove = [name for name in sys.modules if name.startswith(module_name + ".")]
+                for name in to_remove:
+                    del sys.modules[name]
+            
+            start = time.perf_counter()
+            
+            # Import the module fresh
             import goobits_cli.universal.template_engine  # noqa: F401
-
+            
             end = time.perf_counter()
             import_time = (end - start) * 1000
 
@@ -126,6 +134,14 @@ if __name__ == "__main__":
         except ImportError:
             # If import fails, that's ok - this is an optional optimization test
             pytest.skip("Universal template engine not available in current environment")
+        
+        finally:
+            # Restore original module state to avoid affecting other tests
+            if was_loaded and original_module is not None:
+                sys.modules[module_name] = original_module
+            elif module_name in sys.modules and not was_loaded:
+                # Module wasn't there before, but we imported it, so clean up
+                pass  # Keep it loaded as other tests might need it
 
     @pytest.mark.slow
     def test_generated_cli_startup_performance(self):
