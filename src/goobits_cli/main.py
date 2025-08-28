@@ -16,55 +16,6 @@ if len(sys.argv) == 2:
 
         sys.exit(0)
 
-    elif sys.argv[1] in ["--help", "-h"]:
-
-        # Fast help without loading heavy dependencies
-
-        help_text = """
-
-Usage: python -m goobits_cli.main [OPTIONS] COMMAND [ARGS]...
-
-
-
-Unified CLI for Goobits projects
-
-
-
-
-
-╭─ Options ──────────────────────────────────────────────────────────────────────╮
-
-│ --version                     Show version and exit                          │
-
-│ --install-completion          Install completion for the current shell.      │
-
-│ --show-completion             Show completion for the current shell, to copy │
-
-│                               it or customize the installation.              │
-
-│ --help                        Show this message and exit.                    │
-
-╰────────────────────────────────────────────────────────────────────────────────╯
-
-╭─ Commands ─────────────────────────────────────────────────────────────────────╮
-
-│ build       Build CLI and setup scripts from goobits.yaml configuration.    │
-
-│ init        Create initial goobits.yaml template.                            │
-
-│ migrate     Migrate YAML configurations to 3.0.0 format.                    │
-
-│ serve       Serve a local PyPI-compatible package index.                     │
-
-│ upgrade     Upgrade goobits-cli to the latest version.                       │
-
-╰────────────────────────────────────────────────────────────────────────────────╯
-
-        """.strip()
-
-        typer.echo(help_text)
-
-        sys.exit(0)
 
 
 # Now import heavy dependencies only if needed
