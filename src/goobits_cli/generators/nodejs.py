@@ -585,7 +585,7 @@ class NodeJSGenerator(BaseGenerator):
                 (
                     content
                     for path, content in generated_files.items()
-                    if "cli.js" in path or "index.js" in path
+                    if "cli.mjs" in path or "cli.js" in path or "index.js" in path
                 ),
                 "",
             )
