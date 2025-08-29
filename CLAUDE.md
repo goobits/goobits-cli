@@ -55,7 +55,7 @@ pip uninstall goobits-cli
 pytest src/tests/
 
 # Run specific test file  
-pytest src/tests/unit/test_builder.py
+pytest src/tests/unit/core/test_builder.py
 
 # Run with coverage
 pytest --cov=goobits_cli src/tests/

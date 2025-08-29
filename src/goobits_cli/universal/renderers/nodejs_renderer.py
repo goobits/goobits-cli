@@ -13,8 +13,9 @@ Node.js/JavaScript code with proper ES module support.
 """
 
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
+from pathlib import Path
 
 # Lazy import for version to avoid early import overhead
 _version = None
@@ -120,6 +121,13 @@ class NodeJSRenderer(LanguageRenderer):
 
         # Start with base IR context and set language
         context = self._set_language_context(ir)
+        
+        # Determine actual CLI path (same logic as in determine_output_files)
+        base_cli_path = ir.get("project", {}).get("cli_path")
+        if base_cli_path and base_cli_path.endswith('.py'):
+            cli_path = base_cli_path.replace('.py', '.mjs')
+        else:
+            cli_path = base_cli_path or "cli.mjs"
 
         context.update(
             {
@@ -134,8 +142,8 @@ class NodeJSRenderer(LanguageRenderer):
                 "nodejs": {
                     "imports": nodejs_imports,
                     "requires": nodejs_imports,  # Alias for backward compatibility
-                    "main_entry": "cli.js",  # Main entry point for bin/cli.js template
-                    "bin_entry": "bin/cli.js",  # Binary entry point for package.json
+                    "main_entry": cli_path,  # Main entry point - use actual CLI path
+                    "bin_entry": cli_path,  # Binary entry point for package.json - use actual CLI path
                     "package_config": {
                         "name": ir.get("project", {}).get("package_name", "cli"),
                         "version": ir.get("project", {}).get("version", _get_version()),
@@ -298,14 +306,83 @@ class NodeJSRenderer(LanguageRenderer):
         else:
             hooks_path = base_hooks_path or "cli_hooks.mjs"
 
-        # Node.js generates 3 files (cli, hooks, setup.sh)
+        # Node.js generates 4 files (cli, hooks, package.json, setup.sh)
         output = {
             "nodejs_cli_consolidated": cli_path,  # ES6 module with everything embedded
             "hooks_template": hooks_path,  # RENAMED from src/hooks.js to cli_hooks.mjs
             "setup_script": "setup.sh",  # Smart setup with package.json merging
         }
-
+        
+        # Note: package.json is now generated programmatically in generate_manifest()
+        # to properly merge with existing files instead of overwriting
+        
         return output
+    
+    def generate_manifest(self, ir: Dict[str, Any], output_dir: Path) -> Optional[Dict[str, str]]:
+        """
+        Generate package.json programmatically with proper merging for existing files.
+        
+        Args:
+            ir: Intermediate representation
+            output_dir: Directory where package.json should be created
+            
+        Returns:
+            Dict mapping "package.json" to its content, or None if handled by manifest_updater
+        """
+        import json
+        
+        package_json_path = output_dir / "package.json"
+        
+        # If file exists and is older than 2 seconds, let manifest_updater handle it
+        # This preserves user customizations
+        if package_json_path.exists():
+            import time
+            file_age = time.time() - package_json_path.stat().st_mtime
+            if file_age > 2:
+                # Existing file - let manifest_updater handle the merge
+                return None
+        
+        # New file or just created - generate full package.json
+        cli_path = self.get_output_structure(ir).get("nodejs_cli_consolidated", "cli.mjs")
+        
+        package_data = {
+            "name": ir.get("project", {}).get("package_name", "my-cli"),
+            "version": ir.get("project", {}).get("version", "1.0.0"),
+            "description": ir.get("project", {}).get("description", "CLI application"),
+            "main": cli_path,
+            "type": "module",
+            "bin": {
+                ir.get("project", {}).get("command_name", "cli"): f"./{cli_path}"
+            },
+            "scripts": {
+                "start": f"node {cli_path}",
+                "test": "echo \"Error: no test specified\" && exit 1"
+            },
+            "keywords": ["cli"],
+            "author": ir.get("project", {}).get("author", ""),
+            "license": ir.get("project", {}).get("license", "MIT"),
+            "dependencies": {
+                "commander": "^11.1.0",
+                "chalk": "^5.3.0",
+                "ora": "^7.0.1",
+                "winston": "^3.11.0",
+                "js-yaml": "^4.1.0"
+            },
+            "engines": {
+                "node": ">=14.0.0"
+            }
+        }
+        
+        # Add any extra dependencies from installation.extras.npm
+        installation = ir.get("installation", {})
+        if installation:
+            extras = installation.get("extras", {})
+            if extras:
+                npm_deps = extras.get("npm", {})
+                if npm_deps and isinstance(npm_deps, dict):
+                    package_data["dependencies"].update(npm_deps)
+        
+        return {"package.json": json.dumps(package_data, indent=2)}
 
     # Private helper methods
 
@@ -372,12 +449,35 @@ class NodeJSRenderer(LanguageRenderer):
                 "hook_name": command.get(
                     "hook_name", f"on_{command.get('name', 'command')}"
                 ),
-                "subcommands": command.get("subcommands", []),
+                "subcommands": self._build_subcommands_recursive(command.get("subcommands", []), command.get("name", "command")),
             }
 
             commander_data["subcommands"].append(commander_cmd)
 
         return commander_data
+
+    def _build_subcommands_recursive(self, subcommands: List[Dict[str, Any]], parent_name: str) -> List[Dict[str, Any]]:
+        """Recursively build subcommands in Commander format."""
+        
+        result = []
+        for subcmd in subcommands:
+            subcmd_data = {
+                "name": subcmd.get("name", "command"),
+                "description": subcmd.get("description", ""),
+                "arguments": [
+                    self._build_commander_argument(arg)
+                    for arg in subcmd.get("arguments", [])
+                ],
+                "options": [
+                    self._build_commander_option(opt)
+                    for opt in subcmd.get("options", [])
+                ],
+                "hook_name": f"on_{parent_name}_{subcmd.get('name', 'command')}",
+                "subcommands": self._build_subcommands_recursive(subcmd.get("subcommands", []), f"{parent_name}_{subcmd.get('name', 'command')}")
+            }
+            result.append(subcmd_data)
+        
+        return result
 
     def _build_npm_dependencies(self, ir: Dict[str, Any]) -> Dict[str, str]:
         """
@@ -593,9 +693,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         flag_str = ", ".join(flags)
 
-        # Add value placeholder for non-flag options
+        # Add value placeholder for non-boolean options
 
-        if option["type"] != "flag":
+        if option["type"] not in ["flag", "bool", "boolean"]:
 
             flag_str += f" <{option['name']}>"
 

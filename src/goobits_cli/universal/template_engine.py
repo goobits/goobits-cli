@@ -747,10 +747,23 @@ class UniversalTemplateEngine:
         # Get output structure
 
         output_structure = renderer.get_output_structure(ir)
+        
+        # Initialize generated files dict
+        generated_files = {}
+        
+        # Check if renderer supports programmatic manifest generation
+        # This allows renderers to generate package.json/Cargo.toml with proper merging
+        if hasattr(renderer, 'generate_manifest'):
+            manifest_files = renderer.generate_manifest(ir, output_dir)
+            if manifest_files:
+                # Add programmatically generated manifest files
+                for filename, content in manifest_files.items():
+                    full_path = output_dir / filename
+                    generated_files[str(full_path)] = content
 
         # Render all components with error handling and performance optimization
 
-        generated_files = {}
+        generated_files_from_templates = {}
 
         failed_components = []
 
@@ -783,7 +796,7 @@ class UniversalTemplateEngine:
 
                                 full_output_path = output_dir / output_path
 
-                                generated_files[str(full_output_path)] = (
+                                generated_files_from_templates[str(full_output_path)] = (
                                     rendered_content
                                 )
 
@@ -801,7 +814,7 @@ class UniversalTemplateEngine:
 
                     full_output_path = output_dir / output_path
 
-                    generated_files[str(full_output_path)] = rendered_content
+                    generated_files_from_templates[str(full_output_path)] = rendered_content
 
                 else:
 
@@ -819,6 +832,9 @@ class UniversalTemplateEngine:
 
                 failed_components.append(component_name)
 
+        # Merge programmatically generated files with template-generated files
+        generated_files.update(generated_files_from_templates)
+        
         # Report generation results
 
         typer.echo(f"✅ Generated {len(generated_files)} files for {language}")
@@ -1206,6 +1222,8 @@ class UniversalTemplateEngine:
                                     "type": arg_dict.get("type", "string"),
                                     "required": arg_dict.get("required", False),
                                     "default": arg_dict.get("default"),
+                                    "multiple": arg_dict.get("nargs") == "*",
+                                    "nargs": arg_dict.get("nargs"),
                                 }
                             )
 
@@ -1561,7 +1579,8 @@ class UniversalTemplateEngine:
                             "description": _safe_get_attr(arg, "description"),
                             "type": _safe_get_attr(arg, "type", "string"),
                             "required": _safe_get_attr(arg, "required", True),
-                            "multiple": _safe_get_attr(arg, "multiple", False),
+                            "multiple": _safe_get_attr(arg, "nargs") == "*",
+                            "nargs": _safe_get_attr(arg, "nargs"),
                         }
                     )
 

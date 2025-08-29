@@ -363,13 +363,30 @@ const log = getLogger('cli');
 // Create main program
 const program = new Command();
 
+// Configure exit override to use correct exit codes (must be before any commands)
+program.exitOverride((err) => {
+    // Help and version should exit with 0 (success)
+    if (err.code === 'commander.helpDisplayed' || err.code === 'commander.version') {
+        process.exit(0);
+    }
+    // Missing arguments and unknown commands should exit with 2 (validation error)
+    else if (err.code === 'commander.missingArgument' || err.code === 'commander.unknownCommand') {
+        console.error(err.message);
+        process.exit(2);
+    }
+    // Other errors exit with 1 (general error)
+    else {
+        console.error(err.message);
+        process.exit(1);
+    }
+});
+
 program
-    .name('{{ cli.root_command.name | default(project.command_name) | default('cli') }}')
-    .description('{{ cli.description | default(project.description) }}')
+    .name('{{ cli.root_command.name | default(cli.name) | default(project.command_name) | default('cli') }}')
+    .description('{{ cli.tagline | default(cli.description) | default(project.description) | default('CLI Application') }}')
     .version('{{ cli.version | default(project.version) | default("1.0.0") }}');
 
 // Global options from processed commander structure
-
 {% if commander_commands and commander_commands.root_command and commander_commands.root_command.options %}
 {%- for option in commander_commands.root_command.options %}
 program.option(
@@ -380,7 +397,7 @@ program.option(
     {%- endif %}
 );
 {%- endfor %}
-{%- endif %}
+{% endif %}
 
 // Commands - use processed commander structure
 
@@ -403,38 +420,25 @@ const {{ cmd_data.name }}Command = program
         {{ option.default | tojson }}
         {%- endif %}
     )
-    {%- endfor %}
-    .action(async (...args) => {
-        try {
-            // Load hooks if not already loaded
-            if (!hooks) {
-                await loadHooks();
-            }
-            
-            // Call the hook function
-            const hookName = '{{ cmd_data.hook_name | default("on" + cmd_data.name | title) }}';
-            if (hooks && typeof hooks[hookName] === 'function') {
-                await hooks[hookName](...args);
-            } else {
-                console.error(chalk.red(`Hook function '${hookName}' not found in cli_hooks.mjs`));
-                process.exit(1);
-            }
-        } catch (error) {
-            errorHandler.handleError(error, '{{ cmd_data.name }} command');
-        }
-    });
+    {%- endfor %};
 
 // Add subcommands
     {% for sub_data in cmd_data.subcommands %}
 {{ cmd_data.name }}Command
     .command('{{ sub_data.name }}')
     .description('{{ sub_data.description }}')
+    {%- for arg in sub_data.arguments | default([]) %}
+    .argument('{{ arg.pattern }}', '{{ arg.description }}')
+    {%- endfor %}
+    {%- for option in sub_data.options | default([]) %}
+    .option('{{ option.flags }}', '{{ option.description }}'{% if option.default %}, {{ option.default | tojson }}{% endif %})
+    {%- endfor %}
     .action(async (...args) => {
         try {
             if (!hooks) {
                 await loadHooks();
             }
-            const hookName = '{{ sub_data.hook_name | default("on_" + sub_data.name) }}';
+            const hookName = '{{ sub_data.hook_name | default("on_" + cmd_data.name + "_" + sub_data.name) }}';
             if (hooks && typeof hooks[hookName] === 'function') {
                 await hooks[hookName](...args);
             } else {

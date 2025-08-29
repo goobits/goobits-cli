@@ -160,7 +160,9 @@ class ManifestUpdater:
         essential_deps = {
             "commander": "^11.1.0",
             "chalk": "^5.6.0",
-            "js-yaml": "^4.1.0"
+            "js-yaml": "^4.1.0",
+            "ora": "^7.0.1",
+            "winston": "^3.11.0"
         }
         
         if additional_deps:
@@ -309,16 +311,34 @@ def update_manifests_for_build(config: Dict[str, Any],
     """
     updater = ManifestUpdater()
     language = config.get('language', 'python').lower()
-    cli_name = config.get('cli', {}).get('name', 'cli')
+    
+    # Debug: Check if config or cli is None
+    if config is None:
+        return Result.Err("Config is None")
+    
+    cli_config = config.get('cli')
+    if cli_config is None:
+        return Result.Err("CLI config is None")
+    
+    cli_name = cli_config.get('name', 'cli')
     all_warnings = []
     
     try:
         if language == 'nodejs':
             package_json_path = output_dir / "package.json"
-            cli_file = cli_path.name
+            # Use the full relative path, not just the filename
+            cli_file = str(cli_path)
             
             # Extract additional dependencies from config if present
-            extra_deps = config.get('installation', {}).get('extras', {}).get('npm', {})
+            installation = config.get('installation', {})
+            if installation is None:
+                installation = {}
+            extras = installation.get('extras', {})
+            if extras is None:
+                extras = {}
+            extra_deps = extras.get('npm', {})
+            if extra_deps is None:
+                extra_deps = {}
             
             result = updater.update_package_json(
                 package_json_path, 
@@ -338,7 +358,15 @@ def update_manifests_for_build(config: Dict[str, Any],
             cli_file = "src/main.rs"
             
             # Extract additional dependencies from config if present
-            extra_deps = config.get('installation', {}).get('extras', {}).get('cargo', {})
+            installation = config.get('installation', {})
+            if installation is None:
+                installation = {}
+            extras = installation.get('extras', {})
+            if extras is None:
+                extras = {}
+            extra_deps = extras.get('cargo', {})
+            if extra_deps is None:
+                extra_deps = {}
             
             result = updater.update_cargo_toml(
                 cargo_toml_path,

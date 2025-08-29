@@ -206,13 +206,14 @@ hooks = load_hooks()
 # CLI COMMANDS
 # ============================================================================
 
-@click.group()
+@click.group(context_settings={'help_option_names': ['-h', '--help']})
+@click.version_option(version='{{ cli.version | default(project.version) | default("1.0.0") }}', prog_name='{{ cli.name | default(project.command_name) }}')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
 @click.option('--debug', is_flag=True, help='Enable debug output')
 @click.option('--config', type=click.Path(), help='Path to config file')
 @click.pass_context
 def cli(ctx, verbose, debug, config):
-    """{{ cli.description | default(project.description) }}"""
+    """{{ cli.tagline | default(cli.description) | default(project.description) | default('CLI Application') }}"""
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
@@ -223,7 +224,7 @@ def cli(ctx, verbose, debug, config):
     {%- if not cmd_data.subcommands %}
 @cli.command('{{ cmd_name }}')
 {% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) -%}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
 {% endfor -%}
 {% for opt in cmd_data.options | default([]) -%}
 @click.option('--{{ opt.name }}', '-{{ opt.short }}',
@@ -264,7 +265,7 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
 
 @{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_name }}')
           {%- for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
           {%- endfor %}
           {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
 @click.option('{{ opt.long }}', '{{ opt.short }}',
@@ -297,7 +298,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
 
 @{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_data.name }}')
           {% for arg in sub_data.arguments | default([]) %}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
           {% endfor %}
           {% for opt in sub_data.options | default([]) %}
 @click.option('{{ opt.long }}', '{{ opt.short }}',
@@ -333,7 +334,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
 
 @cli.command('{{ command.name }}')
     {%- for arg in command.arguments | default([]) %}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
     {%- endfor %}
     {%- for opt in command.options | default([]) %}
 @click.option('{{ opt.long }}', '{{ opt.short }}',
@@ -427,7 +428,7 @@ def interactive_mode(ctx):
 def main():
     """Main entry point for the CLI."""
     try:
-        cli()
+        cli(prog_name='{{ cli.name | default(project.command_name) }}')
     except Exception as e:
         handle_error(e, '--verbose' in sys.argv or '--debug' in sys.argv)
 

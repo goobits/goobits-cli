@@ -2,7 +2,7 @@ suite_name: basic-commands
 description: Tests for basic command execution, arguments, options, help, and version
 
 setup:
-  goobits_config: ../../../examples/basic-demos/python-example.yaml
+  goobits_config: ../test-cli-config.yaml
   cleanup: true
 
 tests:
@@ -136,3 +136,20 @@ tests:
         - "NAME"
         - "--greeting"
         - "Custom greeting"
+    language_overrides:
+      nodejs:
+        stdout:
+          contains:
+            - "hello"
+            - "Say hello"
+            - "name"  # Commander.js shows argument names in lowercase
+            - "--greeting"
+            - "Custom greeting"
+      typescript:
+        stdout:
+          contains:
+            - "hello"
+            - "Say hello"
+            - "name"  # Commander.js shows argument names in lowercase
+            - "--greeting"
+            - "Custom greeting"

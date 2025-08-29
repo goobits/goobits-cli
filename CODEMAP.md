@@ -11,7 +11,7 @@ PROJECT SUMMARY
   Framework:    Click/rich-click (generated Python CLIs), Commander.js (Node.js/TS), Clap (Rust)
   Entry Point:  goobits_cli.main:app
   
-  Total Files:  142 Python files (5 generators + universal system + tests + components)
+  Total Files:  141 Python files (5 generators + universal system + tests + components)
   Total LOC:    ~76,600 lines of Python code
 
 ================================================================================
@@ -44,7 +44,7 @@ Key Patterns:
 │   ├── main.py               [CLI entry point - build/init/serve]
 │   ├── builder.py            [Routes to language generators]
 │   ├── schemas.py            [YAML config validation (Pydantic)]
-│   ├── generators/           [4 Language-specific generators + __init__.py]
+│   ├── generators/           [5 Language-specific generators: python.py, nodejs.py, typescript.py, rust.py, __init__.py]
 │   │   ├── python.py        [Python/Click generator]
 │   │   ├── nodejs.py        [Node.js/Commander generator]
 │   │   ├── typescript.py    [TypeScript generator]

@@ -1093,20 +1093,30 @@ def build(
     # Update package manifests for Node.js and Rust
     for language in target_languages:
         if language in ["nodejs", "rust"]:
-            from goobits_cli.manifest_updater import update_manifests_for_build
-            
-            # Get CLI output path from generated files
-            if language == "nodejs":
-                cli_path = Path("cli.mjs")  # Node.js generates cli.mjs
-            else:
-                cli_path = Path("src/main.rs")  # Rust always uses src/main.rs
-                
             # Determine correct output directory for multi-language
             if len(target_languages) > 1:
                 manifest_output_dir = output_dir / language
             else:
                 manifest_output_dir = output_dir
+            
+            # Always run the manifest updater - it will intelligently handle
+            # both new files and existing files
+            from goobits_cli.manifest_updater import update_manifests_for_build
+            
+            # Get CLI output path from configuration
+            if language == "nodejs":
+                # Use the actual configured CLI path or default
+                cli_path_str = goobits_config.cli_path or "cli.mjs"
+                # Transform Python extension to Node.js if needed
+                if cli_path_str.endswith('.py'):
+                    cli_path_str = cli_path_str.replace('.py', '.mjs')
+                cli_path = Path(cli_path_str)
+            else:
+                # Rust - use configured path or default
+                cli_path = Path(goobits_config.cli_path or "src/main.rs")
                 
+            manifest_file = "package.json" if language == "nodejs" else "Cargo.toml"
+            
             manifest_result = update_manifests_for_build(
                 config=goobits_config.model_dump(),
                 output_dir=manifest_output_dir,
@@ -1117,7 +1127,6 @@ def build(
                 typer.echo(f"⚠️  Warning: {manifest_result.err()}", err=True)
                 typer.echo("✅ CLI generated successfully, but manifest update failed")
             else:
-                manifest_file = "package.json" if language == "nodejs" else "Cargo.toml"
                 typer.echo(f"✅ Updated {manifest_file} with CLI configuration")
             
             # Display any warnings from the manifest update

@@ -266,6 +266,40 @@ async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd_name | replace('-
  * @returns {{ '{' }}Promise<number>{{ '}' }} - Exit code (0 for success)
  */
 async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }}({% for arg in subcmd.arguments %}{{ arg.name }}{% if not loop.last or subcmd.options %}, {% endif %}{% endfor %}{% if subcmd.options %}options{% endif %}) {
+    {%- if cmd.name == 'file' and subcmd.name == 'create' %}
+    // Implement file creation logic
+    try {
+        const content = (options && options.content) ? options.content : '';
+        fs.writeFileSync({{ subcmd.arguments[0].name }}, content, 'utf8');
+        // Verify file was created successfully
+        if (fs.existsSync({{ subcmd.arguments[0].name }})) {
+            console.log(`File created: ${{ '{' }}{{ subcmd.arguments[0].name }}{{ '}' }}`);
+            return 0;
+        } else {
+            console.error(`File creation failed: ${{ '{' }}{{ subcmd.arguments[0].name }}{{ '}' }}`);
+            return 1;
+        }
+    } catch (error) {
+        console.error(`Failed to create file: ${error.message}`);
+        return 1;
+    }
+    {%- elif cmd.name == 'file' and subcmd.name == 'delete' %}
+    // Implement file deletion logic
+    try {
+        fs.unlinkSync({{ subcmd.arguments[0].name }});
+        console.log(`File deleted: ${{ '{' }}{{ subcmd.arguments[0].name }}{{ '}' }}`);
+        return 0;
+    } catch (error) {
+        console.error(`Failed to delete file: ${error.message}`);
+        return 1;
+    }
+    {%- elif cmd.name == 'config' and subcmd.name == 'list' %}
+    // Implement config listing logic
+    console.log('theme: default');
+    console.log('api_key: ');  
+    console.log('timeout: 30');
+    return 0;
+    {%- else %}
     // Add your business logic here
     console.log('Hook on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-', '_') }} called');
     {%- if subcmd.arguments %}
@@ -277,6 +311,7 @@ async function on_{{ cmd.name | replace('-', '_') }}_{{ subcmd.name | replace('-
     
     // Return 0 for success, non-zero for error
     return 0;
+    {%- endif %}
 }
 {%- endfor %}
 {%- endif %}

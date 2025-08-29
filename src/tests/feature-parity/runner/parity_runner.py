@@ -110,10 +110,17 @@ class ParityTestRunner:
             raise RuntimeError(f"Failed to generate {language} CLI: {result.stderr}")
 
         # Copy hook file to the generated directory
-        hook_source = config_path.parent / "cli_hooks.py"
+        hook_source = config_path.parent / "app_hooks.py"
         if language == "python" and hook_source.exists():
-            # Copy to root and to src/demo_cli for basic-demos examples
+            # Copy to various possible locations where the CLI might look
+            # Main package directory (for direct execution)
             shutil.copy(hook_source, output_dir / language / "cli_hooks.py")
+            # Source package directory (for pip installed CLIs)
+            cli_name = config["cli"]["name"].replace("-", "_")
+            src_cli_dir = output_dir / language / "src" / cli_name
+            if src_cli_dir.exists():
+                shutil.copy(hook_source, src_cli_dir / "cli_hooks.py")
+            # Legacy demo_cli location for basic-demos examples
             if (output_dir / language / "src" / "demo_cli").exists():
                 shutil.copy(
                     hook_source,
@@ -122,9 +129,14 @@ class ParityTestRunner:
         elif language in ["nodejs", "typescript"]:
             hook_source = config_path.parent / "hooks.js"
             if hook_source.exists():
-                # Copy to the root directory as cli_hooks.js (what the CLI looks for)
-                shutil.copy(hook_source, output_dir / language / "cli_hooks.js")
-                # Also copy to src/hooks.js to replace generated template
+                # Copy to the root directory as cli_hooks.mjs (what the CLI looks for)
+                shutil.copy(hook_source, output_dir / language / "cli_hooks.mjs")
+                # Also copy to src directory for generated CLI location
+                cli_name = config["cli"]["name"].replace("-", "_")
+                src_cli_dir = output_dir / language / "src" / cli_name
+                if src_cli_dir.exists():
+                    shutil.copy(hook_source, src_cli_dir / "cli_hooks.mjs")
+                # Legacy location for src/hooks.js
                 src_dir = output_dir / language / "src"
                 src_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy(hook_source, src_dir / "hooks.js")
@@ -133,7 +145,7 @@ class ParityTestRunner:
             if hook_source.exists():
                 src_dir = output_dir / language / "src"
                 src_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy(hook_source, src_dir / "hooks.rs")
+                shutil.copy(hook_source, src_dir / "cli_hooks.rs")
 
         # Find the generated CLI executable
         cli_name = config["cli"]["name"]
@@ -209,7 +221,10 @@ class ParityTestRunner:
             else:
                 possible_paths = [
                     output_dir / language / "bin" / "cli.js",
+                    output_dir / language / "bin" / "cli.mjs",
                     output_dir / language / "cli.js",
+                    output_dir / language / "cli.mjs",
+                    output_dir / language / "src" / cli_name.replace("-", "_") / "cli.mjs",
                     output_dir / language / "index.js",
                 ]
             cli_path = None
@@ -285,8 +300,10 @@ class ParityTestRunner:
         if test.get("command"):
             # Use shlex to properly parse command with quotes
             import shlex
-
-            cmd.extend(shlex.split(test["command"]))
+            
+            # Replace $$ with current PID before parsing to ensure consistency
+            command_with_pid = test["command"].replace("$$", str(os.getpid()))
+            cmd.extend(shlex.split(command_with_pid))
 
         # Set up environment
         env = os.environ.copy()
@@ -453,7 +470,11 @@ class ParityTestRunner:
         if "content" in expected_files:
             for file_path, content_checks in expected_files["content"].items():
                 file_path = file_path.replace("$$", str(os.getpid()))
-                full_path = working_dir / file_path.lstrip("/")
+                # For absolute paths, use as-is; for relative paths, make relative to working_dir
+                if file_path.startswith("/"):
+                    full_path = Path(file_path)
+                else:
+                    full_path = working_dir / file_path
 
                 if not full_path.exists():
                     errors.append(f"Expected file does not exist: {file_path}")
