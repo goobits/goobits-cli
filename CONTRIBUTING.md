@@ -196,7 +196,6 @@ When contributing to the Universal Template System:
 
 ## Performance Considerations
 
-- Run performance benchmarks: `python performance/benchmark_suite.py`
 - Target: <100ms startup time
 - Keep memory usage minimal
 - Use lazy loading where appropriate
@@ -204,7 +203,6 @@ When contributing to the Universal Template System:
 ## Questions?
 
 - Open a GitHub Discussion for general questions
-- Join our community chat (if available)
 - Check existing documentation
 
 Thank you for contributing to Goobits CLI Framework!

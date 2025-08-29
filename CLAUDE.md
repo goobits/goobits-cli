@@ -65,9 +65,6 @@ pytest src/tests/integration/
 
 # Run e2e tests only
 pytest src/tests/e2e/
-
-# Run performance validation
-python performance/performance_suite.py
 ```
 
 ### Linting and Type Checking
