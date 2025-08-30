@@ -307,6 +307,14 @@ class TypeScriptRenderer(LanguageRenderer):
         for name, filter_func in self.get_custom_filters().items():
 
             self._env.filters[name] = filter_func
+        
+        # Add framework integration functions (Phase 1)
+        try:
+            from ..framework_integration import register_framework_functions
+            register_framework_functions(self._env)
+        except ImportError:
+            # Framework integration not available yet
+            pass
 
     def _generate_interfaces(self, ir: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate TypeScript interfaces from CLI schema."""

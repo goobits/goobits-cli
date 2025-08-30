@@ -198,6 +198,14 @@ class RustRenderer(LanguageRenderer):
         for name, filter_func in self.get_custom_filters().items():
 
             self._env.filters[name] = filter_func
+        
+        # Add framework integration functions (Phase 1)
+        try:
+            from ..framework_integration import register_framework_functions
+            register_framework_functions(self._env)
+        except ImportError:
+            # Framework integration not available yet
+            pass
 
     def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
         """
@@ -283,6 +291,14 @@ class RustRenderer(LanguageRenderer):
         # Add custom filters
 
         env.filters.update(self.get_custom_filters())
+        
+        # Add framework integration functions (Phase 1)
+        try:
+            from ..framework_integration import register_framework_functions
+            register_framework_functions(env)
+        except ImportError:
+            # Framework integration not available yet
+            pass
 
         # Render the template
 

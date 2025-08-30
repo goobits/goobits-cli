@@ -308,6 +308,14 @@ class PythonRenderer(LanguageRenderer):
         # Add custom filters
 
         env.filters.update(self.get_custom_filters())
+        
+        # Add framework integration functions (Phase 1)
+        try:
+            from ..framework_integration import register_framework_functions
+            register_framework_functions(env)
+        except ImportError:
+            # Framework integration not available yet
+            pass
 
         # Render the template
 

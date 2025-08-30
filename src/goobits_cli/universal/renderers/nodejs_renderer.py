@@ -261,6 +261,14 @@ class NodeJSRenderer(LanguageRenderer):
             for filter_name, filter_func in self.get_custom_filters().items():
 
                 self._jinja_env.filters[filter_name] = filter_func
+            
+            # Add framework integration functions (Phase 1)
+            try:
+                from ..framework_integration import register_framework_functions
+                register_framework_functions(self._jinja_env)
+            except ImportError:
+                # Framework integration not available yet
+                pass
 
         # Render the template
 

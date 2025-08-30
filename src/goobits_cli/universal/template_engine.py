@@ -101,6 +101,14 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             pass
 
+# Import extracted logging framework (Phase 1)
+try:
+    from ..logging import LoggingFramework
+    LOGGING_FRAMEWORK_AVAILABLE = True
+except ImportError:
+    LOGGING_FRAMEWORK_AVAILABLE = False
+    LoggingFramework = None
+
 
 class LanguageRenderer(ABC):
     """
