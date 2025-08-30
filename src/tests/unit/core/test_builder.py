@@ -48,9 +48,8 @@ class TestBuilder:
         # Test essential CLI structure
         assert "#!/usr/bin/env python3" in result
         assert "Generated from: test.yaml" in result
-        assert "import click" in result
-        # Note: Universal Template System uses standard click, not rich_click
-        # assert "from rich_click import RichGroup" in result
+        assert "import rich_click as click" in result
+        # Note: Universal Template System uses rich_click for enhanced styling
 
         # Test command structure - Universal Template System generates different structure
         assert "def hello(ctx" in result  # May have additional parameters

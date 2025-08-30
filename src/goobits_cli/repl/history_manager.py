@@ -209,21 +209,10 @@ class HistoryManager:
             # Try loading as JSON first (enhanced format)
             with open(self._history_file, 'r') as f:
                 content = f.read().strip()
-                if content.startswith('['):
-                    # JSON format
-                    import json
-                    history_data = json.loads(content)
-                    self._history = [HistoryEntry.from_dict(entry) for entry in history_data]
-                else:
-                    # Plain text format (legacy)
-                    lines = content.split('\\n')
-                    self._history = [
-                        HistoryEntry(
-                            command=line.strip(),
-                            timestamp=datetime.now()
-                        )
-                        for line in lines if line.strip()
-                    ]
+                # JSON format only
+                import json
+                history_data = json.loads(content)
+                self._history = [HistoryEntry.from_dict(entry) for entry in history_data]
                     
         except (OSError, IOError, ValueError, json.JSONDecodeError):
             # If loading fails, start with empty history

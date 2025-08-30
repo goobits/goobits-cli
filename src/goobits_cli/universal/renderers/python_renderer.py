@@ -214,11 +214,11 @@ class PythonRenderer(LanguageRenderer):
             context["cli"] = self._transform_cli_for_python(context["cli"])
 
             # Process colors in help sections
-            if "header_sections" in context["cli"]:
+            if "header_sections" in context["cli"] and context["cli"]["header_sections"] is not None:
                 for section in context["cli"]["header_sections"]:
                     if "title" in section:
                         section["title"] = self._process_colors_filter(section["title"])
-                    if "items" in section:
+                    if "items" in section and section["items"] is not None:
                         for item in section["items"]:
                             if "desc" in item:
                                 item["desc"] = self._process_colors_filter(item["desc"])

@@ -147,7 +147,8 @@ if __name__ == "__main__":
     def test_generated_cli_startup_performance(self):
         """Test generated CLI startup performance (requires build)."""
         # This is a slower integration test
-        generated_cli_path = Path(__file__).parent.parent.parent / "goobits_cli" / "generated_cli.py"
+        # Look for generated_cli.py in the project root
+        generated_cli_path = Path(__file__).parent.parent.parent.parent / "generated_cli.py"
 
         if not generated_cli_path.exists():
             pytest.skip("Generated CLI not found - run 'goobits build' first")

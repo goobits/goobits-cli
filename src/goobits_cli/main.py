@@ -814,27 +814,6 @@ def build(
     logger.info("Loading goobits configuration")
     goobits_config = load_goobits_config(config_path)
 
-    # Check for deprecated hooks_path field and warn user
-    if (
-        hasattr(goobits_config, "hooks_path")
-        and goobits_config.hooks_path
-        and not goobits_config.cli_hooks_path
-    ):
-        typer.echo(
-            "⚠️  WARNING: 'hooks_path' is deprecated and will be removed in v4.0.0 (Q2 2025)",
-            err=True,
-        )
-        typer.echo(
-            "   Please use 'cli_hooks_path' instead in your configuration file.", err=True
-        )
-        typer.echo(
-            f'   Current value: hooks_path: "{goobits_config.hooks_path}"', err=True
-        )
-        typer.echo(f'   Change to: cli_hooks_path: "{goobits_config.hooks_path}"', err=True)
-        typer.echo(
-            "   📖 Migration guide: docs/migration_guides/hooks_path_deprecation.md",
-            err=True,
-        )
 
     # Detect target languages from configuration
     target_languages = goobits_config.get_target_languages()
