@@ -20,6 +20,7 @@ _interactive_framework_instance = None
 _command_framework_instance = None
 _builtin_framework_instance = None
 _hook_framework_instance = None
+_error_framework_instance = None
 
 
 def get_logging_framework():
@@ -172,6 +173,31 @@ def get_hook_framework():
     return _hook_framework_instance
 
 
+def get_error_framework():
+    """
+    Get the singleton ErrorFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set error_framework = get_error_framework() -%}
+    
+    Returns:
+        ErrorFramework instance
+    """
+    global _error_framework_instance
+    
+    if _error_framework_instance is None:
+        try:
+            from ..errors import ErrorFramework
+            _error_framework_instance = ErrorFramework()
+        except ImportError as e:
+            raise ImportError(
+                "ErrorFramework not available. "
+                "Please ensure src/goobits_cli/errors is properly installed."
+            ) from e
+    
+    return _error_framework_instance
+
+
 def register_framework_functions(environment):
     """
     Register framework functions in Jinja2 environment.
@@ -200,6 +226,9 @@ def register_framework_functions(environment):
     # Phase 2.3: Register hook framework (completed)
     environment.globals['get_hook_framework'] = get_hook_framework
     
+    # Phase 3.2: Register error framework (completed)
+    environment.globals['get_error_framework'] = get_error_framework
+    
     return environment
 
 
@@ -226,6 +255,7 @@ def create_framework_context(config: Dict[str, Any]) -> Dict[str, Any]:
         'commands': get_command_framework(),
         'builtins': get_builtin_framework(),
         'hooks': get_hook_framework(),
+        'errors': get_error_framework(),
     }
     
     return context
