@@ -295,12 +295,12 @@ language: python
 
     def test_get_plugin_info(self):
         """Test getting plugin information."""
-        info = PluginInfo(name="test-info", version="2.0.0")
+        info = PluginInfo(name="test-info", version="3.0.1")
         self.manager.registry.add_plugin(info)
 
         retrieved = self.manager.get_plugin_info("test-info")
         assert retrieved is not None
-        assert retrieved.version == "2.0.0"
+        assert retrieved.version == "3.0.1"
 
 
 class TestPluginCLIIntegrator:

@@ -25,7 +25,7 @@ messages:
 cli:
   name: "ComplexPythonCLI"
   tagline: "A comprehensive Python CLI for testing"
-  version: "2.0.0"
+  version: "3.0.1"
   options:
     - name: verbose
       short: v

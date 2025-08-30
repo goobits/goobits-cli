@@ -400,7 +400,7 @@ class TestMainCLICommands(TestMainCLIBase):
                 stdout="Upgraded successfully", stderr="", returncode=0
             ),  # upgrade command
             MagicMock(
-                stdout="goobits-cli 2.0.0", stderr="", returncode=0
+                stdout="goobits-cli 3.0.1", stderr="", returncode=0
             ),  # version check
         ]
 
@@ -441,7 +441,7 @@ class TestMainCLICommands(TestMainCLIBase):
         mock_subprocess.side_effect = [
             MagicMock(stdout="pipx 1.0.0", stderr="", returncode=0),
             MagicMock(stdout="Installed successfully", stderr="", returncode=0),
-            MagicMock(stdout="goobits-cli 2.0.0", stderr="", returncode=0),
+            MagicMock(stdout="goobits-cli 3.0.1", stderr="", returncode=0),
         ]
 
         result = self.runner.invoke(app, ["upgrade", "--source", "git"], input="y\n")
@@ -455,7 +455,7 @@ class TestMainCLICommands(TestMainCLIBase):
         mock_subprocess.side_effect = [
             MagicMock(stdout="pipx 1.0.0", stderr="", returncode=0),
             MagicMock(stdout="Installed successfully", stderr="", returncode=0),
-            MagicMock(stdout="goobits-cli 2.0.0", stderr="", returncode=0),
+            MagicMock(stdout="goobits-cli 3.0.1", stderr="", returncode=0),
         ]
 
         result = self.runner.invoke(app, ["upgrade", "--source", "local"], input="y\n")

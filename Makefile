@@ -218,8 +218,6 @@ ci-test-release: ci-test-full ## CI Tier 3: Release validation with performance 
 	@echo "$(BOLD)🎯 CI Tier 3: Release Validation$(RESET)"
 	@$(MAKE) test-performance-suite || echo "$(YELLOW)Performance suite had issues$(RESET)"
 
-# Legacy CI target (deprecated - use ci-test-full)
-ci-test: ci-test-full ## Run tests in CI mode with XML output (deprecated)
 
 # Development workflow
 dev-test: ## Quick development test cycle

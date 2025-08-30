@@ -38,7 +38,7 @@ language: python      # or: nodejs, typescript, rust
 
 cli:
   name: mycli
-  version: "1.0.0"
+  version: "3.0.1"
   tagline: "Simple and powerful"
   commands:
     greet:

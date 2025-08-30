@@ -1,7 +1,7 @@
 # 🏗️ Nested Command Implementation Proposal
 
 **Feature Branch:** `feature/nested`  
-**Target:** Goobits CLI Framework v2.1.0  
+**Target:** Goobits CLI Framework v3.0.1  
 **Status:** Design Phase  
 
 ---
