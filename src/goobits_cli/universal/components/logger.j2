@@ -19,9 +19,9 @@ The business logic has been extracted to:
 {#- Prepare configuration for the framework -#}
 {%- set framework_config = {
     'project': {
-        'name': project.package_name|default('cli'),
-        'command_name': project.command_name|default('cli'),
-        'display_name': project.display_name|default('CLI'),
+        'name': project.package_name|default(project.name|default('cli')),
+        'command_name': project.command_name|default(project.name|default('cli')),
+        'display_name': project.display_name|default(project.name|default('CLI')),
         'description': project.description|default('')
     },
     'environment': environment|default('development'),
