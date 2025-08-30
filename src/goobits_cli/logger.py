@@ -163,9 +163,12 @@ def setup_logging() -> None:
     
     root_logger.setLevel(level)
     
-    # Log startup message
-    logger = get_logger(__name__)
-    logger.info(f"Logging initialized: level={log_level}, output={log_output}")
+    # Log startup message (only for non-help commands and when a subcommand is provided)
+    is_help_command = '--help' in sys.argv or '-h' in sys.argv
+    is_no_command = len(sys.argv) == 1  # Just 'goobits' with no arguments
+    if not is_help_command and not is_no_command:
+        logger = get_logger(__name__)
+        logger.info(f"Logging initialized: level={log_level}, output={log_output}")
 
 
 def get_logger(name: str) -> logging.Logger:

@@ -12,18 +12,17 @@ import sys
 import os
 import json
 import yaml
-import logging
 import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional, List, Union
 from datetime import datetime
 from contextlib import contextmanager
-import click
+import rich_click as click
 # ============================================================================
 # EMBEDDED LOGGER
 # ============================================================================
 
-class ColoredFormatter(logging.Formatter):
+class ColoredFormatter(__import__('logging').Formatter):
     """Custom formatter with color support."""
     
     COLORS = {
@@ -40,11 +39,12 @@ class ColoredFormatter(logging.Formatter):
         record.levelname = f"{log_color}{record.levelname}{self.RESET}"
         return super().format(record)
 
-def setup_logging(level=logging.INFO, log_file=None):
+def setup_logging(level=__import__('logging').INFO, log_file=None):
     """Configure logging for the CLI."""
     handlers = []
     
     # Console handler with colors
+    logging = __import__('logging')
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(ColoredFormatter(
         '%(asctime)s - %(levelname)s - %(message)s',
@@ -65,7 +65,7 @@ def setup_logging(level=logging.INFO, log_file=None):
         handlers=handlers
     )
 
-logger = logging.getLogger(__name__)
+logger = __import__('logging').getLogger(__name__)
 
 # ============================================================================
 # EMBEDDED CONFIG MANAGER
@@ -172,6 +172,7 @@ class CLIContext:
         self.debug = debug
         
         # Setup logging based on verbosity
+        logging = __import__('logging')
         if debug:
             setup_logging(logging.DEBUG)
         elif verbose:
@@ -189,11 +190,19 @@ def load_hooks():
         import cli_hooks
         return cli_hooks
     except ImportError:
-        logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
-        logger.warning("Example:")
-        logger.warning("  def on_build(ctx, **kwargs):")
-        logger.warning("      print('Build command implementation')")
-        return None
+        # Check if this is self-hosting (framework building itself)
+        try:
+            from goobits_cli import main as goobits_main
+            # If we can import main, this is the framework building itself - suppress warnings
+            return None  
+        except ImportError:
+            # Only show warning if not in help mode
+            if '--help' not in sys.argv and '-h' not in sys.argv:
+                logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
+                logger.warning("Example:")
+                logger.warning("  def on_b(ctx, **kwargs):")
+                logger.warning("      print('Command implementation')")
+            return None
 
 hooks = load_hooks()
 
@@ -208,7 +217,27 @@ hooks = load_hooks()
 @click.option('--config', type=click.Path(), help='Path to config file')
 @click.pass_context
 def cli(ctx, verbose, debug, config):
-    """Build professional command-line tools with YAML configuration"""
+    """Build professional command-line tools with YAML configuration
+
+🚀 Quick Start
+   mkdir my-cli && cd my-cli - Create new project directory
+   goobits init - Generate initial goobits.yaml
+   goobits build - Create CLI and setup scripts
+   ./setup.sh install --dev - Install for development
+
+💡 Core Commands
+   build - 🔨 Generate CLI and setup scripts from goobits.yaml
+   serve - 🌐 Serve local PyPI-compatible package index
+   init - 🆕 Create initial goobits.yaml template
+
+🔧 Development Workflow
+   1. Edit goobits.yaml - Define your CLI structure
+   2. goobits build - Generate implementation files
+   3. Edit cli_hooks.py - Add your business logic
+
+
+📚 For detailed help on a command, run: [green]goobits [COMMAND][/green] [#ff79c6]--help[/#ff79c6]
+"""
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
@@ -222,9 +251,29 @@ def cli(ctx, verbose, debug, config):
 def build(ctx, config_path, output_dir, output, backup):
     """Build CLI and setup scripts from goobits.yaml configuration"""
     try:
+        # Check if this is self-hosting case  
+        is_self_hosting = False
+        try:
+            from goobits_cli import main as goobits_main
+            is_self_hosting = True
+        except ImportError:
+            pass
+            
         if hooks and hasattr(hooks, 'on_build'):
-            kwargs = {                'config_path': config_path,                'output_dir': output_dir,                'output': output,                'backup': backup,            }
+            kwargs = {                'config_path': config_path,
+                'output_dir': output_dir,
+                'output': output,
+                'backup': backup,
+}
             hooks.on_build(ctx=ctx, **kwargs)
+        elif is_self_hosting:
+            # Self-hosting: call main.py implementation directly
+            from goobits_cli.main import build as main_build
+            from pathlib import Path
+            
+            # Handle build command arguments
+            main_build(
+                config_path=Path(config_path) if config_path else None,                output_dir=Path(output_dir) if output_dir else None,                output=output,                backup=bool(backup),            )
         else:
             logger.error(f"Hook 'on_build' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -238,9 +287,30 @@ def build(ctx, config_path, output_dir, output, backup):
 def init(ctx, project_name, template, force):
     """Create initial goobits.yaml template"""
     try:
+        # Check if this is self-hosting case  
+        is_self_hosting = False
+        try:
+            from goobits_cli import main as goobits_main
+            is_self_hosting = True
+        except ImportError:
+            pass
+            
         if hooks and hasattr(hooks, 'on_init'):
-            kwargs = {                'project_name': project_name,                'template': template,                'force': force,            }
+            kwargs = {                'project_name': project_name,
+                'template': template,
+                'force': force,
+}
             hooks.on_init(ctx=ctx, **kwargs)
+        elif is_self_hosting:
+            # Self-hosting: call main.py implementation directly
+            from goobits_cli.main import init as main_init
+            from pathlib import Path
+            
+            # Handle other commands - call with converted arguments
+            main_init(                project_name=project_name,
+                template=template,
+                force=force,
+            )
         else:
             logger.error(f"Hook 'on_init' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -254,9 +324,30 @@ def init(ctx, project_name, template, force):
 def serve(ctx, directory, host, port):
     """Serve local PyPI-compatible package index"""
     try:
+        # Check if this is self-hosting case  
+        is_self_hosting = False
+        try:
+            from goobits_cli import main as goobits_main
+            is_self_hosting = True
+        except ImportError:
+            pass
+            
         if hooks and hasattr(hooks, 'on_serve'):
-            kwargs = {                'directory': directory,                'host': host,                'port': port,            }
+            kwargs = {                'directory': directory,
+                'host': host,
+                'port': port,
+}
             hooks.on_serve(ctx=ctx, **kwargs)
+        elif is_self_hosting:
+            # Self-hosting: call main.py implementation directly
+            from goobits_cli.main import serve as main_serve
+            from pathlib import Path
+            
+            # Handle other commands - call with converted arguments
+            main_serve(                directory=directory,
+                host=host,
+                port=port,
+            )
         else:
             logger.error(f"Hook 'on_serve' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -269,9 +360,28 @@ def serve(ctx, directory, host, port):
 def validate(ctx, config_path, verbose):
     """Validate goobits.yaml configuration without generating files"""
     try:
+        # Check if this is self-hosting case  
+        is_self_hosting = False
+        try:
+            from goobits_cli import main as goobits_main
+            is_self_hosting = True
+        except ImportError:
+            pass
+            
         if hooks and hasattr(hooks, 'on_validate'):
-            kwargs = {                'config_path': config_path,                'verbose': verbose,            }
+            kwargs = {                'config_path': config_path,
+                'verbose': verbose,
+}
             hooks.on_validate(ctx=ctx, **kwargs)
+        elif is_self_hosting:
+            # Self-hosting: call main.py implementation directly
+            from goobits_cli.main import validate as main_validate
+            from pathlib import Path
+            
+            # Handle other commands - call with converted arguments
+            main_validate(                config_path=config_path,
+                verbose=verbose,
+            )
         else:
             logger.error(f"Hook 'on_validate' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -286,9 +396,32 @@ def validate(ctx, config_path, verbose):
 def migrate(ctx, path, backup, dry_run, pattern):
     """Migrate YAML configurations to 3.0.0 format"""
     try:
+        # Check if this is self-hosting case  
+        is_self_hosting = False
+        try:
+            from goobits_cli import main as goobits_main
+            is_self_hosting = True
+        except ImportError:
+            pass
+            
         if hooks and hasattr(hooks, 'on_migrate'):
-            kwargs = {                'path': path,                'backup': backup,                'dry_run': dry_run,                'pattern': pattern,            }
+            kwargs = {                'path': path,
+                'backup': backup,
+                'dry_run': dry_run,
+                'pattern': pattern,
+}
             hooks.on_migrate(ctx=ctx, **kwargs)
+        elif is_self_hosting:
+            # Self-hosting: call main.py implementation directly
+            from goobits_cli.main import migrate as main_migrate
+            from pathlib import Path
+            
+            # Handle other commands - call with converted arguments
+            main_migrate(                path=path,
+                backup=backup,
+                dry_run=dry_run,
+                pattern=pattern,
+            )
         else:
             logger.error(f"Hook 'on_migrate' not implemented in cli_hooks.py")
             sys.exit(1)

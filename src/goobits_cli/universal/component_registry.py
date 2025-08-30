@@ -203,9 +203,10 @@ class ComponentRegistry:
                         dependencies=dependencies,
                     )
 
-                    # Validate template syntax
+                    # Validate template syntax (if validation is enabled)
 
-                    self._validate_template(component_name, content)
+                    if self.validation_enabled:
+                        self._validate_template(component_name, content)
 
                     logger.debug(f"Loaded component: {component_name}")
 
@@ -674,9 +675,10 @@ class ComponentRegistry:
                 name=name, path=component_file, dependencies=dependencies
             )
 
-            # Validate template
+            # Validate template (if validation is enabled)
 
-            self._validate_template(name, content)
+            if self.validation_enabled:
+                self._validate_template(name, content)
 
         except Exception as e:
 

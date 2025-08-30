@@ -12,13 +12,12 @@ import sys
 import os
 import json
 import yaml
-import logging
 import traceback
 from pathlib import Path
 from typing import Any, Dict, Optional, List, Union
 from datetime import datetime
 from contextlib import contextmanager
-import click
+import rich_click as click
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
@@ -28,7 +27,7 @@ from prompt_toolkit.completion import WordCompleter
 # EMBEDDED LOGGER
 # ============================================================================
 
-class ColoredFormatter(logging.Formatter):
+class ColoredFormatter(__import__('logging').Formatter):
     """Custom formatter with color support."""
     
     COLORS = {
@@ -45,11 +44,12 @@ class ColoredFormatter(logging.Formatter):
         record.levelname = f"{log_color}{record.levelname}{self.RESET}"
         return super().format(record)
 
-def setup_logging(level=logging.INFO, log_file=None):
+def setup_logging(level=__import__('logging').INFO, log_file=None):
     """Configure logging for the CLI."""
     handlers = []
     
     # Console handler with colors
+    logging = __import__('logging')
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(ColoredFormatter(
         '%(asctime)s - %(levelname)s - %(message)s',
@@ -70,7 +70,7 @@ def setup_logging(level=logging.INFO, log_file=None):
         handlers=handlers
     )
 
-logger = logging.getLogger(__name__)
+logger = __import__('logging').getLogger(__name__)
 
 # ============================================================================
 # EMBEDDED CONFIG MANAGER
@@ -177,6 +177,7 @@ class CLIContext:
         self.debug = debug
         
         # Setup logging based on verbosity
+        logging = __import__('logging')
         if debug:
             setup_logging(logging.DEBUG)
         elif verbose:
@@ -194,11 +195,19 @@ def load_hooks():
         import cli_hooks
         return cli_hooks
     except ImportError:
-        logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
-        logger.warning("Example:")
-        logger.warning("  def on_build(ctx, **kwargs):")
-        logger.warning("      print('Build command implementation')")
-        return None
+        # Check if this is self-hosting (framework building itself)
+        try:
+            from goobits_cli import main as goobits_main
+            # If we can import main, this is the framework building itself - suppress warnings
+            return None  
+        except ImportError:
+            # Only show warning if not in help mode
+            if '--help' not in sys.argv and '-h' not in sys.argv:
+                logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
+                logger.warning("Example:")
+                logger.warning("  def on_{{ cli.commands | first | first }}(ctx, **kwargs):")
+                logger.warning("      print('Command implementation')")
+            return None
 
 hooks = load_hooks()
 
@@ -213,7 +222,21 @@ hooks = load_hooks()
 @click.option('--config', type=click.Path(), help='Path to config file')
 @click.pass_context
 def cli(ctx, verbose, debug, config):
-    """{{ cli.tagline | default(cli.description) | default(project.description) | default('CLI Application') }}"""
+    """{{ cli.tagline | default(cli.description) | default(project.description) | default('CLI Application') }}
+{% if cli.header_sections %}
+
+{% for section in cli.header_sections %}
+{{ section.title }}
+{% for item in section['items'] %}
+   {{ item.item }} - {{ item.desc }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+{% if cli.footer_note %}
+
+{{ cli.footer_note }}
+{% endif %}"""
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
@@ -233,16 +256,54 @@ def cli(ctx, verbose, debug, config):
 def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in cmd_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
     """{{ cmd_data.desc | default(cmd_data.description) }}"""
     try:
+        # Check if this is self-hosting case  
+        is_self_hosting = False
+        try:
+            from goobits_cli import main as goobits_main
+            is_self_hosting = True
+        except ImportError:
+            pass
+            
         if hooks and hasattr(hooks, 'on_{{ cmd_name.replace("-", "_") }}'):
             kwargs = {
                 {%- for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}
                 '{{ arg.name }}': {{ arg.name }},
-                {%- endfor %}
+                {% endfor -%}
                 {%- for opt in cmd_data.options | default([]) %}
                 '{{ opt.name.replace("-", "_") }}': {{ opt.name.replace('-', '_') }},
-                {%- endfor %}
+                {% endfor -%}
             }
             hooks.on_{{ cmd_name.replace("-", "_") }}(ctx=ctx, **kwargs)
+        elif is_self_hosting:
+            # Self-hosting: call main.py implementation directly
+            from goobits_cli.main import {{ cmd_name.replace("-", "_") }} as main_{{ cmd_name.replace("-", "_") }}
+            from pathlib import Path
+            
+            {% if cmd_name == 'build' %}
+            # Handle build command arguments
+            main_{{ cmd_name.replace("-", "_") }}(
+                config_path=Path({{ cmd_data.args[0].name if cmd_data.args else 'config_path' }}) if {{ cmd_data.args[0].name if cmd_data.args else 'config_path' }} else None,
+{%- for opt in cmd_data.options | default([]) %}
+{%- if opt.name == 'output-dir' or opt.name == 'output_dir' %}
+                output_dir=Path({{ opt.name.replace('-', '_') }}) if {{ opt.name.replace('-', '_') }} else None,
+{%- elif opt.name == 'backup' %}
+                backup=bool({{ opt.name.replace('-', '_') }}),
+{%- else %}
+                {{ opt.name.replace('-', '_') }}={{ opt.name.replace('-', '_') }},
+{%- endif %}
+{% endfor %}
+            )
+            {% else %}
+            # Handle other commands - call with converted arguments
+            main_{{ cmd_name.replace("-", "_") }}(
+{%- for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}
+                {{ arg.name }}={% if arg.type == 'path' %}Path({{ arg.name }}) if {{ arg.name }} else None{% else %}{{ arg.name }}{% endif %},
+{% endfor -%}
+{%- for opt in cmd_data.options | default([]) %}
+                {{ opt.name.replace('-', '_') }}={{ opt.name.replace('-', '_') }},
+{% endfor %}
+            )
+            {% endif %}
         else:
             logger.error(f"Hook 'on_{{ cmd_name.replace("-", "_") }}' not implemented in cli_hooks.py")
             sys.exit(1)

@@ -8,7 +8,7 @@ description: "Build professional command-line tools with YAML configuration"
 # language: python  # Default language (can be overridden with nodejs, typescript, rust)
 
 # CLI generation configuration
-cli_path: "src/goobits_cli/generated_cli.py"
+cli_path: "generated_cli.py"
 cli_hooks_path: "cli_hooks.py"  # Path to hooks file with business logic
 
 python:

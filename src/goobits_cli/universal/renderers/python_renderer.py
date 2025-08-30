@@ -213,6 +213,19 @@ class PythonRenderer(LanguageRenderer):
 
             context["cli"] = self._transform_cli_for_python(context["cli"])
 
+            # Process colors in help sections
+            if "header_sections" in context["cli"]:
+                for section in context["cli"]["header_sections"]:
+                    if "title" in section:
+                        section["title"] = self._process_colors_filter(section["title"])
+                    if "items" in section:
+                        for item in section["items"]:
+                            if "desc" in item:
+                                item["desc"] = self._process_colors_filter(item["desc"])
+            
+            if "footer_note" in context["cli"]:
+                context["cli"]["footer_note"] = self._process_colors_filter(context["cli"]["footer_note"])
+
             # Ensure command_hierarchy is present in CLI section for template compatibility
             if "command_hierarchy" not in context["cli"]:
                 context["cli"]["command_hierarchy"] = {
@@ -258,6 +271,7 @@ class PythonRenderer(LanguageRenderer):
             "snake_case": self._snake_case_filter,
             "python_docstring": self._python_docstring_filter,
             "js_string": self._js_string_filter,  # For compatibility with universal templates
+            "process_colors": self._process_colors_filter,  # Color processing for YAML help text
         }
 
     def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:
@@ -1060,3 +1074,58 @@ setup(
 
         # Do NOT escape Unicode characters - they should be preserved
         return escaped
+
+    def _process_colors_filter(self, text: str) -> str:
+        """
+        Process YAML color syntax to rich-click compatible format.
+        
+        Converts:
+        - [color(2)] -> [green] (based on common terminal color codes)
+        - [#ff79c6] -> [#ff79c6] (hex colors pass through)
+        - [/color(2)] -> [/green] (closing tags)
+        
+        Args:
+            text: Text with YAML color syntax
+            
+        Returns:
+            Text with rich-click color markup
+        """
+        if not isinstance(text, str):
+            return str(text)
+        
+        # Color code mapping (based on common terminal colors)
+        color_map = {
+            '0': 'black',
+            '1': 'red', 
+            '2': 'green',
+            '3': 'yellow',
+            '4': 'blue',
+            '5': 'magenta',
+            '6': 'cyan',
+            '7': 'white',
+            '8': 'bright_black',
+            '9': 'bright_red',
+            '10': 'bright_green',
+            '11': 'bright_yellow', 
+            '12': 'bright_blue',
+            '13': 'bright_magenta',
+            '14': 'bright_cyan',
+            '15': 'bright_white'
+        }
+        
+        import re
+        
+        # Process [color(n)] opening tags
+        for code, color_name in color_map.items():
+            text = text.replace(f'[color({code})]', f'[{color_name}]')
+            text = text.replace(f'[/color({code})]', f'[/{color_name}]')
+        
+        # Process hex colors - these pass through to rich-click as-is
+        # Pattern: [#ff79c6]text[/#ff79c6] -> [#ff79c6]text[/#ff79c6]
+        # Rich-click supports hex colors natively, so no conversion needed
+        
+        # Validate hex color format and clean up any malformed patterns
+        hex_pattern = r'\[#([0-9a-fA-F]{6})\]([^[]*)\[/#\1\]'
+        text = re.sub(hex_pattern, r'[#\1]\2[/#\1]', text)
+        
+        return text

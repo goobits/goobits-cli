@@ -1,24 +1,8 @@
 #!/usr/bin/env python3
 
 
-# Fast version and help check to avoid heavy imports
-
-import sys
-import typer
-
-if len(sys.argv) == 2:
-
-    if sys.argv[1] in ["--version", "-V"]:
-
-        from .__version__ import __version__
-
-        typer.echo(f"goobits-cli {__version__}")
-
-        sys.exit(0)
-
-
-
 # Now import heavy dependencies only if needed
+import sys
 
 import json
 
@@ -105,11 +89,87 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-app = typer.Typer(name="goobits", help="Unified CLI for Goobits projects")
+def generate_help_from_yaml() -> tuple[str, str]:
+    """Generate help text and version from goobits.yaml configuration."""
+    try:
+        # Try to load the self-hosting goobits.yaml
+        goobits_yaml_path = Path.cwd() / "goobits.yaml"
+        if not goobits_yaml_path.exists():
+            # Fallback to default help if no goobits.yaml found
+            return "Build professional command-line tools with YAML configuration", __version__
+        
+        config = load_goobits_config(goobits_yaml_path)
+        
+        # Extract help components
+        cli_config = config.cli if config.cli else None
+        if not cli_config:
+            return config.description or "Build professional command-line tools with YAML configuration", __version__
+        
+        # Start with tagline/description
+        help_parts = []
+        if cli_config.tagline:
+            help_parts.append(cli_config.tagline)
+        elif cli_config.description:
+            help_parts.append(cli_config.description)
+        else:
+            help_parts.append("Build professional command-line tools with YAML configuration")
+        
+        # Add header sections if available
+        if cli_config.header_sections:
+            help_parts.append("")  # Empty line before sections
+            
+            for section in cli_config.header_sections:
+                # Process colors in section title
+                section_title = process_yaml_colors(section.title)
+                help_parts.append(section_title)
+                
+                # Add section items
+                for item in section.items:
+                    item_desc = process_yaml_colors(item.desc)
+                    help_parts.append(f"   {item.item} - {item_desc}")
+                
+                help_parts.append("")  # Empty line after each section
+        
+        # Add footer note if available
+        if cli_config.footer_note:
+            help_parts.append(process_yaml_colors(cli_config.footer_note))
+        
+        # Get version from YAML config or fallback to package version
+        version = cli_config.version if cli_config.version else __version__
+        
+        return "\n".join(help_parts).rstrip(), version
+        
+    except Exception:
+        # If anything fails, use fallback help
+        return "Build professional command-line tools with YAML configuration", __version__
 
 
-@app.callback()
+def process_yaml_colors(text: str) -> str:
+    """Process YAML color syntax for terminal display."""
+    if not text:
+        return text
+        
+    # Simple color processing - strip color tags for plain text help
+    # Note: For full rich color support, we'd need rich-click integration
+    import re
+    
+    # Remove [color(n)] tags
+    text = re.sub(r'\[color\(\d+\)\]([^[]*)\[/color\(\d+\)\]', r'\1', text)
+    # Remove hex color tags
+    text = re.sub(r'\[#[0-9a-fA-F]{6}\]([^[]*)\[/#[0-9a-fA-F]{6}\]', r'\1', text)
+    
+    return text
+
+
+app = typer.Typer(
+    name="goobits", 
+    help=generate_help_from_yaml()
+)
+
+
+@app.callback(invoke_without_command=True)
 def main(
+    ctx: typer.Context,
     version: Optional[bool] = typer.Option(
         None,
         "--version",
@@ -118,15 +178,36 @@ def main(
         help="Show version and exit",
     )
 ):
-    """Goobits CLI Framework - Build professional command-line tools with YAML configuration."""
-
+    # Get dynamic help text and version from YAML
+    dynamic_help, yaml_version = generate_help_from_yaml()
+    
+    # This will be the help text for this callback
+    ctx.info_name = "goobits"
+    
     # Initialize centralized logging early
     setup_logging()
 
     # Set global context
     set_context(framework_version=__version__)
 
-    pass
+    # If no command is provided, show help with dynamic content
+    if ctx.invoked_subcommand is None:
+        # Create custom help with dynamic content and version
+        typer.echo(f"Usage: {ctx.info_name} {yaml_version} [OPTIONS] COMMAND [ARGS]...")
+        typer.echo()
+        typer.echo(f" {dynamic_help}")
+        typer.echo()
+        # Show the standard options and commands from the app
+        help_text = ctx.get_help()
+        # Extract and show just the options and commands sections
+        lines = help_text.split('\n')
+        in_options_or_commands = False
+        for line in lines:
+            if '─ Options ─' in line or '─ Commands ─' in line:
+                in_options_or_commands = True
+            if in_options_or_commands:
+                typer.echo(line)
+        raise typer.Exit()
 
 
 def load_goobits_config(file_path: Path) -> "GoobitsConfigSchema":
