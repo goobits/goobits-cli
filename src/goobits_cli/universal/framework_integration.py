@@ -21,6 +21,10 @@ _command_framework_instance = None
 _builtin_framework_instance = None
 _hook_framework_instance = None
 _error_framework_instance = None
+_completion_framework_instance = None
+_repl_framework_instance = None
+_progress_framework_instance = None
+_setup_framework_instance = None
 
 
 def get_logging_framework():
@@ -198,6 +202,106 @@ def get_error_framework():
     return _error_framework_instance
 
 
+def get_completion_framework():
+    """
+    Get the singleton CompletionFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set completion_framework = get_completion_framework() -%}
+    
+    Returns:
+        CompletionFramework instance
+    """
+    global _completion_framework_instance
+    
+    if _completion_framework_instance is None:
+        try:
+            from ..completion import CompletionFramework
+            _completion_framework_instance = CompletionFramework()
+        except ImportError as e:
+            raise ImportError(
+                "CompletionFramework not available. "
+                "Please ensure src/goobits_cli/completion is properly installed."
+            ) from e
+    
+    return _completion_framework_instance
+
+
+def get_repl_framework():
+    """
+    Get the singleton REPLFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set repl_framework = get_repl_framework() -%}
+    
+    Returns:
+        REPLFramework instance
+    """
+    global _repl_framework_instance
+    
+    if _repl_framework_instance is None:
+        try:
+            from ..repl import REPLFramework
+            _repl_framework_instance = REPLFramework()
+        except ImportError as e:
+            raise ImportError(
+                "REPLFramework not available. "
+                "Please ensure src/goobits_cli/repl is properly installed."
+            ) from e
+    
+    return _repl_framework_instance
+
+
+def get_progress_framework():
+    """
+    Get the singleton ProgressFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set progress_framework = get_progress_framework() -%}
+    
+    Returns:
+        ProgressFramework instance
+    """
+    global _progress_framework_instance
+    
+    if _progress_framework_instance is None:
+        try:
+            from ..progress import ProgressFramework
+            _progress_framework_instance = ProgressFramework()
+        except ImportError as e:
+            raise ImportError(
+                "ProgressFramework not available. "
+                "Please ensure src/goobits_cli/progress is properly installed."
+            ) from e
+    
+    return _progress_framework_instance
+
+
+def get_setup_framework():
+    """
+    Get the singleton SetupFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set setup_framework = get_setup_framework() -%}
+    
+    Returns:
+        SetupFramework instance
+    """
+    global _setup_framework_instance
+    
+    if _setup_framework_instance is None:
+        try:
+            from ..setup import SetupFramework
+            _setup_framework_instance = SetupFramework()
+        except ImportError as e:
+            raise ImportError(
+                "SetupFramework not available. "
+                "Please ensure src/goobits_cli/setup is properly installed."
+            ) from e
+    
+    return _setup_framework_instance
+
+
 def register_framework_functions(environment):
     """
     Register framework functions in Jinja2 environment.
@@ -229,6 +333,18 @@ def register_framework_functions(environment):
     # Phase 3.2: Register error framework (completed)
     environment.globals['get_error_framework'] = get_error_framework
     
+    # Phase 3.3: Register completion framework (completed)
+    environment.globals['get_completion_framework'] = get_completion_framework
+    
+    # Phase 3.4: Register REPL framework (completed)
+    environment.globals['get_repl_framework'] = get_repl_framework
+    
+    # Phase 3.5: Register progress framework (completed)
+    environment.globals['get_progress_framework'] = get_progress_framework
+    
+    # Phase 3.6: Register setup framework (completed)
+    environment.globals['get_setup_framework'] = get_setup_framework
+    
     return environment
 
 
@@ -256,6 +372,10 @@ def create_framework_context(config: Dict[str, Any]) -> Dict[str, Any]:
         'builtins': get_builtin_framework(),
         'hooks': get_hook_framework(),
         'errors': get_error_framework(),
+        'completion': get_completion_framework(),
+        'repl': get_repl_framework(),
+        'progress': get_progress_framework(),
+        'setup': get_setup_framework(),
     }
     
     return context
