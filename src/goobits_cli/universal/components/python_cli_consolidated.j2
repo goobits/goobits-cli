@@ -227,10 +227,7 @@ def cli(ctx, verbose, debug, config):
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
 {% endfor -%}
 {% for opt in cmd_data.options | default([]) -%}
-@click.option('--{{ opt.name }}', '-{{ opt.short }}',
-              {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
-              {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
-              help='{{ opt.desc | default(opt.description) }}')
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %}{% if opt.type == 'bool' %}, is_flag=True{% endif %}{% if opt.default is defined %}, default={{ opt.default | python_repr }}{% endif %}, help={{ (opt.desc | default(opt.description)) | python_repr }})
 {% endfor %}
 @click.pass_obj
 def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in cmd_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):

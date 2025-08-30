@@ -1,0 +1,22 @@
+{
+  "golden_master": {
+    "total": 64,
+    "matched": 0,
+    "success_rate": 0.0
+  },
+  "unit_tests": {
+    "total": 3,
+    "passed": 3,
+    "success_rate": 100.0
+  },
+  "performance": {
+    "framework_time_ms": 0.004841186455450952,
+    "template_time_ms": 0.007261779683176427,
+    "improvement_percent": 33.33333333333333
+  },
+  "integration": {
+    "total": 4,
+    "passed": 4,
+    "success_rate": 100.0
+  }
+}

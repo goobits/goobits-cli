@@ -201,29 +201,30 @@ hooks = load_hooks()
 # CLI COMMANDS
 # ============================================================================
 
-@click.group()
+@click.group(context_settings={'help_option_names': ['-h', '--help']})
+@click.version_option(version='3.0.1', prog_name='goobits')
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
 @click.option('--debug', is_flag=True, help='Enable debug output')
 @click.option('--config', type=click.Path(), help='Path to config file')
 @click.pass_context
 def cli(ctx, verbose, debug, config):
-    """Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."""
+    """Build professional command-line tools with YAML configuration"""
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
 
 @cli.command('build')
 @click.argument('config_path', type=click.STRING)
-@click.option('--output-dir', '-o', default=None,              help='📁 Output directory (defaults to same directory as config file)')
-@click.option('--output', default=None,              help='📝 Output filename for generated CLI (defaults to generated_cli.py)')
-@click.option('--backup', default=None,              help='💾 Create backup files (.bak) when overwriting existing files')
+@click.option('--output-dir', '-o', default=None, help='📁 Output directory (defaults to same directory as config file)')
+@click.option('--output', default=None, help="📝 Output filename for generated CLI (defaults to 'generated_cli.py')")
+@click.option('--backup', default=None, help='💾 Create backup files (.bak) when overwriting existing files')
 @click.pass_obj
 def build(ctx, config_path, output_dir, output, backup):
     """Build CLI and setup scripts from goobits.yaml configuration"""
     try:
         if hooks and hasattr(hooks, 'on_build'):
             kwargs = {                'config_path': config_path,                'output_dir': output_dir,                'output': output,                'backup': backup,            }
-            hooks.on_build(ctx, **kwargs)
+            hooks.on_build(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_build' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -231,15 +232,15 @@ def build(ctx, config_path, output_dir, output, backup):
         handle_error(e, ctx.verbose)
 @cli.command('init')
 @click.argument('project_name', type=click.STRING)
-@click.option('--template', '-t', default='basic',              help='🎯 Template type')
-@click.option('--force', default=None,              help='🔥 Overwrite existing goobits.yaml file')
+@click.option('--template', '-t', default='basic', help='🎯 Template type')
+@click.option('--force', default=None, help='🔥 Overwrite existing goobits.yaml file')
 @click.pass_obj
 def init(ctx, project_name, template, force):
     """Create initial goobits.yaml template"""
     try:
         if hooks and hasattr(hooks, 'on_init'):
             kwargs = {                'project_name': project_name,                'template': template,                'force': force,            }
-            hooks.on_init(ctx, **kwargs)
+            hooks.on_init(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_init' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -247,15 +248,15 @@ def init(ctx, project_name, template, force):
         handle_error(e, ctx.verbose)
 @cli.command('serve')
 @click.argument('directory', type=click.STRING)
-@click.option('--host', default='localhost',              help='🌍 Host to bind the server to')
-@click.option('--port', '-p', default=8080,              help='🔌 Port to run the server on')
+@click.option('--host', default='localhost', help='🌍 Host to bind the server to')
+@click.option('--port', '-p', default=8080, help='🔌 Port to run the server on')
 @click.pass_obj
 def serve(ctx, directory, host, port):
     """Serve local PyPI-compatible package index"""
     try:
         if hooks and hasattr(hooks, 'on_serve'):
             kwargs = {                'directory': directory,                'host': host,                'port': port,            }
-            hooks.on_serve(ctx, **kwargs)
+            hooks.on_serve(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_serve' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -263,14 +264,14 @@ def serve(ctx, directory, host, port):
         handle_error(e, ctx.verbose)
 @cli.command('validate')
 @click.argument('config_path', type=click.STRING)
-@click.option('--verbose', '-v', default=None,              help='📋 Show detailed validation information')
+@click.option('--verbose', '-v', default=None, help='📋 Show detailed validation information')
 @click.pass_obj
 def validate(ctx, config_path, verbose):
     """Validate goobits.yaml configuration without generating files"""
     try:
         if hooks and hasattr(hooks, 'on_validate'):
             kwargs = {                'config_path': config_path,                'verbose': verbose,            }
-            hooks.on_validate(ctx, **kwargs)
+            hooks.on_validate(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_validate' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -278,16 +279,16 @@ def validate(ctx, config_path, verbose):
         handle_error(e, ctx.verbose)
 @cli.command('migrate')
 @click.argument('path', type=click.STRING)
-@click.option('--backup', default=True,              help='💾 Create backup files (.bak)')
-@click.option('--dry-run', default=None,              help='👁️ Show changes without applying them')
-@click.option('--pattern', default='*.yaml',              help='🔍 File pattern for directory migration')
+@click.option('--backup', default=True, help='💾 Create backup files (.bak)')
+@click.option('--dry-run', default=None, help='👁️ Show changes without applying them')
+@click.option('--pattern', default='*.yaml', help='🔍 File pattern for directory migration')
 @click.pass_obj
 def migrate(ctx, path, backup, dry_run, pattern):
     """Migrate YAML configurations to 3.0.0 format"""
     try:
         if hooks and hasattr(hooks, 'on_migrate'):
             kwargs = {                'path': path,                'backup': backup,                'dry_run': dry_run,                'pattern': pattern,            }
-            hooks.on_migrate(ctx, **kwargs)
+            hooks.on_migrate(ctx=ctx, **kwargs)
         else:
             logger.error(f"Hook 'on_migrate' not implemented in cli_hooks.py")
             sys.exit(1)
@@ -304,7 +305,7 @@ def migrate(ctx, path, backup, dry_run, pattern):
 def main():
     """Main entry point for the CLI."""
     try:
-        cli()
+        cli(prog_name='goobits')
     except Exception as e:
         handle_error(e, '--verbose' in sys.argv or '--debug' in sys.argv)
 

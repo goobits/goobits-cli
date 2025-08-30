@@ -1,0 +1,1860 @@
+{
+  "configurations": [
+    {
+      "package_name": "test-development-debug",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "DEBUG",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-debug",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "DEBUG",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-info",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "INFO",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-info",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "INFO",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-warning",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "WARNING",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-warning",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "WARNING",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-error",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "ERROR",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-development-error",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "development",
+      "log_level": "ERROR",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-debug",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "DEBUG",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-debug",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "DEBUG",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-info",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "INFO",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-info",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "INFO",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-warning",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "WARNING",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-warning",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "WARNING",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-error",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "ERROR",
+      "structured_logging": true,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    },
+    {
+      "package_name": "test-production-error",
+      "command_name": "test-cli",
+      "display_name": "Test CLI",
+      "description": "Test configuration",
+      "environment": "production",
+      "log_level": "ERROR",
+      "structured_logging": false,
+      "cli": {
+        "name": "test-cli",
+        "description": "Test CLI for logging baseline",
+        "tagline": "Testing logging framework",
+        "commands": {
+          "test": {
+            "desc": "Test command"
+          }
+        }
+      }
+    }
+  ],
+  "languages": [
+    "python",
+    "nodejs",
+    "typescript",
+    "rust"
+  ],
+  "baselines": {
+    "python": [
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_debug_eff9374b.baseline",
+        "size": 7780,
+        "hash": "f1bc83241768809cb1b90dec672f7c0e92fbbb6859acb95c5d45ad13a812aef0"
+      },
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_debug_d480bb4d.baseline",
+        "size": 7780,
+        "hash": "f1bc83241768809cb1b90dec672f7c0e92fbbb6859acb95c5d45ad13a812aef0"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_info_06c3a48b.baseline",
+        "size": 7778,
+        "hash": "984c5df1dc923499e9bcc17883dc59ffeb9985b15002893ce1a4c4a88bd2f6d9"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_info_27309e41.baseline",
+        "size": 7778,
+        "hash": "984c5df1dc923499e9bcc17883dc59ffeb9985b15002893ce1a4c4a88bd2f6d9"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_warning_5f77ccba.baseline",
+        "size": 7784,
+        "hash": "e3b13eb4e0874221915d316805b656ddf6570b3be43f86d367e43a55d3103d32"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_warning_ab420aba.baseline",
+        "size": 7784,
+        "hash": "e3b13eb4e0874221915d316805b656ddf6570b3be43f86d367e43a55d3103d32"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_error_42cc0a50.baseline",
+        "size": 7780,
+        "hash": "0ef63ec44afe34d43c41f2e4ef65a75ed3ba2207c6ce226820b72c10d94f8788"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/development_error_b32ac42a.baseline",
+        "size": 7780,
+        "hash": "0ef63ec44afe34d43c41f2e4ef65a75ed3ba2207c6ce226820b72c10d94f8788"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_debug_40b3899f.baseline",
+        "size": 7778,
+        "hash": "a1f5134d101c05aa0db7d398371493afcc0d79bba96cadcc491f99f7cb1784d9"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_debug_02d7a8bd.baseline",
+        "size": 7778,
+        "hash": "a1f5134d101c05aa0db7d398371493afcc0d79bba96cadcc491f99f7cb1784d9"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_info_08a21c1d.baseline",
+        "size": 7776,
+        "hash": "e83ccd85f3db5797fd0d5c2bb07b7a1f5653874b49910386c4bcc60f63f53b47"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_info_a6184a2d.baseline",
+        "size": 7776,
+        "hash": "e83ccd85f3db5797fd0d5c2bb07b7a1f5653874b49910386c4bcc60f63f53b47"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_warning_85e31a4e.baseline",
+        "size": 7782,
+        "hash": "68512225a97ec5dbd792b30438a336d1a44244e21a09bc7d9c651fe01d1e503d"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_warning_04ecc8a3.baseline",
+        "size": 7782,
+        "hash": "68512225a97ec5dbd792b30438a336d1a44244e21a09bc7d9c651fe01d1e503d"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_error_9745cce8.baseline",
+        "size": 7778,
+        "hash": "f83be9fb65c5887f64df861a199c5aa0cf72c78eee941387afd8555de4a7bd00"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/python/production_error_cea992ac.baseline",
+        "size": 7778,
+        "hash": "f83be9fb65c5887f64df861a199c5aa0cf72c78eee941387afd8555de4a7bd00"
+      }
+    ],
+    "nodejs": [
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_debug_eff9374b.baseline",
+        "size": 7648,
+        "hash": "5d574913ff2735dec23324c0ad1823967d7bc6c62cb979a4f88f61e3c01708c6"
+      },
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_debug_d480bb4d.baseline",
+        "size": 7648,
+        "hash": "5d574913ff2735dec23324c0ad1823967d7bc6c62cb979a4f88f61e3c01708c6"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_info_06c3a48b.baseline",
+        "size": 7645,
+        "hash": "7445a56a0691a731d84a9c635f43636508be73a3490da73cc28dd988408a7088"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_info_27309e41.baseline",
+        "size": 7645,
+        "hash": "7445a56a0691a731d84a9c635f43636508be73a3490da73cc28dd988408a7088"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_warning_5f77ccba.baseline",
+        "size": 7654,
+        "hash": "b69de515ef2b6d8b04a1ea81c95d37b0306feb8128840765d8c2d3d6d31770d9"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_warning_ab420aba.baseline",
+        "size": 7654,
+        "hash": "b69de515ef2b6d8b04a1ea81c95d37b0306feb8128840765d8c2d3d6d31770d9"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_error_42cc0a50.baseline",
+        "size": 7648,
+        "hash": "d2869035cb72f724bf00cf969f3aafadf7f2d812efa09fa7345e0b41a031eee9"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/development_error_b32ac42a.baseline",
+        "size": 7648,
+        "hash": "d2869035cb72f724bf00cf969f3aafadf7f2d812efa09fa7345e0b41a031eee9"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_debug_40b3899f.baseline",
+        "size": 7645,
+        "hash": "ad5480b2fe1d28fe532cb6504df27b9d59506c4061e9b02ab3a06d9ea85fbb57"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_debug_02d7a8bd.baseline",
+        "size": 7645,
+        "hash": "ad5480b2fe1d28fe532cb6504df27b9d59506c4061e9b02ab3a06d9ea85fbb57"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_info_08a21c1d.baseline",
+        "size": 7642,
+        "hash": "1bd858762d6218c3129d7cad7ce021bdf0f1266b8df218d1eca6abf85018f769"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_info_a6184a2d.baseline",
+        "size": 7642,
+        "hash": "1bd858762d6218c3129d7cad7ce021bdf0f1266b8df218d1eca6abf85018f769"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_warning_85e31a4e.baseline",
+        "size": 7651,
+        "hash": "b1a187a02f4a32c87b1d6f04270943360cca8392c83736b87f82c65464e6880c"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_warning_04ecc8a3.baseline",
+        "size": 7651,
+        "hash": "b1a187a02f4a32c87b1d6f04270943360cca8392c83736b87f82c65464e6880c"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_error_9745cce8.baseline",
+        "size": 7645,
+        "hash": "d7833531c41a35fcc835a10ab8dd11e1e850cb9fb0aedf29cb28e1be28986f6b"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/nodejs/production_error_cea992ac.baseline",
+        "size": 7645,
+        "hash": "d7833531c41a35fcc835a10ab8dd11e1e850cb9fb0aedf29cb28e1be28986f6b"
+      }
+    ],
+    "typescript": [
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_debug_eff9374b.baseline",
+        "size": 9514,
+        "hash": "b18c954caabeebdf1d3ff442354518eb5c60426120ec502ca2517850db336cb8"
+      },
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_debug_d480bb4d.baseline",
+        "size": 9514,
+        "hash": "b18c954caabeebdf1d3ff442354518eb5c60426120ec502ca2517850db336cb8"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_info_06c3a48b.baseline",
+        "size": 9511,
+        "hash": "370a16dcf43cee0bf2ff9b60065cf9ae99142d68427dd131e88cb94d63b226aa"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_info_27309e41.baseline",
+        "size": 9511,
+        "hash": "370a16dcf43cee0bf2ff9b60065cf9ae99142d68427dd131e88cb94d63b226aa"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_warning_5f77ccba.baseline",
+        "size": 9520,
+        "hash": "0f2ed8cdb59abfff2034027ac744f30e42b5327c0696361edfd1216bb0139145"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_warning_ab420aba.baseline",
+        "size": 9520,
+        "hash": "0f2ed8cdb59abfff2034027ac744f30e42b5327c0696361edfd1216bb0139145"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_error_42cc0a50.baseline",
+        "size": 9514,
+        "hash": "79f69603f80507722d03e43f8b5c8581e3efc9cfd206fe417a905a6f0bae5863"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/development_error_b32ac42a.baseline",
+        "size": 9514,
+        "hash": "79f69603f80507722d03e43f8b5c8581e3efc9cfd206fe417a905a6f0bae5863"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_debug_40b3899f.baseline",
+        "size": 9511,
+        "hash": "1f8698a15c99fc352aefa003e41c2c3bc1dfd7f795c684092003bfe1333fd084"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_debug_02d7a8bd.baseline",
+        "size": 9511,
+        "hash": "1f8698a15c99fc352aefa003e41c2c3bc1dfd7f795c684092003bfe1333fd084"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_info_08a21c1d.baseline",
+        "size": 9508,
+        "hash": "085651801c0c1e791354081c13cea20ad92e904f62910cde497bc2bc61a45ed3"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_info_a6184a2d.baseline",
+        "size": 9508,
+        "hash": "085651801c0c1e791354081c13cea20ad92e904f62910cde497bc2bc61a45ed3"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_warning_85e31a4e.baseline",
+        "size": 9517,
+        "hash": "8a79f09ee4244fb78bfbf0835ae4d64d0f2d2a958c85f6a672096a270fd4bbf6"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_warning_04ecc8a3.baseline",
+        "size": 9517,
+        "hash": "8a79f09ee4244fb78bfbf0835ae4d64d0f2d2a958c85f6a672096a270fd4bbf6"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_error_9745cce8.baseline",
+        "size": 9511,
+        "hash": "5bf9f7abd349b335ee914de318cf43602f9c16b6df1958c57083352336c5dfae"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/typescript/production_error_cea992ac.baseline",
+        "size": 9511,
+        "hash": "5bf9f7abd349b335ee914de318cf43602f9c16b6df1958c57083352336c5dfae"
+      }
+    ],
+    "rust": [
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_debug_eff9374b.baseline",
+        "size": 13410,
+        "hash": "9ad0c746f9d22ee72508b66356d4410751b1d25dcb691e626ebbd2768f56597c"
+      },
+      {
+        "config": {
+          "package_name": "test-development-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_debug_d480bb4d.baseline",
+        "size": 13410,
+        "hash": "9ad0c746f9d22ee72508b66356d4410751b1d25dcb691e626ebbd2768f56597c"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_info_06c3a48b.baseline",
+        "size": 13407,
+        "hash": "661dfe53a47a4cdc04a92680818f51ba1fa0c6910c4efbcd4c33b1dac27c1b98"
+      },
+      {
+        "config": {
+          "package_name": "test-development-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_info_27309e41.baseline",
+        "size": 13407,
+        "hash": "661dfe53a47a4cdc04a92680818f51ba1fa0c6910c4efbcd4c33b1dac27c1b98"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_warning_5f77ccba.baseline",
+        "size": 13416,
+        "hash": "88d0e7ced4ddd643f0383cb8d7607c2b91968330f038486fdce25f39ba6f0599"
+      },
+      {
+        "config": {
+          "package_name": "test-development-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_warning_ab420aba.baseline",
+        "size": 13416,
+        "hash": "88d0e7ced4ddd643f0383cb8d7607c2b91968330f038486fdce25f39ba6f0599"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_error_42cc0a50.baseline",
+        "size": 13410,
+        "hash": "bc1414db4ef9c9b206e993805d12bb3500d6c182a072b0552af6e43164a4eb4a"
+      },
+      {
+        "config": {
+          "package_name": "test-development-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "development",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/development_error_b32ac42a.baseline",
+        "size": 13410,
+        "hash": "bc1414db4ef9c9b206e993805d12bb3500d6c182a072b0552af6e43164a4eb4a"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_debug_40b3899f.baseline",
+        "size": 13407,
+        "hash": "b36bb2d0b61796ce33a11b36330c45d8aef6b47728828ba53f9f999f30a0716f"
+      },
+      {
+        "config": {
+          "package_name": "test-production-debug",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "DEBUG",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_debug_02d7a8bd.baseline",
+        "size": 13407,
+        "hash": "b36bb2d0b61796ce33a11b36330c45d8aef6b47728828ba53f9f999f30a0716f"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_info_08a21c1d.baseline",
+        "size": 13404,
+        "hash": "f7188e5a2272763c69c2273cd0b84f80ce0d37e91fffbc9671987974d585678b"
+      },
+      {
+        "config": {
+          "package_name": "test-production-info",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "INFO",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_info_a6184a2d.baseline",
+        "size": 13404,
+        "hash": "f7188e5a2272763c69c2273cd0b84f80ce0d37e91fffbc9671987974d585678b"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_warning_85e31a4e.baseline",
+        "size": 13413,
+        "hash": "54976be73aa60772f334304f68355210eaece69a08390da57c90a1cd31f377b6"
+      },
+      {
+        "config": {
+          "package_name": "test-production-warning",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "WARNING",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_warning_04ecc8a3.baseline",
+        "size": 13413,
+        "hash": "54976be73aa60772f334304f68355210eaece69a08390da57c90a1cd31f377b6"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": true,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_error_9745cce8.baseline",
+        "size": 13407,
+        "hash": "834ec5b92214a557daa5abffdb400832bcb0950d2c8f3b551ae78cc102feaace"
+      },
+      {
+        "config": {
+          "package_name": "test-production-error",
+          "command_name": "test-cli",
+          "display_name": "Test CLI",
+          "description": "Test configuration",
+          "environment": "production",
+          "log_level": "ERROR",
+          "structured_logging": false,
+          "cli": {
+            "name": "test-cli",
+            "description": "Test CLI for logging baseline",
+            "tagline": "Testing logging framework",
+            "commands": {
+              "test": {
+                "desc": "Test command"
+              }
+            }
+          }
+        },
+        "path": "/workspace/baselines/phase1/logging/rust/production_error_cea992ac.baseline",
+        "size": 13407,
+        "hash": "834ec5b92214a557daa5abffdb400832bcb0950d2c8f3b551ae78cc102feaace"
+      }
+    ]
+  }
+}

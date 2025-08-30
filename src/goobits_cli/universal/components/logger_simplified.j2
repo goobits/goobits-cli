@@ -1,0 +1,62 @@
+{#
+Universal Logger Component Template (Simplified)
+=================================================
+
+This is the SIMPLIFIED version of logger.j2 that uses the extracted
+LoggingFramework instead of embedding business logic in the template.
+
+Previously: 1,215 lines of complex template logic
+Now: ~50 lines of simple framework integration
+
+The business logic has been extracted to:
+- src/goobits_cli/logging/logging_framework.py (core orchestration)
+- src/goobits_cli/logging/language_adapters.py (language-specific generation)
+#}
+
+{#- Import the logging framework -#}
+{%- set logging_framework = get_logging_framework() -%}
+
+{#- Prepare configuration for the framework -#}
+{%- set framework_config = {
+    'project': {
+        'name': project.package_name|default('cli'),
+        'command_name': project.command_name|default('cli'),
+        'display_name': project.display_name|default('CLI'),
+        'description': project.description|default('')
+    },
+    'environment': environment|default('development'),
+    'log_level': log_level|default('INFO'),
+    'structured_logging': structured_logging|default(false),
+    'log_to_file': log_to_file|default(false),
+    'log_file_path': log_file_path|default(none),
+    'log_to_stdout': log_to_stdout|default(true),
+    'log_to_stderr': log_to_stderr|default(false),
+    'include_context': include_context|default(true),
+    'include_timestamp': include_timestamp|default(true),
+    'include_caller_info': include_caller_info|default(true),
+    'json_format_in_production': json_format_in_production|default(true),
+    'colorized_output': colorized_output|default(true),
+    'async_logging': async_logging|default(false),
+    'buffer_size': buffer_size|default(1024)
+} -%}
+
+{#- Generate language-specific logging code using the framework -#}
+{{ logging_framework.generate_logging_code(language, framework_config) }}
+
+{#
+That's it! All the complex business logic is now in testable Python code.
+
+Benefits of this approach:
+1. Business logic is now unit testable
+2. No more duplicated conditionals across languages
+3. Easy to debug and maintain
+4. Clear separation of concerns
+5. Template is now just a thin integration layer
+
+The extracted framework provides:
+- Language-specific code generation
+- Configuration validation
+- Consistent behavior across languages
+- Testable business logic
+- Maintainable architecture
+#}
