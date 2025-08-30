@@ -19,6 +19,7 @@ _config_framework_instance = None
 _interactive_framework_instance = None
 _command_framework_instance = None
 _builtin_framework_instance = None
+_hook_framework_instance = None
 
 
 def get_logging_framework():
@@ -146,6 +147,31 @@ def get_builtin_framework():
     return _builtin_framework_instance
 
 
+def get_hook_framework():
+    """
+    Get the singleton HookFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set hook_framework = get_hook_framework() -%}
+    
+    Returns:
+        HookFramework instance
+    """
+    global _hook_framework_instance
+    
+    if _hook_framework_instance is None:
+        try:
+            from ..hooks import HookFramework
+            _hook_framework_instance = HookFramework()
+        except ImportError as e:
+            raise ImportError(
+                "HookFramework not available. "
+                "Please ensure src/goobits_cli/hooks is properly installed."
+            ) from e
+    
+    return _hook_framework_instance
+
+
 def register_framework_functions(environment):
     """
     Register framework functions in Jinja2 environment.
@@ -170,6 +196,9 @@ def register_framework_functions(environment):
     
     # Phase 2.2: Register builtin framework (completed)
     environment.globals['get_builtin_framework'] = get_builtin_framework
+    
+    # Phase 2.3: Register hook framework (completed)
+    environment.globals['get_hook_framework'] = get_hook_framework
     
     return environment
 
@@ -196,6 +225,7 @@ def create_framework_context(config: Dict[str, Any]) -> Dict[str, Any]:
         'interactive': get_interactive_framework(),
         'commands': get_command_framework(),
         'builtins': get_builtin_framework(),
+        'hooks': get_hook_framework(),
     }
     
     return context
