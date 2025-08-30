@@ -18,6 +18,7 @@ _logging_framework_instance = None
 _config_framework_instance = None
 _interactive_framework_instance = None
 _command_framework_instance = None
+_builtin_framework_instance = None
 
 
 def get_logging_framework():
@@ -120,6 +121,31 @@ def get_command_framework():
     return _command_framework_instance
 
 
+def get_builtin_framework():
+    """
+    Get the singleton BuiltinFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set builtin_framework = get_builtin_framework() -%}
+    
+    Returns:
+        BuiltinFramework instance
+    """
+    global _builtin_framework_instance
+    
+    if _builtin_framework_instance is None:
+        try:
+            from ..builtins import BuiltinFramework
+            _builtin_framework_instance = BuiltinFramework()
+        except ImportError as e:
+            raise ImportError(
+                "BuiltinFramework not available. "
+                "Please ensure src/goobits_cli/builtins is properly installed."
+            ) from e
+    
+    return _builtin_framework_instance
+
+
 def register_framework_functions(environment):
     """
     Register framework functions in Jinja2 environment.
@@ -141,6 +167,9 @@ def register_framework_functions(environment):
     
     # Phase 1.2: Register command framework (completed)
     environment.globals['get_command_framework'] = get_command_framework
+    
+    # Phase 2.2: Register builtin framework (completed)
+    environment.globals['get_builtin_framework'] = get_builtin_framework
     
     return environment
 
@@ -166,6 +195,7 @@ def create_framework_context(config: Dict[str, Any]) -> Dict[str, Any]:
         'config': get_config_framework(),
         'interactive': get_interactive_framework(),
         'commands': get_command_framework(),
+        'builtins': get_builtin_framework(),
     }
     
     return context
