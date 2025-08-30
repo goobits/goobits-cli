@@ -1,0 +1,58 @@
+project:
+  name: "Test CLI"
+  package_name: "test-cli"
+  command_name: "test-cli"
+  version: "1.0.0"
+  description: "Test CLI for E2E tests"
+  author: "Test Author"
+  license: "MIT"
+
+cli:
+  root_command:
+    name: "test-cli"
+    description: "A test CLI application"
+    version: "1.0.0"
+    options:
+      - name: "verbose"
+        short: "v"
+        type: "flag"
+        description: "Enable verbose output"
+      - name: "config"
+        short: "c"
+        type: "string"
+        description: "Path to configuration file"
+    subcommands:
+      - name: "hello"
+        description: "Print a greeting"
+        arguments:
+          - name: "name"
+            type: "string"
+            required: false
+            default: "World"
+        options:
+          - name: "times"
+            short: "t"
+            type: "integer"
+            default: 1
+            description: "Number of times to repeat"
+        hook_name: "on_hello"
+      - name: "config"
+        description: "Manage configuration"
+        subcommands:
+          - name: "show"
+            description: "Show current configuration"
+            hook_name: "on_config_show"
+          - name: "set"
+            description: "Set configuration value"
+            arguments:
+              - name: "key"
+                type: "string"
+                required: true
+              - name: "value"
+                type: "string"
+                required: true
+            hook_name: "on_config_set"
+
+installation:
+  pypi_name: "test-cli"
+  development_path: "."

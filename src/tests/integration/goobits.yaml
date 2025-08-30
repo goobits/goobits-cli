@@ -1,0 +1,26 @@
+cli:
+  name: "TestCLI"
+  tagline: "A test CLI for integration tests."
+  commands:
+    greet:
+      desc: "Prints a greeting."
+    hello:
+      desc: "Says hello to a user."
+      args:
+        - name: name
+          desc: "Name to greet"
+          type: str
+          default: "World"
+          required: false
+      options:
+        - name: uppercase
+          desc: "Convert to uppercase"
+          type: flag
+          default: false
+    goodbye:
+      desc: "Says goodbye with optional message."
+      options:
+        - name: message
+          desc: "Custom goodbye message"
+          type: str
+          default: "Goodbye"
