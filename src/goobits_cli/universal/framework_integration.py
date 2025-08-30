@@ -5,9 +5,9 @@ Framework Integration Module
 This module integrates extracted frameworks into the Universal Template System.
 
 Phase 1: Logging Framework Integration (completed)
-Phase 3.1: Config Framework Integration (current)
-Phase 2: Command Framework Integration (future)
-Phase 3: Interactive & Builtin Framework Integration (future)
+Phase 3.1: Config Framework Integration (completed)
+Phase 2.1: Interactive Framework Integration (completed)
+Phase 1.2: Command Framework Integration (completed)
 """
 
 from typing import Dict, Any, Optional
@@ -17,6 +17,7 @@ from typing import Dict, Any, Optional
 _logging_framework_instance = None
 _config_framework_instance = None
 _interactive_framework_instance = None
+_command_framework_instance = None
 
 
 def get_logging_framework():
@@ -94,6 +95,31 @@ def get_interactive_framework():
     return _interactive_framework_instance
 
 
+def get_command_framework():
+    """
+    Get the singleton CommandFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set command_framework = get_command_framework() -%}
+    
+    Returns:
+        CommandFramework instance
+    """
+    global _command_framework_instance
+    
+    if _command_framework_instance is None:
+        try:
+            from ..commands import CommandFramework
+            _command_framework_instance = CommandFramework()
+        except ImportError as e:
+            raise ImportError(
+                "CommandFramework not available. "
+                "Please ensure src/goobits_cli/commands is properly installed."
+            ) from e
+    
+    return _command_framework_instance
+
+
 def register_framework_functions(environment):
     """
     Register framework functions in Jinja2 environment.
@@ -110,11 +136,11 @@ def register_framework_functions(environment):
     # Phase 3.1: Register config framework (completed)
     environment.globals['get_config_framework'] = get_config_framework
     
-    # Phase 2.1: Register interactive framework (current)
+    # Phase 2.1: Register interactive framework (completed)
     environment.globals['get_interactive_framework'] = get_interactive_framework
     
-    # Phase 2: Register command framework (future)
-    # environment.globals['get_command_framework'] = get_command_framework
+    # Phase 1.2: Register command framework (completed)
+    environment.globals['get_command_framework'] = get_command_framework
     
     return environment
 
@@ -139,7 +165,7 @@ def create_framework_context(config: Dict[str, Any]) -> Dict[str, Any]:
         'logging': get_logging_framework(),
         'config': get_config_framework(),
         'interactive': get_interactive_framework(),
-        # 'commands': get_command_framework(),  # Phase 2
+        'commands': get_command_framework(),
     }
     
     return context
