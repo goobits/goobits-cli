@@ -16,6 +16,7 @@ from typing import Dict, Any, Optional
 # Singleton instances of frameworks
 _logging_framework_instance = None
 _config_framework_instance = None
+_interactive_framework_instance = None
 
 
 def get_logging_framework():
@@ -68,6 +69,31 @@ def get_config_framework():
     return _config_framework_instance
 
 
+def get_interactive_framework():
+    """
+    Get the singleton InteractiveFramework instance for template use.
+    
+    This function is called from templates like:
+    {%- set interactive_framework = get_interactive_framework() -%}
+    
+    Returns:
+        InteractiveFramework instance
+    """
+    global _interactive_framework_instance
+    
+    if _interactive_framework_instance is None:
+        try:
+            from ..interactive import InteractiveFramework
+            _interactive_framework_instance = InteractiveFramework()
+        except ImportError as e:
+            raise ImportError(
+                "InteractiveFramework not available. "
+                "Please ensure src/goobits_cli/interactive is properly installed."
+            ) from e
+    
+    return _interactive_framework_instance
+
+
 def register_framework_functions(environment):
     """
     Register framework functions in Jinja2 environment.
@@ -81,14 +107,14 @@ def register_framework_functions(environment):
     # Phase 1: Register logging framework (completed)
     environment.globals['get_logging_framework'] = get_logging_framework
     
-    # Phase 3.1: Register config framework (current)
+    # Phase 3.1: Register config framework (completed)
     environment.globals['get_config_framework'] = get_config_framework
+    
+    # Phase 2.1: Register interactive framework (current)
+    environment.globals['get_interactive_framework'] = get_interactive_framework
     
     # Phase 2: Register command framework (future)
     # environment.globals['get_command_framework'] = get_command_framework
-    
-    # Phase 3: Register interactive framework (future)
-    # environment.globals['get_interactive_framework'] = get_interactive_framework
     
     return environment
 
@@ -111,8 +137,9 @@ def create_framework_context(config: Dict[str, Any]) -> Dict[str, Any]:
     # Add framework references to context
     context['_frameworks'] = {
         'logging': get_logging_framework(),
+        'config': get_config_framework(),
+        'interactive': get_interactive_framework(),
         # 'commands': get_command_framework(),  # Phase 2
-        # 'interactive': get_interactive_framework(),  # Phase 3
     }
     
     return context

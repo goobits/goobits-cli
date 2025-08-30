@@ -195,8 +195,8 @@ class TestInteractiveMode:
 
         # Verify Python-specific content for enhanced REPL
         assert "Enhanced REPL for test-cli" in rendered
-        assert "from goobits_cli.universal.interactive import BasicREPL" in rendered
+        assert "from .repl_base import BasicREPL" in rendered
         assert "class TestcliREPL(BasicREPL" in rendered
         assert "def run_enhanced_repl():" in rendered
-        assert "smart_completion_enabled=True" in rendered
+        assert "smart_completion_enabled=smart_completion_enabled" in rendered
 
