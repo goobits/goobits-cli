@@ -64,7 +64,7 @@ messages:
 
 cli:
   name: "Goobits CLI"
-  version: "3.0.1"
+  version: "3.0.2"
   display_version: true
   tagline: "Build professional command-line tools with YAML configuration"
   description: "Transform simple YAML configuration into rich terminal applications with setup scripts, dependency management, and cross-platform compatibility."
@@ -79,26 +79,26 @@ cli:
       desc: "Enable verbose output with detailed error messages and stack traces"
   
   header_sections:
-    - title: "🚀 Quick Start"
+    - title: "[#8be9fd]🚀 Quick Start[/#8be9fd]"
       items:
-        - { item: 'mkdir my-cli && cd my-cli', desc: "Create new project directory", style: "example" }
-        - { item: 'goobits init', desc: "Generate initial goobits.yaml", style: "example" }
-        - { item: 'goobits build', desc: "Create CLI and setup scripts", style: "example" }
-        - { item: './setup.sh install --dev', desc: "Install for development", style: "example" }
+        - { item: '[#50fa7b]mkdir my-cli && cd my-cli[/#50fa7b]', desc: "Create new project directory", style: "example" }
+        - { item: '[#50fa7b]goobits init[/#50fa7b]', desc: "Generate initial goobits.yaml", style: "example" }
+        - { item: '[#50fa7b]goobits build[/#50fa7b]', desc: "Create CLI and setup scripts", style: "example" }
+        - { item: '[#50fa7b]./setup.sh install --dev[/#50fa7b]', desc: "Install for development", style: "example" }
 
-    - title: "💡 Core Commands"
+    - title: "[#8be9fd]💡 Core Commands[/#8be9fd]"
       items:
-        - { item: "build", desc: "🔨 Generate CLI and setup scripts from goobits.yaml", style: "command" }
-        - { item: "serve", desc: "🌐 Serve local PyPI-compatible package index", style: "command" }
-        - { item: "init", desc: "🆕 Create initial goobits.yaml template", style: "command" }
+        - { item: "[#50fa7b]build[/#50fa7b]", desc: "🔨 Generate CLI and setup scripts from goobits.yaml", style: "command" }
+        - { item: "[#50fa7b]serve[/#50fa7b]", desc: "🌐 Serve local PyPI-compatible package index", style: "command" }
+        - { item: "[#50fa7b]init[/#50fa7b]", desc: "🆕 Create initial goobits.yaml template", style: "command" }
 
-    - title: "🔧 Development Workflow"
+    - title: "[#8be9fd]🔧 Development Workflow[/#8be9fd]"
       items:
-        - { item: "1. Edit goobits.yaml", desc: "Define your CLI structure", style: "setup" }
-        - { item: "2. goobits build", desc: "Generate implementation files", style: "setup" }
-        - { item: "3. Edit cli_hooks.py", desc: "Add your business logic", style: "setup" }
+        - { item: "[#6272a4]1.[/#6272a4] [#50fa7b]Edit goobits.yaml[/#50fa7b]", desc: "Define your CLI structure", style: "setup" }
+        - { item: "[#6272a4]2.[/#6272a4] [#50fa7b]goobits build[/#50fa7b]", desc: "Generate implementation files", style: "setup" }
+        - { item: "[#6272a4]3.[/#6272a4] [#50fa7b]Edit cli_hooks.py[/#50fa7b]", desc: "Add your business logic", style: "setup" }
   
-  footer_note: "📚 For detailed help on a command, run: [color(2)]goobits [COMMAND][/color(2)] [#ff79c6]--help[/#ff79c6]"
+  footer_note: "📚 For detailed help on a command, run: [#ff79c6]goobits [COMMAND][/#ff79c6] [#ff79c6]--help[/#ff79c6]"
   
   command_groups:
     - name: "Core Commands"

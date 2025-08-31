@@ -18,6 +18,11 @@ from typing import Any, Dict, Optional, List, Union
 from datetime import datetime
 from contextlib import contextmanager
 import rich_click as click
+
+# Configure Rich-Click styling to prevent version fragmentation
+click.rich_click.USE_RICH_MARKUP = True
+click.rich_click.STYLE_USAGE_COMMAND = "bold bright_green"
+click.rich_click.STYLE_USAGE = "white"
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
@@ -212,6 +217,70 @@ def load_hooks():
 hooks = load_hooks()
 
 # ============================================================================
+# COLOR PROCESSING
+# ============================================================================
+
+def process_yaml_colors(text: str) -> str:
+    """Process YAML color syntax for terminal display using Rich markup."""
+    if not text:
+        return text
+    
+    import re
+    
+    # Convert hex colors to rich markup
+    # Dracula color palette
+    dracula_colors = {
+        '#f8f8f2': 'bright_white',    # Foreground (white)
+        '#6272a4': 'white',           # Comment (lighter gray) 
+        '#8be9fd': 'cyan',            # Cyan
+        '#50fa7b': 'bright_green',    # Green
+        '#ffb86c': 'orange',          # Orange
+        '#ff79c6': 'magenta',         # Pink
+        '#bd93f9': 'bright_magenta',  # Purple
+        '#ff5555': 'bright_red',      # Red
+        '#f1fa8c': 'yellow',          # Yellow
+    }
+    
+    # Process hex color tags: [#ff79c6]text[/#ff79c6] -> [magenta]text[/magenta]
+    def replace_hex_color(match):
+        hex_color = '#' + match.group(1).lower()
+        content = match.group(2)
+        if hex_color in dracula_colors:
+            rich_color = dracula_colors[hex_color]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace hex color tags with rich markup
+    text = re.sub(r'\[#([0-9a-fA-F]{6})\]([^[\]]*)\[/#[0-9a-fA-F]{6}\]', replace_hex_color, text)
+    
+    # Process numbered color tags (legacy support)
+    color_map = {
+        '0': 'bright_white',    # White (foreground)
+        '1': 'bright_red',      # Red
+        '2': 'bright_green',    # Green 
+        '3': 'yellow',          # Yellow
+        '4': 'cyan',            # Cyan
+        '5': 'bright_magenta',  # Purple
+        '6': 'magenta',         # Pink
+        '7': 'white',           # Comment (lighter gray)
+    }
+    
+    def replace_numbered_color(match):
+        color_num = match.group(1)
+        content = match.group(2)
+        if color_num in color_map:
+            rich_color = color_map[color_num]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace numbered color tags: [color(2)]text[/color(2)] -> [bright_green]text[/bright_green]
+    text = re.sub(r'\[color\((\d+)\)\]([^[\]]*)\[/color\(\d+\)\]', replace_numbered_color, text)
+    
+    return text
+
+# ============================================================================
 # CLI COMMANDS
 # ============================================================================
 
@@ -222,7 +291,7 @@ hooks = load_hooks()
 {%- endfor %}
 @click.pass_context
 def cli(ctx, verbose, debug, config):
-    """{{ cli.tagline | default(cli.description) | default(project.description) | default('CLI Application') }}
+    help_text = """{{ cli.tagline | default(cli.description) | default(project.description) | default('CLI Application') }}
 {% if cli.header_sections %}
 
 {% for section in cli.header_sections %}
@@ -237,6 +306,8 @@ def cli(ctx, verbose, debug, config):
 
 {{ cli.footer_note }}
 {% endif %}"""
+    # Process colors in help text
+    cli.__doc__ = process_yaml_colors(help_text)
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)

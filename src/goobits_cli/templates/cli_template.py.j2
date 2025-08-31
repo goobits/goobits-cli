@@ -1078,6 +1078,66 @@ class DefaultGroup(VersionedRichGroup):
             raise
 {% endif %}
 
+def process_yaml_colors(text: str) -> str:
+    """Process YAML color syntax for terminal display using Rich markup."""
+    if not text:
+        return text
+    
+    import re
+    
+    # Convert hex colors to rich markup
+    # Dracula color palette
+    dracula_colors = {
+        '#f8f8f2': 'bright_white',    # Foreground (white)
+        '#6272a4': 'white',           # Comment (lighter gray) 
+        '#8be9fd': 'cyan',            # Cyan
+        '#50fa7b': 'bright_green',    # Green
+        '#ffb86c': 'orange',          # Orange
+        '#ff79c6': 'magenta',         # Pink
+        '#bd93f9': 'bright_magenta',  # Purple
+        '#ff5555': 'bright_red',      # Red
+        '#f1fa8c': 'yellow',          # Yellow
+    }
+    
+    # Process hex color tags: [#ff79c6]text[/#ff79c6] -> [magenta]text[/magenta]
+    def replace_hex_color(match):
+        hex_color = '#' + match.group(1).lower()
+        content = match.group(2)
+        if hex_color in dracula_colors:
+            rich_color = dracula_colors[hex_color]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace hex color tags with rich markup
+    text = re.sub(r'\[#([0-9a-fA-F]{6})\]([^[\]]*)\[/#[0-9a-fA-F]{6}\]', replace_hex_color, text)
+    
+    # Process numbered color tags (legacy support)
+    color_map = {
+        '0': 'bright_white',    # White (foreground)
+        '1': 'bright_red',      # Red
+        '2': 'bright_green',    # Green 
+        '3': 'yellow',          # Yellow
+        '4': 'cyan',            # Cyan
+        '5': 'bright_magenta',  # Purple
+        '6': 'magenta',         # Pink
+        '7': 'white',           # Comment (lighter gray)
+    }
+    
+    def replace_numbered_color(match):
+        color_num = match.group(1)
+        content = match.group(2)
+        if color_num in color_map:
+            rich_color = color_map[color_num]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace numbered color tags: [color(2)]text[/color(2)] -> [bright_green]text[/bright_green]
+    text = re.sub(r'\[color\((\d+)\)\]([^[\]]*)\[/color\(\d+\)\]', replace_numbered_color, text)
+    
+    return text
+
 {% if ns.default_cmd %}
 @click.group(cls=DefaultGroup, default='{{ ns.default_cmd }}', context_settings={"help_option_names": ["-h", "--help"], "max_content_width": 120})
 {% else %}
@@ -1098,33 +1158,30 @@ class DefaultGroup(VersionedRichGroup):
 {% endfor %}
 {% endif %}
 def main(ctx{% if cli.enable_help_json %}, help_json=False{% endif %}{% if cli.enable_recursive_help %}, help_all=False{% endif %}, interactive=False{% if cli.options %}{% for option in cli.options %}, {{ option.name.replace('-', '_') }}{% if option.type == 'flag' %}=False{% else %}=None{% endif %}{% endfor %}{% endif %}):
-    """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{get_version()}{% endif %}[/bold color(6)] - {{ cli.tagline }}
+    help_text = """{% if cli.icon %}{{ cli.icon | format_icon }}{% endif %}[bold color(6)]{{ cli.name }}{% if cli.display_version %} v{get_version()}{% endif %}[/bold color(6)] - {{ cli.tagline }}
 
     {% if cli.description %}
     \b
-    [#B3B8C0]{{ cli.description }}[/#B3B8C0]
+    {{ cli.description }}
     {% endif %}
 
     {% if cli.header_sections %}
     {% for section in cli.header_sections %}
-    [bold yellow]{{ section.title }}[/bold yellow]
-    {%- set aligned_items = section.items | align_header_items %}
-    {% for item in aligned_items %}
-    {% if item.style == 'example' %}
-    [green]   {{ item.item_aligned }}[/green] [italic][#B3B8C0]# {{ item.desc }}[/#B3B8C0][/italic]
-    {% elif item.style == 'command' %}
-    [green]   {{ item.item_aligned }}[/green]  {{ item.desc }}
-    {% elif item.style == 'setup' %}
-    [#B3B8C0]   {{ item.item + ":" }}{{ " " * (item.item_aligned|length - item.item|length - 1) }}[/#B3B8C0][green]{{ item.desc }}[/green]
-    {%- endif %}
+{{ section.title }}
+    {% for item in section.items %}
+       {{ item.item }} - {{ item.desc }}
+    {% endfor %}
+    
     {%- endfor %}
-    [green] [/green]
     {% endfor %}
     {% endif %}
     {% if cli.footer_note %}
-    [#B3B8C0]{{ cli.footer_note }}[/#B3B8C0]
+    
+    {{ cli.footer_note }}
     {% endif %}
     """
+    # Process colors in help text
+    main.__doc__ = process_yaml_colors(help_text)
     {% if cli.enable_recursive_help %}
     if help_all:
         # Print main help

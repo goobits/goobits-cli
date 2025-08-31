@@ -144,18 +144,62 @@ def generate_help_from_yaml() -> tuple[str, str]:
 
 
 def process_yaml_colors(text: str) -> str:
-    """Process YAML color syntax for terminal display."""
+    """Process YAML color syntax for terminal display using Rich markup."""
     if not text:
         return text
-        
-    # Simple color processing - strip color tags for plain text help
-    # Note: For full rich color support, we'd need rich-click integration
+    
     import re
     
-    # Remove [color(n)] tags
-    text = re.sub(r'\[color\(\d+\)\]([^[]*)\[/color\(\d+\)\]', r'\1', text)
-    # Remove hex color tags
-    text = re.sub(r'\[#[0-9a-fA-F]{6}\]([^[]*)\[/#[0-9a-fA-F]{6}\]', r'\1', text)
+    # Convert hex colors to rich markup
+    # Dracula color palette
+    dracula_colors = {
+        '#f8f8f2': 'bright_white',    # Foreground (white)
+        '#6272a4': 'white',           # Comment (lighter gray) 
+        '#8be9fd': 'cyan',            # Cyan
+        '#50fa7b': 'bright_green',    # Green
+        '#ffb86c': 'orange',          # Orange
+        '#ff79c6': 'magenta',         # Pink
+        '#bd93f9': 'bright_magenta',  # Purple
+        '#ff5555': 'bright_red',      # Red
+        '#f1fa8c': 'yellow',          # Yellow
+    }
+    
+    # Process hex color tags: [#ff79c6]text[/#ff79c6] -> [magenta]text[/magenta]
+    def replace_hex_color(match):
+        hex_color = '#' + match.group(1).lower()
+        content = match.group(2)
+        if hex_color in dracula_colors:
+            rich_color = dracula_colors[hex_color]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace hex color tags with rich markup
+    text = re.sub(r'\[#([0-9a-fA-F]{6})\]([^[\]]*)\[/#[0-9a-fA-F]{6}\]', replace_hex_color, text)
+    
+    # Process numbered color tags (legacy support)
+    color_map = {
+        '0': 'bright_white',    # White (foreground)
+        '1': 'bright_red',      # Red
+        '2': 'bright_green',    # Green 
+        '3': 'yellow',          # Yellow
+        '4': 'cyan',            # Cyan
+        '5': 'bright_magenta',  # Purple
+        '6': 'magenta',         # Pink
+        '7': 'white',           # Comment (lighter gray)
+    }
+    
+    def replace_numbered_color(match):
+        color_num = match.group(1)
+        content = match.group(2)
+        if color_num in color_map:
+            rich_color = color_map[color_num]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace numbered color tags: [color(2)]text[/color(2)] -> [bright_green]text[/bright_green]
+    text = re.sub(r'\[color\((\d+)\)\]([^[\]]*)\[/color\(\d+\)\]', replace_numbered_color, text)
     
     return text
 
@@ -191,11 +235,17 @@ def main(
 
     # If no command is provided, show help with dynamic content
     if ctx.invoked_subcommand is None:
+        from rich.console import Console
+        from rich.markup import escape
+        
+        console = Console()
+        
         # Create custom help with dynamic content and version
-        typer.echo(f"Usage: {ctx.info_name} {yaml_version} [OPTIONS] COMMAND [ARGS]...")
-        typer.echo()
-        typer.echo(f" {dynamic_help}")
-        typer.echo()
+        console.print(f"Usage: {ctx.info_name} {yaml_version} [OPTIONS] COMMAND [ARGS]...")
+        console.print()
+        console.print(f" {dynamic_help}")
+        console.print()
+        
         # Show the standard options and commands from the app
         help_text = ctx.get_help()
         # Extract and show just the options and commands sections
@@ -205,7 +255,7 @@ def main(
             if '─ Options ─' in line or '─ Commands ─' in line:
                 in_options_or_commands = True
             if in_options_or_commands:
-                typer.echo(line)
+                console.print(escape(line))
         raise typer.Exit()
 
 
@@ -2214,15 +2264,22 @@ def run_app():
     """Run the CLI app with enhanced spacing for better terminal presentation."""
     import sys
     
-    # Add spacing before command output (except when output is redirected)
-    if sys.stdout.isatty():
+    # Check if this is a help command (which already has good spacing)
+    is_help_command = (
+        '--help' in sys.argv or 
+        '-h' in sys.argv or
+        len(sys.argv) == 1  # Just 'goobits' with no args shows help
+    )
+    
+    # Add spacing before command output (except for help commands or redirected output)
+    if sys.stdout.isatty() and not is_help_command:
         print()  # Empty line before
     
     try:
         app()
     finally:
-        # Add spacing after command output (except when output is redirected)
-        if sys.stdout.isatty():
+        # Add spacing after command output (except for help commands or redirected output)  
+        if sys.stdout.isatty() and not is_help_command:
             print()  # Empty line after
 
 

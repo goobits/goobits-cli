@@ -18,6 +18,11 @@ from typing import Any, Dict, Optional, List, Union
 from datetime import datetime
 from contextlib import contextmanager
 import rich_click as click
+
+# Configure Rich-Click styling to prevent version fragmentation
+click.rich_click.USE_RICH_MARKUP = True
+click.rich_click.STYLE_USAGE_COMMAND = "bold bright_green"
+click.rich_click.STYLE_USAGE = "white"
 # ============================================================================
 # EMBEDDED LOGGER
 # ============================================================================
@@ -207,44 +212,105 @@ def load_hooks():
 hooks = load_hooks()
 
 # ============================================================================
+# COLOR PROCESSING
+# ============================================================================
+
+def process_yaml_colors(text: str) -> str:
+    """Process YAML color syntax for terminal display using Rich markup."""
+    if not text:
+        return text
+    
+    import re
+    
+    # Convert hex colors to rich markup
+    # Dracula color palette
+    dracula_colors = {
+        '#f8f8f2': 'bright_white',    # Foreground (white)
+        '#6272a4': 'white',           # Comment (lighter gray) 
+        '#8be9fd': 'cyan',            # Cyan
+        '#50fa7b': 'bright_green',    # Green
+        '#ffb86c': 'orange',          # Orange
+        '#ff79c6': 'magenta',         # Pink
+        '#bd93f9': 'bright_magenta',  # Purple
+        '#ff5555': 'bright_red',      # Red
+        '#f1fa8c': 'yellow',          # Yellow
+    }
+    
+    # Process hex color tags: [#ff79c6]text[/#ff79c6] -> [magenta]text[/magenta]
+    def replace_hex_color(match):
+        hex_color = '#' + match.group(1).lower()
+        content = match.group(2)
+        if hex_color in dracula_colors:
+            rich_color = dracula_colors[hex_color]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace hex color tags with rich markup
+    text = re.sub(r'\[#([0-9a-fA-F]{6})\]([^[\]]*)\[/#[0-9a-fA-F]{6}\]', replace_hex_color, text)
+    
+    # Process numbered color tags (legacy support)
+    color_map = {
+        '0': 'bright_white',    # White (foreground)
+        '1': 'bright_red',      # Red
+        '2': 'bright_green',    # Green 
+        '3': 'yellow',          # Yellow
+        '4': 'cyan',            # Cyan
+        '5': 'bright_magenta',  # Purple
+        '6': 'magenta',         # Pink
+        '7': 'white',           # Comment (lighter gray)
+    }
+    
+    def replace_numbered_color(match):
+        color_num = match.group(1)
+        content = match.group(2)
+        if color_num in color_map:
+            rich_color = color_map[color_num]
+            return f"[{rich_color}]{content}[/{rich_color}]"
+        else:
+            return content
+    
+    # Replace numbered color tags: [color(2)]text[/color(2)] -> [bright_green]text[/bright_green]
+    text = re.sub(r'\[color\((\d+)\)\]([^[\]]*)\[/color\(\d+\)\]', replace_numbered_color, text)
+    
+    return text
+
+# ============================================================================
 # CLI COMMANDS
 # ============================================================================
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
-@click.version_option(version='3.0.1', prog_name='goobits')
-@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
-@click.option('--debug', is_flag=True, help='Enable debug output')
-@click.option('--config', type=click.Path(), help='Path to config file')
-@click.pass_context
+@click.version_option(version='3.0.2', prog_name='goobits')@click.pass_context
 def cli(ctx, verbose, debug, config):
-    """Build professional command-line tools with YAML configuration
+    help_text = """Build professional command-line tools with YAML configuration
 
-🚀 Quick Start
-   mkdir my-cli && cd my-cli - Create new project directory
-   goobits init - Generate initial goobits.yaml
-   goobits build - Create CLI and setup scripts
-   ./setup.sh install --dev - Install for development
+[#8be9fd]🚀 Quick Start[/#8be9fd]
+   [#50fa7b]mkdir my-cli && cd my-cli[/#50fa7b] - Create new project directory
+   [#50fa7b]goobits init[/#50fa7b] - Generate initial goobits.yaml
+   [#50fa7b]goobits build[/#50fa7b] - Create CLI and setup scripts
+   [#50fa7b]./setup.sh install --dev[/#50fa7b] - Install for development
 
-💡 Core Commands
-   build - 🔨 Generate CLI and setup scripts from goobits.yaml
-   serve - 🌐 Serve local PyPI-compatible package index
-   init - 🆕 Create initial goobits.yaml template
+[#8be9fd]💡 Core Commands[/#8be9fd]
+   [#50fa7b]build[/#50fa7b] - 🔨 Generate CLI and setup scripts from goobits.yaml
+   [#50fa7b]serve[/#50fa7b] - 🌐 Serve local PyPI-compatible package index
+   [#50fa7b]init[/#50fa7b] - 🆕 Create initial goobits.yaml template
 
-🔧 Development Workflow
-   1. Edit goobits.yaml - Define your CLI structure
-   2. goobits build - Generate implementation files
-   3. Edit cli_hooks.py - Add your business logic
+[#8be9fd]🔧 Development Workflow[/#8be9fd]
+   [#6272a4]1.[/#6272a4] [#50fa7b]Edit goobits.yaml[/#50fa7b] - Define your CLI structure
+   [#6272a4]2.[/#6272a4] [#50fa7b]goobits build[/#50fa7b] - Generate implementation files
+   [#6272a4]3.[/#6272a4] [#50fa7b]Edit cli_hooks.py[/#50fa7b] - Add your business logic
 
 
-📚 For detailed help on a command, run: [green]goobits [COMMAND][/green] [#ff79c6]--help[/#ff79c6]
+📚 For detailed help on a command, run: [#ff79c6]goobits [COMMAND][/#ff79c6] [#ff79c6]--help[/#ff79c6]
 """
+    # Process colors in help text
+    cli.__doc__ = process_yaml_colors(help_text)
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
 
 @cli.command('build')
-@click.argument('config_path', type=click.STRING)
-@click.option('--output-dir', '-o', default=None, help='📁 Output directory (defaults to same directory as config file)')
+@click.argument('config_path', type=click.STRING, required=False, default='None')@click.option('--output-dir', '-o', default=None, help='📁 Output directory (defaults to same directory as config file)')
 @click.option('--output', default=None, help="📝 Output filename for generated CLI (defaults to 'generated_cli.py')")
 @click.option('--backup', default=None, help='💾 Create backup files (.bak) when overwriting existing files')
 @click.pass_obj
@@ -280,8 +346,7 @@ def build(ctx, config_path, output_dir, output, backup):
     except Exception as e:
         handle_error(e, ctx.verbose)
 @cli.command('init')
-@click.argument('project_name', type=click.STRING)
-@click.option('--template', '-t', default='basic', help='🎯 Template type')
+@click.argument('project_name', type=click.STRING, required=False, default='None')@click.option('--template', '-t', default='basic', help='🎯 Template type')
 @click.option('--force', default=None, help='🔥 Overwrite existing goobits.yaml file')
 @click.pass_obj
 def init(ctx, project_name, template, force):
@@ -317,8 +382,7 @@ def init(ctx, project_name, template, force):
     except Exception as e:
         handle_error(e, ctx.verbose)
 @cli.command('serve')
-@click.argument('directory', type=click.STRING)
-@click.option('--host', default='localhost', help='🌍 Host to bind the server to')
+@click.argument('directory', type=click.STRING)@click.option('--host', default='localhost', help='🌍 Host to bind the server to')
 @click.option('--port', '-p', default=8080, help='🔌 Port to run the server on')
 @click.pass_obj
 def serve(ctx, directory, host, port):
@@ -354,8 +418,7 @@ def serve(ctx, directory, host, port):
     except Exception as e:
         handle_error(e, ctx.verbose)
 @cli.command('validate')
-@click.argument('config_path', type=click.STRING)
-@click.option('--verbose', '-v', default=None, help='📋 Show detailed validation information')
+@click.argument('config_path', type=click.STRING, required=False, default='None')@click.option('--verbose', '-v', default=None, help='📋 Show detailed validation information')
 @click.pass_obj
 def validate(ctx, config_path, verbose):
     """Validate goobits.yaml configuration without generating files"""
@@ -388,8 +451,7 @@ def validate(ctx, config_path, verbose):
     except Exception as e:
         handle_error(e, ctx.verbose)
 @cli.command('migrate')
-@click.argument('path', type=click.STRING)
-@click.option('--backup', default=True, help='💾 Create backup files (.bak)')
+@click.argument('path', type=click.STRING)@click.option('--backup', default=True, help='💾 Create backup files (.bak)')
 @click.option('--dry-run', default=None, help='👁️ Show changes without applying them')
 @click.option('--pattern', default='*.yaml', help='🔍 File pattern for directory migration')
 @click.pass_obj
