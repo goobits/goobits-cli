@@ -47,6 +47,34 @@ class LazyImporter:
             import typer
             self._imports['typer'] = typer
         return self._imports['typer']
+    
+    def get_yaml(self):
+        """Get yaml module with lazy loading."""
+        if 'yaml' not in self._imports:
+            import yaml
+            self._imports['yaml'] = yaml
+        return self._imports['yaml']
+    
+    def get_toml(self):
+        """Get toml module with lazy loading."""
+        if 'toml' not in self._imports:
+            import toml
+            self._imports['toml'] = toml
+        return self._imports['toml']
+    
+    def get_pydantic_validation_error(self):
+        """Get Pydantic ValidationError with lazy loading."""
+        if 'ValidationError' not in self._imports:
+            from pydantic import ValidationError
+            self._imports['ValidationError'] = ValidationError
+        return self._imports['ValidationError']
+    
+    def get_deepcopy(self):
+        """Get copy.deepcopy function with lazy loading."""
+        if 'deepcopy' not in self._imports:
+            from copy import deepcopy
+            self._imports['deepcopy'] = deepcopy
+        return self._imports['deepcopy']
 
 
 # Global lazy importer instance for generators
@@ -109,3 +137,24 @@ def lazy_import_jinja2_template_not_found():
 def lazy_import_typer():
     """Lazy import typer - matches existing generator pattern."""
     return _generator_importer.get_typer()
+
+
+# Additional main.py specific lazy imports
+def lazy_import_yaml():
+    """Lazy import yaml module."""
+    return _generator_importer.get_yaml()
+
+
+def lazy_import_toml():
+    """Lazy import toml module."""
+    return _generator_importer.get_toml()
+
+
+def lazy_import_pydantic_validation_error():
+    """Lazy import Pydantic ValidationError."""
+    return _generator_importer.get_pydantic_validation_error()
+
+
+def lazy_import_deepcopy():
+    """Lazy import copy.deepcopy function."""
+    return _generator_importer.get_deepcopy()

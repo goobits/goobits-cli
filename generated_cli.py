@@ -23,6 +23,7 @@ import rich_click as click
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.STYLE_USAGE_COMMAND = "bold bright_green"
 click.rich_click.STYLE_USAGE = "white"
+click.rich_click.STYLE_HEADER_TEXT = "cyan"
 # ============================================================================
 # EMBEDDED LOGGER
 # ============================================================================

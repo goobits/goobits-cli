@@ -21,54 +21,42 @@ import typer
 # Import centralized logging
 from .logger import setup_logging, get_logger, set_context, clear_context
 
-# Lazy imports for heavy dependencies
-yaml = None
-toml = None
-Environment = None
-FileSystemLoader = None
-ValidationError = None
+# Shared lazy imports
+from .shared.lazy_imports import (
+    lazy_import_jinja2_environment,
+    lazy_import_jinja2_filesystem_loader,
+    lazy_import_yaml,
+    lazy_import_toml,
+    lazy_import_pydantic_validation_error,
+    lazy_import_deepcopy,
+)
+
+# Main-specific lazy imports
 GoobitsConfigSchema = None
 serve_packages = None
-deepcopy = None
 
 
 def _lazy_imports():
     """Load heavy dependencies only when needed."""
-    global yaml, toml, Environment, FileSystemLoader, ValidationError
-    global GoobitsConfigSchema, serve_packages, deepcopy
-
-    if yaml is None:
-        import yaml as _yaml
-
-        yaml = _yaml
-    if toml is None:
-        import toml as _toml
-
-        toml = _toml
-    if Environment is None:
-        from jinja2 import (
-            Environment as _Environment,
-            FileSystemLoader as _FileSystemLoader,
-        )
-
-        Environment = _Environment
-        FileSystemLoader = _FileSystemLoader
-    if ValidationError is None:
-        from pydantic import ValidationError as _ValidationError
-
-        ValidationError = _ValidationError
+    # Use shared lazy import utilities
+    global yaml, toml, Environment, FileSystemLoader, ValidationError, deepcopy
+    global GoobitsConfigSchema, serve_packages
+    
+    yaml = lazy_import_yaml()
+    toml = lazy_import_toml()
+    Environment = lazy_import_jinja2_environment()
+    FileSystemLoader = lazy_import_jinja2_filesystem_loader()
+    ValidationError = lazy_import_pydantic_validation_error()
+    deepcopy = lazy_import_deepcopy()
+    
+    # Main-specific imports
     if GoobitsConfigSchema is None:
         from .schemas import GoobitsConfigSchema as _GoobitsConfigSchema
-
         GoobitsConfigSchema = _GoobitsConfigSchema
+    
     if serve_packages is None:
         from .pypi_server import serve_packages as _serve_packages
-
         serve_packages = _serve_packages
-    if deepcopy is None:
-        from copy import deepcopy as _deepcopy
-
-        deepcopy = _deepcopy
 
 
 from .__version__ import __version__  # noqa: E402
@@ -1251,66 +1239,11 @@ def build(
     clear_context()
 
 
-@app.command()
-def validate(
-    config_path: Optional[Path] = typer.Argument(
-        None, help="Path to goobits.yaml file (defaults to ./goobits.yaml)"
-    ),
-    verbose: bool = typer.Option(
-        False, "--verbose", "-v", help="Show detailed validation information"
-    ),
-):
-    """
-    Validate a goobits.yaml configuration file without generating any files.
+# Import validate command from cli_commands module
+from .cli_commands.validate import validate_command
 
-    This command checks:
-    - YAML syntax correctness
-    - Required fields presence
-    - Field type validation
-    - Value constraints
-    """
-    _lazy_imports()
-
-    # Determine config file path
-    if config_path is None:
-        config_path = Path.cwd() / "goobits.yaml"
-
-    config_path = Path(config_path).resolve()
-
-    if not config_path.exists():
-        typer.echo(f"❌ Configuration file '{config_path}' not found.", err=True)
-        raise typer.Exit(1)
-
-    typer.echo(f"🔍 Validating: {config_path}")
-
-    try:
-        # Try to load and validate the configuration
-        config = load_goobits_config(config_path)
-
-        # If we get here, validation passed
-        typer.echo("✅ Configuration is valid!")
-
-        if verbose:
-            typer.echo("\n📋 Configuration Summary:")
-            typer.echo(f"   Package: {config.package_name}")
-            typer.echo(f"   Command: {config.command_name}")
-            typer.echo(f"   Language: {getattr(config, 'language', 'python')}")
-
-            if hasattr(config, "cli") and config.cli:
-                typer.echo(f"   CLI Version: {config.cli.version}")
-                if hasattr(config.cli, "commands") and config.cli.commands:
-                    typer.echo(f"   Commands: {len(config.cli.commands)}")
-                    for cmd_name in list(config.cli.commands.keys())[:5]:
-                        typer.echo(f"      - {cmd_name}")
-                    if len(config.cli.commands) > 5:
-                        typer.echo(f"      ... and {len(config.cli.commands) - 5} more")
-
-        typer.echo("\n💡 Ready to build! Run: goobits build")
-
-    except Exception:
-        # Errors are already formatted nicely by load_goobits_config
-        # Just exit with error code (error message already printed)
-        raise typer.Exit(1)
+# Register the validate command with the app
+app.command(name="validate")(validate_command)
 
 
 @app.command()
@@ -1924,103 +1857,11 @@ cli:
 """
 
 
-@app.command()
-def serve(
-    directory: Path = typer.Argument(
-        ..., help="Directory containing packages to serve."
-    ),
-    host: str = typer.Option("localhost", help="Host to bind the server to."),
-    port: int = typer.Option(8080, help="Port to run the server on."),
-):
-    """
+# Import serve command from cli_commands module
+from .cli_commands.serve import serve_command
 
-    Serve a local PyPI-compatible package index.
-
-
-
-    This command starts a simple HTTP server that serves Python packages
-
-    (.whl and .tar.gz files) in a PyPI-compatible format. This is useful
-
-    for testing package dependencies in Docker environments.
-
-
-
-    The server will automatically generate an index.html file listing all
-
-    available packages and serve them at the specified host and port.
-
-
-
-    Examples:
-
-        goobits serve ./packages
-
-        goobits serve /path/to/packages --host 0.0.0.0 --port 9000
-
-    """
-    _lazy_imports()
-
-    # Set up logging context for serve operation
-    set_context(operation="serve", host=host, port=port)
-    logger = get_logger(__name__)
-    logger.info("Starting PyPI server")
-
-    directory = Path(directory).resolve()
-
-    # Add directory to context
-    set_context(serve_directory=str(directory))
-
-    if not directory.exists():
-        logger.error(f"Serve directory does not exist: {directory}")
-        typer.echo(f"Error: Directory '{directory}' does not exist.", err=True)
-
-        raise typer.Exit(1)
-
-    if not directory.is_dir():
-
-        typer.echo(f"Error: '{directory}' is not a directory.", err=True)
-
-        raise typer.Exit(1)
-
-    typer.echo(f"Starting PyPI server at http://{host}:{port}")
-
-    typer.echo(f"Serving packages from: {directory}")
-
-    typer.echo()
-
-    typer.echo("Press Ctrl+C to stop the server")
-
-    typer.echo()
-
-    try:
-        logger.info(f"Starting server on {host}:{port}")
-        serve_packages(directory, host, port)
-
-    except KeyboardInterrupt:
-        logger.info("Server stopped by user")
-        typer.echo("\n👋 Server stopped by user")
-
-    except OSError as e:
-
-        if e.errno == 48:  # Address already in use
-
-            typer.echo(
-                f"❌ Error: Port {port} is already in use. Try a different port with --port.",
-                err=True,
-            )
-
-        else:
-
-            typer.echo(f"❌ Error starting server: {e}", err=True)
-
-        raise typer.Exit(1)
-
-    except Exception as e:
-
-        typer.echo(f"❌ Unexpected error: {e}", err=True)
-
-        raise typer.Exit(1)
+# Register the serve command with the app
+app.command(name="serve")(serve_command)
 
 
 # Import upgrade command from cli_commands module
@@ -2030,43 +1871,11 @@ from .cli_commands.upgrade import upgrade_command
 app.command(name="upgrade")(upgrade_command)
 
 
-@app.command()
-def migrate(
-    path: str = typer.Argument(..., help="Path to YAML file or directory to migrate"),
-    backup: bool = typer.Option(
-        True, "--backup/--no-backup", help="Create backup files (.bak)"
-    ),
-    dry_run: bool = typer.Option(
-        False, "--dry-run", help="Show changes without applying them"
-    ),
-    pattern: str = typer.Option(
-        "*.yaml", "--pattern", help="File pattern for directory migration"
-    ),
-):
-    """
-    Migrate YAML configurations to 3.0.0 format.
+# Import migrate command from cli_commands module
+from .cli_commands.migrate import migrate_command
 
-    Converts legacy array-based subcommands to standardized object format:
-
-    BEFORE: subcommands: [{name: "start", ...}, {name: "stop", ...}]
-
-    AFTER:  subcommands: {start: {...}, stop: {...}}
-
-    This migration ensures compatibility with the new unlimited nested command system.
-    """
-    from .migration import migrate_yaml as migrate_tool
-    from pathlib import Path
-
-    try:
-        # Convert path argument to Path object
-        target_path = Path(path)
-
-        # Call the migration tool with proper parameters
-        migrate_tool.callback(target_path, backup, dry_run, pattern)
-
-    except Exception as e:
-        typer.echo(f"❌ Migration failed: {e}", err=True)
-        raise typer.Exit(1)
+# Register the migrate command with the app
+app.command(name="migrate")(migrate_command)
 
 
 def run_app():
