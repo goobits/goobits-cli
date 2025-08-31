@@ -34,11 +34,14 @@ from goobits_cli.main import (
     extract_version_from_pyproject,
     dependency_to_dict,
     dependencies_to_json,
+    version_callback,
+)
+# Template functions moved to init command module
+from goobits_cli.cli_commands.init import (
     generate_basic_template,
     generate_advanced_template,
     generate_api_client_template,
     generate_text_processor_template,
-    version_callback,
 )
 from goobits_cli.schemas import GoobitsConfigSchema
 from .test_base import TestMainCLIBase
