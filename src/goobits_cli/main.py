@@ -131,6 +131,67 @@ def generate_help_from_yaml() -> tuple[str, str]:
         return "Build professional command-line tools with YAML configuration", __version__
 
 
+def generate_plain_help_from_yaml() -> str:
+    """Generate plain text help for Typer (no Rich markup)."""
+    try:
+        # Try to load the self-hosting goobits.yaml
+        goobits_yaml_path = Path.cwd() / "goobits.yaml"
+        if not goobits_yaml_path.exists():
+            # Fallback to default help if no goobits.yaml found
+            return "Build professional command-line tools with YAML configuration"
+        
+        config = load_goobits_config(goobits_yaml_path)
+        
+        # Extract help components
+        cli_config = config.cli if config.cli else None
+        if not cli_config:
+            return config.description or "Build professional command-line tools with YAML configuration"
+        
+        # Start with tagline/description (plain text)
+        help_parts = []
+        if cli_config.tagline:
+            help_parts.append(cli_config.tagline)
+        elif cli_config.description:
+            help_parts.append(cli_config.description)
+        else:
+            help_parts.append("Build professional command-line tools with YAML configuration")
+        
+        # Add header sections if available (plain text)
+        if cli_config.header_sections:
+            help_parts.append("")  # Empty line before sections
+            
+            for section in cli_config.header_sections:
+                # Plain text section title (remove Rich markup)
+                section_title = section.title
+                import re
+                section_title = re.sub(r'\[[^]]*\]([^[]*)\[/[^]]*\]', r'\1', section_title)
+                section_title = re.sub(r'\[#[0-9a-fA-F]{6}\]([^[]*)\[/#[0-9a-fA-F]{6}\]', r'\1', section_title)
+                help_parts.append(section_title)
+                
+                # Add section items (plain text)
+                for item in section.items:
+                    item_text = item.item
+                    item_text = re.sub(r'\[[^]]*\]([^[]*)\[/[^]]*\]', r'\1', item_text)
+                    item_text = re.sub(r'\[#[0-9a-fA-F]{6}\]([^[]*)\[/#[0-9a-fA-F]{6}\]', r'\1', item_text)
+                    help_parts.append(f"   {item_text} - {item.desc}")
+                
+                help_parts.append("")  # Empty line after each section
+        
+        # Add footer note if available (plain text)
+        if cli_config.footer_note:
+            footer_text = cli_config.footer_note
+            import re
+            footer_text = re.sub(r'\[[^]]*\]([^[]*)\[/[^]]*\]', r'\1', footer_text)
+            footer_text = re.sub(r'\[#[0-9a-fA-F]{6}\]([^[]*)\[/#[0-9a-fA-F]{6}\]', r'\1', footer_text)
+            help_parts.append(footer_text)
+        
+        return "\n".join(help_parts).rstrip()
+        
+    except Exception:
+        # If anything fails, use fallback help
+        return "Build professional command-line tools with YAML configuration"
+
+
 def process_yaml_colors(text: str) -> str:
     """Process YAML color syntax for terminal display using Rich markup."""
     if not text:
@@ -193,8 +254,7 @@ def process_yaml_colors(text: str) -> str:
 
 
 app = typer.Typer(
-    name="goobits", 
-    help=generate_help_from_yaml()
+    name="goobits"
 )
 
 
@@ -207,6 +267,13 @@ def main(
         callback=version_callback,
         is_eager=True,
         help="Show version and exit",
+    ),
+    help: Optional[bool] = typer.Option(
+        None,
+        "--help",
+        "-h",
+        is_eager=True,
+        help="Show help and exit",
     )
 ):
     # Get dynamic help text and version from YAML
@@ -221,8 +288,8 @@ def main(
     # Set global context
     set_context(framework_version=__version__)
 
-    # If no command is provided, show help with dynamic content
-    if ctx.invoked_subcommand is None:
+    # If --help is provided or no command is provided, show help with dynamic content
+    if help or ctx.invoked_subcommand is None:
         from rich.console import Console
         from rich.markup import escape
         
