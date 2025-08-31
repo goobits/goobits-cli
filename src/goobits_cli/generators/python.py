@@ -21,25 +21,21 @@ Generated Structure:
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-# Lazy imports for heavy dependencies
-typer = None
-Environment = None
-DictLoader = None
+# Shared lazy imports
+from ..shared.lazy_imports import (
+    lazy_import_jinja2_environment,
+    lazy_import_jinja2_dict_loader,
+    lazy_import_typer,
+)
 
 
 def _lazy_imports():
     """Load heavy dependencies only when needed."""
+    # Use shared lazy import utilities
     global typer, Environment, DictLoader
-
-    if typer is None:
-        import typer as _typer
-
-        typer = _typer
-    if Environment is None:
-        from jinja2 import Environment as _Environment, DictLoader as _DictLoader
-
-        Environment = _Environment
-        DictLoader = _DictLoader
+    typer = lazy_import_typer()
+    Environment = lazy_import_jinja2_environment()
+    DictLoader = lazy_import_jinja2_dict_loader()
 
 
 # Base generator and error imports

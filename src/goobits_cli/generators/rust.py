@@ -11,29 +11,23 @@ import threading
 
 from functools import wraps
 
-# Lazy imports for heavy dependencies
-Environment = None
-FileSystemLoader = None
-TemplateNotFound = None
-typer = None
+# Shared lazy imports
+from ..shared.lazy_imports import (
+    lazy_import_jinja2_environment,
+    lazy_import_jinja2_filesystem_loader,
+    lazy_import_jinja2_template_not_found,
+    lazy_import_typer,
+)
 
 
 def _lazy_imports():
     """Load heavy dependencies only when needed."""
+    # Use shared lazy import utilities
     global Environment, FileSystemLoader, TemplateNotFound, typer
-
-    if Environment is None:
-        from jinja2 import Environment as _Environment
-        from jinja2 import FileSystemLoader as _FileSystemLoader
-        from jinja2 import TemplateNotFound as _TemplateNotFound
-
-        Environment = _Environment
-        FileSystemLoader = _FileSystemLoader
-        TemplateNotFound = _TemplateNotFound
-    if typer is None:
-        import typer as _typer
-
-        typer = _typer
+    Environment = lazy_import_jinja2_environment()
+    FileSystemLoader = lazy_import_jinja2_filesystem_loader()
+    TemplateNotFound = lazy_import_jinja2_template_not_found()
+    typer = lazy_import_typer()
 
 
 from . import (

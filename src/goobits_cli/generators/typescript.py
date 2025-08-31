@@ -4,29 +4,23 @@ from pathlib import Path
 
 from typing import Dict, List, Optional, Union
 
-# Lazy imports for heavy dependencies
-TemplateNotFound = None
-Environment = None
-DictLoader = None
-typer = None
+# Shared lazy imports
+from ..shared.lazy_imports import (
+    lazy_import_jinja2_environment,
+    lazy_import_jinja2_dict_loader,
+    lazy_import_jinja2_template_not_found,
+    lazy_import_typer,
+)
 
 
 def _lazy_imports():
     """Load heavy dependencies only when needed."""
+    # Use shared lazy import utilities
     global TemplateNotFound, Environment, DictLoader, typer
-
-    if Environment is None:
-        from jinja2 import TemplateNotFound as _TemplateNotFound
-        from jinja2 import Environment as _Environment
-        from jinja2 import DictLoader as _DictLoader
-
-        TemplateNotFound = _TemplateNotFound
-        Environment = _Environment
-        DictLoader = _DictLoader
-    if typer is None:
-        import typer as _typer
-
-        typer = _typer
+    TemplateNotFound = lazy_import_jinja2_template_not_found()
+    Environment = lazy_import_jinja2_environment()
+    DictLoader = lazy_import_jinja2_dict_loader()
+    typer = lazy_import_typer()
 
 
 from .nodejs import NodeJSGenerator
