@@ -1,189 +1,188 @@
 # 🎯 Goobits CLI Framework
 
-Transform YAML into production-ready CLIs for Python, Node.js, TypeScript, or Rust. Build once, deploy everywhere.
+Generate command-line interfaces for Python, Node.js, TypeScript, or Rust from YAML configuration files.
 
 ## ✨ Key Features
 
-- **⚡ Lightning Fast** - Generate a working CLI in under 30 seconds
-- **🌐 Multi-Language** - One YAML config generates Python, Node.js, TypeScript, or Rust CLIs
-- **📦 Zero Clutter** - Only 3-4 essential files generated, no bloat
-- **🛡️ Safe Merging** - Smart dependency handling preserves your existing package.json/Cargo.toml
-- **🎨 Rich Terminal UX** - Built-in colors, progress bars, and interactive modes
-- **🔄 Self-Hosting** - Goobits uses itself to build its own CLI (meta!)
+- **⚡ Multi-Language Support** - Generate CLIs for Python, Node.js, TypeScript, or Rust from one config
+- **📦 Minimal Output** - Produces 3-4 files per language with no unnecessary clutter
+- **🛡️ Safe Integration** - Preserves existing package.json/Cargo.toml files during generation
+- **🎨 Rich Interfaces** - Includes colors, progress indicators, and interactive modes
+- **🔄 Template System** - Universal templates ensure consistent behavior across languages
+- **⚙️ Self-Hosting** - Framework generates its own CLI from configuration
 
 ## 🚀 Quick Start
 
 ```bash
-# Install globally
-pip install goobits-cli          # via pip
-pipx install goobits-cli         # via pipx (recommended for CLIs)
+# Install
+pip install goobits-cli          # Standard installation
+pipx install goobits-cli         # Isolated installation (recommended)
 
-# Generate your first CLI in 30 seconds
-goobits init my-awesome-cli      # Create starter config
-goobits build                     # Generate CLI code
-./setup.sh install --dev         # Install with dependencies
+# Create and build CLI
+goobits init my-cli              # Generate initial configuration
+goobits build                    # Generate CLI files
+./setup.sh install --dev        # Install generated CLI
 
-# Take it for a spin!
-my-awesome-cli hello world        # Your CLI is ready!
+# Use generated CLI
+my-cli --help                   # View available commands
 ```
 
-## 💻 Configuration Example
+## ⚙️ Configuration
 
 ```yaml
-# goobits.yaml - Your entire CLI defined in one place
+# goobits.yaml
 package_name: my-cli
 command_name: mycli
 display_name: "My CLI"
-description: "Professional CLI tool built with Goobits"
-language: python      # Switch to: nodejs, typescript, or rust
+description: "Command-line tool"
+language: python      # Options: python, nodejs, typescript, rust
 
 cli:
   name: mycli
   version: "1.0.0"
-  tagline: "Making the command line beautiful"
   commands:
     greet:
-      desc: "Greet someone with style"
+      desc: "Display greeting message"
       args:
         - name: name
-          desc: "Person to greet"
+          desc: "Name to greet"
           required: false
           default: "World"
       options:
-        - name: --excited
-          desc: "Add enthusiasm!"
+        - name: --uppercase
+          desc: "Display in uppercase"
           type: boolean
 ```
 
-Run `goobits build` and get a fully-featured CLI with help text, arg validation, and beautiful formatting!
+Generated CLI includes help text, argument validation, and structured output formatting.
 
-## 🌐 Multi-Language Support
+## 🌐 Language Support
 
-Switch between languages with a single line change - same YAML config, different runtime:
+Target multiple languages from the same configuration:
 
 ```yaml
-# Python (default) - Rich click interfaces with type safety
+# Python - Click framework with rich terminal features
 language: python
 
-# Node.js - ES6 modules with Commander.js
+# Node.js - Commander.js with ES6 modules  
 language: nodejs
 
-# TypeScript - Full type definitions and compile-time checking
+# TypeScript - Commander.js with type definitions
 language: typescript
 
-# Rust - Blazing fast CLIs with Clap and zero runtime dependencies
+# Rust - Clap framework with compiled binaries
 language: rust
 ```
 
-**[📖 Language Guide →](docs/languages.md)** - Deep dive into each language's features
+Each language generates idiomatic code with framework-specific patterns and dependencies.
+
+**[📖 Language Guide](docs/languages.md)**
 
 ## 📦 Generated Files
 
-Clean, minimal output - no clutter, no overwrites, just what you need:
+Output structure per language:
 
-| Language | Files Generated | What You Get |
-|----------|----------------|--------------|
-| **Python** | 3 files | `cli.py` (consolidated), `cli_hooks.py` (your code), `setup.sh` (installer) |
-| **Node.js** | 3 files | `cli.mjs` (ES6 module), `cli_hooks.mjs` (your code), `setup.sh` (installer) |
-| **TypeScript** | 4 files | `cli.ts` + `cli_hooks.ts` + `cli_types.d.ts` + `setup.sh` |
-| **Rust** | 4 files | `src/cli.rs` + `src/cli_hooks.rs` + `Cargo.toml` + `setup.sh` |
+| Language | Files | Description |
+|----------|-------|-------------|
+| **Python** | 3 files | `cli.py`, `cli_hooks.py`, `setup.sh` |
+| **Node.js** | 3 files | `cli.mjs`, `cli_hooks.mjs`, `setup.sh` |
+| **TypeScript** | 4 files | `cli.ts`, `cli_hooks.ts`, `cli_types.d.ts`, `setup.sh` |
+| **Rust** | 4 files | `src/cli.rs`, `src/cli_hooks.rs`, `Cargo.toml`, `setup.sh` |
 
-✨ **Smart Features**: Preserves your existing README, merges dependencies intelligently, generates relative to your config location
+Framework preserves existing README files and merges dependencies into existing manifest files.
 
-**[🔧 File Generation Details →](docs/file-generation.md)**
+**[📖 File Generation Details](docs/file-generation.md)**
 
-## 🛠️ CLI Commands
-
-```bash
-# Essential workflow
-goobits init my-cli          # Create starter configuration
-goobits validate             # Check config syntax (fast feedback)
-goobits build               # Generate your CLI code
-
-# Advanced operations  
-goobits migrate old.yaml    # Upgrade configs to latest format
-goobits serve ./packages    # Host local PyPI index for development
-goobits upgrade             # Update goobits-cli to latest version
-```
-
-**[📖 Complete Command Reference →](docs/commands.md)**
-
-## 🎨 Advanced Features
+## 🛠️ Commands
 
 ```bash
-# Interactive REPL mode (all languages)
-mycli --interactive          # Drop into interactive shell
+# Core workflow
+goobits init my-cli          # Create initial configuration
+goobits validate             # Validate configuration syntax
+goobits build               # Generate CLI files
 
-# Shell completions (generated automatically)
-mycli --install-completion   # Bash, Zsh, Fish support
-
-# Rich terminal interfaces
-mycli deploy --progress      # Progress bars and spinners
-mycli config --interactive   # Interactive configuration
+# Additional commands
+goobits migrate config.yaml  # Upgrade configuration format
+goobits serve ./packages    # Serve local PyPI index
+goobits upgrade             # Update goobits-cli version
 ```
 
-**🔧 Hook System**: Write your business logic in language-specific hook files:
+**[📖 Command Reference](docs/commands.md)**
+
+## 🎨 Features
+
+Generated CLIs include:
+
+```bash
+# Interactive mode
+mycli --interactive          # Enter interactive shell
+
+# Shell completions  
+mycli --install-completion   # Install for current shell (bash, zsh, fish)
+
+# Rich output formatting
+mycli status --json          # Structured output
+mycli deploy --progress      # Progress indicators
+```
+
+**Hook System**: Business logic implemented in language-specific hook files:
 - `cli_hooks.py` (Python) • `cli_hooks.mjs` (Node.js) • `cli_hooks.ts` (TypeScript) • `cli_hooks.rs` (Rust)
 
-**⚡ Universal Templates**: Consistent behavior and features across all target languages
+**Template System**: Universal templates provide consistent behavior across all supported languages.
 
-## 📚 Documentation & Resources
+## 📚 Documentation
 
-**📖 Guides**
-- **[Configuration Schema](docs/user-guide/configuration.md)** - Complete YAML reference
-- **[Language Guides](docs/languages.md)** - Python, Node.js, TypeScript, Rust specifics
-- **[CLI Commands](docs/commands.md)** - All available commands and flags
+- **[Configuration Reference](docs/user-guide/configuration.md)** - YAML schema and options
+- **[Language Support](docs/languages.md)** - Python, Node.js, TypeScript, Rust details
+- **[Command Reference](docs/commands.md)** - Available commands and arguments
+- **[File Generation](docs/file-generation.md)** - Output structure and file contents
+- **[Examples](examples/)** - Sample configurations and generated CLIs
+- **[Troubleshooting](docs/user-guide/troubleshooting.md)** - Common issues and solutions
 
-**🛠️ Development**
-- **[File Generation](docs/file-generation.md)** - What gets created where
-- **[Working Examples](examples/)** - Real-world CLI samples
-- **[Troubleshooting](docs/user-guide/troubleshooting.md)** - Common issues & solutions
-
-## 🧪 Development & Contributing
+## 🧪 Development
 
 ```bash
-# Get started with development
+# Setup development environment
 git clone https://github.com/goobits/goobits-cli
 cd goobits-cli
-pip install -e .[dev,test]        # Editable install with dev dependencies
+pip install -e .[dev,test]
 
-# Testing suite
-pytest src/tests/               # Run all tests
-pytest --cov=goobits_cli       # With coverage reporting
+# Run tests
+pytest src/tests/
+pytest --cov=goobits_cli       # With coverage
 mypy src/goobits_cli/          # Type checking
 
-# Code quality
-black src/ && flake8 src/      # Format and lint
+# Code formatting
+black src/
+flake8 src/
 ```
 
-**📋 Project Resources**
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute, setup, and PR process
-- **[Architecture Overview](CODEMAP.md)** - Codebase walkthrough for contributors
+- **[Contributing Guide](CONTRIBUTING.md)** - Development setup and contribution process
+- **[Architecture Guide](CODEMAP.md)** - Codebase structure and components
 
-## ⚡ Performance Benchmarks
+## ⚡ Performance
 
-Built for speed at every level:
+Framework and generated CLI performance characteristics:
 
 ```bash
-# Generation speed
-time goobits build              # ~200ms for complete CLI generation
+# Generation time
+time goobits build              # ~200ms complete CLI generation
 
-# Runtime performance (generated CLIs)
-time mycli --help              # <100ms cold start
-time mycli complex-command     # <10MB memory usage typical
+# Generated CLI performance  
+time mycli --help              # <100ms startup time
 ```
 
-**Optimization Highlights**: Lazy loading, efficient template caching, minimal runtime dependencies
+- **Memory Usage**: <10MB typical runtime memory
+- **Startup Time**: <100ms for generated CLIs
+- **Generation Speed**: ~200ms for complete multi-file CLI generation
+
+Optimizations include lazy loading, template caching, and minimal runtime dependencies.
 
 ## 📝 License
 
 MIT License - see [LICENSE](LICENSE) for details
 
-## 💡 Support & Community
+## 💡 Support
 
-**🐛 Issues & Bugs**: [GitHub Issues](https://github.com/goobits/goobits-cli/issues)
-**💬 Questions & Ideas**: [GitHub Discussions](https://github.com/goobits/goobits-cli/discussions)
-
----
-
-**Made with ❤️ for developers who love clean, fast CLIs**
+- **Issues**: [GitHub Issues](https://github.com/goobits/goobits-cli/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/goobits/goobits-cli/discussions)
