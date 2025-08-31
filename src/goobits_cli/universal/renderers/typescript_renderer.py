@@ -736,11 +736,20 @@ class TypeScriptRenderer(LanguageRenderer):
     
     def _build_commander_argument(self, arg: Dict[str, Any]) -> Dict[str, Any]:
         """Build Commander.js argument structure."""
+        name = arg.get('name', 'arg')
+        # Handle optional vs required arguments
+        if arg.get("required", True):
+            pattern = f"<{name}>"
+        else:
+            pattern = f"[{name}]"
+        
         return {
-            "pattern": f"<{arg.get('name', 'arg')}>",
+            "pattern": pattern,
             "description": arg.get("description", ""),
             "type": arg.get("type", "string"),
-            "name": arg.get("name"),
+            "name": name,
+            "default": arg.get("default"),
+            "required": arg.get("required", True),
         }
     
     def _build_commander_option(self, opt: Dict[str, Any]) -> Dict[str, Any]:

@@ -12,16 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎉 FILE CONSOLIDATION RELEASE
 
 ### Added
-- **File Consolidation**: Minimal file generation (2-3 files per language)
+- **File Consolidation**: Minimal file generation (3-4 files per language)
 - **validate command**: Validate goobits.yaml without generating files
 - **Script entry point**: Added `goobits` command to pyproject.toml for direct CLI access
 
 ### Changed
 - **BREAKING**: Generated file structure reduced by 60-93%
-  - Python: 2 files (cli.py with embedded utilities, setup.sh)
-  - Node.js: 2 files (cli.mjs ES6 module, setup.sh)
-  - TypeScript: 3 files (cli.ts, types.d.ts, setup.sh)
-  - Rust: 2 files (src/main.rs with inline modules, setup.sh)
+  - Python: 3 files (cli.py with embedded utilities, cli_hooks.py, setup.sh)
+  - Node.js: 3 files (cli.mjs ES6 module, cli_hooks.mjs, setup.sh)
+  - TypeScript: 4 files (cli.ts, cli_hooks.ts, cli_types.d.ts, setup.sh)
+  - Rust: 4 files (src/cli.rs with inline modules, src/cli_hooks.rs, Cargo.toml, setup.sh)
 
 ### Fixed
 - **Critical**: No more README.md generation (preserves user documentation)

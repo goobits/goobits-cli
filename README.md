@@ -5,7 +5,7 @@ Generate production-ready CLIs in Python, Node.js, TypeScript, or Rust from a si
 ## ✨ Features
 
 - **🚀 One YAML** - Define once, generate for 4 languages
-- **📦 Minimal files** - Only 2-3 files generated, no clutter
+- **📦 Minimal files** - Only 3-4 files generated, no clutter
 - **⚡ Instant CLI** - Working command-line tool in 30 seconds
 - **🔧 Smart merging** - Never overwrites your package.json/Cargo.toml
 - **🎨 Rich interfaces** - Colors, progress bars, interactive modes
@@ -60,14 +60,14 @@ language: nodejs    # Just change this line
 
 ## 📦 What's Generated
 
-2-3 files only. No README overwriting. Smart dependency merging.
+Minimal files per language. No README overwriting. Smart dependency merging.
 
 | Language | Files | Description |
 |----------|-------|-------------|
-| Python | 2 | `cli.py`, `setup.sh` |
-| Node.js | 2 | `cli.mjs`, `setup.sh` |
-| TypeScript | 3 | `cli.ts`, `types.d.ts`, `setup.sh` |
-| Rust | 2 | `src/main.rs`, `setup.sh` |
+| Python | 3 | `cli.py`, `cli_hooks.py`, `setup.sh` |
+| Node.js | 3 | `cli.mjs`, `cli_hooks.mjs`, `setup.sh` |
+| TypeScript | 4 | `cli.ts`, `cli_hooks.ts`, `cli_types.d.ts`, `setup.sh` |
+| Rust | 4 | `src/cli.rs`, `src/cli_hooks.rs`, `Cargo.toml`, `setup.sh` |
 
 [Details →](docs/file-generation.md)
 
@@ -77,6 +77,9 @@ language: nodejs    # Just change this line
 goobits build      # Generate CLI from goobits.yaml
 goobits init       # Create starter config
 goobits validate   # Check config without generating
+goobits migrate    # Migrate configs to v3.0.0 format
+goobits serve      # Serve local PyPI package index
+goobits upgrade    # Upgrade goobits-cli to latest version
 ```
 [All commands →](docs/commands.md)
 

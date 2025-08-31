@@ -111,7 +111,7 @@ Rust:       src/cli.rs + src/cli_hooks.rs + Cargo.toml + setup.sh → cargo inst
 
 ### Key Components
 
-1. **main.py** - Entry point with commands: `build`, `init`, `serve`, `upgrade`
+1. **main.py** - Entry point with commands: `build`, `init`, `validate`, `migrate`, `serve`, `upgrade`
 2. **schemas.py** - Pydantic models for YAML validation (ConfigSchema, GoobitsConfigSchema)
 3. **builder.py** - Routes to language-specific generators based on `language` field
 4. **generators/** - Language-specific generators with shared component integration:
@@ -210,10 +210,10 @@ The setup.sh script automatically installs all specified dependencies:
 
 As of v3.0.1, the framework generates minimal files to avoid repository clutter:
 
-- **Python**: Single `cli.py` file with all utilities embedded inline
-- **Node.js**: Single `cli.mjs` ES6 module with embedded components
-- **TypeScript**: `cli.ts` + `types.d.ts` for type safety
-- **Rust**: Single `src/main.rs` with inline modules
+- **Python**: `cli.py` with all utilities embedded inline + `cli_hooks.py` for business logic
+- **Node.js**: `cli.mjs` ES6 module with embedded components + `cli_hooks.mjs` for business logic
+- **TypeScript**: `cli.ts` + `cli_hooks.ts` + `cli_types.d.ts` for type safety
+- **Rust**: `src/cli.rs` with inline modules + `src/cli_hooks.rs` for business logic + `Cargo.toml`
 - **setup.sh**: Smart installation script that merges dependencies without overwriting manifests
 
 **IMPORTANT**: No README.md files are generated to prevent overwriting user documentation

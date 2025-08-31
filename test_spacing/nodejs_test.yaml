@@ -1,0 +1,24 @@
+package_name: spacing-test-cli
+command_name: spacingtest
+display_name: "Spacing Test CLI"
+description: "Test CLI for enhanced spacing verification"
+
+cli:
+  name: spacingtest
+  version: "1.0.0"
+  tagline: "Testing enhanced spacing"
+  
+  commands:
+    hello:
+      desc: "Say hello with spacing"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: false
+          default: "World"
+      options:
+        - name: verbose
+          short: v
+          desc: "Verbose output"
+          type: flag
+language: nodejs
