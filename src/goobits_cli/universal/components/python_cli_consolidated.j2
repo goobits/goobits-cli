@@ -476,10 +476,20 @@ def interactive_mode(ctx):
 
 def main():
     """Main entry point for the CLI."""
+    import sys
+    
+    # Add spacing before command output (except when output is redirected)
+    if sys.stdout.isatty():
+        print()  # Empty line before
+    
     try:
         cli(prog_name='{{ cli.name | default(project.command_name) }}')
     except Exception as e:
         handle_error(e, '--verbose' in sys.argv or '--debug' in sys.argv)
+    finally:
+        # Add spacing after command output (except when output is redirected)
+        if sys.stdout.isatty():
+            print()  # Empty line after
 
 if __name__ == '__main__':
     main()

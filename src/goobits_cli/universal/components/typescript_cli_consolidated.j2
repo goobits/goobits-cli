@@ -602,5 +602,13 @@ process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
     process.exit(ExitCode.GENERAL_ERROR);
 });
 
-// Parse arguments
+// Parse arguments with enhanced spacing for better terminal presentation
+if (process.stdout.isTTY) {
+    console.log();  // Empty line before
+}
+
 program.parse(process.argv);
+
+if (process.stdout.isTTY) {
+    console.log();  // Empty line after
+}

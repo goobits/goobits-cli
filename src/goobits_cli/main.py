@@ -2210,6 +2210,21 @@ def migrate(
         raise typer.Exit(1)
 
 
-if __name__ == "__main__":
+def run_app():
+    """Run the CLI app with enhanced spacing for better terminal presentation."""
+    import sys
+    
+    # Add spacing before command output (except when output is redirected)
+    if sys.stdout.isatty():
+        print()  # Empty line before
+    
+    try:
+        app()
+    finally:
+        # Add spacing after command output (except when output is redirected)
+        if sys.stdout.isatty():
+            print()  # Empty line after
 
-    app()
+
+if __name__ == "__main__":
+    run_app()

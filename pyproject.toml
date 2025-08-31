@@ -26,7 +26,7 @@ all = [ "pytest>=7.0.0", "pytest-cov>=4.0.0", "pytest-timeout>=2.1.0", "pytest-a
 [project.urls]
 
 [project.scripts]
-goobits = "goobits_cli.main:app"
+goobits = "goobits_cli.main:run_app"
 
 [tool.black]
 line-length = 88

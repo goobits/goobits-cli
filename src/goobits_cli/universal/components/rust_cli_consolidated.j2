@@ -16,7 +16,7 @@ use log::{debug, info, warn, error};
 use env_logger;
 use colored::Colorize;
 use chrono::Local;
-use std::io::Write;
+use std::io::{Write, IsTerminal};
 
 // ============================================================================
 // INLINE CONFIG MODULE
@@ -378,7 +378,7 @@ fn build_cli() -> Command {
 // MAIN ENTRY POINT
 // ============================================================================
 
-fn main() -> Result<()> {
+fn run_cli() -> Result<()> {
     let app = build_cli();
     let matches = app.get_matches();
     
@@ -443,8 +443,24 @@ fn main() -> Result<()> {
 // Handle errors properly
 #[cfg(not(test))]
 fn main_wrapper() {
-    if let Err(e) = main() {
+    // Add spacing before command output (except when output is redirected)
+    if std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+        println!();  // Empty line before
+    }
+    
+    if let Err(e) = run_cli() {
         let verbose = std::env::args().any(|arg| arg == "--verbose" || arg == "-v");
         errors::handle_error(e, verbose);
     }
+    
+    // Add spacing after command output (except when output is redirected)
+    if std::io::IsTerminal::is_terminal(&std::io::stdout()) {
+        println!();  // Empty line after
+    }
+}
+
+// Entry point with enhanced spacing
+#[cfg(not(test))]
+fn main() {
+    main_wrapper();
 }
