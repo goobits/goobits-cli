@@ -1,7 +1,6 @@
 """Unit tests for TypeScript generator."""
 
 import pytest
-import json
 from unittest.mock import patch
 
 from goobits_cli.generators.typescript import TypeScriptGenerator
@@ -9,9 +8,6 @@ from goobits_cli.schemas import (
     ConfigSchema,
     CLISchema,
     CommandSchema,
-    GoobitsConfigSchema,
-    ArgumentSchema,
-    OptionSchema,
 )
 
 
@@ -92,14 +88,6 @@ class TestTypeScriptGenerator:
 
     def test_typescript_output_files_structure(self):
         """Test that TypeScript generator returns correct file structure."""
-        config = GoobitsConfigSchema(
-            package_name="test-typescript-cli",
-            command_name="test-typescript-cli",
-            display_name="Test TypeScript CLI",
-            description="Test CLI",
-            language="typescript",
-            cli=CLISchema(name="test-typescript-cli", tagline="Test CLI", commands={}),
-        )
         generator = TypeScriptGenerator()
         output_files = generator.get_output_files()
 

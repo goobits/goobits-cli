@@ -6,7 +6,7 @@ Base classes for language-specific code generation adapters.
 Provides common interfaces for generating equivalent functionality across languages.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from abc import ABC, abstractmethod
 
 

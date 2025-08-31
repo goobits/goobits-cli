@@ -7,7 +7,7 @@ management, extracted from the config_manager.j2 template.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Any, List
 from .config_framework import ConfigSchema, ConfigProperty
 
 
@@ -228,7 +228,6 @@ class NodeJSConfigAdapter(ConfigAdapter):
         """Generate complete Node.js configuration management implementation."""
         
         imports = self.get_import_statements(config_schema)
-        config_class = self.get_config_class(config_schema)
         manager_class = self.get_manager_class(config_schema)
         
         return f'''/**

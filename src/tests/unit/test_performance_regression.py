@@ -100,7 +100,6 @@ if __name__ == "__main__":
         """Test that Universal Template imports are not loaded eagerly."""
         # This test ensures we don't regress to eager loading
         import sys
-        import importlib
         
         # Store original module state
         module_name = "goobits_cli.universal.template_engine" 

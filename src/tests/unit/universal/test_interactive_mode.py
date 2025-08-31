@@ -14,8 +14,6 @@ from goobits_cli.universal.interactive import (
     is_interactive_supported,
 )
 from goobits_cli.universal.renderers.python_renderer import PythonRenderer
-from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
-from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
 
 # RustRenderer removed - using existing renderers only
 

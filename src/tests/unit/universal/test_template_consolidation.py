@@ -8,10 +8,7 @@ Validates that each language generates minimal files as per PROPOSAL_08_FILE_CON
 - Rust: 2 files (src/main.rs with inline modules, setup.sh)
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-from typing import Dict, Any
 
 from goobits_cli.universal.template_engine import UniversalTemplateEngine
 from goobits_cli.universal.renderers.python_renderer import PythonRenderer

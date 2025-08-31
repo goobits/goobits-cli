@@ -2,7 +2,6 @@
 
 
 # Now import heavy dependencies only if needed
-import sys
 
 import json
 

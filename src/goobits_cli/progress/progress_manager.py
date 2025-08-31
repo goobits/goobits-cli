@@ -6,13 +6,12 @@ Progress management system extracted from progress_manager.j2 template.
 Provides spinners, progress bars, and status indicators with Rich integration and fallbacks.
 """
 
-import sys
 import time
 import threading
-from typing import Optional, Any, Dict, Union, Callable, Iterator
+from typing import Optional, Any, Dict
 from contextlib import contextmanager
 from enum import Enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 class ProgressType(Enum):
@@ -279,7 +278,7 @@ class ProgressManager:
         """Rich-based progress bar implementation."""
         try:
             from rich.progress import (
-                Progress, TaskID, BarColumn, TextColumn, 
+                Progress, BarColumn, TextColumn, 
                 TimeRemainingColumn, SpinnerColumn, 
                 MofNCompleteColumn, TimeElapsedColumn
             )

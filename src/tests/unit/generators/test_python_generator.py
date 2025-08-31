@@ -92,19 +92,6 @@ class TestPythonGenerator:
 
     def test_python_output_files_structure(self):
         """Test that Python generator returns correct file structure."""
-        config = GoobitsConfigSchema(
-            package_name="test-python-cli",
-            command_name="test-python-cli",
-            display_name="Test Python CLI",
-            description="Test CLI",
-            language="python",
-            cli=CLISchema(
-                name="test-python-cli",
-                tagline="Test CLI",
-                description="Test CLI",
-                commands={},
-            ),
-        )
         generator = PythonGenerator()
         output_files = generator.get_output_files()
 

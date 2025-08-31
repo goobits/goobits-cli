@@ -9,7 +9,7 @@ Provides safe hook execution with error handling and result processing.
 import sys
 import traceback
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 from .discovery_engine import DiscoveryEngine

@@ -7,8 +7,8 @@ Each adapter generates hook system code for its target language.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
-from .hook_framework import HookConfig, HookDefinition, HookExecutionMode
+from typing import List
+from .hook_framework import HookConfig
 from .template_generator import TemplateGenerator
 
 

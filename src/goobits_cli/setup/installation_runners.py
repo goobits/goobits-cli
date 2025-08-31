@@ -8,7 +8,7 @@ Handles the actual execution of installation, upgrade, and uninstall operations.
 
 import subprocess
 import logging
-from typing import Dict, Any, List, Optional, Union
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 from .setup_manager import InstallationConfig, InstallationResult, InstallationMethod

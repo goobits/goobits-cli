@@ -15,13 +15,10 @@ from typing import Dict, List, Optional
 import pytest
 
 from .package_manager_utils import (
-    PackageManagerRegistry,
-    validate_installation_environment,
     PipManager,
     NpmManager,
     CargoManager,
     TestEnvironmentManager,
-    PathManagerUtil,
 )
 from .test_configs import TestConfigTemplates
 from goobits_cli.schemas import GoobitsConfigSchema

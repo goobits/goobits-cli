@@ -9,7 +9,6 @@ Previously, this logic was embedded in 1,215 lines of logger.j2 template.
 Now it's testable, maintainable Python code.
 """
 
-import os
 from dataclasses import dataclass
 from typing import Dict, Any, Optional, List
 from enum import Enum

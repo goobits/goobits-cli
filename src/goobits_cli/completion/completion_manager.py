@@ -7,11 +7,10 @@ Provides multi-shell completion support with script generation and installation.
 """
 
 import os
-import sys
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Any
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 class ShellType(Enum):

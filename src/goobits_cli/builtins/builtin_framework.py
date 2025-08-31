@@ -6,9 +6,8 @@ Core framework extracted from builtin_manager.j2 template.
 Orchestrates built-in command generation for all languages with consistent functionality.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List
 from enum import Enum
 
 

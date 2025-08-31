@@ -7,7 +7,6 @@ AFTER:  subcommands: {start: {...}, stop: {...}}
 """
 
 from typing import Dict, Any, List
-from pathlib import Path
 from .migration import Migration
 
 

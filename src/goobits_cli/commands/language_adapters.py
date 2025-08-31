@@ -7,7 +7,6 @@ Generate CLI command code for Python, Node.js, TypeScript, and Rust.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
 from .command_framework import CommandConfig, Command, Argument, Option, ArgumentType, OptionType
 
 

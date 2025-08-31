@@ -6,9 +6,8 @@ Core framework extracted from completion_manager.j2 and completion_engine.j2 tem
 Orchestrates completion system generation for all languages with consistent functionality.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from enum import Enum
 from .completion_manager import ShellType
 from .language_adapters import (

@@ -9,7 +9,6 @@ Each adapter generates error handling code for its target language.
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 from .exception_hierarchy import ErrorDefinitions, ExitCode
-from .error_handler import ErrorSeverity
 
 
 class ErrorAdapter(ABC):

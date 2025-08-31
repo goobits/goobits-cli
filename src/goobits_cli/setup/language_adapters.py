@@ -6,7 +6,7 @@ Language-specific adapters for generating setup and installation scripts.
 Each adapter generates equivalent setup functionality for its target language.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from ..universal.language_adapters import LanguageAdapter
 
 

@@ -8,7 +8,6 @@ consistent logging functionality across Python, Node.js, TypeScript, and Rust.
 import pytest
 from pathlib import Path
 
-from jinja2 import Template
 
 
 # Test the universal logger template rendering

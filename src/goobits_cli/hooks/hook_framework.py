@@ -6,9 +6,8 @@ Core framework extracted from hook_system.j2 template.
 Orchestrates hook system generation for all languages with consistent functionality.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Callable
+from typing import Dict, Any, Optional, List
 from enum import Enum
 
 

@@ -6,7 +6,6 @@ Completion logic and generation engine extracted from completion_engine.j2 templ
 Provides intelligent completion suggestions with context awareness.
 """
 
-import re
 from typing import Dict, List, Optional, Any, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
@@ -203,7 +202,6 @@ class FileCompletionProvider(CompletionProvider):
     
     def provide_completions(self, context: CompletionContext) -> CompletionResult:
         """Provide file/directory completions."""
-        import os
         from pathlib import Path
         
         current_word = context.current_word

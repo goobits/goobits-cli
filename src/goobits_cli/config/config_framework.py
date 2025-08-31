@@ -6,7 +6,6 @@ Core framework extracted from config_manager.j2 template.
 Orchestrates configuration management code generation for all languages.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Dict, Any, Optional, List
 from enum import Enum

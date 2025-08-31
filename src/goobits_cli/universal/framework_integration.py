@@ -10,7 +10,7 @@ Phase 2.1: Interactive Framework Integration (completed)
 Phase 1.2: Command Framework Integration (completed)
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 # Singleton instances of frameworks

@@ -7,7 +7,6 @@ Generate builtin command code for Python, Node.js, TypeScript, and Rust.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
 from .builtin_framework import BuiltinConfig, BuiltinCommand, BuiltinCommandType
 
 

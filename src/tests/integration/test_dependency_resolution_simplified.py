@@ -7,7 +7,7 @@ Focus is on validating the framework's dependency handling logic.
 
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict
 
 import pytest
 
@@ -59,7 +59,6 @@ class TestDependencyResolutionSimplified:
     @pytest.mark.parametrize("language", ["python", "nodejs", "typescript", "rust"])
     def test_minimal_dependencies_declared(self, language):
         """Test that minimal CLIs declare basic dependencies correctly."""
-        temp_dir = self._create_temp_dir()
         config = TestConfigTemplates.minimal_config(language)
         
         # Generate CLI and verify basic dependency declarations
@@ -79,7 +78,6 @@ class TestDependencyResolutionSimplified:
     @pytest.mark.parametrize("language", ["python", "nodejs", "typescript", "rust"])  
     def test_dependency_heavy_cli_declarations(self, language):
         """Test that dependency-heavy configs correctly specify dependencies in generated CLI."""
-        temp_dir = self._create_temp_dir()
         config = TestConfigTemplates.dependency_heavy_config(language)
         
         # Generate CLI and verify dependency declarations
@@ -134,7 +132,6 @@ class TestDependencyResolutionSimplified:
 
     def test_cross_language_dependency_consistency(self):
         """Test that dependency handling is consistent across languages."""
-        temp_dir = self._create_temp_dir()
         languages = ["python", "nodejs", "typescript", "rust"]
         
         generated_clis = {}

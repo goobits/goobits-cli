@@ -9,14 +9,10 @@ Generated from: goobits.yaml
 """
 
 import sys
-import os
-import json
 import yaml
 import traceback
 from pathlib import Path
-from typing import Any, Dict, Optional, List, Union
-from datetime import datetime
-from contextlib import contextmanager
+from typing import Any, Dict, Optional
 import rich_click as click
 # ============================================================================
 # EMBEDDED LOGGER
@@ -304,7 +300,6 @@ def init(ctx, project_name, template, force):
         elif is_self_hosting:
             # Self-hosting: call main.py implementation directly
             from goobits_cli.main import init as main_init
-            from pathlib import Path
             
             # Handle other commands - call with converted arguments
             main_init(                project_name=project_name,
@@ -341,7 +336,6 @@ def serve(ctx, directory, host, port):
         elif is_self_hosting:
             # Self-hosting: call main.py implementation directly
             from goobits_cli.main import serve as main_serve
-            from pathlib import Path
             
             # Handle other commands - call with converted arguments
             main_serve(                directory=directory,
@@ -376,7 +370,6 @@ def validate(ctx, config_path, verbose):
         elif is_self_hosting:
             # Self-hosting: call main.py implementation directly
             from goobits_cli.main import validate as main_validate
-            from pathlib import Path
             
             # Handle other commands - call with converted arguments
             main_validate(                config_path=config_path,
@@ -414,7 +407,6 @@ def migrate(ctx, path, backup, dry_run, pattern):
         elif is_self_hosting:
             # Self-hosting: call main.py implementation directly
             from goobits_cli.main import migrate as main_migrate
-            from pathlib import Path
             
             # Handle other commands - call with converted arguments
             main_migrate(                path=path,

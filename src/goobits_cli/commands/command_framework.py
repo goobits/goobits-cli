@@ -6,9 +6,8 @@ Core framework extracted from command_handler.j2 template.
 Orchestrates CLI command generation for all languages with hierarchical command support.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List
 from enum import Enum
 
 

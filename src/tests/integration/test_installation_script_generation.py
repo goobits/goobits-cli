@@ -16,13 +16,12 @@ For actual installation testing, see tests/e2e/test_installation_flows.py
 
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict
 import json
 
 import pytest
 
 from .test_configs import TestConfigTemplates
-from goobits_cli.builder import Builder
 
 
 class TestInstallationScriptGeneration:

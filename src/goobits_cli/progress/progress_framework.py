@@ -7,12 +7,11 @@ Coordinates between progress managers, display adapters, and language adapters.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
-from pathlib import Path
 
 from .progress_manager import ProgressManager, ProgressIndicator, ProgressType, SpinnerStyle
-from .display_adapters import DisplayAdapter, RichDisplayAdapter, FallbackDisplayAdapter, SmartDisplayAdapter
+from .display_adapters import DisplayAdapter, FallbackDisplayAdapter, SmartDisplayAdapter
 from .language_adapters import (
     PythonProgressAdapter, NodeJSProgressAdapter, 
     TypeScriptProgressAdapter, RustProgressAdapter

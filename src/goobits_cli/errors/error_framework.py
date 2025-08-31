@@ -6,10 +6,8 @@ Core framework extracted from error_handler.j2 template.
 Orchestrates error handling generation for all languages with consistent functionality.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Dict, Any, Optional, List
-from enum import Enum
+from typing import Dict, Any, List
 from .exception_hierarchy import ExitCode, ErrorDefinitions
 from .language_adapters import (
     PythonErrorAdapter,

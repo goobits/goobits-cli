@@ -27,7 +27,6 @@ all = [ "pytest>=7.0.0", "pytest-cov>=4.0.0", "pytest-timeout>=2.1.0", "pytest-a
 
 [project.scripts]
 goobits = "goobits_cli.main:app"
-nargscli = "nargs_test.cli:cli_entry"
 
 [tool.black]
 line-length = 88
@@ -56,8 +55,6 @@ warn_unreachable = true
 strict_equality = true
 
 [tool.setuptools.package-data]
-test_cli = [ "setup.sh",]
-nargs_test = [ "setup.sh",]
 
 [tool.pytest.ini_options]
 minversion = "6.0"

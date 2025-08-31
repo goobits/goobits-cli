@@ -6,9 +6,8 @@ Core framework extracted from interactive_mode.j2 template.
 Orchestrates interactive mode generation for all languages with consistent behavior.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from enum import Enum
 
 

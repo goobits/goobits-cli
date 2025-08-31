@@ -7,7 +7,7 @@ Each adapter generates REPL integration code for its target language.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 
 class REPLAdapter(ABC):

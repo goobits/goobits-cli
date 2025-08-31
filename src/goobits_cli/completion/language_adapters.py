@@ -7,8 +7,7 @@ Each adapter generates completion integration code for its target language.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
-from .completion_manager import ShellType
+from typing import Dict, Any
 
 
 class CompletionAdapter(ABC):
@@ -128,7 +127,6 @@ class PythonCompletionAdapter(CompletionAdapter):
     def generate_engine_code(self, config: Dict[str, Any]) -> str:
         """Generate Python completion engine code."""
         project_name = config.get('project', {}).get('name', 'CLI')
-        commands = config.get('commands', {})
         
         lines = [
             '"""',

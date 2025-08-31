@@ -6,8 +6,7 @@ Template generation system extracted from hook_system.j2.
 Provides language-specific hook template generation for user hook files.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import List
 from dataclasses import dataclass
 from .hook_framework import HookConfig, HookDefinition
 

@@ -326,10 +326,7 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
           {%- endfor %}
           {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
-@click.option('{{ opt.long }}', '{{ opt.short }}',
-              {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
-              {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
-              help='{{ opt.description }}')
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %}{%- if opt.type == 'bool' %}, is_flag=True{% endif %}{%- if opt.default is defined %}, default={{ opt.default | python_repr }}{% endif %}, help='{{ opt.description }}')
           {%- endfor %}
 @click.pass_obj
 def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
@@ -359,10 +356,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
           {% endfor %}
           {% for opt in sub_data.options | default([]) %}
-@click.option('{{ opt.long }}', '{{ opt.short }}',
-              {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
-              {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
-              help='{{ opt.description }}')
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %}{%- if opt.type == 'bool' %}, is_flag=True{% endif %}{%- if opt.default is defined %}, default={{ opt.default | python_repr }}{% endif %}, help='{{ opt.description }}')
           {% endfor %}
 @click.pass_obj
 def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{% for arg in sub_data.arguments | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in sub_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
@@ -395,10 +389,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs and arg.nargs == "*" %}, nargs=-1{% endif %})
     {%- endfor %}
     {%- for opt in command.options | default([]) %}
-@click.option('{{ opt.long }}', '{{ opt.short }}',
-              {%- if opt.type == 'bool' %} is_flag=True,{% endif %}
-              {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
-              help='{{ opt.description }}')
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %}{%- if opt.type == 'bool' %}, is_flag=True{% endif %}{%- if opt.default is defined %}, default={{ opt.default | python_repr }}{% endif %}, help='{{ opt.description }}')
     {%- endfor %}
 @click.pass_obj
 def {{ command.name.replace('-', '_') }}(ctx{% for arg in command.arguments | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in command.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):

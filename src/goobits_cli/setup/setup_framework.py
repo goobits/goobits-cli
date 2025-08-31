@@ -9,16 +9,15 @@ Coordinates between setup managers, system detection, and language adapters.
 import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from pathlib import Path
 
 from .setup_manager import SetupManager, InstallationConfig, InstallationMethod, InstallationResult
-from .system_detection import SystemDetector, Platform
+from .system_detection import SystemDetector
 from .language_adapters import (
     PythonSetupAdapter, NodeJSSetupAdapter, 
     TypeScriptSetupAdapter, RustSetupAdapter
 )
 from .installation_runners import (
-    InstallationRunner, PythonInstallationRunner,
+    PythonInstallationRunner,
     NodeJSInstallationRunner, TypeScriptInstallationRunner,
     RustInstallationRunner
 )

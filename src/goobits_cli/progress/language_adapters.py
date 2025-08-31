@@ -6,7 +6,7 @@ Language-specific adapters for generating progress management code.
 Each adapter generates equivalent progress functionality for its target language.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from ..universal.language_adapters import LanguageAdapter
 
 

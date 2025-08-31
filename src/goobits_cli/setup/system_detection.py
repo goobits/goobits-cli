@@ -6,15 +6,13 @@ System and platform detection utilities for cross-platform setup management.
 Handles OS detection, package manager discovery, and environment validation.
 """
 
-import os
 import sys
 import platform
 import subprocess
 import shutil
-from typing import Dict, List, Optional, Any, Set
+from typing import Dict, List, Optional, Any
 from enum import Enum
 from dataclasses import dataclass
-from pathlib import Path
 
 
 class Platform(Enum):

@@ -6,14 +6,12 @@ Display adapters for progress indicators with Rich integration and fallback supp
 Handles rendering of progress bars and spinners across different display environments.
 """
 
-import sys
 import time
 import threading
-from typing import Optional, Any, Dict, List, Union
+from typing import Any, Dict
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 
-from .progress_manager import ProgressIndicator, SpinnerStyle, ProgressType
+from .progress_manager import ProgressIndicator, SpinnerStyle
 
 
 class DisplayAdapter(ABC):

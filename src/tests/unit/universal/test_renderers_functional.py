@@ -5,10 +5,8 @@ Tests the actual rendering functionality, template context generation,
 and language-specific code generation for Node.js and TypeScript renderers.
 """
 
-import pytest
 
 from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
-from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
 
 
 class TestNodeJSRendererFunctional:

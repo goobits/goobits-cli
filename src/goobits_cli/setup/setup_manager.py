@@ -7,15 +7,12 @@ Provides installation, upgrade, and dependency management with cross-platform su
 """
 
 import os
-import sys
 import subprocess
-import shutil
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any
 from enum import Enum
 from dataclasses import dataclass, field
-from pathlib import Path
 
-from .system_detection import SystemDetector, Platform, PackageManagerRegistry
+from .system_detection import SystemDetector, PackageManagerRegistry
 
 
 class InstallationMethod(Enum):

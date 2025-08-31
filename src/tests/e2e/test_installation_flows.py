@@ -21,7 +21,6 @@ network conditions, package manager state, and system permissions.
 """
 
 import json
-import os
 import shutil
 import subprocess
 import tempfile

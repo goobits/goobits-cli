@@ -7,8 +7,8 @@ extracted from the interactive_mode.j2 template.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
-from .interactive_framework import InteractiveConfig, REPLMode
+from typing import List
+from .interactive_framework import InteractiveConfig
 
 
 class InteractiveAdapter(ABC):

@@ -11,8 +11,7 @@ Previously, these were embedded in the template as:
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
-from .logging_framework import LoggingConfig, LogLevel, Environment
+from .logging_framework import LoggingConfig, Environment
 
 
 class LoggingAdapter(ABC):

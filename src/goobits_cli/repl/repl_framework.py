@@ -6,7 +6,6 @@ Core framework extracted from repl_loop.j2 template.
 Orchestrates REPL generation for all languages with consistent functionality.
 """
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, List
 from enum import Enum

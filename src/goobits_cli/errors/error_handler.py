@@ -8,7 +8,7 @@ Provides comprehensive error handling with context, reporting, and debugging sup
 
 import sys
 import traceback
-from typing import Optional, Any, Dict, List, Union
+from typing import Optional, Any, Dict, List
 from dataclasses import dataclass, field
 from enum import Enum
 from .exception_hierarchy import ExitCode, CliError

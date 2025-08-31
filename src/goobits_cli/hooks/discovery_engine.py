@@ -9,10 +9,8 @@ Provides dynamic module resolution and hook function discovery.
 import importlib
 import importlib.util
 import inspect
-import sys
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Callable, Union
-from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional, List, Callable
 from dataclasses import dataclass
 
 
@@ -160,7 +158,7 @@ class HookLoader:
             
             return hook_module
             
-        except Exception as e:
+        except Exception:
             # Log error but don't fail completely
             return None
     

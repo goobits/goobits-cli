@@ -14,10 +14,9 @@ import pytest
 
 from .package_manager_utils import (
     PackageManagerRegistry,
-    validate_installation_environment,
     cleanup_global_packages,
 )
-from .test_configs import TestConfigTemplates, TestScenarioRunner
+from .test_configs import TestConfigTemplates
 # Import CLITestHelper from E2E tests since we moved installation flows there
 import sys
 sys.path.append(str(Path(__file__).parent.parent / "e2e"))

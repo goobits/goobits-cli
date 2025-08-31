@@ -7,7 +7,7 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
+from typing import Dict, Any, Optional, List
 import toml
 
 
