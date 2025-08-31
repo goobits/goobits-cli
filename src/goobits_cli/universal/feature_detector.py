@@ -156,7 +156,7 @@ class FeatureDetector:
             options = cmd_dict.get("options", [])
             for opt in options:
                 opt_dict = _safe_to_dict(opt)
-                choices = opt_dict.get("choices", [])
+                choices = opt_dict.get("choices") or []
                 if any(
                     choice in ["table", "json", "csv", "yaml"] for choice in choices
                 ):
