@@ -9,7 +9,6 @@ import typer
 from .utils import (
     _lazy_imports,
     backup_file,
-    extract_version_from_pyproject,
     generate_setup_script,
     load_goobits_config,
     normalize_dependencies_for_template,
@@ -155,15 +154,6 @@ def build_command(
     # Generate CLI for each target language
 
     if goobits_config.cli:
-        # Extract version from pyproject.toml if available
-
-        pyproject_path = output_dir / "pyproject.toml"
-
-        version = None
-
-        if pyproject_path.exists():
-            version = extract_version_from_pyproject(output_dir)
-
         # Multi-language generation loop
 
         for language in target_languages:

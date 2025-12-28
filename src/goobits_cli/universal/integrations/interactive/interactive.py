@@ -8,11 +8,9 @@ import cmd
 import shlex
 
 try:
-    from .goobits_cli import cli
     from .hooks import *  # Import all hook functions
 except ImportError:
     # Fallback imports
-
     try:
         from hooks import *
     except ImportError:

@@ -638,11 +638,8 @@ class IRBuilder:
                 # Convert Pydantic model to dict if necessary
                 extras = _safe_to_dict(extras_obj)
 
-                # Python extras from installation.extras.python are meant for optional-dependencies
-                # NOT for main dependencies. Skip adding them to main dependencies to avoid
-                # pip install errors like "No matching distribution found for dev"
-                python_extras = extras.get("python", [])
-                # NOTE: These are handled separately in pyproject.toml template as optional-dependencies
+                # Python extras from installation.extras.python are handled separately
+                # in pyproject.toml optional-dependencies and are not added here.
 
                 apt_extras = extras.get("apt", [])
                 if apt_extras:

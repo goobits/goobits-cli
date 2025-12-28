@@ -30,7 +30,7 @@ import pytest
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.core.schemas import ConfigSchema, GoobitsConfigSchema, CLISchema
+from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 from goobits_cli.universal.generator import UniversalGenerator
 
 

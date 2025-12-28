@@ -408,7 +408,7 @@ class TestUnicodeInYamlParsing:
                 generator = UniversalGenerator("python")
 
                 # Use generate_all_files to get the generated content
-                with tempfile.TemporaryDirectory() as temp_output_dir:
+                with tempfile.TemporaryDirectory() as _temp_output_dir:
                     result = generator.generate_all_files(config, yaml_file)
                     # Check that Unicode content is preserved in the appropriate files
                     if result:

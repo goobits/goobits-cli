@@ -785,8 +785,6 @@ setup(
             Dictionary of feature flags for template usage
         """
         cli_schema = ir.get("cli", {})
-        features = ir.get("features", {})
-
         # Respect analyzed feature requirements from the IR.
         feature_requirements = ir.get("feature_requirements", {}).copy()
 

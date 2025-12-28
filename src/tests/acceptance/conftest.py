@@ -2,9 +2,7 @@
 Fixtures for acceptance testing.
 """
 
-import shutil
 import subprocess
-import tempfile
 from pathlib import Path
 from typing import Any, Dict
 

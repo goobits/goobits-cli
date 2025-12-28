@@ -22,10 +22,8 @@ from ...core.errors import (
     ConfigurationError,
     GeneratorError,
     RenderError,
-    TemplateError,
 )
 from ..component_registry import ComponentRegistry
-from ..renderers.interface import LanguageRenderer
 from ..renderers.registry import get_default_registry, get_renderer
 from . import stages
 

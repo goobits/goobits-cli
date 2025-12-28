@@ -14,7 +14,6 @@ from typing import Any, Dict
 
 import pytest
 
-from goobits_cli.universal.engine import Orchestrator
 from goobits_cli.universal.engine.stages import build_ir, validate_config
 from goobits_cli.universal.renderers import get_renderer
 
@@ -69,7 +68,7 @@ class TestGenerationTime:
         validated = validate_config(sample_config)
         ir = build_ir(validated, "benchmark.yaml")
         renderer = get_renderer("python")
-        context = renderer.get_template_context(ir)
+        renderer.get_template_context(ir)
         _ = renderer.get_output_structure(ir)
 
         elapsed = time.perf_counter() - start
@@ -87,7 +86,7 @@ class TestGenerationTime:
         validated = validate_config(sample_config)
         ir = build_ir(validated, "benchmark.yaml")
         renderer = get_renderer("nodejs")
-        context = renderer.get_template_context(ir)
+        renderer.get_template_context(ir)
         _ = renderer.get_output_structure(ir)
 
         elapsed = time.perf_counter() - start
@@ -105,7 +104,7 @@ class TestGenerationTime:
         validated = validate_config(sample_config)
         ir = build_ir(validated, "benchmark.yaml")
         renderer = get_renderer("typescript")
-        context = renderer.get_template_context(ir)
+        renderer.get_template_context(ir)
         _ = renderer.get_output_structure(ir)
 
         elapsed = time.perf_counter() - start
@@ -123,7 +122,7 @@ class TestGenerationTime:
         validated = validate_config(sample_config)
         ir = build_ir(validated, "benchmark.yaml")
         renderer = get_renderer("rust")
-        context = renderer.get_template_context(ir)
+        renderer.get_template_context(ir)
         _ = renderer.get_output_structure(ir)
 
         elapsed = time.perf_counter() - start

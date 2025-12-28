@@ -426,8 +426,6 @@ class TestTypeScriptCLICompilation:
 
             # Write files
             cli_file = None
-            types_file = None
-
             for filename, content in all_files.items():
                 if filename == "__executable__":
                     continue
@@ -439,9 +437,6 @@ class TestTypeScriptCLICompilation:
                     "cli" in filename or "main" in filename or "index" in filename
                 ):
                     cli_file = file_path
-                elif filename.endswith(".d.ts"):
-                    types_file = file_path
-
             assert cli_file is not None, "No main CLI TypeScript file found"
 
             # Basic TypeScript syntax validation (without compilation dependencies)

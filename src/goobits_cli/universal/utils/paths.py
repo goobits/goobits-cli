@@ -3,7 +3,7 @@ Path handling utilities for the Universal Template System.
 """
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 
 def normalize_path(path: Union[str, Path]) -> Path:

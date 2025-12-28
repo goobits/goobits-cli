@@ -4,7 +4,7 @@ This module provides all exception classes used throughout the framework,
 centralized to avoid circular imports and ensure consistent error handling.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 
 class GeneratorError(Exception):

@@ -525,7 +525,7 @@ def validate_phase1_compatibility():
 
         # Test CLI generation
 
-        files = generate_cli(config, "test.yaml")
+        generate_cli(config, "test.yaml")
 
         return {
             "compatible": True,

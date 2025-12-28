@@ -89,7 +89,7 @@ class CommandValidator(BaseValidator):
         """Validate a single command definition."""
 
         # Validate command name (continue validation even if name is invalid)
-        name_is_valid = self.validate_identifier(
+        self.validate_identifier(
             name, field_path, result, allow_hyphens=True, language=context.language
         )
 

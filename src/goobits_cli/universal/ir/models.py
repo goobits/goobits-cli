@@ -10,7 +10,7 @@ See docs/IR_SCHEMA.md for the complete specification.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 
 @dataclass(frozen=True)

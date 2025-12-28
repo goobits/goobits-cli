@@ -14,10 +14,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from click.exceptions import Exit
 
-from goobits_cli.core.schemas import ConfigSchema
-from goobits_cli.core.errors import TemplateError, ConfigurationError
+from goobits_cli.core.errors import ConfigurationError
 from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.universal.engine.stages import parse_config, validate_config
 
@@ -44,7 +42,7 @@ class TestBuilderIntegration:
 
         # Generate CLI code using the universal generator
         generator = UniversalGenerator("python")
-        files = generator.generate_all_files(self.config, "goobits.yaml")
+        generator.generate_all_files(self.config, "goobits.yaml")
         generated_code = generator.generate(self.config, "goobits.yaml")
 
         # Verify the generated code is a string

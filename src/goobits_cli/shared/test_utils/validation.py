@@ -282,6 +282,7 @@ class FrameworkIntegrationValidator:
             from conftest import determine_language, generate_cli
 
             result.details["phase1_helpers_imported"] = True
+            _ = (determine_language, generate_cli)
 
         except ImportError as e:
             result.add_error(f"Cannot import Phase 1 helpers: {e}")
@@ -290,6 +291,7 @@ class FrameworkIntegrationValidator:
             from tests.test_helpers import create_test_goobits_config
 
             result.details["phase1_test_helpers_imported"] = True
+            _ = create_test_goobits_config
 
         except ImportError as e:
             result.add_error(f"Cannot import Phase 1 test helpers: {e}")
@@ -303,7 +305,7 @@ class FrameworkIntegrationValidator:
 
             fixtures = TestFixtures()
 
-            config_data = fixtures.get_config("minimal", "python")
+            fixtures.get_config("minimal", "python")
 
             result.details["shared_utilities_functional"] = True
 
@@ -343,6 +345,7 @@ class FrameworkIntegrationValidator:
 
             # Test creating configs for all languages
 
+            _ = GoobitsConfigSchema
             languages = ["python", "nodejs", "typescript", "rust"]
 
             created_configs = {}

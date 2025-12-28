@@ -6,7 +6,7 @@ following the DRY principle by centralizing shared functionality.
 """
 
 import re
-from typing import Any, Dict, Optional
+from typing import Dict
 
 
 def escape_string(s: str, language: str) -> str:

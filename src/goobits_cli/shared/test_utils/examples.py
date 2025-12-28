@@ -130,7 +130,7 @@ class ExampleTestSuite:
 
             files = generate_cli(config, "example.yaml")
 
-            cli_path = env.install_cli_from_files("example-cli", files)
+            env.install_cli_from_files("example-cli", files)
 
             # Create test runner
 
@@ -328,12 +328,8 @@ Commands:
 
             if python_has and nodejs_has:
                 # Should be noted as similarity
-
-                similarity_found = any(
-                    common_file in sim for sim in comparison.similarities
-                )
-
                 # Note: This might not always be true depending on implementation
+                pass
 
     def test_phase1_integration(self):
         """Example: Phase 1 framework integration."""

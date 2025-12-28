@@ -8,7 +8,7 @@ Each function is stateless and can be composed or tested independently.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import yaml
 

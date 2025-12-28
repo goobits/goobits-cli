@@ -285,8 +285,8 @@ class TestLoggingIntegration:
         """Test that multiple loggers share the same context."""
         setup_logging()
 
-        logger1 = get_logger("module1")
-        logger2 = get_logger("module2")
+        get_logger("module1")
+        get_logger("module2")
 
         set_context(shared_operation="test_operation")
 

@@ -40,6 +40,7 @@ from .typescript_renderer import TypeScriptRenderer
 try:
     from .rust_renderer import RustRenderer
 
+    _ = RustRenderer
     _has_rust = True
 except ImportError:
     _has_rust = False

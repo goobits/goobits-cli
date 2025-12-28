@@ -25,8 +25,7 @@ import pytest
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.core.schemas import ConfigSchema, GoobitsConfigSchema
-from goobits_cli.core.errors import TemplateError
+from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
 from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.universal.engine.stages import parse_config, validate_config
 
@@ -140,8 +139,6 @@ class TestNodeJSGeneratorE2E:
 
     def _create_config(self, language: str) -> GoobitsConfigSchema:
         """Create a GoobitsConfigSchema for testing."""
-        from goobits_cli.core.schemas import CLISchema
-
         return GoobitsConfigSchema(
             package_name="test-nodejs-cli",
             command_name="testnodejs",

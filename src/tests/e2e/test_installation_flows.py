@@ -33,7 +33,6 @@ from typing import Dict, List, Optional
 import pytest
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.core.errors import TemplateError
 from goobits_cli.universal.generator import UniversalGenerator
 
 integration_path = str(Path(__file__).parent.parent / "integration")
