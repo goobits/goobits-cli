@@ -10,11 +10,14 @@ import sys
 from typing import List, Optional
 
 try:
-    from .generated_cli import cli
-    from .hooks import *  # Import all hook functions
+    from ..generated_cli import cli
+    from ..hooks import *  # Import all hook functions
 except ImportError:
     # Fallback imports
-    from generated_cli import cli
+    try:
+        from generated_cli import cli
+    except ImportError:
+        cli = None
 
     try:
         from hooks import *

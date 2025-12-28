@@ -11,7 +11,7 @@ import logging
 
 import pytest
 
-from goobits_cli.logger import (
+from goobits_cli.core.logging import (
     setup_logging,
     get_logger,
     set_context,
@@ -120,7 +120,7 @@ class TestLoggingSetup:
         assert logger.name == "production_test"
 
         # Test that the environment variable is being read correctly
-        from goobits_cli.logger import StructuredFormatter
+        from goobits_cli.core.logging import StructuredFormatter
 
         formatter = StructuredFormatter()
         assert formatter.is_production == True
@@ -235,7 +235,7 @@ class TestLoggingFormats:
         """Test human-readable development format setup."""
         os.environ["ENVIRONMENT"] = "development"
 
-        from goobits_cli.logger import StructuredFormatter
+        from goobits_cli.core.logging import StructuredFormatter
 
         formatter = StructuredFormatter()
 
@@ -247,7 +247,7 @@ class TestLoggingFormats:
         """Test JSON format in production setup."""
         os.environ["ENVIRONMENT"] = "production"
 
-        from goobits_cli.logger import StructuredFormatter
+        from goobits_cli.core.logging import StructuredFormatter
 
         formatter = StructuredFormatter()
 

@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from goobits_cli.schemas import GoobitsConfigSchema
-from goobits_cli.generators.python import PythonGenerator
-from goobits_cli.generators.nodejs import NodeJSGenerator
-from goobits_cli.generators.typescript import TypeScriptGenerator
-from goobits_cli.generators.rust import RustGenerator
+from goobits_cli.core.schemas import GoobitsConfigSchema
+from goobits_cli.generation.renderers.python import PythonGenerator
+from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.generation.renderers.rust import RustGenerator
 
 # Timeout configurations for different operations
 QUICK_CHECK_TIMEOUT = 45  # Quick syntax/import checks (increased from 30s)

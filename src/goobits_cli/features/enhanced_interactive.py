@@ -15,7 +15,7 @@ from typing import List, Dict, Any, Optional
 
 from pathlib import Path
 
-from .logger import get_logger
+from ..logger import get_logger
 
 
 # Enhanced imports for completion and plugin systems

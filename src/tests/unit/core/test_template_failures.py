@@ -19,7 +19,7 @@ from goobits_cli.universal.template_engine import (
     LanguageRenderer,
     ComponentRegistry,
 )
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 
 class FailingRenderer(LanguageRenderer):

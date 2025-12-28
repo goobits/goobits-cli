@@ -38,7 +38,7 @@ from goobits_cli.universal.component_registry import (
     ComponentRegistry,
     ComponentMetadata,
 )
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 
 class MockRenderer(LanguageRenderer):

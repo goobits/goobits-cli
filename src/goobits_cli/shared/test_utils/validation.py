@@ -12,7 +12,7 @@ import yaml
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 from pydantic import ValidationError
 
 # Import unified ValidationResult from canonical location
@@ -388,7 +388,7 @@ class FrameworkIntegrationValidator:
 
         try:
 
-            from goobits_cli.schemas import GoobitsConfigSchema
+            from goobits_cli.core.schemas import GoobitsConfigSchema
 
             from goobits_cli.shared.test_utils.fixtures import create_test_config
 

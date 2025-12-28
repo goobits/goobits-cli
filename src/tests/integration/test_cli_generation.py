@@ -15,8 +15,8 @@ import pytest
 from pathlib import Path
 from click.exceptions import Exit
 
-from goobits_cli.builder import load_yaml_config, generate_cli_code, Builder
-from goobits_cli.schemas import ConfigSchema
+from goobits_cli.generation.builder import load_yaml_config, generate_cli_code, Builder
+from goobits_cli.core.schemas import ConfigSchema
 
 
 class TestBuilderIntegration:
@@ -195,7 +195,7 @@ class TestCLIGenerationIntegration:
 
     def test_python_cli_generation_and_execution(self, tmp_path):
         """Test Python CLI generation and basic execution."""
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         # Create a minimal test configuration
         config = ConfigSchema(
@@ -225,7 +225,7 @@ class TestCLIGenerationIntegration:
 
     def test_nodejs_cli_generation_and_execution(self, tmp_path):
         """Test Node.js CLI generation and basic execution."""
-        from goobits_cli.generators.nodejs import NodeJSGenerator
+        from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
 
         # Create a minimal test configuration
         config = ConfigSchema(
@@ -261,7 +261,7 @@ class TestCLIGenerationIntegration:
     )
     def test_rust_cli_generation_and_execution(self, tmp_path):
         """Test Rust CLI generation and basic execution."""
-        from goobits_cli.generators.rust import RustGenerator
+        from goobits_cli.generation.renderers.rust import RustGenerator
 
         # Create a minimal test configuration
         config = ConfigSchema(
@@ -304,10 +304,10 @@ class TestCLIGenerationIntegration:
         )
 
         # Test each generator
-        from goobits_cli.generators.python import PythonGenerator
-        from goobits_cli.generators.nodejs import NodeJSGenerator
-        from goobits_cli.generators.typescript import TypeScriptGenerator
-        from goobits_cli.generators.rust import RustGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
+        from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+        from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+        from goobits_cli.generation.renderers.rust import RustGenerator
 
         generators = [
             ("python", PythonGenerator),

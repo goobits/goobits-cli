@@ -43,7 +43,7 @@ def _lazy_imports():
 
         ValidationError = _ValidationError
     if GoobitsConfigSchema is None:
-        from goobits_cli.schemas import GoobitsConfigSchema as _GoobitsConfigSchema
+        from goobits_cli.core.schemas import GoobitsConfigSchema as _GoobitsConfigSchema
 
         GoobitsConfigSchema = _GoobitsConfigSchema
     if deepcopy is None:

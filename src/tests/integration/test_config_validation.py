@@ -5,7 +5,7 @@ scenarios and edge cases.
 """
 
 from typing import Dict, List
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 
 class TestConfigTemplates:

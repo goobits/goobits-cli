@@ -30,8 +30,8 @@ from typing import Dict, List, Optional
 
 import pytest
 
-from goobits_cli.builder import Builder
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.generation.builder import Builder
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 # Import test configs from integration tests
 import sys
@@ -44,7 +44,7 @@ try:
     from test_configs import TestConfigTemplates
 except ImportError:
     # Fallback: create minimal test configs here
-    from goobits_cli.schemas import GoobitsConfigSchema
+    from goobits_cli.core.schemas import GoobitsConfigSchema
 
     class TestConfigTemplates:
         @staticmethod

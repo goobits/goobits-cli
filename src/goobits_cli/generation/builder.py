@@ -20,7 +20,7 @@ def _get_schemas():
     """Lazy load schema classes to avoid Pydantic import overhead."""
     global _schemas
     if _schemas is None:
-        from .schemas import ConfigSchema, GoobitsConfigSchema
+        from ..core.schemas import ConfigSchema, GoobitsConfigSchema
 
         _schemas = (ConfigSchema, GoobitsConfigSchema)
     return _schemas
@@ -34,7 +34,7 @@ def _get_python_generator():
     """Lazy load Python generator to reduce startup overhead."""
     global _python_generator
     if _python_generator is None:
-        from .generators.python import PythonGenerator
+        from .renderers.python import PythonGenerator
 
         _python_generator = PythonGenerator
     return _python_generator
@@ -117,15 +117,15 @@ class Builder:
             language: Target language identifier
         """
         if language == "nodejs":
-            from .generators.nodejs import NodeJSGenerator
+            from .renderers.nodejs import NodeJSGenerator
 
             self.generator = NodeJSGenerator()
         elif language == "typescript":
-            from .generators.typescript import TypeScriptGenerator
+            from .renderers.typescript import TypeScriptGenerator
 
             self.generator = TypeScriptGenerator()
         elif language == "rust":
-            from .generators.rust import RustGenerator
+            from .renderers.rust import RustGenerator
 
             self.generator = RustGenerator()
         else:

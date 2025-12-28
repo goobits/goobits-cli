@@ -8,7 +8,7 @@ dependencies and code.
 
 from typing import Dict, Any
 
-from ...generators import _safe_to_dict
+from ...generation import _safe_to_dict
 from ..utils import _safe_get_attr
 
 

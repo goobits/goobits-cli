@@ -35,14 +35,14 @@ def _get_config_schema():
     """Lazy load GoobitsConfigSchema to avoid Pydantic import overhead."""
     global _config_schema
     if _config_schema is None:
-        from ..schemas import GoobitsConfigSchema
+        from ..core.schemas import GoobitsConfigSchema
 
         _config_schema = GoobitsConfigSchema
     return _config_schema
 
 
 # Import shared _safe_to_dict function
-from ..generators import _safe_to_dict
+from ..generation import _safe_to_dict
 
 
 # Import performance optimization components

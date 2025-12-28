@@ -24,7 +24,7 @@ from .package_manager_utils import (
     PathManagerUtil,
 )
 from .test_configs import TestConfigTemplates
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 # Import CLITestHelper from E2E tests since we moved installation flows there
 import sys

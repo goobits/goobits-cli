@@ -46,14 +46,14 @@ def _lazy_imports():
 
 
 # Base generator and error imports
-from ...generators import (
+from .. import (
     BaseGenerator,
     DependencyError,
     TemplateError,
     ValidationError,
     _safe_to_dict,
 )
-from ...schemas import ConfigSchema, GoobitsConfigSchema
+from ...core.schemas import ConfigSchema, GoobitsConfigSchema
 
 # Universal Template System imports
 # Universal Template System is required
@@ -181,7 +181,7 @@ class PythonGenerator(BaseGenerator):
             # Convert config to GoobitsConfigSchema if needed
             if isinstance(config, ConfigSchema):
                 # Create minimal GoobitsConfigSchema for universal system with defaults
-                from ...schemas import (
+                from ...core.schemas import (
                     PythonConfigSchema,
                     DependenciesSchema,
                     InstallationSchema,

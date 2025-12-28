@@ -28,7 +28,7 @@ def migrate_command(
 
     This migration ensures compatibility with the new unlimited nested command system.
     """
-    from goobits_cli.migration import migrate_yaml as migrate_tool
+    from .migration_tool import migrate_yaml as migrate_tool
 
     try:
         # Convert path argument to Path object

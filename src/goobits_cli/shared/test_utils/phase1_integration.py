@@ -17,7 +17,7 @@ from typing import Dict, List, Any, Optional
 from pathlib import Path
 
 
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 
 # Import from the test conftest.py file
@@ -606,7 +606,7 @@ def validate_phase1_compatibility():
 
         # Test that we can create configurations
 
-        from goobits_cli.schemas import GoobitsConfigSchema
+        from goobits_cli.core.schemas import GoobitsConfigSchema
 
         config = GoobitsConfigSchema(**config_data)
 

@@ -5,8 +5,8 @@ from pathlib import Path
 from unittest.mock import patch, mock_open
 from click.exceptions import Exit
 
-from goobits_cli.builder import load_yaml_config, Builder
-from goobits_cli.schemas import (
+from goobits_cli.generation.builder import load_yaml_config, Builder
+from goobits_cli.core.schemas import (
     ConfigSchema,
     CLISchema,
     CommandSchema,
@@ -27,7 +27,7 @@ class TestBuilder:
         assert builder.generator is not None
 
         # Builder now delegates to PythonGenerator
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         assert isinstance(builder.generator, PythonGenerator)
 

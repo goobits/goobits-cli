@@ -40,7 +40,7 @@ from goobits_cli.main import (
     generate_text_processor_template,
     version_callback,
 )
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 from .test_base import TestMainCLIBase
 
 
@@ -74,7 +74,7 @@ class TestMainCLICommands(TestMainCLIBase):
         config_path = self.create_test_config_file(config_content)
 
         # Mock the generator to return multiple files
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
@@ -109,7 +109,7 @@ class TestMainCLICommands(TestMainCLIBase):
             os.chdir(self.temp_dir)
             self.create_test_config_file(config_content)
 
-            from goobits_cli.generators.python import PythonGenerator
+            from goobits_cli.generation.renderers.python import PythonGenerator
 
             with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
                 mock_gen.return_value = {
@@ -123,7 +123,7 @@ class TestMainCLICommands(TestMainCLIBase):
         finally:
             os.chdir(original_cwd)
 
-    @patch("goobits_cli.generators.nodejs.NodeJSGenerator.generate_all_files")
+    @patch("goobits_cli.generation.renderers.nodejs.NodeJSGenerator.generate_all_files")
     def test_build_command_nodejs(self, mock_generate):
         """Test build command with Node.js language."""
         config_content = self.get_minimal_valid_config(
@@ -142,7 +142,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "Detected language: nodejs" in result.stdout
 
-    @patch("goobits_cli.generators.typescript.TypeScriptGenerator.generate_all_files")
+    @patch("goobits_cli.generation.renderers.typescript.TypeScriptGenerator.generate_all_files")
     def test_build_command_typescript(self, mock_generate):
         """Test build command with TypeScript language."""
         config_content = self.get_minimal_valid_config(
@@ -166,7 +166,7 @@ class TestMainCLICommands(TestMainCLIBase):
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
@@ -184,7 +184,7 @@ class TestMainCLICommands(TestMainCLIBase):
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
@@ -536,7 +536,7 @@ class TestMainCLICommands(TestMainCLIBase):
         finally:
             os.chdir(original_cwd)
 
-    @patch("goobits_cli.generators.python.PythonGenerator.generate_all_files")
+    @patch("goobits_cli.generation.renderers.python.PythonGenerator.generate_all_files")
     def test_build_command_generator_exception(self, mock_generate):
         """Test build command when generator raises an exception."""
         config_content = """
@@ -666,7 +666,7 @@ cli:
 """
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
@@ -722,7 +722,7 @@ cli:
 """
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
@@ -1424,7 +1424,7 @@ class TestGenerateSetupScript(TestMainCLIBase):
     def test_generate_setup_script_basic(self, mock_loader, mock_env):
         """Test basic setup script generation."""
         # Create a mock config
-        from goobits_cli.schemas import GoobitsConfigSchema
+        from goobits_cli.core.schemas import GoobitsConfigSchema
 
         config_data = {
             "package_name": "test-cli",

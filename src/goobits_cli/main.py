@@ -25,7 +25,7 @@ from typing import Optional
 import typer
 
 # Import centralized logging
-from .logger import setup_logging, set_context
+from .core.logging import setup_logging, set_context
 
 from .__version__ import __version__  # noqa: E402
 

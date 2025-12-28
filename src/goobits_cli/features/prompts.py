@@ -67,7 +67,7 @@ class PromptsHelper:
 
         # Initialize predictive prompting if available
         try:
-            from .universal.performance.predictive_prompts import (
+            from ..universal.performance.predictive_prompts import (
                 get_prompt_manager,
                 PromptConfig,
                 record_prompt_shown,

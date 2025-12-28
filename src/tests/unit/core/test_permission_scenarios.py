@@ -12,9 +12,9 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-from goobits_cli.builder import Builder
-from goobits_cli.schemas import ConfigSchema, CLISchema, CommandSchema
-from goobits_cli.generators.python import PythonGenerator
+from goobits_cli.generation.builder import Builder
+from goobits_cli.core.schemas import ConfigSchema, CLISchema, CommandSchema
+from goobits_cli.generation.renderers.python import PythonGenerator
 
 
 class TestPermissionErrorScenarios:

@@ -3,9 +3,9 @@
 import pytest
 from unittest.mock import patch
 
-from goobits_cli.generators.python import PythonGenerator
-from goobits_cli.generators import TemplateError
-from goobits_cli.schemas import (
+from goobits_cli.generation.renderers.python import PythonGenerator
+from goobits_cli.generation import TemplateError
+from goobits_cli.core.schemas import (
     ConfigSchema,
     CLISchema,
     CommandSchema,
@@ -69,7 +69,7 @@ class TestPythonGenerator:
         except Exception as e:
             pytest.fail(f"Command generation failed: {e}")
 
-    @patch("goobits_cli.generators.python.PythonGenerator.generate_all_files")
+    @patch("goobits_cli.generation.renderers.python.PythonGenerator.generate_all_files")
     def test_python_generator_mocked(self, mock_generate):
         """Test with mocked generation to avoid file system operations."""
         mock_generate.return_value = True

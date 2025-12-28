@@ -18,7 +18,7 @@ from goobits_cli.universal.renderers.python_renderer import PythonRenderer
 from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
 from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
 from goobits_cli.universal.renderers.rust_renderer import RustRenderer
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 
 class TestFileConsolidation:

@@ -19,7 +19,7 @@ Progress indicators and visual feedback helpers for Goobits CLI Framework
 
 import sys
 
-from .logger import get_logger
+from .core.logging import get_logger
 
 from typing import Any, Callable, Optional, Iterator
 

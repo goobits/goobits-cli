@@ -40,9 +40,9 @@ def _lazy_imports():
 
 from .nodejs import NodeJSGenerator
 
-from ...schemas import ConfigSchema, GoobitsConfigSchema
+from ...core.schemas import ConfigSchema, GoobitsConfigSchema
 
-from ...formatter import align_header_items, format_icon_spacing, align_setup_steps
+from ...utils.formatter import align_header_items, format_icon_spacing, align_setup_steps
 
 from ...shared.components import create_documentation_generator
 
@@ -90,7 +90,7 @@ class TypeScriptGenerator(NodeJSGenerator):
                 "typescript", self.typescript_renderer
             )
         except Exception as e:
-            from ...generators import DependencyError
+            from .. import DependencyError
 
             raise DependencyError(
                 f"Failed to initialize TypeScript Universal Template System: {e}",
@@ -311,7 +311,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                 # Create minimal GoobitsConfigSchema for universal system
 
-                from ...schemas import GoobitsConfigSchema as _GoobitsConfigSchema
+                from ...core.schemas import GoobitsConfigSchema as _GoobitsConfigSchema
 
                 goobits_config = _GoobitsConfigSchema(
                     package_name=getattr(config, "package_name", config.cli.name),
@@ -350,7 +350,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                 # Convert back to GoobitsConfigSchema
 
-                from ...schemas import GoobitsConfigSchema as _GoobitsConfigSchema2
+                from ...core.schemas import GoobitsConfigSchema as _GoobitsConfigSchema2
 
                 goobits_config = _GoobitsConfigSchema2(**config_dict)
 
@@ -372,7 +372,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
                 # Convert back to GoobitsConfigSchema
 
-                from ...schemas import GoobitsConfigSchema as _GoobitsConfigSchema3
+                from ...core.schemas import GoobitsConfigSchema as _GoobitsConfigSchema3
 
                 goobits_config = _GoobitsConfigSchema3(**config_dict)
 

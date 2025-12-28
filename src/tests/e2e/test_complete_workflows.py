@@ -24,10 +24,10 @@ import sys
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.builder import load_yaml_config, Builder
-from goobits_cli.generators.nodejs import NodeJSGenerator
-from goobits_cli.generators.typescript import TypeScriptGenerator
-from goobits_cli.schemas import ConfigSchema
+from goobits_cli.generation.builder import load_yaml_config, Builder
+from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.core.schemas import ConfigSchema
 
 
 class TestCLIE2E:
@@ -59,7 +59,7 @@ class TestCLIE2E:
     def test_python_cli_e2e_workflow(self, test_config, tmp_path):
         """Test complete Python CLI workflow end-to-end."""
         # Generate CLI using Python generator
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         generator = PythonGenerator()
         result = generator.generate(test_config, str(tmp_path))
@@ -79,7 +79,7 @@ class TestCLIE2E:
 
     def test_cli_help_output(self, test_config, tmp_path):
         """Test that generated CLI produces valid help output."""
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         generator = PythonGenerator()
         generator.generate(test_config, str(tmp_path))
@@ -243,7 +243,7 @@ class TestCompleteWorkflowValidation:
         )
 
         # Generate CLI
-        from goobits_cli.generators.python import PythonGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
 
         generator = PythonGenerator()
         result = generator.generate(config, str(tmp_path))
@@ -299,7 +299,7 @@ class TestCompleteWorkflowValidation:
         )
 
         # Generate CLI
-        from goobits_cli.generators.typescript import TypeScriptGenerator
+        from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
 
         generator = TypeScriptGenerator()
         result = generator.generate(config, str(tmp_path))
@@ -333,7 +333,7 @@ class TestCompleteWorkflowValidation:
         )
 
         # Generate CLI
-        from goobits_cli.generators.rust import RustGenerator
+        from goobits_cli.generation.renderers.rust import RustGenerator
 
         generator = RustGenerator()
         result = generator.generate(config, str(tmp_path))

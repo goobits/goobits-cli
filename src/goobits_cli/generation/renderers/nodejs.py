@@ -63,9 +63,9 @@ def _lazy_imports():
 
 
 # Base generator imports
-from ...generators import BaseGenerator
-from ...schemas import ConfigSchema, GoobitsConfigSchema
-from ...formatter import align_header_items, format_icon_spacing, align_setup_steps
+from .. import BaseGenerator
+from ...core.schemas import ConfigSchema, GoobitsConfigSchema
+from ...utils.formatter import align_header_items, format_icon_spacing, align_setup_steps
 
 # Universal Template System imports
 # Universal Template System is required

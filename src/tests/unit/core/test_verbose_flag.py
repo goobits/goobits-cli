@@ -1,10 +1,10 @@
 """Tests for the --verbose flag functionality."""
 
 import pytest
-from goobits_cli.schemas import OptionSchema, CLISchema, ConfigSchema
-from goobits_cli.generators.python import PythonGenerator
-from goobits_cli.generators.nodejs import NodeJSGenerator
-from goobits_cli.builder import Builder
+from goobits_cli.core.schemas import OptionSchema, CLISchema, ConfigSchema
+from goobits_cli.generation.renderers.python import PythonGenerator
+from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+from goobits_cli.generation.builder import Builder
 
 
 class TestVerboseFlag:

@@ -40,16 +40,16 @@ def _lazy_imports():
         typer = _typer
 
 
-from ...generators import (
+from .. import (
     BaseGenerator,
     TemplateError,
     DependencyError,
     ValidationError,
 )
 
-from ...schemas import ConfigSchema, GoobitsConfigSchema
+from ...core.schemas import ConfigSchema, GoobitsConfigSchema
 
-from ...formatter import (
+from ...utils.formatter import (
     align_examples,
     format_multiline_text,
     escape_for_docstring,

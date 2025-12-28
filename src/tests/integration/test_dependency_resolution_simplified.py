@@ -12,7 +12,7 @@ from typing import Dict, Any
 import pytest
 
 from .test_configs import TestConfigTemplates
-from goobits_cli.builder import Builder
+from goobits_cli.generation.builder import Builder
 
 
 class TestDependencyResolutionSimplified:

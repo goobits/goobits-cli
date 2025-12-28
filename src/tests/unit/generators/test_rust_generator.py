@@ -21,13 +21,13 @@ import shutil
 import threading
 from functools import wraps
 
-from goobits_cli.generators.rust import RustGenerator
-from goobits_cli.generators import (
+from goobits_cli.generation.renderers.rust import RustGenerator
+from goobits_cli.generation import (
     ConfigurationError,
     TemplateError,
     ValidationError,
 )
-from goobits_cli.schemas import (
+from goobits_cli.core.schemas import (
     ConfigSchema,
     CLISchema,
     CommandSchema,

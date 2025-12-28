@@ -7,7 +7,7 @@ that can be reused across different test scenarios and language generators.
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from goobits_cli.schemas import (
+from goobits_cli.core.schemas import (
     ArgumentSchema,
     CLISchema,
     CommandSchema,

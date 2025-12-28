@@ -29,7 +29,7 @@ except ImportError:
 # Import schemas for validation
 sys.path.append(str(Path(__file__).parent.parent.parent / "src"))
 try:
-    from goobits_cli.schemas import (
+    from goobits_cli.core.schemas import (
         CommandSchema,
         ArgumentSchema,
         OptionSchema,

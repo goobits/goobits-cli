@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from goobits_cli.schemas import GoobitsConfigSchema
+from goobits_cli.core.schemas import GoobitsConfigSchema
 
 # Import generate_cli from test fixtures
 try:
@@ -28,7 +28,7 @@ except ImportError:
     # Fallback for different test environments
     def generate_cli(config, filename):
         """Fallback generate_cli implementation"""
-        from goobits_cli.builder import Builder
+        from goobits_cli.generation.builder import Builder
 
         builder = Builder()
         return builder.build_files(config)
