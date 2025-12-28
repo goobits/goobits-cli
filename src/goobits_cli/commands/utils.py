@@ -217,19 +217,18 @@ def generate_setup_script(config: "GoobitsConfigSchema", project_dir: Path) -> s
     """Generate setup.sh script from goobits configuration."""
     _lazy_imports()
 
-    template_dir = Path(__file__).parent.parent / "templates"
+    # Use universal components directory for templates
+    template_dir = Path(__file__).parent.parent / "universal" / "components"
 
     env = Environment(
         loader=FileSystemLoader(template_dir), trim_blocks=True, lstrip_blocks=True
     )
 
     # Add custom filters
-
     env.filters["dependency_to_dict"] = dependency_to_dict
-
     env.filters["dependencies_to_json"] = dependencies_to_json
 
-    template = env.get_template("setup_template.sh.j2")
+    template = env.get_template("setup_template_python.j2")
 
     # Extract version from pyproject.toml
 

@@ -8,6 +8,26 @@ following the DRY principle by centralizing shared functionality.
 import re
 from typing import Dict
 
+# Import case conversion functions from centralized utils
+from goobits_cli.utils.strings import (
+    to_camel_case,
+    to_kebab_case,
+    to_pascal_case,
+    to_snake_case,
+)
+
+# Re-export for backwards compatibility
+__all__ = [
+    "escape_string",
+    "indent",
+    "to_snake_case",
+    "to_camel_case",
+    "to_pascal_case",
+    "to_kebab_case",
+    "format_docstring",
+    "get_type_mapping",
+]
+
 
 def escape_string(s: str, language: str) -> str:
     """
@@ -63,67 +83,8 @@ def indent(text: str, level: int = 1, spaces: int = 4) -> str:
     return "\n".join(prefix + line if line.strip() else line for line in lines)
 
 
-def to_snake_case(name: str) -> str:
-    """
-    Convert a name to snake_case.
-
-    Args:
-        name: Name to convert
-
-    Returns:
-        snake_case version of the name
-    """
-    if not name:
-        return name
-
-    # Replace hyphens with underscores
-    name = name.replace("-", "_")
-
-    # Insert underscores before uppercase letters
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
-
-
-def to_camel_case(name: str) -> str:
-    """
-    Convert a name to camelCase.
-
-    Args:
-        name: Name to convert
-
-    Returns:
-        camelCase version of the name
-    """
-    if not name:
-        return name
-
-    # First convert to snake_case if needed
-    snake = to_snake_case(name)
-    components = snake.split("_")
-
-    # First component lowercase, rest capitalized
-    return components[0] + "".join(x.title() for x in components[1:])
-
-
-def to_pascal_case(name: str) -> str:
-    """
-    Convert a name to PascalCase.
-
-    Args:
-        name: Name to convert
-
-    Returns:
-        PascalCase version of the name
-    """
-    if not name:
-        return name
-
-    # First convert to snake_case if needed
-    snake = to_snake_case(name)
-    components = snake.split("_")
-
-    # All components capitalized
-    return "".join(x.title() for x in components)
+# Note: to_snake_case, to_camel_case, to_pascal_case, to_kebab_case are now
+# imported from goobits_cli.utils.strings to avoid code duplication
 
 
 def format_docstring(text: str, language: str) -> str:

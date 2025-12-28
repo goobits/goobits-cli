@@ -116,6 +116,8 @@ def to_kebab_case(text: str) -> str:
 def to_snake_case(text: str) -> str:
     """Convert text to snake_case.
 
+    Properly handles camelCase, PascalCase, kebab-case, and space-separated text.
+
     Args:
         text: Input text in any case format
 
@@ -129,8 +131,18 @@ def to_snake_case(text: str) -> str:
         'hello_world'
         >>> to_snake_case("Hello World")
         'hello_world'
+        >>> to_snake_case("HTTPResponse")
+        'http_response'
     """
-    return text.replace("-", "_").replace(" ", "_").lower()
+    if not text:
+        return text
+
+    # Replace hyphens and spaces with underscores
+    text = text.replace("-", "_").replace(" ", "_")
+
+    # Insert underscores before uppercase letters (handles camelCase/PascalCase)
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", text)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
 def escape_javascript_string(value: str) -> str:

@@ -30,14 +30,15 @@ class PatternAnalyzer:
     """Analyzes template directories to find common patterns across languages"""
 
     def __init__(
-        self, base_path: str = "/workspace/goobits-cli/src/goobits_cli/templates"
+        self, base_path: str = "/workspace/goobits-cli/src/goobits_cli/universal/components"
     ):
         self.base_path = Path(base_path)
+        # Universal components are now language-agnostic in a single directory
         self.languages = {
             "python": self.base_path,
-            "nodejs": self.base_path / "nodejs",
-            "typescript": self.base_path / "typescript",
-            "rust": self.base_path / "rust",
+            "nodejs": self.base_path,
+            "typescript": self.base_path,
+            "rust": self.base_path,
         }
         self.patterns: Dict[str, Pattern] = {}
         self.pattern_categories: Dict[str, List[Pattern]] = {
