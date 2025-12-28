@@ -864,7 +864,7 @@ class TestComplexUnicodeScenarios:
             # Command descriptions ARE included in the generated output
             key_unicode_texts = [
                 # These are from command descriptions which ARE included:
-                "部署应用程序",  # Chinese text from deploy command description  
+                "部署应用程序",  # Chinese text from deploy command description
                 "Развернуть приложение",  # Russian text from deploy command description
                 "アプリケーションをデプロイ",  # Japanese text from deploy command description
                 "监控服务",  # Chinese text from monitor command description
@@ -962,13 +962,17 @@ class TestComplexUnicodeScenarios:
         # Verify the generator handles complex Unicode without crashing
         assert isinstance(result, str)
         assert len(result) > 0
-        
+
         # Test that Unicode is preserved in command docstrings
         # The Universal Template System preserves Unicode in command descriptions as docstrings
-        assert "analyze-regions" in result or "analyze_regions" in result  # Command name (may be converted to snake_case)
+        assert (
+            "analyze-regions" in result or "analyze_regions" in result
+        )  # Command name (may be converted to snake_case)
         assert "handle-names" in result or "handle_names" in result  # Command name
-        assert "format-addresses" in result or "format_addresses" in result  # Command name
-        
+        assert (
+            "format-addresses" in result or "format_addresses" in result
+        )  # Command name
+
         # Most importantly, verify that complex Unicode characters are preserved in docstrings
         # This tests that the generator doesn't crash or mangle Unicode
         assert "🇺🇸 USA" in result  # Flag emoji in command description

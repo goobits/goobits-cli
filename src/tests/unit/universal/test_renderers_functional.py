@@ -269,4 +269,3 @@ class TestNodeJSRendererFunctional:
         deploy_hook = next(hook for hook in hooks if hook["command_name"] == "deploy")
         assert deploy_hook["name"] == "on_deploy"
         assert deploy_hook["js_name"] == "onDeploy"
-

@@ -89,7 +89,6 @@ cli:
     - title: "💡 Core Commands"
       items:
         - { item: "build", desc: "🔨 Generate CLI and setup scripts from goobits.yaml", style: "command" }
-        - { item: "serve", desc: "🌐 Serve local PyPI-compatible package index", style: "command" }
         - { item: "init", desc: "🆕 Create initial goobits.yaml template", style: "command" }
 
     - title: "🔧 Development Workflow"
@@ -104,7 +103,7 @@ cli:
     - name: "Core Commands"
       commands: ["build", "init", "validate"]
     - name: "Development Tools"
-      commands: ["serve", "migrate"]
+      commands: ["migrate"]
 
   commands:
     build:
@@ -144,24 +143,6 @@ cli:
         - name: "force"
           type: "flag"
           desc: "🔥 Overwrite existing goobits.yaml file"
-    
-    serve:
-      desc: "Serve local PyPI-compatible package index"
-      icon: "🌐"
-      args:
-        - name: "directory"
-          desc: "Directory containing packages to serve"
-          required: true
-      options:
-        - name: "host"
-          type: "str"
-          desc: "🌍 Host to bind the server to"
-          default: "localhost"
-        - name: "port"
-          short: "p"
-          type: "int"
-          desc: "🔌 Port to run the server on"
-          default: 8080
     
     validate:
       desc: "Validate goobits.yaml configuration without generating files"

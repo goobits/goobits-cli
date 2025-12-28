@@ -181,7 +181,7 @@ class TestVerboseFlag:
 
     def test_verbose_flag_replaces_debug_references(self):
         """Test that verbose functionality is present in generated CLIs.
-        
+
         Note: The Universal Template System includes both --verbose and --debug options
         in Python CLIs for comprehensive debugging support. This is by design.
         """
@@ -207,7 +207,7 @@ class TestVerboseFlag:
 
             # Verify that verbose option is present
             assert "--verbose" in generated_cli or "-v" in generated_cli
-            
+
             # Note: Python includes both --debug and --verbose by design
             # Node.js and TypeScript only include --verbose
             if language == "python":

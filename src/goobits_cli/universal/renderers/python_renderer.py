@@ -549,7 +549,7 @@ setup(
         # For backward compatibility, include package name in default path
         default_cli_path = f"{package_name}/cli.py"
         default_hooks_path = f"{package_name}/cli_hooks.py"
-        
+
         cli_path = ir["project"].get("cli_path") or default_cli_path
         hooks_path = ir["project"].get("cli_hooks_path") or default_hooks_path
 
@@ -573,7 +573,9 @@ setup(
         features = ir.get("features", {})
         interactive_mode = features.get("interactive_mode", {})
 
-        if interactive_mode.get("enabled", False) and False:  # Disabled for consolidation
+        if (
+            interactive_mode.get("enabled", False) and False
+        ):  # Disabled for consolidation
             # The main interactive_mode template handles all features based on configuration
             # This single comprehensive template generates different implementations based on enabled features
             output_structure["interactive_mode"] = f"src/{package_name}/interactive.py"
@@ -714,7 +716,9 @@ setup(
                     elif isinstance(sub_data, dict):
                         # Full command format
                         sub_cmd = {"name": sub_name, **sub_data}
-                    transformed_subcmds.append(self._transform_command_for_python(sub_cmd))
+                    transformed_subcmds.append(
+                        self._transform_command_for_python(sub_cmd)
+                    )
                 transformed["subcommands"] = transformed_subcmds
 
         return transformed

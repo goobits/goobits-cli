@@ -47,4 +47,3 @@ class TestNodeJSGeneratorCore:
 
         # Check that environment has correct loader
         assert hasattr(generator.env, "loader")
-

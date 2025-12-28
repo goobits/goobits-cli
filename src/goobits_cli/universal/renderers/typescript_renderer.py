@@ -127,7 +127,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
         context = ir.copy()
         context["language"] = "typescript"
-        
+
         # Add commander.js structure (same as Node.js)
         context["commander_commands"] = self._build_commander_structure(
             ir.get("cli", {})
@@ -277,18 +277,18 @@ class TypeScriptRenderer(LanguageRenderer):
         base_cli_path = ir["project"].get("cli_path")
         base_hooks_path = ir["project"].get("cli_hooks_path")
         base_types_path = ir["project"].get("cli_types_path")
-        
+
         # Transform file extensions for TypeScript if they have Python extensions
-        if base_cli_path and base_cli_path.endswith('.py'):
-            cli_path = base_cli_path.replace('.py', '.ts')
+        if base_cli_path and base_cli_path.endswith(".py"):
+            cli_path = base_cli_path.replace(".py", ".ts")
         else:
             cli_path = base_cli_path or "cli.ts"
-            
-        if base_hooks_path and base_hooks_path.endswith('.py'):
-            hooks_path = base_hooks_path.replace('.py', '.ts')
+
+        if base_hooks_path and base_hooks_path.endswith(".py"):
+            hooks_path = base_hooks_path.replace(".py", ".ts")
         else:
             hooks_path = base_hooks_path or "cli_hooks.ts"
-            
+
         types_path = base_types_path or "cli_types.d.ts"
 
         # TypeScript generates 4 files (cli, hooks, types, setup.sh)
@@ -652,7 +652,7 @@ class TypeScriptRenderer(LanguageRenderer):
     def _build_commander_structure(self, cli_schema: Dict[str, Any]) -> Dict[str, Any]:
         """Build Commander.js specific command structure."""
         root_command = cli_schema.get("root_command", {})
-        
+
         commander_data = {
             "root_command": {
                 "name": root_command.get("name", "cli"),
@@ -663,7 +663,7 @@ class TypeScriptRenderer(LanguageRenderer):
             },
             "subcommands": [],
         }
-        
+
         # Convert options to Commander format
         for option in root_command.get("options", []):
             commander_option = {
@@ -673,7 +673,7 @@ class TypeScriptRenderer(LanguageRenderer):
                 "type": self._js_type_from_option(option),
             }
             commander_data["root_command"]["options"].append(commander_option)
-        
+
         # Convert commands to Commander format
         for command in root_command.get("subcommands", []):
             commander_cmd = {
@@ -693,26 +693,26 @@ class TypeScriptRenderer(LanguageRenderer):
                 "subcommands": command.get("subcommands", []),
             }
             commander_data["subcommands"].append(commander_cmd)
-        
+
         return commander_data
-    
+
     def _build_option_flags(self, option: Dict[str, Any]) -> str:
         """Build option flags for Commander.js."""
         name = option.get("name", "option")
         short = option.get("short")
         type_str = option.get("type", "string")
-        
+
         if short:
             flags = f"-{short}, --{name}"
         else:
             flags = f"--{name}"
-        
+
         # Add value placeholder for non-boolean types
         if type_str not in ("boolean", "flag"):
             flags += f" <{name}>"
-        
+
         return flags
-    
+
     def _js_type_from_option(self, option: Dict[str, Any]) -> str:
         """Convert option type to JavaScript type."""
         type_str = option.get("type", "string")
@@ -725,7 +725,7 @@ class TypeScriptRenderer(LanguageRenderer):
             "array": "Array",
         }
         return type_mapping.get(type_str, "String")
-    
+
     def _build_commander_argument(self, arg: Dict[str, Any]) -> Dict[str, Any]:
         """Build Commander.js argument structure."""
         return {
@@ -734,7 +734,7 @@ class TypeScriptRenderer(LanguageRenderer):
             "type": arg.get("type", "string"),
             "name": arg.get("name"),
         }
-    
+
     def _build_commander_option(self, opt: Dict[str, Any]) -> Dict[str, Any]:
         """Build Commander.js option structure."""
         return {

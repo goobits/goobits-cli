@@ -11,7 +11,6 @@ for different testing scenarios.
 import pytest
 
 
-
 # Import the shared test utilities
 
 from goobits_cli.shared.test_utils import (

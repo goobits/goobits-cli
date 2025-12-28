@@ -17,7 +17,6 @@ from typing import Dict, List, Any, Optional
 from pathlib import Path
 
 
-
 from goobits_cli.schemas import GoobitsConfigSchema
 
 

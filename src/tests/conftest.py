@@ -97,15 +97,15 @@ def create_test_goobits_config(
 def basic_cli_schema():
     """Provide a basic CLI schema for testing."""
     return CLISchema(
-        commands=[
-            CommandSchema(
-                name="test",
-                description="Test command",
-                arguments=[
+        name="test-cli",
+        tagline="Test CLI for testing",
+        commands={
+            "test": CommandSchema(
+                desc="Test command",
+                args=[
                     ArgumentSchema(
                         name="input",
-                        description="Input file",
-                        type="string",
+                        desc="Input file",
                         required=True,
                     )
                 ],
@@ -113,13 +113,13 @@ def basic_cli_schema():
                     OptionSchema(
                         name="--verbose",
                         short="-v",
-                        description="Enable verbose output",
-                        type="boolean",
+                        desc="Enable verbose output",
+                        type="bool",
                         default=False,
                     )
                 ],
             )
-        ]
+        },
     )
 
 
@@ -163,6 +163,50 @@ def nodejs_generator():
 def typescript_generator():
     """Provide a TypeScript generator instance."""
     return TypeScriptGenerator()
+
+
+@pytest.fixture
+def rust_generator():
+    """Provide a Rust generator instance."""
+    return RustGenerator()
+
+
+# Parameterized fixtures for consolidated cross-language tests
+
+
+@pytest.fixture(params=["python", "nodejs", "typescript", "rust"])
+def language_test_config(request, basic_cli_schema):
+    """Provide a test configuration for each supported language.
+
+    This parameterized fixture enables writing a single test that runs
+    across all supported languages, reducing test duplication.
+    """
+    language = request.param
+    package_name = f"test-{language}-cli"
+    return create_test_goobits_config(
+        package_name=package_name, cli=basic_cli_schema, language=language
+    )
+
+
+@pytest.fixture(
+    params=[
+        (PythonGenerator, "python"),
+        (NodeJSGenerator, "nodejs"),
+        (TypeScriptGenerator, "typescript"),
+        (RustGenerator, "rust"),
+    ]
+)
+def parameterized_generator(request):
+    """Provide a generator instance with its language identifier.
+
+    This parameterized fixture enables writing unified generator tests
+    that validate common patterns across all language generators.
+
+    Returns:
+        tuple: (generator_instance, language_name)
+    """
+    GeneratorClass, language = request.param
+    return GeneratorClass(), language
 
 
 # Note: YAML test integration has been removed in favor of keeping

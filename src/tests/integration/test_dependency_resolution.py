@@ -28,6 +28,7 @@ from goobits_cli.schemas import GoobitsConfigSchema
 
 # Import CLITestHelper from E2E tests since we moved installation flows there
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent / "e2e"))
 try:
     from test_installation_flows import CLITestHelper
@@ -231,7 +232,7 @@ class TestDependencyResolution:
         self._cleanup_pip_packages()
 
         # Reset environment PATH using PATH manager if initialized
-        if hasattr(self, 'path_manager') and self.path_manager:
+        if hasattr(self, "path_manager") and self.path_manager:
             self.path_manager.cleanup()
 
     def _create_temp_dir(self) -> str:
@@ -593,4 +594,3 @@ process.exit(0);
                 temp_dir, expected_deps
             )
             assert all(results.values()), f"Missing Rust dependencies: {results}"
-

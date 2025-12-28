@@ -107,4 +107,3 @@ class TestRustGenerator:
         assert "to_screaming_snake_case" in generator.env.filters
         assert "to_pascal_case" in generator.env.filters
         assert "escape_rust_string" in generator.env.filters
-

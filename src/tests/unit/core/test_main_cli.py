@@ -2,7 +2,7 @@
 Comprehensive tests for main CLI functionality in main.py
 
 This unified test suite covers all main CLI functionality:
-- CLI commands (build, init, serve, upgrade)
+- CLI commands (build, init, upgrade)
 - Configuration handling and validation
 - Template generation and processing
 - Utility functions and helpers
@@ -66,7 +66,6 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "build" in result.stdout
         assert "init" in result.stdout
-        assert "serve" in result.stdout
         assert "upgrade" in result.stdout
 
     def test_build_command_basic(self):
@@ -321,74 +320,7 @@ class TestMainCLICommands(TestMainCLIBase):
         finally:
             os.chdir(original_cwd)
 
-    @patch("goobits_cli.main.serve_packages")
-    def test_serve_command_basic(self, mock_serve):
-        """Test serve command with valid directory."""
-        # Create a test directory with some files
-        packages_dir = self.temp_dir / "packages"
-        packages_dir.mkdir()
-        (packages_dir / "test-package-1.0.0.whl").touch()
-
-        mock_serve.side_effect = KeyboardInterrupt()  # Simulate Ctrl+C
-
-        result = self.runner.invoke(app, ["serve", str(packages_dir)])
-
-        assert result.exit_code == 0
-        assert "Starting PyPI server" in result.stdout
-        assert "Server stopped by user" in result.stdout
-        mock_serve.assert_called_once_with(packages_dir, "localhost", 8080)
-
-    def test_serve_command_directory_not_exists(self):
-        """Test serve command when directory doesn't exist."""
-        non_existent_dir = self.temp_dir / "nonexistent"
-
-        result = self.runner.invoke(app, ["serve", str(non_existent_dir)])
-
-        assert result.exit_code == 1
-        assert "does not exist" in result.output
-
-    def test_serve_command_not_directory(self):
-        """Test serve command when path is not a directory."""
-        test_file = self.temp_dir / "test.txt"
-        test_file.write_text("test content")
-
-        result = self.runner.invoke(app, ["serve", str(test_file)])
-
-        assert result.exit_code == 1
-        assert "is not a directory" in result.output
-
-    @patch("goobits_cli.main.serve_packages")
-    def test_serve_command_custom_host_port(self, mock_serve):
-        """Test serve command with custom host and port."""
-        packages_dir = self.temp_dir / "packages"
-        packages_dir.mkdir()
-
-        mock_serve.side_effect = KeyboardInterrupt()
-
-        result = self.runner.invoke(
-            app, ["serve", str(packages_dir), "--host", "0.0.0.0", "--port", "9000"]
-        )
-
-        assert result.exit_code == 0
-        mock_serve.assert_called_once_with(packages_dir, "0.0.0.0", 9000)
-
-    @patch("goobits_cli.main.serve_packages")
-    def test_serve_command_port_in_use_error(self, mock_serve):
-        """Test serve command when port is already in use."""
-        packages_dir = self.temp_dir / "packages"
-        packages_dir.mkdir()
-
-        # Simulate port in use error
-        error = OSError("Address already in use")
-        error.errno = 48
-        mock_serve.side_effect = error
-
-        result = self.runner.invoke(app, ["serve", str(packages_dir)])
-
-        assert result.exit_code == 1
-        assert "already in use" in result.output
-
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_basic(self, mock_subprocess):
         """Test basic upgrade command."""
         # Mock pipx --version check
@@ -410,7 +342,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert "Upgrade completed successfully" in result.stdout
         assert "Using pipx version" in result.stdout
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_pipx_not_found(self, mock_subprocess):
         """Test upgrade command when pipx is not available."""
         # Simulate pipx not found
@@ -421,7 +353,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "pipx is required" in result.output
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_specific_version(self, mock_subprocess):
         """Test upgrade command with specific version."""
         mock_subprocess.side_effect = [
@@ -435,7 +367,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "version 1.5.0 from PyPI" in result.stdout
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_git_source(self, mock_subprocess):
         """Test upgrade command from git source."""
         mock_subprocess.side_effect = [
@@ -449,7 +381,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "version latest from Git" in result.stdout
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_local_source(self, mock_subprocess):
         """Test upgrade command from local source."""
         mock_subprocess.side_effect = [
@@ -463,7 +395,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "local development version" in result.stdout
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_dry_run(self, mock_subprocess):
         """Test upgrade command with dry run."""
         mock_subprocess.return_value = MagicMock(
@@ -477,7 +409,7 @@ class TestMainCLICommands(TestMainCLIBase):
         # Should only call pipx version check, not actual upgrade
         assert len(mock_subprocess.call_args_list) == 1
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_invalid_source(self, mock_subprocess):
         """Test upgrade command with invalid source."""
         mock_subprocess.return_value = MagicMock(
@@ -489,7 +421,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Unknown source" in result.output
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_user_cancellation(self, mock_subprocess):
         """Test upgrade command when user cancels."""
         mock_subprocess.return_value = MagicMock(
@@ -501,7 +433,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "Upgrade cancelled" in result.stdout
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_upgrade_failure(self, mock_subprocess):
         """Test upgrade command when upgrade fails."""
         mock_subprocess.side_effect = [
@@ -514,7 +446,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Upgrade failed" in result.output
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_version_check_failure(self, mock_subprocess):
         """Test upgrade command when new version check fails."""
         mock_subprocess.side_effect = [
@@ -534,7 +466,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0  # Should still succeed
         assert "New version information not available" in result.stdout
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_unexpected_error(self, mock_subprocess):
         """Test upgrade command with unexpected error."""
         mock_subprocess.side_effect = [
@@ -549,7 +481,7 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 1
         assert "Unexpected error during upgrade" in result.output
 
-    @patch("goobits_cli.main.run_cached")
+    @patch("goobits_cli.commands.upgrade.run_cached")
     def test_upgrade_command_pre_release_flag(self, mock_subprocess):
         """Test upgrade command with pre-release flag."""
         mock_subprocess.side_effect = [
@@ -654,21 +586,6 @@ cli:
         # The CLI should catch the exception and exit with error code
         assert result.exit_code == 1
 
-    def test_serve_command_os_error_generic(self):
-        """Test serve command with generic OS error."""
-        packages_dir = self.temp_dir / "packages"
-        packages_dir.mkdir()
-
-        with patch("goobits_cli.main.serve_packages") as mock_serve:
-            error = OSError("Generic OS error")
-            error.errno = 13  # Permission denied
-            mock_serve.side_effect = error
-
-            result = self.runner.invoke(app, ["serve", str(packages_dir)])
-
-        assert result.exit_code == 1
-        assert "Error starting server" in result.output
-
     def test_build_command_no_cli_section(self):
         """Test build command when CLI section is missing."""
         config_content = """
@@ -707,7 +624,7 @@ messages:
         assert result.exit_code == 0  # Should not fail, just skip CLI generation
         assert "No CLI configuration found" in result.stdout
 
-    @patch("goobits_cli.main.update_pyproject_toml")
+    @patch("goobits_cli.commands.build.update_pyproject_toml")
     def test_build_command_pyproject_update_failure(self, mock_update):
         """Test build command when pyproject.toml update fails."""
         config_content = """
@@ -1502,8 +1419,8 @@ class TestMainCLITemplates(TestMainCLIBase):
 class TestGenerateSetupScript(TestMainCLIBase):
     """Test setup script generation functionality."""
 
-    @patch("goobits_cli.main.Environment")
-    @patch("goobits_cli.main.FileSystemLoader")
+    @patch("goobits_cli.commands.utils.Environment")
+    @patch("goobits_cli.commands.utils.FileSystemLoader")
     def test_generate_setup_script_basic(self, mock_loader, mock_env):
         """Test basic setup script generation."""
         # Create a mock config

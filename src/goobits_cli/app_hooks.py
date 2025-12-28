@@ -115,7 +115,9 @@ def on_validate(config_path: Optional[str] = None, verbose: bool = False) -> Non
         pass
 
 
-def on_migrate(path: str, backup: bool = True, dry_run: bool = False, pattern: str = "*.yaml") -> None:
+def on_migrate(
+    path: str, backup: bool = True, dry_run: bool = False, pattern: str = "*.yaml"
+) -> None:
     """Hook for migrate command - delegate to main.py implementation."""
 
     try:
@@ -134,4 +136,3 @@ def on_migrate(path: str, backup: bool = True, dry_run: bool = False, pattern: s
         # Handle typer.Exit gracefully
 
         pass
-

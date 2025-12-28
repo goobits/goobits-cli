@@ -347,9 +347,14 @@ class TestNodeJSCLICompilation:
 
                 # Look for main CLI file (not hooks file)
                 if (filename.endswith(".js") or filename.endswith(".mjs")) and (
-                    filename == "cli.js" or filename == "cli.mjs" or
-                    filename == "main.js" or filename == "main.mjs" or
-                    (("cli" in filename or "main" in filename) and "hooks" not in filename)
+                    filename == "cli.js"
+                    or filename == "cli.mjs"
+                    or filename == "main.js"
+                    or filename == "main.mjs"
+                    or (
+                        ("cli" in filename or "main" in filename)
+                        and "hooks" not in filename
+                    )
                 ):
                     cli_file = file_path
                     cli_file.chmod(0o755)
@@ -367,8 +372,8 @@ class TestNodeJSCLICompilation:
                     "ora": "^8.0.0",
                     "inquirer": "^9.0.0",
                     "js-yaml": "^4.0.0",
-                    "winston": "^3.0.0"
-                }
+                    "winston": "^3.0.0",
+                },
             }
             package_json_path = Path(temp_dir) / "package.json"
             package_json_path.write_text(json.dumps(package_json, indent=2))
@@ -381,7 +386,7 @@ class TestNodeJSCLICompilation:
                 timeout=120,
                 cwd=temp_dir,
             )
-            
+
             if npm_install.returncode != 0:
                 pytest.skip(f"npm install failed: {npm_install.stderr}")
 
@@ -443,14 +448,17 @@ class TestTypeScriptCLICompilation:
             # Basic TypeScript syntax validation (without compilation dependencies)
             # Just verify the generated TypeScript file has valid basic syntax
             cli_content = cli_file.read_text()
-            
+
             # Basic syntax checks
-            assert "export" in cli_content or "import" in cli_content or "function" in cli_content, \
-                "TypeScript file should contain basic TypeScript/JavaScript constructs"
-            
+            assert (
+                "export" in cli_content
+                or "import" in cli_content
+                or "function" in cli_content
+            ), "TypeScript file should contain basic TypeScript/JavaScript constructs"
+
             # Verify it's not empty
             assert len(cli_content.strip()) > 0, "TypeScript file should not be empty"
-            
+
             print("✅ TypeScript CLI basic validation passed")
 
 

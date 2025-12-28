@@ -1,12 +1,12 @@
 """E2E Installation workflow validation tests.
 
 This module provides comprehensive end-to-end tests for validating that generated CLIs
-install correctly across all supported package managers and languages. These are 
+install correctly across all supported package managers and languages. These are
 system-level tests that interact with real package managers and system state.
 
 Tests cover:
 - Python: pip, pipx installation workflows
-- Node.js: npm, yarn installation workflows  
+- Node.js: npm, yarn installation workflows
 - TypeScript: build + npm/yarn installation workflows
 - Rust: cargo installation workflows
 
@@ -35,6 +35,7 @@ from goobits_cli.schemas import GoobitsConfigSchema
 
 # Import test configs from integration tests
 import sys
+
 integration_path = str(Path(__file__).parent.parent / "integration")
 if integration_path not in sys.path:
     sys.path.append(integration_path)
@@ -44,7 +45,7 @@ try:
 except ImportError:
     # Fallback: create minimal test configs here
     from goobits_cli.schemas import GoobitsConfigSchema
-    
+
     class TestConfigTemplates:
         @staticmethod
         def minimal_config(language):
@@ -55,10 +56,17 @@ except ImportError:
                 description=f"Test CLI for {language}",
                 language=language,
                 dependencies={"required": [], "optional": []},
-                installation={"pypi_name": f"test-{language}-cli", "development_path": "."},
-                cli={"name": f"test{language}cli", "tagline": f"Test {language} CLI", "commands": {
-                    "hello": {"desc": "Say hello", "args": [], "options": []}
-                }}
+                installation={
+                    "pypi_name": f"test-{language}-cli",
+                    "development_path": ".",
+                },
+                cli={
+                    "name": f"test{language}cli",
+                    "tagline": f"Test {language} CLI",
+                    "commands": {
+                        "hello": {"desc": "Say hello", "args": [], "options": []}
+                    },
+                },
             )
 
 
@@ -235,7 +243,10 @@ class CLITestHelper:
                 if (
                     filename.startswith("bin/")
                     or filename in ["setup.sh"]
-                    or ((filename.endswith(".js") or filename.endswith(".mjs")) and "cli" in filename)
+                    or (
+                        (filename.endswith(".js") or filename.endswith(".mjs"))
+                        and "cli" in filename
+                    )
                 ):
                     file_path.chmod(0o755)
 
@@ -252,7 +263,9 @@ class CLITestHelper:
                     "cli" in filename or "main" in filename or "index" in filename
                 ):
                     result["cli_file"] = str(file_path)
-                elif filename.endswith(".rs") and ("main" in filename or "cli" in filename):
+                elif filename.endswith(".rs") and (
+                    "main" in filename or "cli" in filename
+                ):
                     result["cli_file"] = str(file_path)
                 elif filename == "package.json":
                     result["package_file"] = str(file_path)
@@ -835,9 +848,9 @@ class TestInstallationWorkflows:
         """Test CLI generation quality (updated to focus on generation, not installation)."""
         # Skip actual system installation testing per architecture decision
         # Focus on validating that CLI generation was successful
-        
+
         print(f"✅ CLI '{command_name}' generation validated")
-        
+
         # The presence of this call indicates successful generation workflow
         # Actual system installation testing would require complex environment setup
         # and doesn't align with the framework's design as a CLI generation tool
@@ -1077,7 +1090,9 @@ class TestNodeJSInstallation(TestInstallationWorkflows):
         else:
             # Look for .js or .mjs files
             for file_path in generated_files.values():
-                if isinstance(file_path, str) and (file_path.endswith('.js') or file_path.endswith('.mjs')):
+                if isinstance(file_path, str) and (
+                    file_path.endswith(".js") or file_path.endswith(".mjs")
+                ):
                     cli_file = Path(file_path)
                     break
 
@@ -1086,8 +1101,10 @@ class TestNodeJSInstallation(TestInstallationWorkflows):
         # Verify syntax is valid (basic check)
         cli_content = cli_file.read_text()
         assert len(cli_content.strip()) > 0, "CLI file is empty"
-        assert any(keyword in cli_content for keyword in ["function", "import", "require", "export"]), \
-            "CLI file should contain JavaScript/ES6 keywords"
+        assert any(
+            keyword in cli_content
+            for keyword in ["function", "import", "require", "export"]
+        ), "CLI file should contain JavaScript/ES6 keywords"
 
 
 # TypeScript Installation Tests
@@ -1262,7 +1279,10 @@ process.exit(0);
         assert "scripts" in package_content
         # Note: Universal Template System may not include build script by default
         # Check for essential scripts (start is minimum requirement)
-        assert "start" in package_content["scripts"] or "build" in package_content["scripts"]
+        assert (
+            "start" in package_content["scripts"]
+            or "build" in package_content["scripts"]
+        )
 
 
 # Rust Installation Tests
@@ -1284,7 +1304,9 @@ class TestRustInstallation(TestInstallationWorkflows):
         # Test cargo build with timeout
         try:
             result = PackageManagerHelper.run_command(
-                ["cargo", "build"], cwd=temp_dir, timeout=600  # 10 minutes for first build
+                ["cargo", "build"],
+                cwd=temp_dir,
+                timeout=600,  # 10 minutes for first build
             )
             assert result.returncode == 0
         except PackageManagerError as e:
@@ -1309,7 +1331,9 @@ class TestRustInstallation(TestInstallationWorkflows):
         # Test cargo install --path . with timeout
         try:
             result = PackageManagerHelper.run_command(
-                ["cargo", "install", "--path", "."], cwd=temp_dir, timeout=600  # 10 minutes for install
+                ["cargo", "install", "--path", "."],
+                cwd=temp_dir,
+                timeout=600,  # 10 minutes for install
             )
             assert result.returncode == 0
         except PackageManagerError as e:

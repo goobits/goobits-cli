@@ -98,18 +98,16 @@ class RustRenderer(LanguageRenderer):
 
         context = ir.copy()
         context["language"] = "rust"
-        
+
         # Add clap structure (similar to commander_commands)
-        context["clap_commands"] = self._build_clap_structure(
-            ir.get("cli", {})
-        )
+        context["clap_commands"] = self._build_clap_structure(ir.get("cli", {}))
 
         # Add Rust-specific transformations
 
         # Get the actual CLI path from output structure
         output_structure = self.get_output_structure(ir)
         actual_cli_path = output_structure.get("rust_cli_consolidated", "src/cli.rs")
-        
+
         context["rust"] = {
             "structs": self._generate_structs(ir),
             "type_mappings": self._get_type_mappings(),
@@ -137,9 +135,16 @@ class RustRenderer(LanguageRenderer):
         rust_deps = ir.get("dependencies", {}).get("rust", [])
         if rust_deps:
             # Filter out dependencies that are already included in base template
-            base_template_deps = {"serde", "serde_json", "serde_yaml", "clap", "anyhow", "thiserror"}
+            base_template_deps = {
+                "serde",
+                "serde_json",
+                "serde_yaml",
+                "clap",
+                "anyhow",
+                "thiserror",
+            }
             filtered_deps = [dep for dep in rust_deps if dep not in base_template_deps]
-            
+
             if filtered_deps:
                 if "project" not in context:
                     context["project"] = {}
@@ -221,18 +226,18 @@ class RustRenderer(LanguageRenderer):
         # Use user-defined paths if specified, otherwise use defaults
         base_cli_path = ir["project"].get("cli_path")
         base_hooks_path = ir["project"].get("cli_hooks_path")
-        
+
         # Transform file extensions for Rust if they have Python extensions
-        if base_cli_path and base_cli_path.endswith('.py'):
-            cli_path = base_cli_path.replace('.py', '.rs')
+        if base_cli_path and base_cli_path.endswith(".py"):
+            cli_path = base_cli_path.replace(".py", ".rs")
         else:
             cli_path = base_cli_path or "src/cli.rs"
-            
-        if base_hooks_path and base_hooks_path.endswith('.py'):
-            hooks_path = base_hooks_path.replace('.py', '.rs')
+
+        if base_hooks_path and base_hooks_path.endswith(".py"):
+            hooks_path = base_hooks_path.replace(".py", ".rs")
         else:
             hooks_path = base_hooks_path or "src/cli_hooks.rs"
-        
+
         # Ensure src/ prefix for Rust files
         if cli_path and not cli_path.startswith("src/"):
             cli_path = f"src/{cli_path}"
@@ -426,9 +431,18 @@ class RustRenderer(LanguageRenderer):
         ir_dependencies = ir.get("dependencies", {})
         rust_deps = ir_dependencies.get("rust", [])
         # Dependencies that are already included in the base template
-        base_template_deps = {"serde", "serde_json", "serde_yaml", "clap", "anyhow", "thiserror"}
+        base_template_deps = {
+            "serde",
+            "serde_json",
+            "serde_yaml",
+            "clap",
+            "anyhow",
+            "thiserror",
+        }
         for dep_name in rust_deps:
-            if dep_name not in deps and dep_name not in base_template_deps:  # Don't override existing or base deps
+            if (
+                dep_name not in deps and dep_name not in base_template_deps
+            ):  # Don't override existing or base deps
                 deps[dep_name] = '"*"'  # Default to latest version
 
         # Add conditional dependencies
@@ -667,11 +681,11 @@ class RustRenderer(LanguageRenderer):
             return f"r#{safe_name}"
 
         return safe_name
-    
+
     def _build_clap_structure(self, cli_schema: Dict[str, Any]) -> Dict[str, Any]:
         """Build Clap-specific command structure for Rust."""
         root_command = cli_schema.get("root_command", {})
-        
+
         clap_data = {
             "root_command": {
                 "name": root_command.get("name", "cli"),
@@ -682,7 +696,7 @@ class RustRenderer(LanguageRenderer):
             },
             "subcommands": [],
         }
-        
+
         # Convert commands to Clap format
         for command in root_command.get("subcommands", []):
             clap_cmd = {
@@ -696,7 +710,7 @@ class RustRenderer(LanguageRenderer):
                 "subcommands": command.get("subcommands", []),
             }
             clap_data["subcommands"].append(clap_cmd)
-        
+
         return clap_data
 
     def _rust_optional_filter(self, rust_type: str) -> str:

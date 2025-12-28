@@ -199,4 +199,3 @@ class TestInteractiveMode:
         assert "class TestcliREPL(BasicREPL" in rendered
         assert "def run_enhanced_repl():" in rendered
         assert "smart_completion_enabled=True" in rendered
-

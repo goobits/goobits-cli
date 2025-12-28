@@ -17,10 +17,6 @@ from typing import Dict, List, Any, Set
 from dataclasses import dataclass, field
 
 
-
-
-
-
 @dataclass
 class ComparisonResult:
     """Result of a cross-language comparison."""

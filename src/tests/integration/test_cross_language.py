@@ -683,7 +683,9 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                             # The UTS generates its own hook files that don't print "HOOK_EXECUTED"
                             if hello_result.returncode == 0:
                                 result["hook_executed"] = True
-                                result["warnings"].append("Command executed successfully (UTS mode)")
+                                result["warnings"].append(
+                                    "Command executed successfully (UTS mode)"
+                                )
                         else:
                             result["warnings"].append(
                                 f"Hello command failed: {hello_result.stderr}"
@@ -739,11 +741,13 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                     "name": config.package_name,
                     "type": "module",
                     "version": "1.0.0",
-                    "description": "Test CLI for Node.js"
+                    "description": "Test CLI for Node.js",
                 }
                 package_json_path.write_text(json.dumps(minimal_package, indent=2))
-                result["warnings"].append("Created minimal package.json for ES6 module support")
-            
+                result["warnings"].append(
+                    "Created minimal package.json for ES6 module support"
+                )
+
             # Install dependencies if package.json exists
             if package_json_path.exists():
                 try:
@@ -810,7 +814,9 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                             # The UTS generates its own hook files that don't print "HOOK_EXECUTED"
                             if hello_result.returncode == 0:
                                 result["hook_executed"] = True
-                                result["warnings"].append("Command executed successfully (UTS mode)")
+                                result["warnings"].append(
+                                    "Command executed successfully (UTS mode)"
+                                )
 
                     except Exception as e:
                         result["warnings"].append(f"Hook test error: {str(e)}")
@@ -857,11 +863,13 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                     "name": config.package_name,
                     "type": "module",
                     "version": "1.0.0",
-                    "description": "Test CLI for TypeScript"
+                    "description": "Test CLI for TypeScript",
                 }
                 package_json_path.write_text(json.dumps(minimal_package, indent=2))
-                result["warnings"].append("Created minimal package.json for ES6 module support")
-            
+                result["warnings"].append(
+                    "Created minimal package.json for ES6 module support"
+                )
+
             # Install dependencies if package.json exists
             if package_json_path.exists():
                 npm_result = subprocess.run(
@@ -945,7 +953,9 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                             # The UTS generates its own hook files that don't print "HOOK_EXECUTED"
                             if hello_result.returncode == 0:
                                 result["hook_executed"] = True
-                                result["warnings"].append("Command executed successfully (UTS mode)")
+                                result["warnings"].append(
+                                    "Command executed successfully (UTS mode)"
+                                )
 
                     except Exception as e:
                         result["warnings"].append(f"Hook test error: {str(e)}")
@@ -1084,7 +1094,15 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
         """Find the main CLI file for the given language."""
         search_patterns = {
             "python": ["cli.py", "generated_cli.py", "main.py"],
-            "nodejs": ["cli.mjs", "index.mjs", "cli.js", "index.js", "app.js", "bin/cli.js", "bin/cli.mjs"],
+            "nodejs": [
+                "cli.mjs",
+                "index.mjs",
+                "cli.js",
+                "index.js",
+                "app.js",
+                "bin/cli.js",
+                "bin/cli.mjs",
+            ],
             "typescript": [
                 "dist/bin/cli.js",
                 "bin/cli.js",

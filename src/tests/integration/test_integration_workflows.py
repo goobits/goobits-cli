@@ -18,8 +18,10 @@ from .package_manager_utils import (
     cleanup_global_packages,
 )
 from .test_configs import TestConfigTemplates, TestScenarioRunner
+
 # Import CLITestHelper from E2E tests since we moved installation flows there
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent / "e2e"))
 from test_installation_flows import CLITestHelper
 
@@ -552,7 +554,6 @@ setup(
 
         results["completed"] = time.time()
         return results
-
 
 
 if __name__ == "__main__":

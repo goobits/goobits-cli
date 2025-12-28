@@ -3,6 +3,10 @@ Base validation framework for Goobits CLI configurations.
 
 This module provides the foundation for validating CLI configurations across
 all supported languages (Python, Node.js, TypeScript, Rust).
+
+NOTE: ValidationResult, ValidationMessage, and ValidationSeverity are now
+imported from the unified goobits_cli.validation module. They are re-exported
+here for backward compatibility.
 """
 
 from abc import ABC, abstractmethod
@@ -12,14 +16,12 @@ from typing import Any, Dict, List, Optional, Set
 import re
 from pathlib import Path
 
-
-class ValidationSeverity(Enum):
-    """Severity levels for validation messages."""
-
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    CRITICAL = "critical"
+# Import unified validation classes from the canonical location
+from goobits_cli.validation import (
+    ValidationMessage,
+    ValidationResult,
+    ValidationSeverity,
+)
 
 
 class ValidationMode(Enum):
@@ -29,148 +31,6 @@ class ValidationMode(Enum):
     LENIENT = "lenient"  # Only critical errors fail validation
     DEV = "dev"  # Extra checks for development
     PRODUCTION = "production"  # Minimal checks for production
-
-
-@dataclass
-class ValidationMessage:
-    """A single validation message with context."""
-
-    severity: ValidationSeverity
-    message: str
-    field_path: str = ""
-    suggestion: Optional[str] = None
-    code: Optional[str] = None
-    line_number: Optional[int] = None
-    column: Optional[int] = None
-    context: Dict[str, Any] = field(default_factory=dict)
-
-    def __str__(self) -> str:
-        prefix = {
-            ValidationSeverity.INFO: "ℹ",
-            ValidationSeverity.WARNING: "⚠",
-            ValidationSeverity.ERROR: "✗",
-            ValidationSeverity.CRITICAL: "💥",
-        }[self.severity]
-
-        location = f" at {self.field_path}" if self.field_path else ""
-        suggestion_text = (
-            f"\n  Suggestion: {self.suggestion}" if self.suggestion else ""
-        )
-        return f"{prefix} {self.severity.value.upper()}{location}: {self.message}{suggestion_text}"
-
-
-@dataclass
-class ValidationResult:
-    """Result of a validation operation."""
-
-    messages: List[ValidationMessage] = field(default_factory=list)
-    is_valid: bool = True
-    validator_name: str = ""
-    execution_time_ms: float = 0.0
-
-    def add_info(
-        self,
-        message: str,
-        field_path: str = "",
-        suggestion: Optional[str] = None,
-        **kwargs,
-    ):
-        """Add an info message."""
-        self.messages.append(
-            ValidationMessage(
-                severity=ValidationSeverity.INFO,
-                message=message,
-                field_path=field_path,
-                suggestion=suggestion,
-                **kwargs,
-            )
-        )
-
-    def add_warning(
-        self,
-        message: str,
-        field_path: str = "",
-        suggestion: Optional[str] = None,
-        **kwargs,
-    ):
-        """Add a warning message."""
-        self.messages.append(
-            ValidationMessage(
-                severity=ValidationSeverity.WARNING,
-                message=message,
-                field_path=field_path,
-                suggestion=suggestion,
-                **kwargs,
-            )
-        )
-
-    def add_error(
-        self,
-        message: str,
-        field_path: str = "",
-        suggestion: Optional[str] = None,
-        **kwargs,
-    ):
-        """Add an error message."""
-        self.messages.append(
-            ValidationMessage(
-                severity=ValidationSeverity.ERROR,
-                message=message,
-                field_path=field_path,
-                suggestion=suggestion,
-                **kwargs,
-            )
-        )
-        self.is_valid = False
-
-    def add_critical(
-        self,
-        message: str,
-        field_path: str = "",
-        suggestion: Optional[str] = None,
-        **kwargs,
-    ):
-        """Add a critical error message."""
-        self.messages.append(
-            ValidationMessage(
-                severity=ValidationSeverity.CRITICAL,
-                message=message,
-                field_path=field_path,
-                suggestion=suggestion,
-                **kwargs,
-            )
-        )
-        self.is_valid = False
-
-    def merge(self, other: "ValidationResult") -> "ValidationResult":
-        """Merge another validation result into this one."""
-        self.messages.extend(other.messages)
-        if not other.is_valid:
-            self.is_valid = False
-        return self
-
-    def get_errors(self) -> List[ValidationMessage]:
-        """Get all error and critical messages."""
-        return [
-            m
-            for m in self.messages
-            if m.severity in [ValidationSeverity.ERROR, ValidationSeverity.CRITICAL]
-        ]
-
-    def get_warnings(self) -> List[ValidationMessage]:
-        """Get all warning messages."""
-        return [m for m in self.messages if m.severity == ValidationSeverity.WARNING]
-
-    def has_errors(self) -> bool:
-        """Check if there are any error or critical messages."""
-        return len(self.get_errors()) > 0
-
-    def summary_stats(self) -> Dict[str, int]:
-        """Get summary statistics of validation messages."""
-        stats = {severity.value: 0 for severity in ValidationSeverity}
-        for message in self.messages:
-            stats[message.severity.value] += 1
-        return stats
 
 
 @dataclass

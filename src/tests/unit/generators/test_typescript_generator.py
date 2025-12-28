@@ -110,4 +110,3 @@ class TestTypeScriptGenerator:
         # Should not generate Python or Rust files
         assert "cli.py" not in output_files
         assert "Cargo.toml" not in output_files
-

@@ -29,6 +29,7 @@ except ImportError:
     def generate_cli(config, filename):
         """Fallback generate_cli implementation"""
         from goobits_cli.builder import Builder
+
         builder = Builder()
         return builder.build_files(config)
 

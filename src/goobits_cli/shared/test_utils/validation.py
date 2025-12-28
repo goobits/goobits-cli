@@ -1,74 +1,22 @@
 """Validation utilities for test data and framework integration.
 
-
-
 This module provides utilities to validate test configurations,
-
 check framework integration, and ensure test data quality.
 
+NOTE: ValidationResult is now imported from the unified goobits_cli.validation
+module. It is re-exported here for backward compatibility.
 """
 
 import yaml
 
-
 from typing import Dict, List, Any, Optional
-
 from pathlib import Path
 
-from dataclasses import dataclass
-
-
 from goobits_cli.schemas import GoobitsConfigSchema
-
 from pydantic import ValidationError
 
-
-@dataclass
-class ValidationResult:
-    """Result of validation operations."""
-
-    passed: bool
-
-    errors: List[str]
-
-    warnings: List[str]
-
-    details: Dict[str, Any]
-
-    def add_error(self, error: str):
-        """Add an error to the validation result."""
-
-        self.errors.append(error)
-
-        self.passed = False
-
-    def add_warning(self, warning: str):
-        """Add a warning to the validation result."""
-
-        self.warnings.append(warning)
-
-    def get_summary(self) -> str:
-        """Get a summary of the validation result."""
-
-        if self.passed:
-
-            summary = "✓ Validation passed"
-
-            if self.warnings:
-
-                summary += f" ({len(self.warnings)} warnings)"
-
-        else:
-
-            summary = f"✗ Validation failed ({len(self.errors)} errors"
-
-            if self.warnings:
-
-                summary += f", {len(self.warnings)} warnings"
-
-            summary += ")"
-
-        return summary
+# Import unified ValidationResult from canonical location
+from goobits_cli.validation import ValidationResult
 
 
 class TestDataValidator:
@@ -394,8 +342,6 @@ class FrameworkIntegrationValidator:
         try:
 
             from goobits_cli.shared.test_utils.fixtures import TestFixtures
-
-
 
             # Test basic functionality
 

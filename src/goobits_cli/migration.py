@@ -3,7 +3,7 @@ YAML Migration Tool for Goobits CLI Framework
 
 Converts legacy YAML configurations to current standardized format:
 - Array subcommands → Object subcommands (v3.0.0)
-- Field name standardization (v3.0.2) 
+- Field name standardization (v3.0.2)
 - Validates new structure compatibility
 - Creates backup files for safety
 """
@@ -101,20 +101,18 @@ class YAMLMigrationTool:
     ) -> Dict[str, Any]:
         """Apply all migration transformations to YAML structure."""
         from .migrations import apply_all_migrations
-        
+
         if not isinstance(data, dict):
             return data
-        
+
         # Apply all applicable migrations using the registry system
         migrated_data, changes, warnings = apply_all_migrations(data, file_path)
-        
+
         # Add changes and warnings to our tracking
         self.changes_made.extend(changes)
         self.warnings.extend(warnings)
-        
+
         return migrated_data
-
-
 
     def _show_migration_summary(
         self, file_path: Path, original: Dict[str, Any], migrated: Dict[str, Any]
@@ -266,7 +264,7 @@ def migrate_yaml(path: Path, backup: bool, dry_run: bool, pattern: str):
     Migrate Goobits YAML configurations to latest format.
 
     Applies all applicable migrations:
-    
+
     \b
     v3.0.0: subcommands: [{name: "start", ...}] → {start: {...}}
     v3.0.2: cli_output_path → cli_path, hooks_output_path → cli_hooks_path

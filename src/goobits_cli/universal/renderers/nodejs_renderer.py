@@ -286,15 +286,15 @@ class NodeJSRenderer(LanguageRenderer):
         # Use user-defined paths if specified, otherwise use defaults
         base_cli_path = ir["project"].get("cli_path")
         base_hooks_path = ir["project"].get("cli_hooks_path")
-        
+
         # Transform file extensions for Node.js if they have Python extensions
-        if base_cli_path and base_cli_path.endswith('.py'):
-            cli_path = base_cli_path.replace('.py', '.mjs')
+        if base_cli_path and base_cli_path.endswith(".py"):
+            cli_path = base_cli_path.replace(".py", ".mjs")
         else:
             cli_path = base_cli_path or "cli.mjs"
-            
-        if base_hooks_path and base_hooks_path.endswith('.py'):
-            hooks_path = base_hooks_path.replace('.py', '.mjs')
+
+        if base_hooks_path and base_hooks_path.endswith(".py"):
+            hooks_path = base_hooks_path.replace(".py", ".mjs")
         else:
             hooks_path = base_hooks_path or "cli_hooks.mjs"
 
@@ -722,31 +722,31 @@ class NodeJSRenderer(LanguageRenderer):
             # Check if this is a program declaration that should be converted
             if line == "program" and i + 1 < len(lines):
                 next_line = lines[i + 1].strip()
-                
+
                 # Check if this is a command definition (should keep fluent interface)
                 if next_line.startswith(".command("):
                     # Keep fluent interface for command definitions
                     # Just combine the lines properly
                     combined = f"program\n    {next_line}"
                     i += 2
-                    
+
                     # Continue collecting chained methods for this command
                     while i < len(lines) and lines[i].strip().startswith("."):
                         combined += f"\n    {lines[i].strip()}"
                         i += 1
-                    
+
                     processed_lines.append(combined)
                     continue
                 elif next_line.startswith("."):
                     # This is config like .name() or .version() - convert to individual calls
                     method_calls = []
                     i += 1
-                    
+
                     while i < len(lines) and lines[i].strip().startswith("."):
                         method_call = lines[i].strip()
                         method_calls.append(method_call)
                         i += 1
-                    
+
                     # Convert to individual statements
                     for method_call in method_calls:
                         processed_lines.append(f"program{method_call}")

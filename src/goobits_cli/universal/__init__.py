@@ -12,13 +12,24 @@ for multiple programming languages from a common intermediate representation.
 
 from .template_engine import (
     LanguageRenderer,
-    ComponentRegistry,
     UniversalTemplateEngine,
 )
+from .component_registry import ComponentRegistry
+
+# Also expose new modular components for advanced usage
+from .engine.base import LanguageRenderer as LanguageRendererBase
+from .ir.builder import IRBuilder
+from .ir.feature_analyzer import FeatureAnalyzer
+from .utils import _safe_get_attr
 
 
 __all__ = [
     "LanguageRenderer",
     "ComponentRegistry",
     "UniversalTemplateEngine",
+    # New modular components
+    "LanguageRendererBase",
+    "IRBuilder",
+    "FeatureAnalyzer",
+    "_safe_get_attr",
 ]

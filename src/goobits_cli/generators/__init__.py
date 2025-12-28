@@ -393,4 +393,33 @@ __all__ = [
     "DependencyError",
     "ValidationError",
     "_safe_to_dict",
+    # Re-exported for backward compatibility (moved to generation/renderers/)
+    "PythonGenerator",
+    "NodeJSGenerator",
+    "TypeScriptGenerator",
+    "RustGenerator",
 ]
+
+
+# Backward compatibility: re-export generators from new location
+# These were moved to generation/renderers/ but are re-exported here
+# to maintain backward compatibility with existing imports.
+def __getattr__(name: str):
+    """Lazy import for backward compatibility with moved generators."""
+    if name == "PythonGenerator":
+        from ..generation.renderers.python import PythonGenerator
+
+        return PythonGenerator
+    elif name == "NodeJSGenerator":
+        from ..generation.renderers.nodejs import NodeJSGenerator
+
+        return NodeJSGenerator
+    elif name == "TypeScriptGenerator":
+        from ..generation.renderers.typescript import TypeScriptGenerator
+
+        return TypeScriptGenerator
+    elif name == "RustGenerator":
+        from ..generation.renderers.rust import RustGenerator
+
+        return RustGenerator
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
