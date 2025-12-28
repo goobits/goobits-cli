@@ -128,13 +128,11 @@ Rust:       src/cli.rs + src/cli_hooks.rs + Cargo.toml + setup.sh → cargo inst
    - `templates/typescript/` - TypeScript templates
    - `templates/rust/` - Rust templates
 6. **universal/** - Universal Template System (Phase 3):
-   - `template_engine.py` - Core universal template engine
+   - `engine/orchestrator.py` - Core orchestrator for CLI generation pipeline
    - `renderers/` - Language-specific renderers for universal templates
-   - `components/` - Universal component templates
-   - `interactive/` - Interactive REPL mode system
-   - `completion/` - Dynamic completion system
-   - `plugins/` - Plugin marketplace and management
-   - `performance/` - Performance optimization and monitoring
+   - `integrations/` - Optional feature integrations (interactive, completion, plugins)
+   - `ir/` - Intermediate representation builders
+   - `utils/` - Utility functions (strings, paths, json)
 7. **shared/** - Shared Components (Phase 2):
    - `components/` - Validation framework and utilities
    - `schemas/` - Common schema definitions
@@ -238,9 +236,9 @@ The framework uses Universal Template System with fallback support:
 - `escape_docstring`: Escapes strings for Python docstrings
 
 **Universal Template System (Production Ready):** Single template generates for all languages:
-- **UniversalTemplateEngine**: Core engine with Intermediate Representation (IR)
-- **LanguageRenderers**: Python, Node.js, TypeScript-specific renderers
-- **ComponentRegistry**: Universal component template management
+- **Orchestrator**: Central pipeline coordinator for CLI generation
+- **LanguageRenderers**: Python, Node.js, TypeScript, Rust-specific renderers
+- **Registry**: Dynamic renderer registration and lookup
 - **Performance Optimization**: <100ms startup times with lazy loading
 - **Cross-Language Consistency**: Unified behavior across all supported languages
 
