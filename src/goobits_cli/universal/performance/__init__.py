@@ -1,23 +1,15 @@
 """
+Performance Optimization System for Goobits CLI Framework.
 
-Performance Optimization System for Goobits CLI Framework
-
-Provides lazy loading, caching, and performance monitoring
-
+Provides performance monitoring and subprocess caching.
 """
 
-from .cache import ComponentCache, TemplateCache
-from .lazy_loader import LazyLoader, LoadingStrategy
 from .monitor import MemoryTracker, PerformanceMonitor, StartupBenchmark
-from .optimizer import CLIOptimizer
+from .subprocess_cache import run_cached
 
 __all__ = [
-    "LazyLoader",
-    "LoadingStrategy",
     "PerformanceMonitor",
     "StartupBenchmark",
     "MemoryTracker",
-    "TemplateCache",
-    "ComponentCache",
-    "CLIOptimizer",
+    "run_cached",
 ]
