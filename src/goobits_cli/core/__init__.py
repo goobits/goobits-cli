@@ -5,6 +5,8 @@ This module exports:
 - schemas: Pydantic schemas for YAML validation
 - logging: Structured logging infrastructure
 - manifest: Manifest file updater for package.json and Cargo.toml
+- errors: Unified exception classes
+- utils: Shared utility functions
 """
 
 from .config import (
@@ -56,6 +58,19 @@ from .schemas import (
     ShellIntegrationSchema,
     ValidationSchema,
 )
+from .errors import (
+    GeneratorError,
+    ConfigurationError,
+    TemplateError,
+    DependencyError,
+    ValidationError,
+    RenderError,
+)
+from .utils import (
+    safe_to_dict,
+    _safe_to_dict,
+    safe_get_attr,
+)
 
 __all__ = [
     # Config
@@ -103,4 +118,15 @@ __all__ = [
     "ManifestUpdater",
     "Result",
     "update_manifests_for_build",
+    # Errors
+    "GeneratorError",
+    "ConfigurationError",
+    "TemplateError",
+    "DependencyError",
+    "ValidationError",
+    "RenderError",
+    # Utils
+    "safe_to_dict",
+    "_safe_to_dict",
+    "safe_get_attr",
 ]

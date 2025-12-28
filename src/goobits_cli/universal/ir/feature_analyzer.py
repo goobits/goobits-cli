@@ -8,7 +8,7 @@ dependencies and code.
 
 from typing import Any, Dict
 
-from ...generation import _safe_to_dict
+from ...core.utils import safe_to_dict as _safe_to_dict
 
 
 class FeatureAnalyzer:

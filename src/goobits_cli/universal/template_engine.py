@@ -40,7 +40,7 @@ def _get_config_schema():
 
 
 # Import shared _safe_to_dict function
-from ..generation import _safe_to_dict
+from ..core.utils import safe_to_dict as _safe_to_dict
 
 # Import performance optimization components
 try:
