@@ -787,11 +787,8 @@ setup(
         cli_schema = ir.get("cli", {})
         features = ir.get("features", {})
 
-        # RESPECT the analyzed feature requirements from template engine
-        template_engine_features = ir.get("feature_requirements", {})
-
-        # Start with the analyzed requirements (DO NOT OVERRIDE rich_interface!)
-        feature_requirements = template_engine_features.copy()
+        # Respect analyzed feature requirements from the IR.
+        feature_requirements = ir.get("feature_requirements", {}).copy()
 
         # Add Python-specific features that don't conflict with analysis
         feature_requirements.update(

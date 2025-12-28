@@ -135,25 +135,25 @@ def typescript_test_config(basic_cli_schema):
 @pytest.fixture
 def python_generator():
     """Provide a Python generator instance."""
-    return PythonGenerator()
+    return UniversalGenerator("python")
 
 
 @pytest.fixture
 def nodejs_generator():
     """Provide a Node.js generator instance."""
-    return NodeJSGenerator()
+    return UniversalGenerator("nodejs")
 
 
 @pytest.fixture
 def typescript_generator():
     """Provide a TypeScript generator instance."""
-    return TypeScriptGenerator()
+    return UniversalGenerator("typescript")
 
 
 @pytest.fixture
 def rust_generator():
     """Provide a Rust generator instance."""
-    return RustGenerator()
+    return UniversalGenerator("rust")
 
 
 # Parameterized fixtures for consolidated cross-language tests

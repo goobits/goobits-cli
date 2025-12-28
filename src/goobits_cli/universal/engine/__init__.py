@@ -4,10 +4,9 @@ Engine module for Universal Template System.
 This module provides the core engine components for CLI generation:
 - Orchestrator: Main entry point coordinating the pipeline
 - Stages: Pure functions for each pipeline step
-- Base: Legacy LanguageRenderer (use renderers/interface.py instead)
 """
 
-from .base import LanguageRenderer
+from ..renderers.interface import LanguageRenderer
 from .orchestrator import Orchestrator, generate
 from .stages import (
     build_frozen_ir,
@@ -35,6 +34,6 @@ __all__ = [
     "write_artifacts",
     "write_files",
     "pipeline",
-    # Legacy (for backward compatibility)
+    # Re-export for convenience
     "LanguageRenderer",
 ]

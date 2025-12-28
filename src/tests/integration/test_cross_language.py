@@ -38,10 +38,7 @@ except ImportError:
     PYTEST_AVAILABLE = False
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.universal.generator import NodeJSGenerator
-from goobits_cli.universal.generator import PythonGenerator
-from goobits_cli.universal.generator import RustGenerator
-from goobits_cli.universal.generator import TypeScriptGenerator
+from goobits_cli.universal.generator import UniversalGenerator
 
 
 class CLIExecutionResult:
@@ -561,17 +558,12 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
 
     def _get_generator(self, language: str):
         """Get the appropriate generator for the language."""
-        generators = {
-            "python": PythonGenerator,
-            "nodejs": NodeJSGenerator,
-            "typescript": TypeScriptGenerator,
-            "rust": RustGenerator,
-        }
+        supported = ["python", "nodejs", "typescript", "rust"]
 
-        if language not in generators:
+        if language not in supported:
             raise ValueError(f"Unsupported language: {language}")
 
-        return generators[language]()
+        return UniversalGenerator(language)
 
     def _test_language_specific_integration(
         self,

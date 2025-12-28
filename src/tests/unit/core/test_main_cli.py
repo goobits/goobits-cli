@@ -27,6 +27,7 @@ import yaml
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
 from goobits_cli.main import app, version_callback
+from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.commands.init import (
     generate_advanced_template,
     generate_api_client_template,
@@ -76,9 +77,7 @@ class TestMainCLICommands(TestMainCLIBase):
         config_path = self.create_test_config_file(config_content)
 
         # Mock the generator to return multiple files
-        from goobits_cli.universal.generator import PythonGenerator
-
-        with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
+        with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/test_cli/generated_cli.py": "# Generated CLI code",
                 "setup.sh": "#!/bin/bash\n# Setup script",
@@ -111,9 +110,7 @@ class TestMainCLICommands(TestMainCLIBase):
             os.chdir(self.temp_dir)
             self.create_test_config_file(config_content)
 
-            from goobits_cli.universal.generator import PythonGenerator
-
-            with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
+            with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
                 mock_gen.return_value = {
                     "src/test_cli/generated_cli.py": "# Generated CLI code",
                     "setup.sh": "#!/bin/bash\n# Setup script",
@@ -168,9 +165,8 @@ class TestMainCLICommands(TestMainCLIBase):
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.universal.generator import PythonGenerator
 
-        with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
+        with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/test_cli/generated_cli.py": "# Generated CLI code",
                 "setup.sh": "#!/bin/bash\n# Setup script",
@@ -186,9 +182,8 @@ class TestMainCLICommands(TestMainCLIBase):
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.universal.generator import PythonGenerator
 
-        with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
+        with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/test_cli/generated_cli.py": "# Generated CLI code",
                 "setup.sh": "#!/bin/bash\n# Setup script",
@@ -668,9 +663,8 @@ cli:
 """
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.universal.generator import PythonGenerator
 
-        with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
+        with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/test_cli/generated_cli.py": "# Generated CLI code",
                 "setup.sh": "#!/bin/bash\n# Setup script",
@@ -724,9 +718,8 @@ cli:
 """
         config_path = self.create_test_config_file(config_content)
 
-        from goobits_cli.universal.generator import PythonGenerator
 
-        with patch.object(PythonGenerator, "generate_all_files") as mock_gen:
+        with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/complex_cli_tool/deep/nested/cli.py": "# Complex CLI code",
                 "setup.sh": "#!/bin/bash\n# Setup script",

@@ -180,7 +180,7 @@ class TestCLIGenerationIntegration:
 
     def test_python_cli_generation_and_execution(self, tmp_path):
         """Test Python CLI generation and basic execution."""
-        from goobits_cli.universal.generator import PythonGenerator
+        from goobits_cli.universal.generator import UniversalGenerator
         from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 
         # Create a minimal test configuration using GoobitsConfigSchema
@@ -198,7 +198,7 @@ class TestCLIGenerationIntegration:
         )
 
         # Generate Python CLI
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Verify generation was successful
@@ -220,7 +220,7 @@ class TestCLIGenerationIntegration:
 
     def test_nodejs_cli_generation_and_execution(self, tmp_path):
         """Test Node.js CLI generation and basic execution."""
-        from goobits_cli.universal.generator import NodeJSGenerator
+        from goobits_cli.universal.generator import UniversalGenerator
         from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 
         # Create a minimal test configuration using GoobitsConfigSchema
@@ -238,7 +238,7 @@ class TestCLIGenerationIntegration:
         )
 
         # Generate Node.js CLI
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Verify generation was successful
@@ -264,7 +264,7 @@ class TestCLIGenerationIntegration:
     )
     def test_rust_cli_generation_and_execution(self, tmp_path):
         """Test Rust CLI generation and basic execution."""
-        from goobits_cli.universal.generator import RustGenerator
+        from goobits_cli.universal.generator import UniversalGenerator
         from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 
         # Create a minimal test configuration using GoobitsConfigSchema
@@ -282,7 +282,7 @@ class TestCLIGenerationIntegration:
         )
 
         # Generate Rust CLI
-        generator = RustGenerator()
+        generator = UniversalGenerator("rust")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Verify generation was successful

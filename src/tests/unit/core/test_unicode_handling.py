@@ -37,10 +37,7 @@ from goobits_cli.core.schemas import (
     ShellIntegrationSchema,
     ValidationSchema,
 )
-from goobits_cli.universal.generator import NodeJSGenerator
-from goobits_cli.universal.generator import PythonGenerator
-from goobits_cli.universal.generator import RustGenerator
-from goobits_cli.universal.generator import TypeScriptGenerator
+from goobits_cli.universal.generator import UniversalGenerator
 
 
 class TestUnicodeInConfigs:
@@ -77,7 +74,7 @@ class TestUnicodeInConfigs:
             messages=MessagesSchema(),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         result = generator.generate(config, "unicode.yaml", "1.0.0")
 
         # Verify the generated code handles emoji properly
@@ -153,13 +150,13 @@ class TestUnicodeInConfigs:
             )
 
             if language == "python":
-                generator = PythonGenerator()
+                generator = UniversalGenerator("python")
             elif language == "nodejs":
-                generator = NodeJSGenerator()
+                generator = UniversalGenerator("nodejs")
             elif language == "typescript":
-                generator = TypeScriptGenerator()
+                generator = UniversalGenerator("typescript")
             else:  # rust
-                generator = RustGenerator()
+                generator = UniversalGenerator("rust")
 
             result = generator.generate(config, "intl.yaml", "1.0.0")
 
@@ -217,7 +214,7 @@ class TestUnicodeInConfigs:
             messages=MessagesSchema(),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         result = generator.generate(config, "norm.yaml", "1.0.0")
 
         # Both forms should be preserved in the generated code
@@ -273,7 +270,7 @@ class TestUnicodeInConfigs:
             messages=MessagesSchema(),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         result = generator.generate(config, "control.yaml", "1.0.0")
 
         # Verify the generator handles these characters without crashing
@@ -330,13 +327,13 @@ class TestUnicodeInConfigs:
             )
 
             if language == "python":
-                generator = PythonGenerator()
+                generator = UniversalGenerator("python")
             elif language == "nodejs":
-                generator = NodeJSGenerator()
+                generator = UniversalGenerator("nodejs")
             elif language == "typescript":
-                generator = TypeScriptGenerator()
+                generator = UniversalGenerator("typescript")
             else:  # rust
-                generator = RustGenerator()
+                generator = UniversalGenerator("rust")
 
             result = generator.generate(config, "rtl.yaml", "1.0.0")
 
@@ -408,7 +405,7 @@ class TestUnicodeInYamlParsing:
 
                 # Test with the generators
                 config = GoobitsConfigSchema(**loaded_content)
-                generator = PythonGenerator()
+                generator = UniversalGenerator("python")
 
                 # Use generate_all_files to get the generated content
                 with tempfile.TemporaryDirectory() as temp_output_dir:
@@ -530,7 +527,7 @@ class TestGeneratedCodeSyntaxValidation:
             messages=MessagesSchema(),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         result = generator.generate(config, "syntax.yaml", "1.0.0")
 
         # Try to compile the generated Python code
@@ -567,7 +564,7 @@ class TestGeneratedCodeSyntaxValidation:
             messages=MessagesSchema(),
         )
 
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
         result = generator.generate(config, "js-syntax.yaml", "1.0.0")
 
         # Basic validation that result contains expected elements
@@ -609,7 +606,7 @@ class TestGeneratedCodeSyntaxValidation:
             messages=MessagesSchema(),
         )
 
-        generator = RustGenerator()
+        generator = UniversalGenerator("rust")
         result = generator.generate(config, "rust-syntax.yaml", "1.0.0")
 
         # Basic validation for Rust structure
@@ -675,13 +672,13 @@ class TestUnicodeOptionAndArgumentNames:
             )
 
             if language == "python":
-                generator = PythonGenerator()
+                generator = UniversalGenerator("python")
             elif language == "nodejs":
-                generator = NodeJSGenerator()
+                generator = UniversalGenerator("nodejs")
             elif language == "typescript":
-                generator = TypeScriptGenerator()
+                generator = UniversalGenerator("typescript")
             else:  # rust
-                generator = RustGenerator()
+                generator = UniversalGenerator("rust")
 
             result = generator.generate(config, "unicode-options.yaml", "1.0.0")
 
@@ -731,7 +728,7 @@ class TestUnicodeOptionAndArgumentNames:
             messages=MessagesSchema(),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         result = generator.generate(config, "unicode-args.yaml", "1.0.0")
 
         # Verify Unicode argument names are handled
@@ -851,13 +848,13 @@ class TestComplexUnicodeScenarios:
             )
 
             if language == "python":
-                generator = PythonGenerator()
+                generator = UniversalGenerator("python")
             elif language == "nodejs":
-                generator = NodeJSGenerator()
+                generator = UniversalGenerator("nodejs")
             elif language == "typescript":
-                generator = TypeScriptGenerator()
+                generator = UniversalGenerator("typescript")
             else:  # rust
-                generator = RustGenerator()
+                generator = UniversalGenerator("rust")
 
             result = generator.generate(config, "multilingual.yaml", "1.0.0")
 
@@ -958,7 +955,7 @@ class TestComplexUnicodeScenarios:
             messages=MessagesSchema(),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         result = generator.generate(config, "edge-case.yaml", "1.0.0")
 
         # Verify the generator handles complex Unicode without crashing

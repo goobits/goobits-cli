@@ -76,10 +76,9 @@ class CLIOptimizer:
     def _register_core_components(self):
         """Register core CLI components for lazy loading"""
 
-        # Template engine
-
+        # Orchestrator (generation entry point)
         self.lazy_loader.register(
-            "template_engine", lambda: self._create_template_engine(), dependencies=[]
+            "orchestrator", lambda: self._create_orchestrator(), dependencies=[]
         )
 
         # Configuration manager
@@ -104,7 +103,7 @@ class CLIOptimizer:
             dependencies=["config_manager"],
         )
 
-    def _create_template_engine(self):
+    def _create_orchestrator(self):
         """Create optimized orchestrator for generation."""
         from ..engine.orchestrator import Orchestrator
 

@@ -49,6 +49,8 @@ class TestInstallationScriptGeneration:
         self, language: str, config_type: str = "minimal"
     ) -> Dict[str, str]:
         """Generate CLI files and return them as a dictionary."""
+        from goobits_cli.universal.generator import UniversalGenerator
+
         if config_type == "minimal":
             config = TestConfigTemplates.minimal_config(language)
         elif config_type == "complex":
@@ -56,26 +58,10 @@ class TestInstallationScriptGeneration:
         else:
             config = TestConfigTemplates.dependency_heavy_config(language)
 
-        # Use the specific generator classes
-        if language == "python":
-            from goobits_cli.universal.generator import PythonGenerator
-
-            generator = PythonGenerator()
-        elif language == "nodejs":
-            from goobits_cli.universal.generator import NodeJSGenerator
-
-            generator = NodeJSGenerator()
-        elif language == "typescript":
-            from goobits_cli.universal.generator import TypeScriptGenerator
-
-            generator = TypeScriptGenerator()
-        elif language == "rust":
-            from goobits_cli.universal.generator import RustGenerator
-
-            generator = RustGenerator()
-        else:
+        if language not in ["python", "nodejs", "typescript", "rust"]:
             raise ValueError(f"Unsupported language: {language}")
 
+        generator = UniversalGenerator(language)
         return generator.generate_all_files(config, "test.yaml", "1.0.0")
 
     @pytest.mark.parametrize("language", ["python", "nodejs", "typescript", "rust"])

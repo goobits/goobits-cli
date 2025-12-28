@@ -27,13 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from goobits_cli.core.schemas import ConfigSchema, GoobitsConfigSchema
 from goobits_cli.core.errors import TemplateError
-from goobits_cli.universal.generator import (
-    UniversalGenerator,
-    NodeJSGenerator,
-    TypeScriptGenerator,
-    PythonGenerator,
-    RustGenerator,
-)
+from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.universal.engine.stages import parse_config, validate_config
 
 
@@ -80,7 +74,7 @@ class TestCLIE2E:
     def test_python_cli_e2e_workflow(self, test_config, tmp_path):
         """Test complete Python CLI workflow end-to-end."""
         # Generate CLI using Python generator
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         files = generator.generate_all_files(test_config, "goobits.yaml")
 
         # Verify generation succeeded
@@ -104,7 +98,7 @@ class TestCLIE2E:
 
     def test_cli_help_output(self, test_config, tmp_path):
         """Test that generated CLI produces valid help output."""
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         files = generator.generate_all_files(test_config, "goobits.yaml")
 
         # Write files to disk
@@ -185,7 +179,7 @@ class TestNodeJSGeneratorE2E:
     def test_nodejs_generator_e2e(self, tmp_path):
         """Test Node.js generator end-to-end workflow."""
         config = self._create_config("nodejs")
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
 
         # Generate the CLI
         files = generator.generate_all_files(config, "goobits.yaml")
@@ -208,7 +202,7 @@ class TestNodeJSGeneratorE2E:
     def test_typescript_generator_e2e(self, tmp_path):
         """Test TypeScript generator end-to-end workflow."""
         config = self._create_config("typescript")
-        generator = TypeScriptGenerator()
+        generator = UniversalGenerator("typescript")
 
         # Generate the CLI
         files = generator.generate_all_files(config, "goobits.yaml")
@@ -240,7 +234,7 @@ class TestNodeJSGeneratorE2E:
     def test_nodejs_cli_syntax_validation(self, tmp_path):
         """Test that generated Node.js CLI has valid syntax."""
         config = self._create_config("nodejs")
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Write files to disk
@@ -304,7 +298,7 @@ class TestCompleteWorkflowValidation:
         """Test minimal workflow with Python generator."""
         config = self._create_minimal_config("python")
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Write files to disk
@@ -327,7 +321,7 @@ class TestCompleteWorkflowValidation:
         """Test minimal workflow with Node.js generator."""
         config = self._create_minimal_config("nodejs")
 
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Write files to disk
@@ -350,7 +344,7 @@ class TestCompleteWorkflowValidation:
         """Test minimal workflow with TypeScript generator."""
         config = self._create_minimal_config("typescript")
 
-        generator = TypeScriptGenerator()
+        generator = UniversalGenerator("typescript")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Write files to disk
@@ -377,7 +371,7 @@ class TestCompleteWorkflowValidation:
         """Test minimal workflow with Rust generator."""
         config = self._create_minimal_config("rust")
 
-        generator = RustGenerator()
+        generator = UniversalGenerator("rust")
         files = generator.generate_all_files(config, "goobits.yaml")
 
         # Write files to disk

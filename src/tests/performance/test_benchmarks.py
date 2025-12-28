@@ -31,10 +31,6 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from goobits_cli.core.schemas import ConfigSchema, GoobitsConfigSchema, CLISchema
-from goobits_cli.universal.generator import NodeJSGenerator
-from goobits_cli.universal.generator import PythonGenerator
-from goobits_cli.universal.generator import RustGenerator
-from goobits_cli.universal.generator import TypeScriptGenerator
 from goobits_cli.universal.generator import UniversalGenerator
 
 
@@ -156,7 +152,7 @@ class TestPerformanceBenchmarks:
     def test_python_generation_performance(self, tmp_path):
         """Test Python CLI generation performance."""
         config = self._create_config("python")
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
 
         with self.measure_performance():
             files = generator.generate_all_files(config, "goobits.yaml")
@@ -177,7 +173,7 @@ class TestPerformanceBenchmarks:
     def test_nodejs_generation_performance(self, tmp_path):
         """Test Node.js CLI generation performance."""
         config = self._create_config("nodejs")
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
 
         # Add timeout to prevent hanging
         import signal
@@ -217,7 +213,7 @@ class TestPerformanceBenchmarks:
     def test_typescript_generation_performance(self, tmp_path):
         """Test TypeScript CLI generation performance."""
         config = self._create_config("typescript")
-        generator = TypeScriptGenerator()
+        generator = UniversalGenerator("typescript")
 
         # Add timeout to prevent hanging
         import signal
@@ -258,7 +254,7 @@ class TestPerformanceBenchmarks:
     def test_rust_generation_performance(self, tmp_path):
         """Test Rust CLI generation performance."""
         config = self._create_config("rust")
-        generator = RustGenerator()
+        generator = UniversalGenerator("rust")
 
         with self.measure_performance():
             files = generator.generate_all_files(config, "goobits.yaml")
@@ -363,7 +359,7 @@ class TestPerformanceBenchmarks:
             ),
         )
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
 
         with self.measure_performance():
             files = generator.generate_all_files(large_config, "goobits.yaml")
@@ -380,7 +376,7 @@ class TestPerformanceBenchmarks:
 
     def test_memory_efficiency(self, tmp_path):
         """Test memory efficiency by generating multiple CLIs."""
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         config = self._create_config("python")
 
         initial_memory = self._get_memory_usage()
@@ -425,7 +421,7 @@ class TestPerformanceBenchmarks:
 
     def test_template_rendering_performance(self, tmp_path):
         """Test template rendering performance specifically."""
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
         config = self._create_config("python")
 
         # Measure template rendering specifically
@@ -482,7 +478,7 @@ class TestSimpleBenchmarks:
         """Test basic Python generation completes quickly."""
         config = self._create_config("python")
 
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
 
         start_time = time.perf_counter()
         files = generator.generate_all_files(config, "goobits.yaml")
@@ -501,7 +497,7 @@ class TestSimpleBenchmarks:
         """Test basic Node.js generation completes quickly."""
         config = self._create_config("nodejs")
 
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
 
         start_time = time.perf_counter()
         files = generator.generate_all_files(config, "goobits.yaml")

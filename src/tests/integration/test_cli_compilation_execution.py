@@ -17,10 +17,7 @@ from pathlib import Path
 import pytest
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.universal.generator import NodeJSGenerator
-from goobits_cli.universal.generator import PythonGenerator
-from goobits_cli.universal.generator import RustGenerator
-from goobits_cli.universal.generator import TypeScriptGenerator
+from goobits_cli.universal.generator import UniversalGenerator
 
 # Timeout configurations for different operations
 QUICK_CHECK_TIMEOUT = 45  # Quick syntax/import checks (increased from 30s)
@@ -138,7 +135,7 @@ class TestPythonCLICompilation:
     def test_python_cli_syntax_validation(self):
         """Test that generated Python CLI has valid syntax and can be compiled."""
         config = create_realistic_config("python")
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -205,7 +202,7 @@ class TestPythonCLICompilation:
             pytest.skip("pip not available for Python dependency installation")
 
         config = create_realistic_config("python")
-        generator = PythonGenerator()
+        generator = UniversalGenerator("python")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -283,7 +280,7 @@ class TestNodeJSCLICompilation:
             pytest.skip("node not available for Node.js testing")
 
         config = create_realistic_config("nodejs")
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -331,7 +328,7 @@ class TestNodeJSCLICompilation:
             pytest.skip("node or npm not available for Node.js dependency testing")
 
         config = create_realistic_config("nodejs")
-        generator = NodeJSGenerator()
+        generator = UniversalGenerator("nodejs")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -420,7 +417,7 @@ class TestTypeScriptCLICompilation:
             pytest.skip("node or npm not available for TypeScript testing")
 
         config = create_realistic_config("typescript")
-        generator = TypeScriptGenerator()
+        generator = UniversalGenerator("typescript")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
@@ -486,13 +483,13 @@ class TestCrossLanguageConsistency:
             config = create_realistic_config(language)
 
             if language == "python":
-                generator = PythonGenerator()
+                generator = UniversalGenerator("python")
             elif language == "nodejs":
-                generator = NodeJSGenerator()
+                generator = UniversalGenerator("nodejs")
             elif language == "typescript":
-                generator = TypeScriptGenerator()
+                generator = UniversalGenerator("typescript")
             elif language == "rust":
-                generator = RustGenerator()
+                generator = UniversalGenerator("rust")
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 try:
