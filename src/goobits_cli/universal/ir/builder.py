@@ -5,11 +5,11 @@ This module converts Goobits configuration into a language-agnostic
 intermediate representation that can be consumed by any language renderer.
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 from ...generation import _safe_to_dict
-from ..utils import _safe_get_attr
 from ..command_hierarchy import CommandFlattener, HierarchyBuilder
+from ..utils import _safe_get_attr
 from .feature_analyzer import FeatureAnalyzer
 
 
@@ -147,9 +147,7 @@ class IRBuilder:
         # Extract arguments (CLI root rarely has arguments in current schema)
 
         if "args" in cli_dict and cli_dict["args"]:
-
             for arg in cli_dict["args"]:
-
                 schema["root_command"]["arguments"].append(
                     {
                         "name": _safe_get_attr(arg, "name"),
@@ -164,9 +162,7 @@ class IRBuilder:
         # Extract options
 
         if "options" in cli_dict and cli_dict["options"]:
-
             for opt in cli_dict["options"]:
-
                 option_data = {
                     "name": _safe_get_attr(opt, "name"),
                     "short": _safe_get_attr(opt, "short"),
@@ -263,9 +259,7 @@ class IRBuilder:
                     # Extract command arguments
 
                     if "args" in cmd_dict and cmd_dict["args"]:
-
                         for arg in cmd_dict["args"]:
-
                             command_data["arguments"].append(
                                 {
                                     "name": _safe_get_attr(arg, "name"),
@@ -282,9 +276,7 @@ class IRBuilder:
                     # Extract command options
 
                     if "options" in cmd_dict and cmd_dict["options"]:
-
                         for opt in cmd_dict["options"]:
-
                             command_data["options"].append(
                                 {
                                     "name": _safe_get_attr(opt, "name"),
@@ -302,7 +294,6 @@ class IRBuilder:
                     # Handle nested subcommands recursively
 
                     if "subcommands" in cmd_dict and cmd_dict["subcommands"]:
-
                         command_data["subcommands"] = self._extract_subcommands_dict(
                             cmd_dict["subcommands"]
                         )
@@ -413,7 +404,6 @@ class IRBuilder:
         subcommands = []
 
         for cmd_name, cmd in commands.items():
-
             command_data = {
                 "name": cmd_name,
                 "description": _safe_get_attr(cmd, "desc"),
@@ -466,7 +456,6 @@ class IRBuilder:
                 options = cmd.options
 
             if options:
-
                 for opt in options:
                     # Handle both dict and object option formats
                     if isinstance(opt, dict):
@@ -507,7 +496,6 @@ class IRBuilder:
                 )
 
             if nested_subcommands:
-
                 command_data["subcommands"] = self._extract_subcommands_dict(
                     nested_subcommands
                 )
@@ -530,7 +518,6 @@ class IRBuilder:
         subcommands = []
 
         for cmd in commands:
-
             command_data = {
                 "name": _safe_get_attr(cmd, "name"),
                 "description": _safe_get_attr(cmd, "description"),
@@ -543,9 +530,7 @@ class IRBuilder:
             # Extract arguments and options similar to main commands
 
             if hasattr(cmd, "arguments") and cmd.arguments:
-
                 for arg in cmd.arguments:
-
                     command_data["arguments"].append(
                         {
                             "name": _safe_get_attr(arg, "name"),
@@ -562,9 +547,7 @@ class IRBuilder:
                 options = cmd.options
 
             if options:
-
                 for opt in options:
-
                     command_data["options"].append(
                         {
                             "name": _safe_get_attr(opt, "name"),
@@ -580,7 +563,6 @@ class IRBuilder:
             # Recursively handle nested subcommands
 
             if hasattr(cmd, "commands") and cmd.commands:
-
                 command_data["subcommands"] = self._extract_subcommands(cmd.commands)
 
             subcommands.append(command_data)
@@ -609,13 +591,10 @@ class IRBuilder:
 
         dependencies_obj = _safe_get_attr(config, "dependencies")
         if dependencies_obj:
-
             # Handle required dependencies
 
             if _safe_get_attr(dependencies_obj, "required"):
-
                 for dep in _safe_get_attr(dependencies_obj, "required", []):
-
                     if hasattr(dep, "name"):  # DependencyItem object
                         dep_name = _safe_get_attr(dep, "name")
                         dep_type = _safe_get_attr(dep, "type", "python")
@@ -634,9 +613,7 @@ class IRBuilder:
             # Handle optional dependencies
 
             if _safe_get_attr(dependencies_obj, "optional"):
-
                 for dep in _safe_get_attr(dependencies_obj, "optional", []):
-
                     if hasattr(dep, "name"):  # DependencyItem object
                         dep_name = _safe_get_attr(dep, "name")
                         dep_type = _safe_get_attr(dep, "type", "python")
@@ -656,7 +633,6 @@ class IRBuilder:
 
         installation_obj = _safe_get_attr(config, "installation")
         if installation_obj:
-
             extras_obj = _safe_get_attr(installation_obj, "extras")
 
             if extras_obj:
@@ -684,7 +660,6 @@ class IRBuilder:
         # Extract Rust crates
 
         if hasattr(config, "rust_crates") and config.rust_crates:
-
             dependencies["rust"].extend(config.rust_crates.keys())
 
         return dependencies

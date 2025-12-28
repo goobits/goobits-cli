@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 
 from .package_manager_utils import (
-    PackageManagerRegistry,
-    validate_installation_environment,
-    PipManager,
     NpmManager,
+    PackageManagerRegistry,
+    PipManager,
+    validate_installation_environment,
 )
 from .test_configs import TestConfigTemplates, TestScenarioRunner
 

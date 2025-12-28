@@ -5,10 +5,11 @@ This module provides the shared TestMainCLIBase class that contains
 common setup, teardown, and helper methods used by multiple test modules.
 """
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
+import pytest
 from typer.testing import CliRunner
 
 
@@ -133,7 +134,7 @@ cli:
         """Node.js goobits.yaml content."""
         return """
 package_name: node-test-cli
-command_name: nodetestcli  
+command_name: nodetestcli
 display_name: "Node Test CLI"
 description: "A Node.js test CLI"
 language: nodejs
@@ -163,7 +164,7 @@ messages:
 
 cli:
   name: nodetestcli
-  tagline: "Node.js Test CLI tool"  
+  tagline: "Node.js Test CLI tool"
   commands:
     hello:
       desc: "Say hello"

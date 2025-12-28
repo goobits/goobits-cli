@@ -5,20 +5,20 @@ This module tests the structured logging implementation that provides
 observability and debugging capabilities across the framework and generated CLIs.
 """
 
+import logging
 import os
 import tempfile
-import logging
 
 import pytest
 
 from goobits_cli.core.logging import (
-    setup_logging,
-    get_logger,
-    set_context,
     clear_context,
-    update_context,
     get_context,
+    get_logger,
     remove_context_keys,
+    set_context,
+    setup_logging,
+    update_context,
 )
 
 
@@ -97,7 +97,7 @@ class TestLoggingSetup:
             logger.info("Test message")
 
             # Check file was created and contains message
-            with open(log_file, "r") as f:
+            with open(log_file) as f:
                 content = f.read()
 
             assert "Test message" in content
@@ -323,9 +323,9 @@ class TestLoggingIntegration:
         avg_time_per_operation = total_time / 100
 
         # Should be reasonably fast (less than 10ms per operation)
-        assert (
-            avg_time_per_operation < 0.01
-        ), f"Context operations too slow: {avg_time_per_operation*1000:.2f}ms per operation"
+        assert avg_time_per_operation < 0.01, (
+            f"Context operations too slow: {avg_time_per_operation * 1000:.2f}ms per operation"
+        )
 
         # Test context get performance
         set_context(test_data="performance_test")
@@ -340,9 +340,9 @@ class TestLoggingIntegration:
         avg_time_per_get = total_time / 100
 
         # Should be reasonably fast
-        assert (
-            avg_time_per_get < 0.01
-        ), f"Context get operations too slow: {avg_time_per_get*1000:.2f}ms per operation"
+        assert avg_time_per_get < 0.01, (
+            f"Context get operations too slow: {avg_time_per_get * 1000:.2f}ms per operation"
+        )
 
 
 if __name__ == "__main__":

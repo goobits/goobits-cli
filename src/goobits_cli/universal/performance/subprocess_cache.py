@@ -6,17 +6,17 @@ during a single CLI build session. Offers 30-50% performance improvement for
 builds with multiple package manager checks and system operations.
 """
 
-import subprocess
 import hashlib
 import json
-import time
-from typing import Dict, List, Optional, Any, Union
-from pathlib import Path
 import logging
-from dataclasses import dataclass
-from threading import Lock
 import os
 import shlex
+import subprocess
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from threading import Lock
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 

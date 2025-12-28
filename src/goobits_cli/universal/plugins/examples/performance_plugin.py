@@ -7,55 +7,36 @@ Provides real-time performance monitoring and analysis for CLI applications
 """
 
 import json
+import platform
+import subprocess
+import threading
+import time
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 
-import time
-
-import threading
-
-from collections import defaultdict, deque
-
-from dataclasses import dataclass, field
-
-from datetime import datetime
-
-from pathlib import Path
-
-from typing import Dict, List, Optional, Any, Callable
-
-import subprocess
-
-import platform
-
-
 try:
-
     import matplotlib.pyplot as plt
-
     from matplotlib.dates import DateFormatter
 
     MATPLOTLIB_AVAILABLE = True
 
 except ImportError:
-
     MATPLOTLIB_AVAILABLE = False
 
-
 try:
-
     from rich.console import Console
-
-    from rich.table import Table
-
-    from rich.panel import Panel
-
     from rich.live import Live
+    from rich.panel import Panel
+    from rich.table import Table
 
     RICH_AVAILABLE = True
 
 except ImportError:
-
     RICH_AVAILABLE = False
 
 
@@ -134,7 +115,6 @@ class PerformanceMonitor:
     """Real-time performance monitoring system"""
 
     def __init__(self, sample_interval: float = 1.0, history_size: int = 1000):
-
         self.sample_interval = sample_interval
 
         self.history_size = history_size
@@ -166,7 +146,6 @@ class PerformanceMonitor:
         """Start continuous monitoring in background thread"""
 
         if self.monitoring:
-
             return
 
         self.monitoring = True
@@ -181,16 +160,13 @@ class PerformanceMonitor:
         self.monitoring = False
 
         if self.monitor_thread:
-
             self.monitor_thread.join(timeout=2.0)
 
     def _monitor_loop(self):
         """Main monitoring loop"""
 
         while self.monitoring:
-
             try:
-
                 metrics = self.collect_system_metrics()
 
                 self.system_history.append(metrics)
@@ -198,19 +174,15 @@ class PerformanceMonitor:
                 # Call registered callbacks
 
                 for callback in self.callbacks:
-
                     try:
-
                         callback(metrics)
 
                     except Exception:
-
                         pass  # Don't let callback errors stop monitoring
 
                 time.sleep(self.sample_interval)
 
             except Exception:
-
                 pass  # Continue monitoring even if collection fails
 
     def collect_system_metrics(self) -> SystemMetrics:
@@ -247,13 +219,10 @@ class PerformanceMonitor:
         load_average = None
 
         if hasattr(psutil, "getloadavg"):
-
             try:
-
                 load_average = list(psutil.getloadavg())
 
             except (AttributeError, OSError):
-
                 pass
 
         return SystemMetrics(
@@ -277,19 +246,14 @@ class PerformanceMonitor:
         metrics = []
 
         try:
-
             if pid:
-
                 processes = [psutil.Process(pid)]
 
             else:
-
                 processes = psutil.process_iter()
 
             for proc in processes:
-
                 try:
-
                     pinfo = proc.as_dict(
                         attrs=[
                             "pid",
@@ -325,11 +289,9 @@ class PerformanceMonitor:
                     )
 
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
-
                     continue
 
         except Exception:
-
             pass
 
         return metrics
@@ -353,11 +315,9 @@ class PerformanceMonitor:
         metrics.exit_code = exit_code
 
         if metrics.cpu_usage:
-
             metrics.avg_cpu = sum(metrics.cpu_usage) / len(metrics.cpu_usage)
 
         if metrics.memory_usage:
-
             metrics.peak_memory = max(metrics.memory_usage)
 
     def get_system_summary(self, duration_minutes: int = 5) -> Dict[str, Any]:
@@ -368,7 +328,6 @@ class PerformanceMonitor:
         recent_metrics = [m for m in self.system_history if m.timestamp >= cutoff_time]
 
         if not recent_metrics:
-
             return {"error": "No recent metrics available"}
 
         cpu_values = [m.cpu_percent for m in recent_metrics]
@@ -404,11 +363,9 @@ class PerformanceMonitor:
         processes = self.collect_process_metrics()
 
         if sort_by == "memory":
-
             processes.sort(key=lambda p: p.memory_percent, reverse=True)
 
         else:
-
             processes.sort(key=lambda p: p.cpu_percent, reverse=True)
 
         return processes[:limit]
@@ -419,7 +376,6 @@ class PerformanceMonitor:
         anomalies = []
 
         if len(self.system_history) < 10:
-
             return anomalies
 
         recent_metrics = list(self.system_history)[-10:]
@@ -427,7 +383,6 @@ class PerformanceMonitor:
         historical_metrics = list(self.system_history)[:-10]
 
         if not historical_metrics:
-
             return anomalies
 
         # Calculate historical averages
@@ -451,13 +406,11 @@ class PerformanceMonitor:
         )
 
         if recent_cpu_avg > hist_cpu_avg * threshold_multiplier:
-
             anomalies.append(
                 f"High CPU usage detected: {recent_cpu_avg:.1f}% (vs avg {hist_cpu_avg:.1f}%)"
             )
 
         if recent_memory_avg > hist_memory_avg * threshold_multiplier:
-
             anomalies.append(
                 f"High memory usage detected: {recent_memory_avg:.1f}% (vs avg {hist_memory_avg:.1f}%)"
             )
@@ -500,13 +453,10 @@ class PerformanceMonitor:
         }
 
         with open(filepath, "w") as f:
-
             if format.lower() == "json":
-
                 json.dump(data, f, indent=2)
 
             else:
-
                 raise ValueError(f"Unsupported format: {format}")
 
 
@@ -514,7 +464,6 @@ class PerformanceDashboard:
     """Real-time performance dashboard"""
 
     def __init__(self, monitor: PerformanceMonitor):
-
         self.monitor = monitor
 
         self.console = Console() if RICH_AVAILABLE else None
@@ -523,13 +472,11 @@ class PerformanceDashboard:
         """Show live performance dashboard"""
 
         if not RICH_AVAILABLE:
-
             print("Rich library not available. Install with: pip install rich")
 
             return
 
         def generate_table():
-
             summary = self.monitor.get_system_summary(1)
 
             top_processes = self.monitor.get_top_processes(5)
@@ -545,7 +492,6 @@ class PerformanceDashboard:
             system_table.add_column("Average (5min)", style="green")
 
             if "error" not in summary:
-
                 current = summary["current"]
 
                 cpu_avg = summary["cpu"]["average"]
@@ -583,7 +529,6 @@ class PerformanceDashboard:
             processes_table.add_column("Threads", style="green")
 
             for proc in top_processes:
-
                 processes_table.add_row(
                     str(proc.pid),
                     proc.name[:20],
@@ -599,11 +544,9 @@ class PerformanceDashboard:
             )
 
         with Live(generate_table(), refresh_per_second=1) as live:
-
             start_time = time.time()
 
             while time.time() - start_time < duration_seconds:
-
                 time.sleep(1)
 
                 live.update(generate_table())
@@ -612,7 +555,6 @@ class PerformanceDashboard:
         """Generate performance plots"""
 
         if not MATPLOTLIB_AVAILABLE:
-
             print("Matplotlib not available. Install with: pip install matplotlib")
 
             return
@@ -624,7 +566,6 @@ class PerformanceDashboard:
         ]
 
         if not recent_metrics:
-
             print("No recent metrics to plot")
 
             return
@@ -682,7 +623,6 @@ class PerformancePlugin:
     """Main performance monitoring plugin"""
 
     def __init__(self):
-
         self.monitor = PerformanceMonitor()
 
         self.dashboard = PerformanceDashboard(self.monitor)
@@ -713,7 +653,6 @@ class PerformancePlugin:
         cmd_metrics = self.monitor.start_command_monitoring(full_command)
 
         try:
-
             # Execute command
 
             result = subprocess.run([command] + args, capture_output=True, text=True)
@@ -729,7 +668,6 @@ class PerformancePlugin:
             return result.returncode
 
         except Exception as e:
-
             self.monitor.finish_command_monitoring(cmd_metrics, -1)
 
             print(f"❌ Command failed: {e}")
@@ -742,7 +680,6 @@ class PerformancePlugin:
         summary = self.monitor.get_system_summary(5)
 
         if "error" in summary:
-
             print("❌ No performance data available")
 
             return
@@ -768,11 +705,9 @@ class PerformancePlugin:
         anomalies = self.monitor.detect_anomalies()
 
         if anomalies:
-
             print("\n⚠️  Performance Anomalies Detected:")
 
             for anomaly in anomalies:
-
                 print(f"   {anomaly}")
 
     def show_top_processes(self, limit: int = 10):
@@ -787,7 +722,6 @@ class PerformancePlugin:
         print("-" * 55)
 
         for proc in processes:
-
             print(
                 f"{proc.pid:<8} {proc.name[:19]:<20} {proc.cpu_percent:<8.1f} {proc.memory_percent:<10.1f} {proc.status}"
             )
@@ -911,7 +845,6 @@ def on_perf_monitor(*args, **kwargs):
     """Monitor a command execution"""
 
     if not args:
-
         print("❌ Command required")
 
         return
@@ -932,7 +865,6 @@ def on_perf_monitor(*args, **kwargs):
 
 
 if __name__ == "__main__":
-
     # Example usage
 
     plugin = PerformancePlugin()
@@ -940,7 +872,6 @@ if __name__ == "__main__":
     plugin.start()
 
     try:
-
         # Monitor for 10 seconds
 
         time.sleep(10)
@@ -950,5 +881,4 @@ if __name__ == "__main__":
         plugin.show_top_processes(5)
 
     finally:
-
         plugin.stop()

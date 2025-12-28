@@ -14,24 +14,25 @@ Test suite for the plugin system.
 Tests the PluginManager, PluginInfo, PluginRegistry, and integration components.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
+from goobits_cli.universal.plugins.integration import (
+    PluginCLIIntegrator,
+    PluginCommandManager,
+    create_plugin_template_context,
+    setup_plugin_integration,
+)
 from goobits_cli.universal.plugins.manager import (
-    PluginManager,
     PluginInfo,
+    PluginManager,
     PluginRegistry,
     PluginStatus,
     PluginType,
     get_plugin_manager,
-)
-from goobits_cli.universal.plugins.integration import (
-    PluginCLIIntegrator,
-    PluginCommandManager,
-    setup_plugin_integration,
-    create_plugin_template_context,
 )
 
 
@@ -361,7 +362,6 @@ class TestPluginCLIIntegrator:
                 }
             ),
         ):
-
             base_config = {"name": "test-cli"}
             enhanced_config = await self.integrator.integrate_plugins_with_cli(
                 base_config

@@ -5,21 +5,21 @@ This module focuses on testing template rendering failures, error handling, and
 proper cleanup when template generation fails partially through the process.
 """
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+from typing import Any, Dict
 from unittest.mock import Mock, patch
-from typing import Dict, Any
 
 import jinja2
+import pytest
 
-from goobits_cli.universal.template_engine import (
-    UniversalTemplateEngine,
-    LanguageRenderer,
-    ComponentRegistry,
-)
 from goobits_cli.core.schemas import GoobitsConfigSchema
+from goobits_cli.universal.template_engine import (
+    ComponentRegistry,
+    LanguageRenderer,
+    UniversalTemplateEngine,
+)
 
 
 class FailingRenderer(LanguageRenderer):
@@ -552,7 +552,7 @@ class TestComponentRegistryFailures:
 Content A
 """
         comp_b = """
-# Component B  
+# Component B
 {# depends: component_a #}
 {% include 'component_a.j2' %}
 Content B

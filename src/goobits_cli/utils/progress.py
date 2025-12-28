@@ -18,13 +18,10 @@ Progress indicators and visual feedback helpers for Goobits CLI Framework
 """
 
 import sys
+from contextlib import contextmanager
+from typing import Any, Callable, Iterator, Optional
 
 from .core.logging import get_logger
-
-from typing import Any, Callable, Optional, Iterator
-
-from contextlib import contextmanager
-
 
 # Custom Exception Classes for Progress Operations
 
@@ -33,7 +30,6 @@ class ProgressError(Exception):
     """Base exception for progress operations."""
 
     def __init__(self, message: str, suggestion: Optional[str] = None):
-
         self.message = message
 
         self.suggestion = suggestion
@@ -47,7 +43,6 @@ class DependencyMissingError(ProgressError):
     def __init__(
         self, dependency: str, feature: str, install_command: Optional[str] = None
     ):
-
         self.dependency = dependency
 
         self.feature = feature
@@ -71,26 +66,23 @@ logger = get_logger(__name__)
 
 
 try:
-
-    from rich.progress import (
-        Progress,
-        TaskID,
-        BarColumn,
-        TextColumn,
-        TimeRemainingColumn,
-        SpinnerColumn,
-        MofNCompleteColumn,
-        TimeElapsedColumn,
-    )
-
     from rich.console import Console
+    from rich.progress import (
+        BarColumn,
+        MofNCompleteColumn,
+        Progress,
+        SpinnerColumn,
+        TaskID,
+        TextColumn,
+        TimeElapsedColumn,
+        TimeRemainingColumn,
+    )
 
     HAS_RICH = True
 
     logger.debug("Rich library loaded successfully")
 
 except ImportError as e:
-
     HAS_RICH = False
 
     Progress = None
@@ -108,19 +100,15 @@ class ProgressHelper:
     """Helper class for progress indicators and visual feedback"""
 
     def __init__(self, console: Optional["Console"] = None):
-
         self._fallback_enabled = not HAS_RICH
 
         if HAS_RICH:
-
             try:
-
                 self.console = console or Console()
 
                 logger.debug("Rich console initialized")
 
             except Exception as e:
-
                 logger.warning(f"Failed to initialize Rich console: {e}")
 
                 self.console = None
@@ -128,7 +116,6 @@ class ProgressHelper:
                 self._fallback_enabled = True
 
         else:
-
             self.console = None
 
             logger.debug("Using fallback mode (Rich not available)")
@@ -138,17 +125,14 @@ class ProgressHelper:
         """Context manager for showing a spinner with enhanced error handling."""
 
         if self._fallback_enabled or not self.console:
-
             print(f"{text}", end="", flush=True)
 
             try:
-
                 yield None
 
                 print(" ✓")
 
             except Exception:
-
                 print(" ✗")
 
                 raise
@@ -156,15 +140,11 @@ class ProgressHelper:
             return
 
         try:
-
             with self.console.status(f"[bold blue]{text}") as status:
-
                 try:
-
                     status.spinner = spinner
 
                 except Exception as e:
-
                     logger.debug(f"Failed to set spinner style '{spinner}': {e}")
 
                     # Continue with default spinner
@@ -172,7 +152,6 @@ class ProgressHelper:
                 yield status
 
         except Exception as e:
-
             logger.warning(f"Rich spinner failed, falling back to basic output: {e}")
 
             # Fallback to basic output
@@ -180,13 +159,11 @@ class ProgressHelper:
             print(f"{text}", end="", flush=True)
 
             try:
-
                 yield None
 
                 print(" ✓")
 
             except Exception as inner_e:
-
                 print(" ✗")
 
                 raise inner_e
@@ -202,13 +179,10 @@ class ProgressHelper:
         """Context manager for showing a progress bar with enhanced error handling."""
 
         if self._fallback_enabled or not self.console:
-
             print(f"{description}")
 
             class FallbackProgress:
-
                 def __init__(self):
-
                     self.total = total or 100
 
                     self.completed = 0
@@ -216,39 +190,32 @@ class ProgressHelper:
                     self.last_percentage = -1
 
                 def update(self, task_id, advance: int = 1):
-
                     self.completed += advance
 
                     if self.total > 0:
-
                         pct = min(100, (self.completed / self.total) * 100)
 
                         # Only print if percentage changed significantly
 
                         if int(pct) != self.last_percentage:
-
                             print(f"\rProgress: {pct:.1f}%", end="", flush=True)
 
                             self.last_percentage = int(pct)
 
                 def add_task(self, description: str, total: Optional[int] = None):
-
                     return "fallback_task"
 
             progress = FallbackProgress()
 
             try:
-
                 yield progress, "fallback_task"
 
             finally:
-
                 print()  # New line
 
             return
 
         try:
-
             # Rich progress bar columns
 
             columns = [
@@ -258,17 +225,14 @@ class ProgressHelper:
             ]
 
             if show_percentage:
-
                 columns.append(
                     TextColumn("[progress.percentage]{task.percentage:>3.0f}%")
                 )
 
             if total is not None:
-
                 columns.append(MofNCompleteColumn())
 
             if show_time:
-
                 columns.extend(
                     [
                         TimeElapsedColumn(),
@@ -277,13 +241,11 @@ class ProgressHelper:
                 )
 
             with Progress(*columns, console=self.console) as progress:
-
                 task_id = progress.add_task(description, total=total)
 
                 yield progress, task_id
 
         except Exception as e:
-
             logger.warning(
                 f"Rich progress bar failed, falling back to basic output: {e}"
             )
@@ -293,35 +255,28 @@ class ProgressHelper:
             print(f"{description}")
 
             class FallbackProgress:
-
                 def __init__(self):
-
                     self.total = total or 100
 
                     self.completed = 0
 
                 def update(self, task_id, advance: int = 1):
-
                     self.completed += advance
 
                     if self.total > 0:
-
                         pct = (self.completed / self.total) * 100
 
                         print(f"\rProgress: {pct:.1f}%", end="", flush=True)
 
                 def add_task(self, description: str, total: Optional[int] = None):
-
                     return "fallback_task"
 
             progress = FallbackProgress()
 
             try:
-
                 yield progress, "fallback_task"
 
             finally:
-
                 print()  # New line
 
     def simple_progress(self, items: Iterator[Any], description: str = "Processing..."):
@@ -332,9 +287,7 @@ class ProgressHelper:
         total = len(items_list)
 
         with self.progress_bar(description, total=total) as (progress, task_id):
-
             for item in items_list:
-
                 yield item
 
                 progress.update(task_id, advance=1)
@@ -343,15 +296,12 @@ class ProgressHelper:
         """Print a success message with fallback support."""
 
         if not self._fallback_enabled and self.console:
-
             try:
-
                 self.console.print(f"[bold green]✓[/bold green] {message}")
 
                 return
 
             except Exception as e:
-
                 logger.debug(f"Rich success message failed: {e}")
 
         print(f"✓ {message}")
@@ -360,15 +310,12 @@ class ProgressHelper:
         """Print an error message with fallback support."""
 
         if not self._fallback_enabled and self.console:
-
             try:
-
                 self.console.print(f"[bold red]✗[/bold red] {message}", err=True)
 
                 return
 
             except Exception as e:
-
                 logger.debug(f"Rich error message failed: {e}")
 
         print(f"✗ {message}", file=sys.stderr)
@@ -377,15 +324,12 @@ class ProgressHelper:
         """Print a warning message with fallback support."""
 
         if not self._fallback_enabled and self.console:
-
             try:
-
                 self.console.print(f"[bold yellow]⚠[/bold yellow] {message}", err=True)
 
                 return
 
             except Exception as e:
-
                 logger.debug(f"Rich warning message failed: {e}")
 
         print(f"⚠ {message}", file=sys.stderr)
@@ -394,15 +338,12 @@ class ProgressHelper:
         """Print an info message with fallback support."""
 
         if not self._fallback_enabled and self.console:
-
             try:
-
                 self.console.print(f"[bold blue]ℹ[/bold blue] {message}")
 
                 return
 
             except Exception as e:
-
                 logger.debug(f"Rich info message failed: {e}")
 
         print(f"ℹ {message}")
@@ -419,13 +360,10 @@ def get_progress_helper() -> ProgressHelper:
     global _default_progress
 
     if _default_progress is None:
-
         try:
-
             _default_progress = ProgressHelper()
 
         except Exception as e:
-
             logger.warning(f"Failed to initialize progress helper: {e}")
 
             # Create a minimal fallback instance
@@ -442,13 +380,10 @@ def with_spinner(text: str = "Processing...", spinner: str = "dots"):
     """Decorator for adding a spinner to a function"""
 
     def decorator(func: Callable):
-
         def wrapper(*args, **kwargs):
-
             progress = get_progress_helper()
 
             with progress.spinner(text, spinner):
-
                 return func(*args, **kwargs)
 
         return wrapper
@@ -460,13 +395,10 @@ def with_progress(description: str = "Processing...", total: Optional[int] = Non
     """Decorator for adding a progress bar to a function"""
 
     def decorator(func: Callable):
-
         def wrapper(*args, **kwargs):
-
             progress = get_progress_helper()
 
             with progress.progress_bar(description, total) as (prog, task_id):
-
                 # Pass progress and task_id as keyword arguments if function accepts them
 
                 import inspect
@@ -474,11 +406,9 @@ def with_progress(description: str = "Processing...", total: Optional[int] = Non
                 sig = inspect.signature(func)
 
                 if "progress" in sig.parameters and "task_id" in sig.parameters:
-
                     return func(*args, progress=prog, task_id=task_id, **kwargs)
 
                 else:
-
                     return func(*args, **kwargs)
 
         return wrapper

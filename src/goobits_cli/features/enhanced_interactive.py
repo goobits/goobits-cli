@@ -3,45 +3,32 @@
 # Generated from:
 
 
-import os
-
-
 import asyncio
-
-
+import os
 import shlex
-
-from typing import List, Dict, Any, Optional
-
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from ..logger import get_logger
-
 
 # Enhanced imports for completion and plugin systems
 
 try:
-
     from goobits_cli.universal.completion import get_completion_registry
-
     from goobits_cli.universal.completion.integration import (
         setup_completion_for_language,
     )
-
     from goobits_cli.universal.plugins import get_plugin_manager
-
     from goobits_cli.universal.plugins.integration import get_plugin_command_manager
 
     ENHANCED_FEATURES_AVAILABLE = True
 
 except ImportError:
-
     ENHANCED_FEATURES_AVAILABLE = False
 
     # Use centralized logger
     _logger = get_logger(__name__)
     _logger.warning("Enhanced completion and plugin features not available")
-
 
 logger = get_logger(__name__)
 
@@ -50,8 +37,6 @@ class EnhancedInteractive:
     """
 
     Enhanced interactive mode with dynamic completion and plugin support.
-
-
 
     Features:
 
@@ -77,11 +62,9 @@ class EnhancedInteractive:
         # Enhanced features initialization
 
         if ENHANCED_FEATURES_AVAILABLE:
-
             self._setup_enhanced_features()
 
         else:
-
             self._setup_basic_features()
 
         # Setup command handlers
@@ -92,7 +75,6 @@ class EnhancedInteractive:
         """Setup enhanced completion and plugin features."""
 
         try:
-
             # Setup dynamic completion
 
             self.completion_integrator = setup_completion_for_language("python")
@@ -112,7 +94,6 @@ class EnhancedInteractive:
             logger.info("Enhanced features initialized successfully")
 
         except Exception as e:
-
             logger.error(f"Failed to setup enhanced features: {e}")
 
             self._setup_basic_features()
@@ -123,7 +104,6 @@ class EnhancedInteractive:
         # Basic readline setup
 
         try:
-
             import readline
 
             readline.set_completer(self._basic_completer)
@@ -131,14 +111,12 @@ class EnhancedInteractive:
             readline.parse_and_bind("tab: complete")
 
         except ImportError:
-
             pass
 
     def _setup_enhanced_readline(self) -> None:
         """Setup readline with enhanced completion."""
 
         try:
-
             import readline
 
             # Create completion function
@@ -148,17 +126,13 @@ class EnhancedInteractive:
             # Enhanced completion function that combines plugin and dynamic completion
 
             def enhanced_completer(text: str, state: int) -> Optional[str]:
-
                 try:
-
                     # First try plugin completions
 
                     if hasattr(self, "plugin_completions"):
-
                         plugin_results = self.plugin_completions.get(text, [])
 
                         if plugin_results and state < len(plugin_results):
-
                             return plugin_results[state]
 
                     # Then try dynamic completion
@@ -166,7 +140,6 @@ class EnhancedInteractive:
                     return completion_func(text, state)
 
                 except Exception as e:
-
                     logger.debug(f"Completion error: {e}")
 
                     return None
@@ -184,7 +157,6 @@ class EnhancedInteractive:
             readline.parse_and_bind("set menu-complete-display-prefix on")
 
         except ImportError:
-
             logger.warning("readline not available, completion disabled")
 
     def _basic_completer(self, text: str, state: int) -> Optional[str]:
@@ -195,18 +167,15 @@ class EnhancedInteractive:
         matches = [opt for opt in options if opt.startswith(text)]
 
         try:
-
             return matches[state]
 
         except IndexError:
-
             return None
 
     async def _load_plugins(self) -> None:
         """Load and register plugin commands."""
 
         try:
-
             # Register plugin commands
 
             plugin_commands = await self.plugin_manager.register_plugin_commands()
@@ -214,7 +183,6 @@ class EnhancedInteractive:
             # Add plugin commands to our command registry
 
             for command_name, plugin_info in plugin_commands.items():
-
                 self.commands[command_name] = {
                     "handler": self._execute_plugin_command,
                     "plugin_info": plugin_info,
@@ -224,7 +192,6 @@ class EnhancedInteractive:
             logger.info(f"Loaded {len(plugin_commands)} plugin commands")
 
         except Exception as e:
-
             logger.error(f"Error loading plugins: {e}")
 
     def _setup_builtin_commands(self) -> None:
@@ -271,7 +238,6 @@ class EnhancedInteractive:
         print("📝 Type 'help' for available commands, 'exit' to quit.")
 
         if ENHANCED_FEATURES_AVAILABLE:
-
             print("✨ Enhanced features: Dynamic completion and plugin support enabled")
 
         print()
@@ -279,9 +245,7 @@ class EnhancedInteractive:
         self.running = True
 
         while self.running:
-
             try:
-
                 # Enhanced prompt with context
 
                 prompt = self._get_enhanced_prompt()
@@ -289,7 +253,6 @@ class EnhancedInteractive:
                 user_input = input(prompt).strip()
 
                 if not user_input:
-
                     continue
 
                 # Add to history
@@ -301,17 +264,14 @@ class EnhancedInteractive:
                 await self._execute_command(user_input)
 
             except KeyboardInterrupt:
-
                 print("\n⚠️  Use 'exit' to quit.")
 
             except EOFError:
-
                 print("\n👋 Goodbye!")
 
                 break
 
             except Exception as e:
-
                 print(f"❌ Error: {e}")
 
     def _get_enhanced_prompt(self) -> str:
@@ -320,7 +280,6 @@ class EnhancedInteractive:
         base_prompt = "> "
 
         if ENHANCED_FEATURES_AVAILABLE:
-
             # Add context indicators
 
             cwd = Path.cwd().name
@@ -333,7 +292,6 @@ class EnhancedInteractive:
         """Execute a command with enhanced features."""
 
         try:
-
             # Parse command and arguments
 
             parts = shlex.split(user_input)
@@ -345,7 +303,6 @@ class EnhancedInteractive:
             # Check if it's a registered command
 
             if command in self.commands:
-
                 cmd_info = self.commands[command]
 
                 handler = cmd_info["handler"]
@@ -353,15 +310,12 @@ class EnhancedInteractive:
                 # Execute handler
 
                 if asyncio.iscoroutinefunction(handler):
-
                     await handler(args, cmd_info)
 
                 else:
-
                     handler(args, cmd_info)
 
             else:
-
                 # Try to execute as system command or show error
 
                 print(f"❌ Unknown command: {command}")
@@ -369,7 +323,6 @@ class EnhancedInteractive:
                 print("💡 Type 'help' to see available commands")
 
         except Exception as e:
-
             print(f"❌ Command execution error: {e}")
 
     async def _execute_plugin_command(
@@ -378,7 +331,6 @@ class EnhancedInteractive:
         """Execute a plugin-provided command."""
 
         try:
-
             plugin_info = cmd_info["plugin_info"]
 
             print(f"🔌 Executing plugin command from {plugin_info.name}")
@@ -392,7 +344,6 @@ class EnhancedInteractive:
             print(f"   Args: {args}")
 
         except Exception as e:
-
             print(f"❌ Plugin command error: {e}")
 
     def _cmd_help(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
@@ -409,23 +360,18 @@ class EnhancedInteractive:
         plugin_commands = {}
 
         for cmd_name, info in self.commands.items():
-
             if "plugin_info" in info:
-
                 plugin_commands[cmd_name] = info
 
             else:
-
                 builtin_commands[cmd_name] = info
 
         # Show built-in commands
 
         if builtin_commands:
-
             print("🏠 Built-in Commands:")
 
             for cmd_name, info in builtin_commands.items():
-
                 desc = info.get("description", "No description")
 
                 print(f"   {cmd_name:<15} - {desc}")
@@ -435,11 +381,9 @@ class EnhancedInteractive:
         # Show plugin commands
 
         if plugin_commands:
-
             print("🔌 Plugin Commands:")
 
             for cmd_name, info in plugin_commands.items():
-
                 desc = info.get("description", "No description")
 
                 plugin_name = info["plugin_info"].name
@@ -449,7 +393,6 @@ class EnhancedInteractive:
             print()
 
         if ENHANCED_FEATURES_AVAILABLE:
-
             print("✨ Enhanced Features:")
 
             print("   - Dynamic contextual completion (Tab)")
@@ -469,7 +412,6 @@ class EnhancedInteractive:
         """Show command history."""
 
         if not self.history:
-
             print("📝 No command history")
 
             return
@@ -477,7 +419,6 @@ class EnhancedInteractive:
         print("📝 Command History:")
 
         for i, cmd in enumerate(self.history[-10:], 1):  # Show last 10 commands
-
             print(f"   {i:2}. {cmd}")
 
     def _cmd_clear(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
@@ -492,23 +433,19 @@ class EnhancedInteractive:
         """Manage plugins."""
 
         if not ENHANCED_FEATURES_AVAILABLE:
-
             print("❌ Plugin features not available")
 
             return
 
         if not args:
-
             # List plugins
 
             try:
-
                 manager = get_plugin_manager()
 
                 plugins = manager.list_plugins()
 
                 if not plugins:
-
                     print("🔌 No plugins installed")
 
                     return
@@ -516,7 +453,6 @@ class EnhancedInteractive:
                 print("🔌 Installed Plugins:")
 
                 for plugin in plugins:
-
                     status_icon = "✅" if plugin.status.value == "enabled" else "❌"
 
                     print(
@@ -524,25 +460,20 @@ class EnhancedInteractive:
                     )
 
             except Exception as e:
-
                 print(f"❌ Error listing plugins: {e}")
 
         elif args[0] == "install":
-
             if len(args) < 2:
-
                 print("❌ Usage: plugins install <plugin_source>")
 
                 return
 
             try:
-
                 manager = get_plugin_manager()
 
                 success = await manager.install_plugin(args[1])
 
                 if success:
-
                     print("✅ Plugin installed successfully")
 
                     # Reload plugin commands
@@ -550,56 +481,45 @@ class EnhancedInteractive:
                     await self._load_plugins()
 
                 else:
-
                     print("❌ Plugin installation failed")
 
             except Exception as e:
-
                 print(f"❌ Error installing plugin: {e}")
 
         elif args[0] == "enable":
-
             if len(args) < 2:
-
                 print("❌ Usage: plugins enable <plugin_name>")
 
                 return
 
             try:
-
                 manager = get_plugin_manager()
 
                 success = await manager.enable_plugin(args[1])
 
                 if success:
-
                     print("✅ Plugin enabled successfully")
 
                     await self._load_plugins()
 
                 else:
-
                     print("❌ Plugin enable failed")
 
             except Exception as e:
-
                 print(f"❌ Error enabling plugin: {e}")
 
         else:
-
             print("❌ Unknown plugin command. Available: list, install, enable")
 
     def _cmd_completion(self, args: List[str], cmd_info: Dict[str, Any]) -> None:
         """Manage completion settings."""
 
         if not ENHANCED_FEATURES_AVAILABLE:
-
             print("❌ Enhanced completion not available")
 
             return
 
         if not args:
-
             # Show completion status
 
             registry = get_completion_registry()
@@ -615,7 +535,6 @@ class EnhancedInteractive:
             print(f"   Cache size: {stats['cache_size']}")
 
         elif args[0] == "clear":
-
             registry = get_completion_registry()
 
             registry.clear_cache()
@@ -623,7 +542,6 @@ class EnhancedInteractive:
             print("✅ Completion cache cleared")
 
         else:
-
             print("❌ Unknown completion command. Available: status, clear")
 
 
@@ -636,5 +554,4 @@ def start_enhanced_interactive():
 
 
 if __name__ == "__main__":
-
     start_enhanced_interactive()

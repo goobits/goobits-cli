@@ -7,6 +7,9 @@ and resolution across different package managers and environments.
 import json
 import os
 import subprocess
+
+# Import CLITestHelper from E2E tests since we moved installation flows there
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -14,20 +17,15 @@ from typing import Dict, List, Optional
 
 import pytest
 
-from .package_manager_utils import (
-    PackageManagerRegistry,
-    validate_installation_environment,
-    PipManager,
-    NpmManager,
-    CargoManager,
-    TestEnvironmentManager,
-    PathManagerUtil,
-)
-from .test_configs import TestConfigTemplates
 from goobits_cli.core.schemas import GoobitsConfigSchema
 
-# Import CLITestHelper from E2E tests since we moved installation flows there
-import sys
+from .package_manager_utils import (
+    CargoManager,
+    NpmManager,
+    PipManager,
+    TestEnvironmentManager,
+)
+from .test_configs import TestConfigTemplates
 
 sys.path.append(str(Path(__file__).parent.parent / "e2e"))
 try:
@@ -92,7 +90,7 @@ class DependencyValidator:
                 for dep in expected_deps:
                     results[dep] = dep in all_deps
             except json.JSONDecodeError:
-                results = {dep: False for dep in expected_deps}
+                results = dict.fromkeys(expected_deps, False)
 
         return results
 
@@ -352,7 +350,7 @@ class TestDependencyResolution:
                     )
 
                 if venv_python.exists():
-                    wrapper_content = f"#!/bin/bash\nexec {venv_python} -m {package_name.replace('-', '_')} \"$@\"\n"
+                    wrapper_content = f'#!/bin/bash\nexec {venv_python} -m {package_name.replace("-", "_")} "$@"\n'
                     wrapper_path.write_text(wrapper_content)
                     wrapper_path.chmod(0o755)
                     return str(wrapper_path)

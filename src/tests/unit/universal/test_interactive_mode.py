@@ -5,17 +5,16 @@ This module tests the interactive mode template rendering, integration,
 and functionality across all supported languages.
 """
 
-import pytest
-from typing import Dict, Any
+from typing import Any, Dict
 
-from goobits_cli.universal.template_engine import UniversalTemplateEngine
+import pytest
+
 from goobits_cli.universal.interactive import (
     integrate_interactive_mode,
     is_interactive_supported,
 )
 from goobits_cli.universal.renderers.python_renderer import PythonRenderer
-from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
-from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
+from goobits_cli.universal.template_engine import UniversalTemplateEngine
 
 # RustRenderer removed - using existing renderers only
 

@@ -7,8 +7,9 @@ Tests the bug fixes for:
 """
 
 import os
-import sys
 import subprocess
+import sys
+
 import pytest
 
 
@@ -96,13 +97,13 @@ def _path_to_import_path(file_path: str, package_name: str = "testcli"):
 def _find_and_import_hooks():
     configured_path = "testcli/cli/cli_hooks.py"
     import_path, module_name = _path_to_import_path(configured_path)
-    
+
     # Strategy 1: Try package-relative import
     try:
         return importlib.import_module(import_path)
     except ImportError:
         pass
-    
+
     # Strategy 4: File-based import as fallback
     try:
         cli_dir = Path(__file__).parent
@@ -112,7 +113,7 @@ def _find_and_import_hooks():
             cli_dir.parent.parent / configured_path,
             cli_dir.parent.parent.parent / configured_path,
         ]
-        
+
         for hooks_file in search_paths:
             if hooks_file.exists():
                 spec = importlib.util.spec_from_file_location(module_name, hooks_file)
@@ -122,7 +123,7 @@ def _find_and_import_hooks():
                     return hooks_module
     except Exception:
         pass
-    
+
     return None
 
 def test_hook_discovery():
@@ -224,19 +225,19 @@ from pathlib import Path
 def _find_and_import_hooks():
     # No cli_hooks_path configured, try default locations
     default_module_name = "cli_hooks"
-    
+
     # Strategy 1: Try package-relative import
     try:
         return importlib.import_module(f"defaultcli.{default_module_name}")
     except ImportError:
         pass
-    
+
     # Strategy 3: Try direct import from Python path
     try:
         return importlib.import_module(default_module_name)
     except ImportError:
         pass
-    
+
     # Strategy 4: File-based fallback
     try:
         cli_dir = Path(__file__).parent
@@ -246,7 +247,7 @@ def _find_and_import_hooks():
             cli_dir.parent.parent / f"{default_module_name}.py",
             cli_dir.parent.parent.parent / f"{default_module_name}.py",
         ]
-        
+
         for hooks_file in search_paths:
             if hooks_file.exists():
                 spec = importlib.util.spec_from_file_location(default_module_name, hooks_file)
@@ -256,7 +257,7 @@ def _find_and_import_hooks():
                     return hooks_module
     except Exception:
         pass
-    
+
     return None
 
 def test_default_hook_discovery():
@@ -317,12 +318,12 @@ if __name__ == "__main__":
 
         for file_path, expected_import, expected_module in test_cases:
             import_path, module_name = _path_to_import_path(file_path)
-            assert (
-                import_path == expected_import
-            ), f"Expected {expected_import}, got {import_path} for {file_path}"
-            assert (
-                module_name == expected_module
-            ), f"Expected {expected_module}, got {module_name} for {file_path}"
+            assert import_path == expected_import, (
+                f"Expected {expected_import}, got {import_path} for {file_path}"
+            )
+            assert module_name == expected_module, (
+                f"Expected {expected_module}, got {module_name} for {file_path}"
+            )
 
         print("✅ Hook path conversion function test passed")
 
@@ -385,20 +386,20 @@ def _path_to_import_path(file_path: str, package_name: str = "myapp"):
 def _find_and_import_hooks():
     configured_path = "myapp/cli/hooks.py"
     import_path, module_name = _path_to_import_path(configured_path)
-    
+
     # Try multiple strategies
     strategies = [
         ("package-relative", lambda: importlib.import_module(import_path)),
         ("direct module", lambda: importlib.import_module(module_name)),
         ("file-based", lambda: _file_based_import(configured_path, module_name))
     ]
-    
+
     for strategy_name, strategy_func in strategies:
         try:
             return strategy_func()
         except ImportError:
             continue
-    
+
     return None
 
 def _file_based_import(configured_path, module_name):
@@ -409,7 +410,7 @@ def _file_based_import(configured_path, module_name):
         cli_dir.parent.parent / configured_path,
         cli_dir.parent.parent.parent / configured_path,
     ]
-    
+
     for hooks_file in search_paths:
         if hooks_file.exists():
             spec = importlib.util.spec_from_file_location(module_name, hooks_file)
@@ -417,22 +418,22 @@ def _file_based_import(configured_path, module_name):
                 hooks_module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(hooks_module)
                 return hooks_module
-    
+
     raise ImportError(f"Could not find hooks file: {configured_path}")
 
 def main():
     if len(sys.argv) < 2:
         print("Usage: myapp <command> [args...]")
         return 1
-    
+
     command = sys.argv[1]
-    
+
     # Load hooks
     hooks = _find_and_import_hooks()
     if not hooks:
         print("ERROR: No hooks module found")
         return 1
-    
+
     # Execute command
     if command == "deploy":
         if len(sys.argv) < 3:
@@ -440,20 +441,20 @@ def main():
             return 1
         environment = sys.argv[2]
         force = "--force" in sys.argv
-        
+
         if hasattr(hooks, 'on_deploy'):
             return hooks.on_deploy(environment, force=force)
         else:
             print("ERROR: on_deploy hook not found")
             return 1
-    
+
     elif command == "status":
         if hasattr(hooks, 'on_status'):
             return hooks.on_status()
         else:
             print("ERROR: on_status hook not found")
             return 1
-    
+
     else:
         print(f"ERROR: Unknown command: {command}")
         return 1

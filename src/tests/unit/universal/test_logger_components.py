@@ -5,9 +5,9 @@ This module tests the cross-language logger component generation that provides
 consistent logging functionality across Python, Node.js, TypeScript, and Rust.
 """
 
-import pytest
 from pathlib import Path
 
+import pytest
 from jinja2 import Template
 
 
@@ -22,7 +22,7 @@ class TestUniversalLoggerTemplate:
             Path(__file__).parent.parent.parent.parent
             / "goobits_cli/universal/components/logger.j2"
         )
-        with open(template_path, "r") as f:
+        with open(template_path) as f:
             return Template(f.read())
 
     def test_python_logger_generation(self, logger_template):
@@ -165,9 +165,9 @@ class TestUniversalLoggerTemplate:
             # Check core features
             for feature_category, features in core_features.items():
                 features_found = sum(1 for feature in features if feature in rendered)
-                assert (
-                    features_found >= 1
-                ), f"{language} missing features from {feature_category}: {features}"
+                assert features_found >= 1, (
+                    f"{language} missing features from {feature_category}: {features}"
+                )
 
     def test_template_project_name_substitution(self, logger_template):
         """Test that project name is properly substituted."""
@@ -197,9 +197,9 @@ class TestUniversalLoggerTemplate:
         avg_time_per_render = total_time / 10
 
         # Should be fast (less than 10ms per render)
-        assert (
-            avg_time_per_render < 0.01
-        ), f"Template rendering too slow: {avg_time_per_render*1000:.2f}ms per render"
+        assert avg_time_per_render < 0.01, (
+            f"Template rendering too slow: {avg_time_per_render * 1000:.2f}ms per render"
+        )
 
         # Should generate substantial content
         assert len(rendered) > 1000
@@ -216,12 +216,12 @@ class TestLoggerComponentIntegration:
         )
 
         assert template_path.exists(), f"Logger template not found at {template_path}"
-        assert (
-            template_path.is_file()
-        ), f"Logger template path is not a file: {template_path}"
+        assert template_path.is_file(), (
+            f"Logger template path is not a file: {template_path}"
+        )
 
         # Should be readable
-        with open(template_path, "r") as f:
+        with open(template_path) as f:
             content = f.read()
 
         assert len(content) > 10000, "Logger template seems too small"
@@ -234,7 +234,7 @@ class TestLoggerComponentIntegration:
             / "goobits_cli/universal/components/logger.j2"
         )
 
-        with open(template_path, "r") as f:
+        with open(template_path) as f:
             template_content = f.read()
 
         # Should be able to create Template without syntax errors
@@ -257,7 +257,7 @@ class TestLoggerComponentIntegration:
             / "goobits_cli/universal/components/logger.j2"
         )
 
-        with open(template_path, "r") as f:
+        with open(template_path) as f:
             template_content = f.read()
 
         template = Template(template_content)
@@ -268,9 +268,9 @@ class TestLoggerComponentIntegration:
             rendered = template.render(**context)
 
             # Each language should have substantial implementation
-            assert (
-                len(rendered) > 2000
-            ), f"{language} logger implementation seems incomplete ({len(rendered)} chars)"
+            assert len(rendered) > 2000, (
+                f"{language} logger implementation seems incomplete ({len(rendered)} chars)"
+            )
 
             # Should have setup function
             setup_patterns = {

@@ -1,18 +1,12 @@
 """Documentation Generator - Shared component for generating documentation across all language generators.
 
-
-
 This module provides utilities for generating consistent documentation (README, help text,
 
 installation guides) across Python, Node.js, TypeScript, and Rust CLI generators.
 
-
-
 Usage:
 
     from goobits_cli.shared.components.doc_generator import DocumentationGenerator
-
-
 
     generator = DocumentationGenerator(language='python', config=config_data)
 
@@ -22,12 +16,10 @@ Usage:
 
 """
 
-import yaml
-
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from typing import Dict, Any, Optional, List
-
+import yaml
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -38,8 +30,6 @@ class DocumentationGenerator:
         self, language: str, config: Dict[str, Any], template_dir: Optional[str] = None
     ):
         """Initialize the documentation generator.
-
-
 
         Args:
 
@@ -58,11 +48,9 @@ class DocumentationGenerator:
         # Set up template directory
 
         if template_dir:
-
             self.template_dir = Path(template_dir)
 
         else:
-
             # Default to shared templates directory
 
             current_dir = Path(__file__).parent.parent
@@ -91,13 +79,10 @@ class DocumentationGenerator:
         customizations_file = self.template_dir / "language_customizations.yaml"
 
         if customizations_file.exists():
-
-            with open(customizations_file, "r") as f:
-
+            with open(customizations_file) as f:
                 self.customizations = yaml.safe_load(f)
 
         else:
-
             self.customizations = {}
 
     def _register_filters(self) -> None:
@@ -111,13 +96,10 @@ class DocumentationGenerator:
             formatted_lines = []
 
             for line in lines:
-
                 if len(line) <= max_width:
-
                     formatted_lines.append(line)
 
                 else:
-
                     # Simple word wrap
 
                     words = line.split(" ")
@@ -125,21 +107,16 @@ class DocumentationGenerator:
                     current_line = ""
 
                     for word in words:
-
                         if len(current_line + " " + word) <= max_width:
-
                             current_line += (" " if current_line else "") + word
 
                         else:
-
                             if current_line:
-
                                 formatted_lines.append(current_line)
 
                             current_line = word
 
                     if current_line:
-
                         formatted_lines.append(current_line)
 
             return "\n".join(formatted_lines)
@@ -153,7 +130,6 @@ class DocumentationGenerator:
             """Align command examples with consistent formatting."""
 
             if not examples:
-
                 return ""
 
             max_cmd_length = max(len(ex.get("command", "")) for ex in examples)
@@ -161,7 +137,6 @@ class DocumentationGenerator:
             aligned = []
 
             for example in examples:
-
                 cmd = example.get("command", "")
 
                 desc = example.get("description", "")
@@ -242,15 +217,11 @@ class DocumentationGenerator:
     ) -> str:
         """Generate help text for a specific command.
 
-
-
         Args:
 
             command_name: Name of the command
 
             command_data: Command configuration data
-
-
 
         Returns:
 
@@ -275,9 +246,7 @@ class DocumentationGenerator:
 {{ command_description(current_command_data) }}
 
 
-
 Usage: {{ command_usage(command_name, current_command, current_command_data) }}
-
 
 
 {{ format_arguments(current_command_data.args) }}
@@ -293,15 +262,11 @@ Usage: {{ command_usage(command_name, current_command, current_command_data) }}
     def generate_error_message(self, error_type: str, **kwargs) -> str:
         """Generate language-appropriate error messages.
 
-
-
         Args:
 
             error_type: Type of error (missing_dependency, permission_error, etc.)
 
             **kwargs: Error-specific parameters
-
-
 
         Returns:
 
@@ -324,13 +289,9 @@ Usage: {{ command_usage(command_name, current_command, current_command_data) }}
     def get_language_config(self, key: str) -> Any:
         """Get language-specific configuration value.
 
-
-
         Args:
 
             key: Configuration key (e.g., 'package_manager', 'test_command')
-
-
 
         Returns:
 
@@ -343,13 +304,9 @@ Usage: {{ command_usage(command_name, current_command, current_command_data) }}
     def supports_feature(self, feature: str) -> bool:
         """Check if the current language supports a specific feature.
 
-
-
         Args:
 
             feature: Feature name (e.g., 'completion_support', 'virtual_env')
-
-
 
         Returns:
 
@@ -363,8 +320,6 @@ Usage: {{ command_usage(command_name, current_command, current_command_data) }}
 
     def get_documentation_sections(self) -> Dict[str, List[str]]:
         """Get language-specific documentation sections to include/exclude.
-
-
 
         Returns:
 
@@ -381,8 +336,6 @@ Usage: {{ command_usage(command_name, current_command, current_command_data) }}
     ) -> str:
         """Generate a custom documentation section using a template string.
 
-
-
         Args:
 
             section_name: Name of the section
@@ -390,8 +343,6 @@ Usage: {{ command_usage(command_name, current_command, current_command_data) }}
             template_string: Jinja2 template string
 
             **kwargs: Additional template variables
-
-
 
         Returns:
 
@@ -415,15 +366,11 @@ def create_documentation_generator(
 ) -> DocumentationGenerator:
     """Factory function to create a documentation generator.
 
-
-
     Args:
 
         language: Target language
 
         config: Configuration dictionary
-
-
 
     Returns:
 
@@ -440,15 +387,11 @@ def create_documentation_generator(
 def generate_readme_for_language(language: str, config: Dict[str, Any]) -> str:
     """Generate README content for a specific language.
 
-
-
     Args:
 
         language: Target language
 
         config: Configuration dictionary
-
-
 
     Returns:
 
@@ -466,15 +409,11 @@ def generate_installation_guide_for_language(
 ) -> str:
     """Generate installation guide for a specific language.
 
-
-
     Args:
 
         language: Target language
 
         config: Configuration dictionary
-
-
 
     Returns:
 
@@ -490,13 +429,9 @@ def generate_installation_guide_for_language(
 def get_language_help_formatting(language: str) -> Dict[str, Any]:
     """Get help text formatting preferences for a language.
 
-
-
     Args:
 
         language: Target language
-
-
 
     Returns:
 
@@ -509,9 +444,7 @@ def get_language_help_formatting(language: str) -> Dict[str, Any]:
     customizations_file = current_dir / "templates" / "language_customizations.yaml"
 
     if customizations_file.exists():
-
-        with open(customizations_file, "r") as f:
-
+        with open(customizations_file) as f:
             customizations = yaml.safe_load(f)
 
             return customizations.get("help_formatting", {}).get(language, {})

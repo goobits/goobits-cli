@@ -2,8 +2,6 @@
 
 Interactive mode support for Goobits CLI Framework.
 
-
-
 This module provides the foundation for interactive (REPL) modes
 
 in generated CLI applications across all supported languages.
@@ -11,13 +9,12 @@ in generated CLI applications across all supported languages.
 """
 
 from .base import (
+    BasicREPL,
     InteractiveCommand,
     InteractiveEngine,
     InteractiveRenderer,
-    BasicREPL,
     create_basic_repl,
 )
-
 
 __all__ = [
     "InteractiveCommand",
@@ -35,21 +32,15 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
 
     Integrate interactive mode support into CLI configuration.
 
-
-
     This function adds the necessary flags and configuration to enable
 
     interactive mode in the generated CLI.
-
-
 
     Args:
 
         cli_config: The CLI configuration dictionary.
 
         language: The target programming language.
-
-
 
     Returns:
 
@@ -65,23 +56,18 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
     # Check for CLI structure (goobits format)
 
     if "cli" in cli_config:
-
         if "options" not in cli_config["cli"]:
-
             cli_config["cli"]["options"] = []
 
         target_options = cli_config["cli"]["options"]
 
     else:
-
         # Fallback to root_command structure
 
         if "root_command" not in cli_config:
-
             cli_config["root_command"] = {}
 
         if "options" not in cli_config["root_command"]:
-
             cli_config["root_command"]["options"] = []
 
         target_options = cli_config["root_command"]["options"]
@@ -91,7 +77,6 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
     has_interactive = any(opt.get("name") == "interactive" for opt in target_options)
 
     if not has_interactive:
-
         # Add the interactive flag using goobits option format
 
         interactive_option = {
@@ -107,7 +92,6 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
     # Add interactive mode metadata
 
     if "features" not in cli_config:
-
         cli_config["features"] = {}
 
     # Get CLI name from appropriate configuration structure
@@ -115,11 +99,9 @@ def integrate_interactive_mode(cli_config: dict, language: str) -> dict:
     cli_name = "cli"
 
     if "cli" in cli_config and "name" in cli_config["cli"]:
-
         cli_name = cli_config["cli"]["name"]
 
     elif "root_command" in cli_config and "name" in cli_config["root_command"]:
-
         cli_name = cli_config["root_command"]["name"]
 
     # Get existing interactive_mode config if it exists
@@ -152,13 +134,9 @@ def is_interactive_supported(language: str) -> bool:
 
     Check if interactive mode is supported for the given language.
 
-
-
     Args:
 
         language: The target programming language.
-
-
 
     Returns:
 
@@ -176,13 +154,9 @@ def is_tab_completion_supported(language: str) -> bool:
 
     Check if tab completion is supported for the given language.
 
-
-
     Args:
 
         language: The target programming language.
-
-
 
     Returns:
 
@@ -200,15 +174,11 @@ def get_interactive_file_name(language: str, project_name: str) -> str:
 
     Get the appropriate file name for the interactive mode module.
 
-
-
     Args:
 
         language: The target programming language.
 
         project_name: The name of the project.
-
-
 
     Returns:
 
@@ -233,15 +203,11 @@ def get_interactive_import_statement(language: str, cli_module: str) -> str:
 
     Get the import statement for the interactive mode in the main CLI.
 
-
-
     Args:
 
         language: The target programming language.
 
         cli_module: The name of the CLI module.
-
-
 
     Returns:
 
@@ -266,15 +232,11 @@ def get_interactive_launch_code(
 
     Get the code snippet to launch interactive mode based on the flag.
 
-
-
     Args:
 
         language: The target programming language.
 
         option_name: The name of the interactive option flag.
-
-
 
     Returns:
 

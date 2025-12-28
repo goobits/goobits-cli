@@ -2,8 +2,6 @@
 
 Template Migration Tool for Universal Template System
 
-
-
 This module provides tools to migrate existing language-specific templates
 
 to the Universal Template System format.
@@ -11,10 +9,7 @@ to the Universal Template System format.
 """
 
 import re
-
-
 from pathlib import Path
-
 from typing import Dict, Optional, Set
 
 import typer
@@ -24,8 +19,6 @@ class TemplateMigrator:
     """
 
     Converts existing language-specific templates to universal format.
-
-
 
     This class analyzes existing templates and attempts to create
 
@@ -37,8 +30,6 @@ class TemplateMigrator:
         """
 
         Initialize the migrator.
-
-
 
         Args:
 
@@ -84,8 +75,6 @@ class TemplateMigrator:
 
         Analyze existing templates to identify common patterns.
 
-
-
         Returns:
 
             Analysis report with common patterns and differences
@@ -103,9 +92,7 @@ class TemplateMigrator:
         # Find all language directories
 
         for lang_dir in self.templates_dir.glob("*"):
-
             if lang_dir.is_dir() and lang_dir.name in self.language_mappings:
-
                 language = lang_dir.name
 
                 analysis["languages"].append(language)
@@ -115,7 +102,6 @@ class TemplateMigrator:
                 # Analyze templates in this language
 
                 for template_file in lang_dir.glob("*.j2"):
-
                     template_name = template_file.name
 
                     # Check if this maps to a universal component
@@ -123,29 +109,24 @@ class TemplateMigrator:
                     mapping = self.language_mappings[language].get(template_name)
 
                     if mapping:
-
                         analysis["common_components"].add(mapping)
 
                     else:
-
                         analysis["language_specific"][language].append(template_name)
 
                     # Analyze template content for patterns
 
                     try:
-
                         content = template_file.read_text(encoding="utf-8")
 
                         patterns = self._extract_patterns(content, language)
 
                         if template_name not in analysis["patterns"]:
-
                             analysis["patterns"][template_name] = {}
 
                         analysis["patterns"][template_name][language] = patterns
 
                     except Exception as e:
-
                         self.migration_report.append(
                             f"Warning: Could not analyze {template_file}: {e}"
                         )
@@ -157,15 +138,11 @@ class TemplateMigrator:
 
         Extract common patterns from template content.
 
-
-
         Args:
 
             content: Template content
 
             language: Programming language
-
-
 
         Returns:
 
@@ -189,7 +166,6 @@ class TemplateMigrator:
         variables = re.findall(var_pattern, content)
 
         for var in variables:
-
             # Clean up variable (remove filters, etc.)
 
             clean_var = var.split("|")[0].strip()
@@ -215,7 +191,6 @@ class TemplateMigrator:
         # Language-specific patterns
 
         if language == "python":
-
             # Extract imports
 
             import_pattern = r"^import\s+(\S+)|^from\s+(\S+)\s+import"
@@ -233,7 +208,6 @@ class TemplateMigrator:
             patterns["functions"] = functions
 
         elif language in ["nodejs", "typescript"]:
-
             # Extract require/import statements
 
             require_pattern = (
@@ -253,7 +227,6 @@ class TemplateMigrator:
             patterns["functions"] = [func[0] or func[1] for func in functions]
 
         elif language == "rust":
-
             # Extract use statements
 
             use_pattern = r"^use\s+([^;]+);"
@@ -279,15 +252,11 @@ class TemplateMigrator:
 
         Create a universal template from language-specific templates.
 
-
-
         Args:
 
             component_name: Name of the universal component
 
             language_templates: Mapping of language to template file path
-
-
 
         Returns:
 
@@ -296,7 +265,6 @@ class TemplateMigrator:
         """
 
         if not language_templates:
-
             return None
 
         # Analyze all language templates to find commonalities
@@ -308,9 +276,7 @@ class TemplateMigrator:
         all_blocks = set()
 
         for language, template_path in language_templates.items():
-
             try:
-
                 content = template_path.read_text(encoding="utf-8")
 
                 patterns = self._extract_patterns(content, language)
@@ -322,7 +288,6 @@ class TemplateMigrator:
                 all_blocks.update(patterns["blocks"])
 
             except Exception as e:
-
                 self.migration_report.append(
                     f"Warning: Could not read {template_path}: {e}"
                 )
@@ -348,8 +313,6 @@ class TemplateMigrator:
 
         Generate universal template content.
 
-
-
         Args:
 
             component_name: Name of the component
@@ -359,8 +322,6 @@ class TemplateMigrator:
             variables: All variables found
 
             blocks: All blocks found
-
-
 
         Returns:
 
@@ -378,7 +339,6 @@ class TemplateMigrator:
         # Add language-specific sections
 
         if "command_handler" in component_name:
-
             template_lines.extend(
                 [
                     "{% if lang == 'python' %}",
@@ -394,7 +354,6 @@ class TemplateMigrator:
             )
 
         else:
-
             # Generic component structure
 
             template_lines.extend(
@@ -430,13 +389,9 @@ class TemplateMigrator:
 
         Migrate all eligible templates to universal format.
 
-
-
         Args:
 
             dry_run: If True, don't write files, just report what would be done
-
-
 
         Returns:
 
@@ -445,7 +400,6 @@ class TemplateMigrator:
         """
 
         try:
-
             # Analyze existing templates
 
             analysis = self.analyze_templates()
@@ -459,7 +413,6 @@ class TemplateMigrator:
             )
 
             if not dry_run:
-
                 # Ensure universal components directory exists
 
                 self.universal_dir.mkdir(parents=True, exist_ok=True)
@@ -467,13 +420,11 @@ class TemplateMigrator:
             # Migrate common components
 
             for component_name in analysis["common_components"]:
-
                 # Find all language templates for this component
 
                 language_templates = {}
 
                 for language in analysis["languages"]:
-
                     lang_dir = self.templates_dir / language
 
                     # Find template that maps to this component
@@ -481,17 +432,13 @@ class TemplateMigrator:
                     for template_name, mapped_component in self.language_mappings[
                         language
                     ].items():
-
                         if mapped_component == component_name:
-
                             template_path = lang_dir / template_name
 
                             if template_path.exists():
-
                                 language_templates[language] = template_path
 
                 if language_templates:
-
                     # Create universal template
 
                     universal_content = self.create_universal_template(
@@ -499,7 +446,6 @@ class TemplateMigrator:
                     )
 
                     if universal_content and not dry_run:
-
                         universal_path = self.universal_dir / component_name
 
                         universal_path.write_text(universal_content, encoding="utf-8")
@@ -509,13 +455,11 @@ class TemplateMigrator:
                         )
 
                     elif dry_run:
-
                         self.migration_report.append(f"Would create: {component_name}")
 
             return True
 
         except Exception as e:
-
             self.migration_report.append(f"Migration failed: {e}")
 
             return False
@@ -524,8 +468,6 @@ class TemplateMigrator:
         """
 
         Generate a comprehensive migration report.
-
-
 
         Returns:
 
@@ -557,8 +499,6 @@ def migrate_templates_command(
 
     Migrate existing templates to Universal Template System format.
 
-
-
     This command analyzes existing language-specific templates and creates
 
     universal templates that can work across multiple programming languages.
@@ -568,7 +508,6 @@ def migrate_templates_command(
     typer.echo(f"Starting template migration from: {templates_dir}")
 
     if dry_run:
-
         typer.echo("🔍 Dry run mode - no files will be modified")
 
     # Initialize migrator
@@ -584,28 +523,23 @@ def migrate_templates_command(
     report = migrator.generate_migration_report()
 
     if output_report:
-
         output_report.write_text(report, encoding="utf-8")
 
         typer.echo(f"📄 Migration report saved to: {output_report}")
 
     else:
-
         typer.echo(report)
 
     if success:
-
         typer.echo("✅ Migration completed successfully")
 
         return 0
 
     else:
-
         typer.echo("❌ Migration failed")
 
         return 1
 
 
 if __name__ == "__main__":
-
     typer.run(migrate_templates_command)

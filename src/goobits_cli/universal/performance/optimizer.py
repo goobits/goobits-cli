@@ -7,21 +7,14 @@ Orchestrates all performance optimization components
 """
 
 import threading
-
 import time
-
-from pathlib import Path
-
-from typing import Dict, List, Optional, Any, Callable
-
 from contextlib import asynccontextmanager
-
-
-from .lazy_loader import LazyLoader, LazyLoadingStrategy, PredictiveLoadingStrategy
-
-from .monitor import PerformanceMonitor
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 from .cache import CacheManager
+from .lazy_loader import LazyLoader, LazyLoadingStrategy, PredictiveLoadingStrategy
+from .monitor import PerformanceMonitor
 
 
 class CLIOptimizer:
@@ -34,7 +27,6 @@ class CLIOptimizer:
         startup_target_ms: int = 100,
         memory_target_mb: int = 50,
     ):
-
         self.cache_dir = cache_dir or Path.home() / ".goobits" / "cache"
 
         self.startup_target_ms = startup_target_ms
@@ -48,11 +40,9 @@ class CLIOptimizer:
         self.cache_manager = CacheManager(self.cache_dir)
 
         if enable_monitoring:
-
             self.monitor = PerformanceMonitor()
 
         else:
-
             self.monitor = None
 
         # Optimization settings
@@ -73,7 +63,6 @@ class CLIOptimizer:
         """Start performance optimization"""
 
         if self.monitor:
-
             self.monitor.start_monitoring()
 
         # Register core components for lazy loading
@@ -132,13 +121,10 @@ class CLIOptimizer:
         # This would be implemented based on actual config manager
 
         class ConfigManager:
-
             def __init__(self):
-
                 self.config = {}
 
             def load_config(self, path: Path):
-
                 pass
 
         return ConfigManager()
@@ -149,9 +135,7 @@ class CLIOptimizer:
         # This would be implemented based on actual parser
 
         class CommandParser:
-
             def __init__(self):
-
                 pass
 
         return CommandParser()
@@ -162,9 +146,7 @@ class CLIOptimizer:
         # This would be implemented based on actual plugin manager
 
         class PluginManager:
-
             def __init__(self):
-
                 pass
 
         return PluginManager()
@@ -173,7 +155,6 @@ class CLIOptimizer:
         """Start background optimization tasks"""
 
         if self.auto_preload:
-
             # Start preloading thread
 
             preload_thread = threading.Thread(
@@ -196,28 +177,23 @@ class CLIOptimizer:
         time.sleep(0.1)  # Let startup complete first
 
         try:
-
             # Preload components based on usage patterns
 
             self.lazy_loader.preload_components()
 
         except Exception as e:
-
             print(f"Background preload failed: {e}")
 
     def _background_cache_optimization(self):
         """Background cache optimization"""
 
         while self.optimization_enabled:
-
             try:
-
                 time.sleep(300)  # Every 5 minutes
 
                 self.cache_manager.optimize_caches()
 
             except Exception as e:
-
                 import logging
 
                 logging.debug(f"Cache optimization error (non-critical): {e}")
@@ -227,23 +203,19 @@ class CLIOptimizer:
         """Context manager for optimizing startup"""
 
         if self.monitor:
-
             self.monitor.startup_benchmark.start()
 
         startup_start = time.perf_counter()
 
         try:
-
             yield self
 
         finally:
-
             startup_time = time.perf_counter() - startup_start
 
             self.startup_times.append(startup_time)
 
             if self.monitor:
-
                 metrics = self.monitor.startup_benchmark.finish()
 
                 # Record optimization results
@@ -269,7 +241,6 @@ class CLIOptimizer:
         startup_ms = metrics.total_time * 1000
 
         if startup_ms > self.startup_target_ms * 1.5:
-
             # Performance is poor, enable aggressive optimization
 
             print(f"🚀 Enabling aggressive optimization (startup: {startup_ms:.2f}ms)")
@@ -281,7 +252,6 @@ class CLIOptimizer:
             self.lazy_loader.strategy = LazyLoadingStrategy()
 
         elif startup_ms < self.startup_target_ms * 0.7:
-
             # Performance is good, can afford some preloading
 
             print(
@@ -295,7 +265,6 @@ class CLIOptimizer:
         memory_mb = metrics.memory_usage / 1024 / 1024
 
         if memory_mb > self.memory_target_mb * 1.2:
-
             print(f"💾 High memory usage ({memory_mb:.2f}MB), optimizing caches")
 
             self._optimize_memory_usage()
@@ -306,7 +275,6 @@ class CLIOptimizer:
         # Reduce cache sizes
 
         if hasattr(self.cache_manager.template_cache._cache, "max_size"):
-
             current_size = self.cache_manager.template_cache._cache.max_size
 
             new_size = max(100, int(current_size * 0.8))
@@ -325,17 +293,12 @@ class CLIOptimizer:
         """Optimize a specific command execution"""
 
         def decorator(func: Callable):
-
             def wrapper(*args, **kwargs):
-
                 if self.monitor:
-
                     with self.monitor.command_profiler.profile_command(command_name):
-
                         return func(*args, **kwargs)
 
                 else:
-
                     return func(*args, **kwargs)
 
             return wrapper
@@ -354,7 +317,6 @@ class CLIOptimizer:
         }
 
         if self.monitor:
-
             report.update(
                 {
                     "monitoring_data": self.monitor.create_dashboard_data(),
@@ -370,7 +332,6 @@ class CLIOptimizer:
         """Analyze startup performance trends"""
 
         if not self.startup_times:
-
             return {"status": "No startup data available"}
 
         recent_times = self.startup_times[-10:]  # Last 10 startups
@@ -395,7 +356,6 @@ class CLIOptimizer:
         """Analyze memory usage patterns"""
 
         if not self.monitor:
-
             return {"status": "Monitoring disabled"}
 
         memory_stats = self.monitor.memory_tracker.stop()
@@ -434,13 +394,11 @@ class CLIOptimizer:
         # Startup performance recommendations
 
         if self.startup_times:
-
             avg_startup = sum(self.startup_times[-5:]) / min(5, len(self.startup_times))
 
             if avg_startup * 1000 > self.startup_target_ms:
-
                 recommendations.append(
-                    f"Startup time ({avg_startup*1000:.2f}ms) exceeds target. "
+                    f"Startup time ({avg_startup * 1000:.2f}ms) exceeds target. "
                     "Consider more aggressive lazy loading."
                 )
 
@@ -455,7 +413,6 @@ class CLIOptimizer:
         )
 
         if template_hit_rate < 0.7:
-
             recommendations.append(
                 f"Template cache hit rate is low ({template_hit_rate:.1%}). "
                 "Consider increasing cache size or preloading templates."
@@ -466,7 +423,6 @@ class CLIOptimizer:
         load_stats = self.lazy_loader.get_load_stats()
 
         if load_stats.get("average_load_time", 0) > 0.01:  # 10ms
-
             recommendations.append(
                 "Component loading is slow. Consider component preloading or optimization."
             )
@@ -474,13 +430,11 @@ class CLIOptimizer:
         # Memory recommendations
 
         if self.monitor:
-
             memory_stats = self.monitor.memory_tracker.stop()
 
             peak_mb = memory_stats.get("peak_mb", 0)
 
             if peak_mb > self.memory_target_mb:
-
                 recommendations.append(
                     f"Memory usage ({peak_mb:.2f}MB) exceeds target ({self.memory_target_mb}MB). "
                     "Consider reducing cache sizes or enabling memory optimization."
@@ -498,9 +452,7 @@ class CLIOptimizer:
         # Enable auto-reloading for templates
 
         if hasattr(self.cache_manager.template_cache, "_env_cache"):
-
             for env in self.cache_manager.template_cache._env_cache.values():
-
                 env.auto_reload = True
 
         print("🔧 Development mode enabled - optimizations adjusted for development")
@@ -515,9 +467,7 @@ class CLIOptimizer:
         # Disable auto-reloading
 
         if hasattr(self.cache_manager.template_cache, "_env_cache"):
-
             for env in self.cache_manager.template_cache._env_cache.values():
-
                 env.auto_reload = False
 
         # Preload all critical components
@@ -536,7 +486,6 @@ class CLIOptimizer:
         memory_usage = []
 
         for i in range(iterations):
-
             # Simulate startup
 
             start_time = time.perf_counter()
@@ -567,7 +516,9 @@ class CLIOptimizer:
 
             memory_usage.append(memory_mb)
 
-            print(f"  Iteration {i+1}: {startup_time*1000:.2f}ms, {memory_mb:.2f}MB")
+            print(
+                f"  Iteration {i + 1}: {startup_time * 1000:.2f}ms, {memory_mb:.2f}MB"
+            )
 
         # Calculate statistics
 
@@ -595,7 +546,7 @@ class CLIOptimizer:
         print("\n📊 Benchmark Results:")
 
         print(
-            f"  Startup: {avg_startup*1000:.2f}ms (target: {self.startup_target_ms}ms)"
+            f"  Startup: {avg_startup * 1000:.2f}ms (target: {self.startup_target_ms}ms)"
         )
 
         print(f"  Memory: {avg_memory:.2f}MB (target: {self.memory_target_mb}MB)")
@@ -618,23 +569,18 @@ class CLIOptimizer:
         overall_score = (startup_score * 0.7) + (memory_score * 0.3)
 
         if overall_score >= 90:
-
             return "A+ (Excellent)"
 
         elif overall_score >= 80:
-
             return "A (Very Good)"
 
         elif overall_score >= 70:
-
             return "B (Good)"
 
         elif overall_score >= 60:
-
             return "C (Fair)"
 
         else:
-
             return "D (Needs Improvement)"
 
     def shutdown(self):
@@ -643,11 +589,9 @@ class CLIOptimizer:
         self.optimization_enabled = False
 
         if self.lazy_loader:
-
             self.lazy_loader.shutdown()
 
         if self.monitor:
-
             # Final report
 
             final_report = self.get_optimization_report()
@@ -661,7 +605,6 @@ class CLIOptimizer:
             cache_stats = final_report.get("cache_performance", {})
 
             if cache_stats:
-
                 print(
                     f"  Cache Hit Rate: {cache_stats.get('templates', {}).get('template_cache', {}).get('hit_rate', 0):.1%}"
                 )

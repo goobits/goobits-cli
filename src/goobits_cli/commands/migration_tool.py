@@ -8,14 +8,15 @@ Converts legacy YAML configurations to current standardized format:
 - Creates backup files for safety
 """
 
-import yaml
 import shutil
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Any, Dict, List, Tuple
+
 import click
+import yaml
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -48,7 +49,7 @@ class YAMLMigrationTool:
 
         try:
             # Load current YAML
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
                 data = yaml.safe_load(content)
 
@@ -142,7 +143,7 @@ class YAMLMigrationTool:
         """Recursively find differences between original and migrated structures."""
         changes = []
 
-        if type(original) != type(migrated):
+        if type(original) is not type(migrated):
             changes.append(
                 {
                     "type": "Type Change",

@@ -102,9 +102,9 @@ install_with_pip() {
     if [[ "$install_dev" == "true" ]]; then
         tree_sub_node "progress" "Installing in development mode with pip..."
         {% if installation.extras and installation.extras.python %}
-        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[{{ installation.extras.python|join(',') }}]" --user) &
+        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH[{{ installation.extras.python|join(',') }}]" $PIP_USER_FLAG) &
         {% else %}
-        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" --user) &
+        (cd "$PROJECT_DIR" && python3 -m pip install --editable "$DEVELOPMENT_PATH" $PIP_USER_FLAG) &
         {% endif %}
         show_spinner $!
         wait $!
@@ -123,9 +123,9 @@ install_with_pip() {
     else
         tree_sub_node "progress" "Installing from PyPI with pip..."
         {% if installation.extras and installation.extras.python %}
-        python3 -m pip install "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --user &
+        python3 -m pip install "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" $PIP_USER_FLAG &
         {% else %}
-        python3 -m pip install "$PYPI_NAME" --user &
+        python3 -m pip install "$PYPI_NAME" $PIP_USER_FLAG &
         {% endif %}
         show_spinner $!
         wait $!
@@ -172,9 +172,9 @@ upgrade_package() {
 
         # Capture pip output to prevent it from breaking tree structure
         {% if installation.extras and installation.extras.python %}
-        python3 -m pip install --upgrade "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" --user >/dev/null 2>&1 &
+        python3 -m pip install --upgrade "$PYPI_NAME[{{ installation.extras.python|join(',') }}]" $PIP_USER_FLAG >/dev/null 2>&1 &
         {% else %}
-        python3 -m pip install --upgrade "$PYPI_NAME" --user >/dev/null 2>&1 &
+        python3 -m pip install --upgrade "$PYPI_NAME" $PIP_USER_FLAG >/dev/null 2>&1 &
         {% endif %}
         show_spinner $!
         wait $!

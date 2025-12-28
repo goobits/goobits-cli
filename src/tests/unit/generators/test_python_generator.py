@@ -1,18 +1,19 @@
 """Unit tests for Python generator."""
 
-import pytest
 from unittest.mock import patch
 
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation import TemplateError
+import pytest
+
 from goobits_cli.core.schemas import (
-    ConfigSchema,
+    ArgumentSchema,
     CLISchema,
     CommandSchema,
+    ConfigSchema,
     GoobitsConfigSchema,
-    ArgumentSchema,
     OptionSchema,
 )
+from goobits_cli.generation import TemplateError
+from goobits_cli.generation.renderers.python import PythonGenerator
 
 
 class TestPythonGenerator:
@@ -130,9 +131,9 @@ class TestPythonGenerator:
 
         # Find Python CLI file (might be different with Universal Templates)
         cli_files = [f for f in output_files.keys() if f.endswith(".py")]
-        assert (
-            len(cli_files) > 0
-        ), f"No Python files found in {list(output_files.keys())}"
+        assert len(cli_files) > 0, (
+            f"No Python files found in {list(output_files.keys())}"
+        )
         cli_content = output_files[cli_files[0]]
 
         # Check for essential Python CLI structure (Universal Templates use rich_click)
@@ -153,9 +154,9 @@ class TestPythonGenerator:
 
         # Universal Templates use rich_click and have proper structure
         assert has_imports, f"No imports found in CLI: {cli_content[:200]}"
-        assert (
-            has_main or "def " in cli_content
-        ), f"No function definitions found in CLI: {cli_content[:200]}"
+        assert has_main or "def " in cli_content, (
+            f"No function definitions found in CLI: {cli_content[:200]}"
+        )
 
     def test_python_unicode_special_characters(self):
         """Test Python generator with unicode and special characters."""
@@ -182,9 +183,9 @@ class TestPythonGenerator:
             cli_files = [
                 f for f in output_files.keys() if f.endswith(".py") and "cli.py" in f
             ]
-            assert (
-                len(cli_files) > 0
-            ), f"No CLI files generated: {list(output_files.keys())}"
+            assert len(cli_files) > 0, (
+                f"No CLI files generated: {list(output_files.keys())}"
+            )
 
             # Check that unicode is properly handled in output
             cli_content = output_files[cli_files[0]]
@@ -238,27 +239,27 @@ class TestPythonGenerator:
         cli_files = [
             f for f in output_files.keys() if f.endswith(".py") and "cli.py" in f
         ]
-        assert (
-            len(cli_files) > 0
-        ), f"No CLI files generated: {list(output_files.keys())}"
+        assert len(cli_files) > 0, (
+            f"No CLI files generated: {list(output_files.keys())}"
+        )
         cli_content = output_files[cli_files[0]]
 
         # Check for complex command structure
         # Universal Templates might structure commands differently
-        assert (
-            "complex" in cli_content
-        ), f"Complex command not found in: {cli_content[:300]}..."
+        assert "complex" in cli_content, (
+            f"Complex command not found in: {cli_content[:300]}..."
+        )
         # Arguments and options might be transformed (e.g., input_file -> input-file)
         assert any(
             pattern in cli_content
             for pattern in ["input_file", "input-file", "inputFile"]
         ), "Input argument not found"
-        assert any(
-            pattern in cli_content for pattern in ["verbose", "-v"]
-        ), "Verbose option not found"
-        assert any(
-            pattern in cli_content for pattern in ["output", "-o"]
-        ), "Output option not found"
+        assert any(pattern in cli_content for pattern in ["verbose", "-v"]), (
+            "Verbose option not found"
+        )
+        assert any(pattern in cli_content for pattern in ["output", "-o"]), (
+            "Output option not found"
+        )
 
     def test_python_generator_error_handling(self):
         """Test error handling for invalid configurations."""

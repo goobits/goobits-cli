@@ -15,7 +15,7 @@ The engine supports:
 import asyncio
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import jinja2
 
@@ -24,8 +24,6 @@ from .component_registry import ComponentRegistry
 # Import from refactored modules
 from .engine.base import LanguageRenderer
 from .ir.builder import IRBuilder
-from .ir.feature_analyzer import FeatureAnalyzer
-from .utils import _safe_get_attr
 
 # Lazy import for heavy Pydantic schemas
 _config_schema = None
@@ -43,7 +41,6 @@ def _get_config_schema():
 
 # Import shared _safe_to_dict function
 from ..generation import _safe_to_dict
-
 
 # Import performance optimization components
 try:
@@ -136,13 +133,10 @@ class UniversalTemplateEngine:
         # Performance optimization components
 
         if PERFORMANCE_AVAILABLE and not test_mode:
-
             if template_cache is not None:
-
                 self.template_cache = template_cache
 
             else:
-
                 # Create default template cache when performance is available
 
                 self.template_cache = TemplateCache()
@@ -153,7 +147,6 @@ class UniversalTemplateEngine:
             self.io_manager = ParallelIOManager(max_workers=4, use_async=True)
 
         else:
-
             self.template_cache = None
 
             self.performance_enabled = False
@@ -163,13 +156,11 @@ class UniversalTemplateEngine:
         # Lazy loading setup
 
         if enable_lazy_loading and PERFORMANCE_AVAILABLE:
-
             self.lazy_loader = LazyLoader()
 
             self._register_lazy_components()
 
         else:
-
             self.lazy_loader = None
 
             # Load components immediately if no lazy loading
@@ -210,7 +201,6 @@ class UniversalTemplateEngine:
         """Register components for lazy loading"""
 
         if not self.lazy_loader:
-
             return
 
         # Register component loading
@@ -224,7 +214,6 @@ class UniversalTemplateEngine:
         # Register renderer components
 
         for language in ["python", "nodejs", "typescript", "rust"]:
-
             self.lazy_loader.register(
                 f"{language}_renderer",
                 lambda lang=language: self._create_renderer(lang),
@@ -252,15 +241,11 @@ class UniversalTemplateEngine:
 
         Register a language-specific renderer.
 
-
-
         Args:
 
             language: Language name (for backward compatibility with test signature)
 
             renderer: Language renderer implementation
-
-
 
         Raises:
 
@@ -269,11 +254,9 @@ class UniversalTemplateEngine:
         """
 
         if renderer is None:
-
             raise ValueError("Renderer cannot be None")
 
         if not isinstance(renderer, LanguageRenderer):
-
             raise ValueError(
                 f"Renderer must implement LanguageRenderer interface, got {type(renderer)}"
             )
@@ -283,7 +266,6 @@ class UniversalTemplateEngine:
         lang_name = language or renderer.language
 
         if not lang_name:
-
             raise ValueError("Language name must be provided")
 
         self.renderers[lang_name] = renderer
@@ -295,19 +277,13 @@ class UniversalTemplateEngine:
 
         Get a registered language renderer.
 
-
-
         Args:
 
             language: Target programming language
 
-
-
         Returns:
 
             Language renderer implementation
-
-
 
         Raises:
 
@@ -316,7 +292,6 @@ class UniversalTemplateEngine:
         """
 
         if language not in self.renderers:
-
             available = list(self.renderers.keys())
 
             raise ValueError(
@@ -333,11 +308,7 @@ class UniversalTemplateEngine:
 
         Create intermediate representation from Goobits configuration.
 
-
-
         This is a public interface for the internal _build_intermediate_representation method.
-
-
 
         Args:
 
@@ -345,13 +316,9 @@ class UniversalTemplateEngine:
 
             config_filename: Name of the configuration file (for source attribution)
 
-
-
         Returns:
 
             Intermediate representation as dictionary
-
-
 
         Raises:
 
@@ -360,7 +327,6 @@ class UniversalTemplateEngine:
         """
 
         if config is None:
-
             raise ValueError("Configuration cannot be None")
 
         return self._build_intermediate_representation(config, config_filename)
@@ -370,21 +336,15 @@ class UniversalTemplateEngine:
 
         Render a configuration using the specified language renderer.
 
-
-
         Args:
 
             config: Validated Goobits configuration
 
             language: Target programming language
 
-
-
         Returns:
 
             Dictionary containing rendered files and metadata
-
-
 
         Raises:
 
@@ -395,7 +355,6 @@ class UniversalTemplateEngine:
         start_time = time.time()
 
         if language not in self.renderers:
-
             available = list(self.renderers.keys())
 
             raise ValueError(
@@ -424,13 +383,10 @@ class UniversalTemplateEngine:
         template_count = 0
 
         for component_name, output_filename in output_structure.items():
-
             try:
-
                 # Check if component exists
 
                 if self.component_registry.has_component(component_name):
-
                     # Get template content
 
                     template_content = self.component_registry.get_component(
@@ -448,7 +404,6 @@ class UniversalTemplateEngine:
                     template_count += 1
 
                 else:
-
                     # Component not found - use placeholder or skip
 
                     rendered_files[output_filename] = (
@@ -456,7 +411,6 @@ class UniversalTemplateEngine:
                     )
 
             except Exception as e:
-
                 # Handle template rendering errors gracefully
 
                 rendered_files[output_filename] = (
@@ -488,8 +442,6 @@ class UniversalTemplateEngine:
 
         Generate a complete CLI implementation for the specified language.
 
-
-
         Args:
 
             config: Validated Goobits configuration
@@ -502,13 +454,9 @@ class UniversalTemplateEngine:
 
             config_filename: Name of the configuration file (for source attribution)
 
-
-
         Returns:
 
             Dictionary mapping output file paths to generated content
-
-
 
         Raises:
 
@@ -521,15 +469,12 @@ class UniversalTemplateEngine:
         """
 
         if not config:
-
             raise ValueError("Configuration cannot be None or empty")
 
         if not language:
-
             raise ValueError("Language cannot be None or empty")
 
         if language not in self.renderers:
-
             available = list(self.renderers.keys())
 
             raise ValueError(
@@ -546,7 +491,6 @@ class UniversalTemplateEngine:
         # Use lazy loading if available
 
         if self.lazy_loader:
-
             # Ensure component registry is loaded
 
             self.lazy_loader.get_component("component_registry")
@@ -557,17 +501,14 @@ class UniversalTemplateEngine:
         ir_cache_key = f"ir_{hash(str(config_dict))}"
 
         if self.performance_enabled and self.template_cache and not self.test_mode:
-
             # Try to get cached IR
 
             cached_ir = self.template_cache._cache.get(ir_cache_key)
 
             if cached_ir:
-
                 ir = cached_ir
 
             else:
-
                 ir = self._build_intermediate_representation(config, config_filename)
 
                 # Cache the IR for future use
@@ -575,7 +516,6 @@ class UniversalTemplateEngine:
                 self.template_cache._cache.put(ir_cache_key, ir, ttl=300)  # 5 min cache
 
         else:
-
             ir = self._build_intermediate_representation(config, config_filename)
 
         # Get language-specific context
@@ -596,11 +536,8 @@ class UniversalTemplateEngine:
         failed_components = []
 
         for component_name, output_path in output_structure.items():
-
             try:
-
                 if self.component_registry.has_component(component_name):
-
                     # Use cached template if available and not in test mode
 
                     if (
@@ -608,20 +545,17 @@ class UniversalTemplateEngine:
                         and self.template_cache
                         and not self.test_mode
                     ):
-
                         template_path = (
                             self.component_registry.components_dir
                             / f"{component_name}.j2"
                         )
 
                         if template_path.exists():
-
                             rendered_content = self.template_cache.render_template(
                                 template_path, context
                             )
 
                             if rendered_content is not None:
-
                                 full_output_path = output_dir / output_path
 
                                 generated_files[str(full_output_path)] = (
@@ -645,7 +579,6 @@ class UniversalTemplateEngine:
                     generated_files[str(full_output_path)] = rendered_content
 
                 else:
-
                     typer.echo(
                         f"⚠️  Component '{component_name}' not found, skipping", err=True
                     )
@@ -653,7 +586,6 @@ class UniversalTemplateEngine:
                     failed_components.append(component_name)
 
             except Exception as e:
-
                 typer.echo(
                     f"❌ Failed to render component '{component_name}': {e}", err=True
                 )
@@ -665,7 +597,6 @@ class UniversalTemplateEngine:
         typer.echo(f"✅ Generated {len(generated_files)} files for {language}")
 
         if failed_components:
-
             typer.echo(
                 f"⚠️  Skipped {len(failed_components)} components: {', '.join(failed_components)}",
                 err=True,
@@ -680,7 +611,6 @@ class UniversalTemplateEngine:
             and failed_components
             and len(failed_components) == len(output_structure)
         ):
-
             # All requested components were missing/failed - this may be intentional for testing
 
             typer.echo(
@@ -689,7 +619,6 @@ class UniversalTemplateEngine:
             )
 
         elif not generated_files and failed_components:
-
             # Some components failed with errors (not just missing)
 
             raise RuntimeError(

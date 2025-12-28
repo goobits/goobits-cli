@@ -21,20 +21,19 @@ network conditions, package manager state, and system permissions.
 """
 
 import json
-import os
 import shutil
 import subprocess
+
+# Import test configs from integration tests
+import sys
 import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import pytest
 
-from goobits_cli.generation.builder import Builder
 from goobits_cli.core.schemas import GoobitsConfigSchema
-
-# Import test configs from integration tests
-import sys
+from goobits_cli.generation.builder import Builder
 
 integration_path = str(Path(__file__).parent.parent / "integration")
 if integration_path not in sys.path:
@@ -516,8 +515,8 @@ Repository = "{config.repository}"
         if hasattr(config.cli, "commands") and config.cli.commands:
             commands = list(config.cli.commands.keys())
 
-        hooks_content = '''#!/usr/bin/env python3
-"""Hook implementations for {package_name}.
+        hooks_content = f'''#!/usr/bin/env python3
+"""Hook implementations for {config.package_name}.
 
 This file contains the business logic implementations for CLI commands.
 """
@@ -526,9 +525,7 @@ def print_info(message: str):
     """Print informational message."""
     print(f"[INFO] {{message}}")
 
-'''.format(
-            package_name=config.package_name
-        )
+'''
 
         # Generate hook functions for each command
         for cmd in commands:
@@ -1415,9 +1412,9 @@ class TestCrossLanguageInstallation(TestInstallationWorkflows):
 
         # Verify files are contained in the temp directory
         for file_path in generated_files.values():
-            assert (
-                temp_dir in file_path
-            ), f"Generated file {file_path} not in temp directory"
+            assert temp_dir in file_path, (
+                f"Generated file {file_path} not in temp directory"
+            )
 
 
 if __name__ == "__main__":

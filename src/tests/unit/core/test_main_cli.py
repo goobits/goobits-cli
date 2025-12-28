@@ -17,32 +17,34 @@ Merged from test_main_cli.py and test_main_cli_real.py to eliminate duplication
 and provide comprehensive coverage in a single organized file.
 """
 
-import pytest
 import subprocess
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
-import yaml
-import typer
+from unittest.mock import MagicMock, mock_open, patch
 
-from goobits_cli.main import (
-    app,
-    load_goobits_config,
-    normalize_dependencies_for_template,
-    generate_setup_script,
-    backup_file,
-    update_pyproject_toml,
-    extract_version_from_pyproject,
-    dependency_to_dict,
-    dependencies_to_json,
-    generate_basic_template,
+import pytest
+import typer
+import yaml
+
+from goobits_cli.core.schemas import GoobitsConfigSchema
+from goobits_cli.main import app, version_callback
+from goobits_cli.commands.init import (
     generate_advanced_template,
     generate_api_client_template,
+    generate_basic_template,
     generate_text_processor_template,
-    version_callback,
 )
-from goobits_cli.core.schemas import GoobitsConfigSchema
-from .test_base import TestMainCLIBase
+from goobits_cli.commands.utils import (
+    backup_file,
+    dependencies_to_json,
+    dependency_to_dict,
+    extract_version_from_pyproject,
+    generate_setup_script,
+    load_goobits_config,
+    normalize_dependencies_for_template,
+    update_pyproject_toml,
+)
 
+from .test_base import TestMainCLIBase
 
 # ============================================================================
 # CLI COMMANDS TESTS
@@ -142,7 +144,9 @@ class TestMainCLICommands(TestMainCLIBase):
         assert result.exit_code == 0
         assert "Detected language: nodejs" in result.stdout
 
-    @patch("goobits_cli.generation.renderers.typescript.TypeScriptGenerator.generate_all_files")
+    @patch(
+        "goobits_cli.generation.renderers.typescript.TypeScriptGenerator.generate_all_files"
+    )
     def test_build_command_typescript(self, mock_generate):
         """Test build command with TypeScript language."""
         config_content = self.get_minimal_valid_config(
@@ -519,9 +523,9 @@ class TestMainCLICommands(TestMainCLIBase):
                 )
 
                 assert result.exit_code == 0, f"Failed for template: {template}"
-                assert (
-                    config_path.exists()
-                ), f"Config not created for template: {template}"
+                assert config_path.exists(), (
+                    f"Config not created for template: {template}"
+                )
 
                 content = config_path.read_text()
                 assert f"test-{template}" in content

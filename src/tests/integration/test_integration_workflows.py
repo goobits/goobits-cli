@@ -5,6 +5,9 @@ to successful deployment and functionality testing.
 """
 
 import subprocess
+
+# Import CLITestHelper from E2E tests since we moved installation flows there
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -14,13 +17,9 @@ import pytest
 
 from .package_manager_utils import (
     PackageManagerRegistry,
-    validate_installation_environment,
     cleanup_global_packages,
 )
-from .test_configs import TestConfigTemplates, TestScenarioRunner
-
-# Import CLITestHelper from E2E tests since we moved installation flows there
-import sys
+from .test_configs import TestConfigTemplates
 
 sys.path.append(str(Path(__file__).parent.parent / "e2e"))
 from test_installation_flows import CLITestHelper
@@ -123,9 +122,9 @@ class IntegrationTestRunner:
             # Phase 3: Functionality Testing
             if install_success:
                 functionality_results = self._test_cli_functionality(config)
-                self.test_results[test_id]["phases"][
-                    "functionality"
-                ] = functionality_results
+                self.test_results[test_id]["phases"]["functionality"] = (
+                    functionality_results
+                )
 
                 # Phase 4: Cleanup Testing
                 cleanup_results = self._test_cleanup_process(config, language)
@@ -182,12 +181,12 @@ class IntegrationTestRunner:
 from setuptools import setup
 
 setup(
-    name="{getattr(config, 'package_name', 'test-cli')}",
+    name="{getattr(config, "package_name", "test-cli")}",
     version="1.0.0",
     py_modules=["cli"],
     entry_points={{
         'console_scripts': [
-            '{getattr(config, 'command_name', 'test-cli')}=cli:main',
+            '{getattr(config, "command_name", "test-cli")}=cli:main',
         ],
     }},
 )
@@ -238,10 +237,10 @@ setup(
                 # Create minimal package.json for testing
                 package_json.write_text(
                     f"""{{
-    "name": "{getattr(config, 'package_name', 'test-cli')}",
+    "name": "{getattr(config, "package_name", "test-cli")}",
     "version": "1.0.0",
     "bin": {{
-        "{getattr(config, 'command_name', 'test-cli')}": "./cli.js"
+        "{getattr(config, "command_name", "test-cli")}": "./cli.js"
     }},
     "dependencies": {{}}
 }}"""
@@ -308,10 +307,10 @@ setup(
                 # Create minimal package.json for TypeScript testing
                 package_json.write_text(
                     f"""{{
-    "name": "{getattr(config, 'package_name', 'test-cli')}",
+    "name": "{getattr(config, "package_name", "test-cli")}",
     "version": "1.0.0",
     "bin": {{
-        "{getattr(config, 'command_name', 'test-cli')}": "./dist/cli.js"
+        "{getattr(config, "command_name", "test-cli")}": "./dist/cli.js"
     }},
     "scripts": {{
         "build": "echo 'Skipping TypeScript build for test'"
@@ -432,8 +431,8 @@ setup(
         """Get the full path to the CLI command based on language and installation method."""
         if language == "python":
             # For Python, the CLI is installed in the virtual environment's bin directory
-            import sys
             import os
+            import sys
 
             venv_bin = os.path.dirname(sys.executable)
             cli_path = os.path.join(venv_bin, command_name)

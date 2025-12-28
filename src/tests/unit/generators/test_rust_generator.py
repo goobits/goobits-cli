@@ -13,29 +13,12 @@ Merged from test_rust_generator.py and test_rust_specific_features.py
 to eliminate duplicate coverage and provide unified testing.
 """
 
-import pytest
-from unittest.mock import Mock, patch
-from pathlib import Path
-import tempfile
-import shutil
 import threading
 from functools import wraps
 
+import pytest
+
 from goobits_cli.generation.renderers.rust import RustGenerator
-from goobits_cli.generation import (
-    ConfigurationError,
-    TemplateError,
-    ValidationError,
-)
-from goobits_cli.core.schemas import (
-    ConfigSchema,
-    CLISchema,
-    CommandSchema,
-    ArgumentSchema,
-    OptionSchema,
-)
-from goobits_cli.main import load_goobits_config
-from ...conftest import create_test_goobits_config, determine_language
 
 
 # Timeout decorator for hanging tests

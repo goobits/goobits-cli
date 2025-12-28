@@ -2,17 +2,14 @@
 
 Plugin system for Goobits CLI Framework.
 
-
-
 Provides a secure, extensible plugin architecture with marketplace integration,
 
 version management, and cross-language support.
 
 """
 
-from .manager import PluginManager, PluginInfo, PluginRegistry
-
 from .integration import setup_plugin_integration
+from .manager import PluginInfo, PluginManager, PluginRegistry
 
 
 def integrate_plugin_system(config_dict, language):
@@ -20,15 +17,11 @@ def integrate_plugin_system(config_dict, language):
 
     Integrate plugin system into CLI configuration.
 
-
-
     Args:
 
         config_dict: CLI configuration dictionary
 
         language: Target language (python, nodejs, typescript, rust)
-
-
 
     Returns:
 
@@ -49,7 +42,6 @@ def integrate_plugin_system(config_dict, language):
     # Add plugin configuration to CLI config
 
     if not config_dict.get("cli"):
-
         config_dict["cli"] = {}
 
     # Add plugin system configuration

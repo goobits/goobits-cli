@@ -24,16 +24,17 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+
 import pytest
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
-from goobits_cli.generation.renderers.rust import RustGenerator
 from goobits_cli.core.schemas import ConfigSchema
+from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+from goobits_cli.generation.renderers.python import PythonGenerator
+from goobits_cli.generation.renderers.rust import RustGenerator
+from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
 
 
 @dataclass
@@ -181,9 +182,9 @@ class TestPerformanceBenchmarks:
 
             # Verify files were generated (check for actual generated file types)
             main_files = ["cli.js", "cli.mjs", "index.js"]
-            assert any(
-                (tmp_path / f).exists() for f in main_files
-            ), f"No main CLI file found in {list(tmp_path.iterdir())}"
+            assert any((tmp_path / f).exists() for f in main_files), (
+                f"No main CLI file found in {list(tmp_path.iterdir())}"
+            )
             # package.json might not be generated in test scenarios, so check if any files exist
             generated_files = list(tmp_path.iterdir())
             assert len(generated_files) > 0, f"No files generated in {tmp_path}"
@@ -219,9 +220,9 @@ class TestPerformanceBenchmarks:
 
             # Verify files were generated (check for either main file types)
             main_files = ["cli.ts", "index.ts", "generated_index.ts"]
-            assert any(
-                (tmp_path / f).exists() for f in main_files
-            ), f"No main CLI file found in {list(tmp_path.iterdir())}"
+            assert any((tmp_path / f).exists() for f in main_files), (
+                f"No main CLI file found in {list(tmp_path.iterdir())}"
+            )
             # Verify at least some files were generated (config files might not be generated in test scenarios)
             generated_files = list(tmp_path.iterdir())
             assert len(generated_files) > 0, f"No files generated in {tmp_path}"
@@ -290,12 +291,12 @@ class TestPerformanceBenchmarks:
 
         # Performance should be reasonable across all languages
         for lang, result in results.items():
-            assert (
-                result.duration_ms < 10000
-            ), f"{lang} generation too slow: {result.duration_ms}ms"
-            assert (
-                result.memory_usage_mb < 200
-            ), f"{lang} using too much memory: {result.memory_usage_mb}MB"
+            assert result.duration_ms < 10000, (
+                f"{lang} generation too slow: {result.duration_ms}ms"
+            )
+            assert result.memory_usage_mb < 200, (
+                f"{lang} using too much memory: {result.memory_usage_mb}MB"
+            )
 
     def test_large_config_performance(self, tmp_path):
         """Test performance with a large configuration."""
@@ -398,9 +399,9 @@ class TestPerformanceBenchmarks:
         avg_duration_ms = ((end_time - start_time) / 3) * 1000
 
         # Template rendering should be fast (under 2 seconds per generation)
-        assert (
-            avg_duration_ms < 2000
-        ), f"Template rendering too slow: {avg_duration_ms}ms"
+        assert avg_duration_ms < 2000, (
+            f"Template rendering too slow: {avg_duration_ms}ms"
+        )
 
 
 class TestSimpleBenchmarks:

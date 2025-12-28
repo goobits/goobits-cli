@@ -14,15 +14,14 @@ These tests verify:
 For actual installation testing, see tests/e2e/test_installation_flows.py
 """
 
+import json
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
-import json
+from typing import Dict
 
 import pytest
 
 from .test_configs import TestConfigTemplates
-from goobits_cli.generation.builder import Builder
 
 
 class TestInstallationScriptGeneration:
@@ -100,13 +99,13 @@ class TestInstallationScriptGeneration:
 
             # Language-specific checks
             if language == "python":
-                assert (
-                    "pip" in setup_lower or "pipx" in setup_lower
-                ), "Python setup should mention pip/pipx"
+                assert "pip" in setup_lower or "pipx" in setup_lower, (
+                    "Python setup should mention pip/pipx"
+                )
             elif language in ["nodejs", "typescript"]:
-                assert (
-                    "npm" in setup_lower or "node" in setup_lower
-                ), "Node.js setup should mention npm/node"
+                assert "npm" in setup_lower or "node" in setup_lower, (
+                    "Node.js setup should mention npm/node"
+                )
             elif language == "rust":
                 assert "cargo" in setup_lower, "Rust setup should mention cargo"
 
@@ -118,9 +117,9 @@ class TestInstallationScriptGeneration:
                 for f in files.keys()
                 if f.endswith((".py", ".js", ".mjs", ".ts", ".rs"))
             ]
-            assert (
-                len(cli_files) > 0
-            ), f"{language} should generate at least one CLI file"
+            assert len(cli_files) > 0, (
+                f"{language} should generate at least one CLI file"
+            )
             print(f"ℹ️  {language} uses simplified approach without setup.sh")
 
     @pytest.mark.parametrize("language", ["nodejs", "typescript"])
@@ -139,32 +138,32 @@ class TestInstallationScriptGeneration:
 
                 # Basic package.json structure validation
                 assert "name" in package_data, "package.json should have name field"
-                assert (
-                    "version" in package_data
-                ), "package.json should have version field"
+                assert "version" in package_data, (
+                    "package.json should have version field"
+                )
 
                 # Check for CLI-specific fields
                 if "bin" in package_data:
-                    assert isinstance(
-                        package_data["bin"], (dict, str)
-                    ), "bin field should be dict or string"
+                    assert isinstance(package_data["bin"], (dict, str)), (
+                        "bin field should be dict or string"
+                    )
 
                 # Dependencies validation
                 if language == "nodejs":
                     # Node.js should have commander dependency
                     deps = package_data.get("dependencies", {})
-                    assert (
-                        "commander" in str(deps).lower()
-                    ), "Node.js CLI should include commander dependency"
+                    assert "commander" in str(deps).lower(), (
+                        "Node.js CLI should include commander dependency"
+                    )
                 elif language == "typescript":
                     # TypeScript might have type dependencies
                     all_deps = {
                         **package_data.get("dependencies", {}),
                         **package_data.get("devDependencies", {}),
                     }
-                    assert (
-                        len(all_deps) > 0
-                    ), "TypeScript CLI should have some dependencies"
+                    assert len(all_deps) > 0, (
+                        "TypeScript CLI should have some dependencies"
+                    )
 
                 print(f"✅ {language} package.json generation validated")
 
@@ -186,17 +185,17 @@ class TestInstallationScriptGeneration:
             cargo_content = files[cargo_files[0]]
 
             # Basic Cargo.toml validation
-            assert (
-                "[package]" in cargo_content
-            ), "Cargo.toml should have [package] section"
+            assert "[package]" in cargo_content, (
+                "Cargo.toml should have [package] section"
+            )
             assert "name" in cargo_content, "Cargo.toml should specify package name"
             assert "version" in cargo_content, "Cargo.toml should specify version"
 
             # Check for dependencies section
             if "[dependencies]" in cargo_content:
-                assert (
-                    "clap" in cargo_content.lower()
-                ), "Rust CLI should include clap dependency"
+                assert "clap" in cargo_content.lower(), (
+                    "Rust CLI should include clap dependency"
+                )
 
             print(f"✅ {language} Cargo.toml generation validated")
         else:
@@ -217,14 +216,14 @@ class TestInstallationScriptGeneration:
 
         # Verify that all languages that generate setup.sh follow similar patterns
         for language, setup_content in setup_scripts.items():
-            assert (
-                "set -e" in setup_content
-            ), f"{language} setup should have error handling"
-            assert (
-                len(setup_content.strip()) > 0
-            ), f"{language} setup should not be empty"
+            assert "set -e" in setup_content, (
+                f"{language} setup should have error handling"
+            )
+            assert len(setup_content.strip()) > 0, (
+                f"{language} setup should not be empty"
+            )
 
-        print(f"✅ Cross-language installation consistency validated")
+        print("✅ Cross-language installation consistency validated")
 
     @pytest.mark.parametrize("config_type", ["minimal", "complex", "dependency_heavy"])
     def test_installation_complexity_handling(self, config_type):
@@ -239,9 +238,9 @@ class TestInstallationScriptGeneration:
             setup_content = files[setup_files[0]]
 
             # All complexity levels should have basic structure
-            assert (
-                len(setup_content.strip()) > 0
-            ), f"{config_type} config should generate setup content"
+            assert len(setup_content.strip()) > 0, (
+                f"{config_type} config should generate setup content"
+            )
 
             if config_type == "dependency_heavy":
                 # Heavy configs might have more complex installation steps

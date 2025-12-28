@@ -10,13 +10,13 @@ that integrates with the existing session management. Features include:
 """
 
 import json
+import logging
 import re
 import time
-from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
-from threading import Lock
-import logging
 from enum import Enum
+from threading import Lock
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -390,7 +390,8 @@ class VariableStore:
                 value_str = str(variable.value)
                 if " " in value_str or '"' in value_str:
                     # Escape quotes and wrap in quotes
-                    return f'"{value_str.replace('"', '\\"')}"'
+                    escaped = value_str.replace('"', '\\"')
+                    return f'"{escaped}"'
                 return value_str
             else:
                 return str(variable.value)

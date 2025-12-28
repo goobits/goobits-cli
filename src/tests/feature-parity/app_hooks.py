@@ -1,7 +1,7 @@
 """Hook implementations for the test CLI"""
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 

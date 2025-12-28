@@ -10,13 +10,13 @@ a complete advanced interactive mode experience.
 
 import asyncio
 import json
+import logging
 import shlex
 import time
-from typing import Dict, List, Optional, Any, Tuple, AsyncIterator
-from dataclasses import dataclass, asdict
-from threading import Lock
-import logging
+from dataclasses import asdict, dataclass
 from enum import Enum
+from threading import Lock
+from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -557,9 +557,9 @@ class PipelineProcessor:
                             if success
                             else PipelineStatus.FAILED
                         )
-                        self.active_pipelines[execution_id][
-                            "completed_at"
-                        ] = time.time()
+                        self.active_pipelines[execution_id]["completed_at"] = (
+                            time.time()
+                        )
 
                 # Add to execution history
                 self.execution_history.append(
@@ -581,9 +581,9 @@ class PipelineProcessor:
             except asyncio.TimeoutError:
                 with self._pipeline_lock:
                     if execution_id in self.active_pipelines:
-                        self.active_pipelines[execution_id][
-                            "status"
-                        ] = PipelineStatus.CANCELLED
+                        self.active_pipelines[execution_id]["status"] = (
+                            PipelineStatus.CANCELLED
+                        )
 
                 return False, f"Pipeline timed out after {timeout} seconds"
 
@@ -592,9 +592,9 @@ class PipelineProcessor:
 
             with self._pipeline_lock:
                 if execution_id in self.active_pipelines:
-                    self.active_pipelines[execution_id][
-                        "status"
-                    ] = PipelineStatus.FAILED
+                    self.active_pipelines[execution_id]["status"] = (
+                        PipelineStatus.FAILED
+                    )
 
             return False, f"Pipeline execution error: {e}"
 

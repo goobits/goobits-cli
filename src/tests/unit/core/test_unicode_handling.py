@@ -18,27 +18,29 @@ pipeline from YAML configuration to generated CLI code, and that the resulting
 code compiles/runs without Unicode-related errors.
 """
 
+import os
+import tempfile
+
 import pytest
 import yaml
-import tempfile
-import os
+
 from goobits_cli.core.schemas import (
-    GoobitsConfigSchema,
+    ArgumentSchema,
     CLISchema,
     CommandSchema,
-    ArgumentSchema,
+    DependenciesSchema,
+    GoobitsConfigSchema,
+    InstallationSchema,
+    MessagesSchema,
     OptionSchema,
     PythonConfigSchema,
-    DependenciesSchema,
-    InstallationSchema,
     ShellIntegrationSchema,
     ValidationSchema,
-    MessagesSchema,
 )
-from goobits_cli.generation.renderers.python import PythonGenerator
 from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.generation.renderers.python import PythonGenerator
 from goobits_cli.generation.renderers.rust import RustGenerator
+from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
 
 
 class TestUnicodeInConfigs:
@@ -395,7 +397,7 @@ class TestUnicodeInYamlParsing:
 
             try:
                 # Try to read and parse the YAML file
-                with open(yaml_file, "r", encoding=encoding) as f:
+                with open(yaml_file, encoding=encoding) as f:
                     loaded_content = yaml.safe_load(f)
 
                 # Verify Unicode content is preserved
@@ -431,17 +433,19 @@ class TestUnicodeInYamlParsing:
 
                         # Verify Unicode is preserved through the entire pipeline
                         # Check that package description Unicode appears somewhere
-                        assert (
-                            package_description_found or "漢字" in all_content
-                        ), "Package description Unicode characters (漢字) not found in generated files"
+                        assert package_description_found or "漢字" in all_content, (
+                            "Package description Unicode characters (漢字) not found in generated files"
+                        )
                         assert (
                             package_description_found or "кириллица" in all_content
-                        ), "Package description Unicode characters (кириллица) not found in generated files"
+                        ), (
+                            "Package description Unicode characters (кириллица) not found in generated files"
+                        )
 
                         # Command names with Unicode should be preserved in CLI logic files
-                        assert (
-                            command_content_found or "东西" in all_content
-                        ), "Command Unicode content (东西) not found in generated files"
+                        assert command_content_found or "东西" in all_content, (
+                            "Command Unicode content (东西) not found in generated files"
+                        )
 
                         # Set result to the combined content for final verification
                         result = all_content
@@ -489,7 +493,7 @@ cli:
             yaml_file = f.name
 
         try:
-            with open(yaml_file, "r", encoding="utf-8-sig") as f:
+            with open(yaml_file, encoding="utf-8-sig") as f:
                 loaded_content = yaml.safe_load(f)
 
             # Verify BOM doesn't interfere with Unicode handling
@@ -874,9 +878,9 @@ class TestComplexUnicodeScenarios:
             ]
 
             for text in key_unicode_texts:
-                assert (
-                    text in result
-                ), f"Key Unicode text '{text}' not found in {language} output"
+                assert text in result, (
+                    f"Key Unicode text '{text}' not found in {language} output"
+                )
 
             # Verify the generated code has basic structure
             assert isinstance(result, str)

@@ -39,13 +39,25 @@ def _lazy_imports():
 
         typer = _typer
     if Environment is None:
-        from jinja2 import Environment as _Environment, DictLoader as _DictLoader
+        from jinja2 import DictLoader as _DictLoader
+        from jinja2 import Environment as _Environment
 
         Environment = _Environment
         DictLoader = _DictLoader
 
 
 # Base generator and error imports
+from ...core.schemas import ConfigSchema, GoobitsConfigSchema
+from ...universal.completion import (
+    integrate_completion_system,
+)
+from ...universal.interactive import integrate_interactive_mode
+from ...universal.plugins import integrate_plugin_system
+from ...universal.renderers.python_renderer import PythonRenderer
+
+# Universal Template System imports
+# Universal Template System is required
+from ...universal.template_engine import UniversalTemplateEngine
 from .. import (
     BaseGenerator,
     DependencyError,
@@ -53,17 +65,6 @@ from .. import (
     ValidationError,
     _safe_to_dict,
 )
-from ...core.schemas import ConfigSchema, GoobitsConfigSchema
-
-# Universal Template System imports
-# Universal Template System is required
-from ...universal.template_engine import UniversalTemplateEngine
-from ...universal.renderers.python_renderer import PythonRenderer
-from ...universal.interactive import integrate_interactive_mode
-from ...universal.completion import (
-    integrate_completion_system,
-)
-from ...universal.plugins import integrate_plugin_system
 
 
 class PythonGenerator(BaseGenerator):
@@ -182,9 +183,9 @@ class PythonGenerator(BaseGenerator):
             if isinstance(config, ConfigSchema):
                 # Create minimal GoobitsConfigSchema for universal system with defaults
                 from ...core.schemas import (
-                    PythonConfigSchema,
                     DependenciesSchema,
                     InstallationSchema,
+                    PythonConfigSchema,
                     ValidationSchema,
                 )
 
@@ -378,7 +379,6 @@ class PythonGenerator(BaseGenerator):
             # Write each file to the output directory
             written_files = {}
             for relative_path, content in all_files.items():
-
                 if is_test_call:
                     # For tests, flatten the structure - write CLI files directly to output_directory
                     file_name = Path(relative_path).name

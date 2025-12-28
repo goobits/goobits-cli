@@ -8,13 +8,13 @@ Extends the existing completion system with intelligent features:
 - Backward compatible with existing DynamicCompletionRegistry
 """
 
-import time
-from collections import defaultdict, Counter
-from typing import List, Dict
-from dataclasses import dataclass, field
 import logging
+import time
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from typing import Dict, List
 
-from .registry import DynamicCompletionRegistry, CompletionProvider, CompletionContext
+from .registry import CompletionContext, CompletionProvider, DynamicCompletionRegistry
 
 logger = logging.getLogger(__name__)
 

@@ -6,10 +6,9 @@ are required, enabling optimized CLI generation that excludes unused
 dependencies and code.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 from ...generation import _safe_to_dict
-from ..utils import _safe_get_attr
 
 
 class FeatureAnalyzer:

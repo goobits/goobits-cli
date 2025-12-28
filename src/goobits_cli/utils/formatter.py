@@ -1,8 +1,7 @@
 """Formatting utilities for CLI generation."""
 
-from typing import List, Tuple
-
 import unicodedata
+from typing import List, Tuple
 
 
 def align_examples(examples: List[Tuple[str, str]]) -> List[str]:

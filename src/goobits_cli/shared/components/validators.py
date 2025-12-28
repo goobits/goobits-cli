@@ -14,28 +14,28 @@ try:
     from .validation_framework import (
         BaseValidator,
         ValidationContext,
-        ValidationResult,
         ValidationMode,
+        ValidationResult,
     )
 except ImportError:
     # Handle direct execution
     from validation_framework import (
         BaseValidator,
         ValidationContext,
-        ValidationResult,
         ValidationMode,
+        ValidationResult,
     )
 
 # Import schemas for validation
 sys.path.append(str(Path(__file__).parent.parent.parent / "src"))
 try:
     from goobits_cli.core.schemas import (
-        CommandSchema,
         ArgumentSchema,
-        OptionSchema,
-        GoobitsConfigSchema,
         CLISchema,
         CommandGroupSchema,
+        CommandSchema,
+        GoobitsConfigSchema,
+        OptionSchema,
     )
 except ImportError:
     # Fallback for standalone usage

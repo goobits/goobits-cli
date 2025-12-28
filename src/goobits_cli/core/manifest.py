@@ -7,7 +7,8 @@ import json
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Union
+from typing import Any, Dict, List, Optional
+
 import toml
 
 
@@ -61,7 +62,7 @@ class ManifestUpdater:
 
             # Load or create package.json
             if package_json_path.exists():
-                with open(package_json_path, "r") as f:
+                with open(package_json_path) as f:
                     package_data = json.load(f)
             else:
                 package_data = {}
@@ -102,7 +103,7 @@ class ManifestUpdater:
 
             # Load or create Cargo.toml
             if cargo_toml_path.exists():
-                with open(cargo_toml_path, "r") as f:
+                with open(cargo_toml_path) as f:
                     cargo_data = toml.load(f)
             else:
                 cargo_data = {}

@@ -1,15 +1,16 @@
 """TypeScript CLI generator implementation."""
 
 from pathlib import Path
-
 from typing import Dict, List, Optional, Union
 
 # Import shared utilities
 from ...utils.strings import (
-    to_camel_case,
-    to_pascal_case,
-    to_kebab_case,
     escape_javascript_string,
+    to_camel_case,
+    to_kebab_case,
+    to_pascal_case,
+)
+from ...utils.strings import (
     json_stringify as shared_json_stringify,
 )
 
@@ -25,9 +26,9 @@ def _lazy_imports():
     global TemplateNotFound, Environment, DictLoader, typer
 
     if Environment is None:
-        from jinja2 import TemplateNotFound as _TemplateNotFound
-        from jinja2 import Environment as _Environment
         from jinja2 import DictLoader as _DictLoader
+        from jinja2 import Environment as _Environment
+        from jinja2 import TemplateNotFound as _TemplateNotFound
 
         TemplateNotFound = _TemplateNotFound
         Environment = _Environment
@@ -38,29 +39,28 @@ def _lazy_imports():
         typer = _typer
 
 
-from .nodejs import NodeJSGenerator
-
 from ...core.schemas import ConfigSchema, GoobitsConfigSchema
-
-from ...utils.formatter import align_header_items, format_icon_spacing, align_setup_steps
-
 from ...shared.components import create_documentation_generator
-
-from ...shared.test_utils.validation import ValidationResult, TestDataValidator
-
+from ...shared.test_utils.validation import TestDataValidator, ValidationResult
+from ...universal.completion import (
+    get_completion_files_for_language,
+    integrate_completion_system,
+)
+from ...universal.interactive import integrate_interactive_mode
+from ...universal.plugins import integrate_plugin_system
+from ...universal.renderers.typescript_renderer import (
+    TypeScriptRenderer as UniversalTypeScriptRenderer,
+)
 
 # Universal Template System imports
 # Universal Template System is required
 from ...universal.template_engine import UniversalTemplateEngine
-from ...universal.renderers.typescript_renderer import (
-    TypeScriptRenderer as UniversalTypeScriptRenderer,
+from ...utils.formatter import (
+    align_header_items,
+    align_setup_steps,
+    format_icon_spacing,
 )
-from ...universal.interactive import integrate_interactive_mode
-from ...universal.completion import (
-    integrate_completion_system,
-    get_completion_files_for_language,
-)
-from ...universal.plugins import integrate_plugin_system
+from .nodejs import NodeJSGenerator
 
 
 class TypeScriptGenerator(NodeJSGenerator):
@@ -109,7 +109,6 @@ class TypeScriptGenerator(NodeJSGenerator):
         from jinja2 import FileSystemLoader
 
         if template_dir.exists():
-
             self.env = Environment(
                 loader=FileSystemLoader([template_dir, fallback_dir]),
                 trim_blocks=True,
@@ -119,13 +118,11 @@ class TypeScriptGenerator(NodeJSGenerator):
             self.template_missing = False
 
         else:
-
             # If typescript subdirectory doesn't exist, fallback to nodejs templates
 
             nodejs_dir = Path(__file__).parent.parent.parent / "templates" / "nodejs"
 
             if nodejs_dir.exists():
-
                 self.env = Environment(
                     loader=FileSystemLoader([nodejs_dir, fallback_dir]),
                     trim_blocks=True,
@@ -133,7 +130,6 @@ class TypeScriptGenerator(NodeJSGenerator):
                 )
 
             else:
-
                 self.env = Environment(
                     loader=FileSystemLoader(fallback_dir),
                     trim_blocks=True,
@@ -193,8 +189,6 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         Generate TypeScript CLI code from configuration.
 
-
-
         Args:
 
             config: The configuration object
@@ -202,8 +196,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             config_filename: Name of the configuration file OR output directory path (for E2E test compatibility)
 
             version: Optional version string
-
-
 
         Returns:
 
@@ -220,7 +212,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             or "pytest" in config_filename
             or Path(config_filename).is_dir()
         ):
-
             # For E2E tests, use the legacy approach which is more reliable
             # Write files directly to the output directory (test compatibility)
             output_path = Path(config_filename)
@@ -279,8 +270,6 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         Override to use TypeScript language in universal templates.
 
-
-
         Args:
 
             config: The configuration object
@@ -289,8 +278,6 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             version: Optional version string
 
-
-
         Returns:
 
             Generated TypeScript CLI code
@@ -298,17 +285,14 @@ class TypeScriptGenerator(NodeJSGenerator):
         """
 
         try:
-
             # Ensure universal engine is available
 
             if not self.universal_engine:
-
                 raise RuntimeError("Universal Template Engine not initialized")
 
             # Convert config to GoobitsConfigSchema if needed
 
             if isinstance(config, ConfigSchema):
-
                 # Create minimal GoobitsConfigSchema for universal system
 
                 from ...core.schemas import GoobitsConfigSchema as _GoobitsConfigSchema
@@ -329,13 +313,11 @@ class TypeScriptGenerator(NodeJSGenerator):
                 )
 
             else:
-
                 goobits_config = config
 
             # Integrate interactive mode support
 
             if integrate_interactive_mode:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -357,7 +339,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             # Integrate completion system support
 
             if integrate_completion_system:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -379,7 +360,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             # Integrate plugin system support
 
             if integrate_plugin_system:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -421,7 +401,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             self._generated_files = {}
 
             for file_path, content in generated_files.items():
-
                 # Extract relative path from output directory (preserve directory structure)
 
                 relative_path = Path(file_path).relative_to(output_dir)
@@ -440,7 +419,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             )
 
             if not main_file:
-
                 # If no main file found, use the first available content
 
                 main_file = next(iter(generated_files.values()), "")
@@ -448,7 +426,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             return main_file
 
         except Exception as e:
-
             # Handle template generation failure
 
             typer.echo(
@@ -462,7 +439,7 @@ class TypeScriptGenerator(NodeJSGenerator):
 
             # TypeScript Universal Templates failed - provide helpful error
             error_msg = f"""❌ TypeScript Universal Templates failed: {type(e).__name__}: {e}
-            
+
 🔧 Troubleshooting:
 1. Check TypeScript configuration syntax
 2. Ensure all required fields are present
@@ -518,13 +495,9 @@ class TypeScriptGenerator(NodeJSGenerator):
     def _validate_config(self, config: any) -> ValidationResult:
         """Validate TypeScript-specific configuration.
 
-
-
         Args:
 
             config: Configuration object to validate
-
-
 
         Returns:
 
@@ -539,15 +512,12 @@ class TypeScriptGenerator(NodeJSGenerator):
         cli_config = None
 
         if hasattr(config, "cli"):
-
             cli_config = config.cli
 
         elif isinstance(config, dict) and "cli" in config:
-
             cli_config = config["cli"]
 
         if not cli_config:
-
             result.add_error("No CLI configuration found")
 
             return result
@@ -555,13 +525,10 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Validate TypeScript-specific requirements
 
         if hasattr(cli_config, "commands"):
-
             for cmd_name, cmd_data in cli_config.commands.items():
-
                 # Check for valid command names in TypeScript context
 
                 if "-" in cmd_name and "_" in cmd_name:
-
                     result.add_warning(
                         f"Command '{cmd_name}' mixes hyphens and underscores. "
                         "Consider using consistent naming (kebab-case recommended)."
@@ -570,9 +537,7 @@ class TypeScriptGenerator(NodeJSGenerator):
                 # Validate TypeScript compatibility for options
 
                 if hasattr(cmd_data, "options") and cmd_data.options:
-
                     for opt in cmd_data.options:
-
                         if hasattr(opt, "type") and opt.type not in [
                             "str",
                             "int",
@@ -581,7 +546,6 @@ class TypeScriptGenerator(NodeJSGenerator):
                             "flag",
                             "list",
                         ]:
-
                             result.add_warning(
                                 f"Option '{opt.name}' has type '{opt.type}' which may need custom handling in TypeScript"
                             )
@@ -589,7 +553,6 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Check for TypeScript-specific installation requirements
 
         if hasattr(config, "installation"):
-
             installation = config.installation
 
             if (
@@ -597,13 +560,10 @@ class TypeScriptGenerator(NodeJSGenerator):
                 and hasattr(installation.extras, "npm")
                 and installation.extras.npm
             ):
-
                 # Validate npm packages
 
                 for pkg in installation.extras.npm:
-
                     if "@types/" in pkg and pkg not in ["@types/node"]:
-
                         result.details.setdefault("type_packages", []).append(pkg)
 
         result.details["language"] = "typescript"
@@ -626,19 +586,15 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Determine the directory to check for conflicts
 
         for filepath, content in target_files.items():
-
             # Construct the full path for conflict checking
 
             if target_directory:
-
                 check_path = os.path.join(target_directory, filepath)
 
             else:
-
                 check_path = filepath
 
             if filepath == "index.ts" and os.path.exists(check_path):
-
                 # index.ts exists, use a different name to avoid conflicts
                 new_filepath = "generated_index.ts"
 
@@ -653,7 +609,6 @@ class TypeScriptGenerator(NodeJSGenerator):
                 )
 
             elif filepath == "package.json" and os.path.exists(check_path):
-
                 warnings.append(
                     "⚠️  Existing package.json detected. Review and merge dependencies manually."
                 )
@@ -661,7 +616,6 @@ class TypeScriptGenerator(NodeJSGenerator):
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
             elif filepath == "tsconfig.json" and os.path.exists(check_path):
-
                 warnings.append(
                     "⚠️  Existing tsconfig.json detected. Review and merge settings manually."
                 )
@@ -669,17 +623,14 @@ class TypeScriptGenerator(NodeJSGenerator):
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
             else:
-
                 adjusted_files[filepath] = content
 
         # Print warnings if any
 
         if warnings:
-
             typer.echo("\n🔍 File Conflict Detection:")
 
             for warning in warnings:
-
                 typer.echo(f"   {warning}")
 
             typer.echo("")
@@ -809,11 +760,9 @@ class TypeScriptGenerator(NodeJSGenerator):
         validation_result = self._validate_config(config)
 
         if not validation_result.passed:
-
             error_msg = "Configuration validation failed:\n"
 
             for error in validation_result.errors:
-
                 error_msg += f"  - {error}\n"
 
             raise ValueError(error_msg)
@@ -821,7 +770,6 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Log warnings if any
 
         for warning in validation_result.warnings:
-
             typer.echo(f"⚠️  {warning}", err=True)
 
         # Determine main file name (check for conflicts early)
@@ -879,13 +827,11 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Generate main index.ts file - CLI entry point
 
         try:
-
             template = self.env.get_template("index.ts.j2")
 
             files["index.ts"] = template.render(**context)
 
         except TemplateNotFound:
-
             files["index.ts"] = self._generate_fallback_typescript_code(context)
 
         # Generate src/hooks.ts file - user's business logic (TypeScript for better type safety)
@@ -895,37 +841,31 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Generate package.json
 
         try:
-
             template = self.env.get_template("package.json.j2")
 
             files["package.json"] = template.render(**context)
 
         except TemplateNotFound:
-
             files["package.json"] = self._generate_typescript_package_json(context)
 
         # Generate tsconfig.json
 
         try:
-
             template = self.env.get_template("tsconfig.json.j2")
 
             files["tsconfig.json"] = template.render(**context)
 
         except TemplateNotFound:
-
             files["tsconfig.json"] = self._generate_tsconfig(context)
 
         # Generate setup script
 
         try:
-
             template = self.env.get_template("setup.sh.j2")
 
             files["setup.sh"] = template.render(**context)
 
         except TemplateNotFound:
-
             files["setup.sh"] = self._generate_typescript_setup_script(context)
 
         # Generate helper library files
@@ -940,15 +880,12 @@ class TypeScriptGenerator(NodeJSGenerator):
         ]
 
         for helper_file in helper_files:
-
             try:
-
                 template = self.env.get_template(f"{helper_file}.j2")
 
                 files[helper_file] = template.render(**context)
 
             except TemplateNotFound:
-
                 # Skip if template doesn't exist - these are optional helper files
 
                 pass
@@ -963,15 +900,12 @@ class TypeScriptGenerator(NodeJSGenerator):
         ]
 
         for ts_file in ts_files:
-
             try:
-
                 template = self.env.get_template(f"{ts_file}.j2")
 
                 files[ts_file] = template.render(**context)
 
             except TemplateNotFound:
-
                 pass
 
         # Generate type definition files (disabled for now to avoid compilation errors)
@@ -985,39 +919,32 @@ class TypeScriptGenerator(NodeJSGenerator):
         ]
 
         for type_file in type_files:
-
             try:
-
                 template = self.env.get_template(f"{type_file}.j2")
 
                 files[type_file] = template.render(**context)
 
             except TemplateNotFound:
-
                 pass
 
         # Generate bin/cli.cjs if template exists (simplified CommonJS version)
 
         try:
-
             template = self.env.get_template("bin/cli.cjs.j2")
 
             files["bin/cli.cjs"] = template.render(**context)
 
         except TemplateNotFound:
-
             pass
 
         # Generate interactive mode with enhanced TypeScript features
 
         try:
-
             template = self.env.get_template("interactive_mode.ts.j2")
 
             enhanced_context = {**context}
 
             if self.interactive_renderer:
-
                 enhanced_context.update(
                     self.interactive_renderer.get_enhanced_template_context()
                 )
@@ -1025,7 +952,6 @@ class TypeScriptGenerator(NodeJSGenerator):
             files["interactive_mode.ts"] = template.render(**enhanced_context)
 
         except TemplateNotFound:
-
             # Generate basic interactive mode as fallback
 
             files["interactive_mode.ts"] = self._generate_fallback_interactive_mode(
@@ -1052,11 +978,9 @@ class TypeScriptGenerator(NodeJSGenerator):
         # Generate README.md using shared documentation generator
 
         try:
-
             files["README.md"] = self.doc_generator.generate_readme()
 
         except Exception:
-
             # Fallback to original method if shared generator fails
 
             files["README.md"] = self._generate_readme(config, is_typescript=True)
@@ -1086,19 +1010,17 @@ class TypeScriptGenerator(NodeJSGenerator):
 
         hooks_content = f"""/**
 
- * Hook functions for {context['display_name']}
+ * Hook functions for {context["display_name"]}
 
- * Auto-generated from {context['file_name']}
+ * Auto-generated from {context["file_name"]}
 
- * 
+ *
 
  * Implement your business logic in these hook functions.
 
  * Each command will call its corresponding hook function.
 
  */
-
-
 
 /**
 
@@ -1123,9 +1045,7 @@ async function onUnknownCommand(args) {{
         # Generate hook functions for each command
 
         if cli_config and hasattr(cli_config, "commands"):
-
             for cmd_name, cmd_data in cli_config.commands.items():
-
                 safe_cmd_name = cmd_name.replace("-", "_")
 
                 function_name = f"on{safe_cmd_name.replace('_', '').title()}"
@@ -1150,8 +1070,6 @@ async function {function_name}(args) {{
 
     console.log('   Command:', args.commandName);
 
-    
-
     // Example: access raw arguments
 
     if (args.rawArgs) {{
@@ -1163,8 +1081,6 @@ async function {function_name}(args) {{
         }});
 
     }}
-
-    
 
     console.log('✅ {cmd_name} command completed successfully!');
 
@@ -1193,9 +1109,9 @@ module.exports = {
         cli_config = context.get("cli")
 
         hooks_content = f"""/**
- * Hook functions for {context['display_name']}
- * Auto-generated from {context['file_name']}
- * 
+ * Hook functions for {context["display_name"]}
+ * Auto-generated from {context["file_name"]}
+ *
  * Implement your business logic in these hook functions.
  * Each command will call its corresponding hook function.
  */
@@ -1235,7 +1151,7 @@ export async function {function_name}(args: CommandArgs): Promise<void> {{
     // Add your '{cmd_name}' command logic here
     console.log('🚀 Executing {cmd_name} command...');
     console.log('   Command:', args.commandName);
-    
+
     // Example: access raw arguments
     if (args.rawArgs) {{
         console.log('   Raw arguments:');
@@ -1243,7 +1159,7 @@ export async function {function_name}(args: CommandArgs): Promise<void> {{
             console.log(`   ${{key}}: ${{value}}`);
         }});
     }}
-    
+
     console.log('✅ {cmd_name} command completed successfully!');
 }}
 """
@@ -1256,7 +1172,6 @@ export async function {function_name}(args: CommandArgs): Promise<void> {{
         base_gitignore = super()._generate_gitignore()
 
         if is_typescript:
-
             typescript_ignores = """
 
 # TypeScript
@@ -1266,8 +1181,6 @@ dist/
 *.tsbuildinfo
 
 .eslintcache
-
-
 
 # TypeScript test coverage
 
@@ -1296,7 +1209,6 @@ coverage/
         readme = super()._generate_readme(context)
 
         if is_typescript:
-
             # Replace JavaScript references with TypeScript
 
             readme = readme.replace("JavaScript", "TypeScript")
@@ -1311,11 +1223,7 @@ coverage/
 
 ## Development
 
-
-
 This CLI is written in TypeScript. To work on the source code:
-
-
 
 1. Install dependencies: `npm install`
 
@@ -1331,8 +1239,6 @@ This CLI is written in TypeScript. To work on the source code:
 
 7. Format code: `npm run format`
 
-
-
 The compiled JavaScript files are in the `dist/` directory.
 
 """
@@ -1340,13 +1246,11 @@ The compiled JavaScript files are in the `dist/` directory.
             # Insert before the License section if it exists
 
             if "## License" in readme:
-
                 readme = readme.replace(
                     "## License", typescript_section + "\n## License"
                 )
 
             else:
-
                 readme += typescript_section
 
         return readme
@@ -1374,21 +1278,15 @@ The compiled JavaScript files are in the `dist/` directory.
 
  * Generated by goobits-cli
 
- * Auto-generated from {context['file_name']}
+ * Auto-generated from {context["file_name"]}
 
  */
-
-
 
 import {{ Command }} from 'commander';
 
 import * as hooks from './src/hooks';
 
-
-
 const program = new Command();
-
-
 
 program
 
@@ -1398,24 +1296,18 @@ program
 
   .version('{version}');
 
-
-
-// Configuration from {context['file_name']}
+// Configuration from {context["file_name"]}
 
 const config = {json.dumps(cli_config.model_dump() if cli_config else {}, indent=2)};
-
-
 
 """
 
         # Add commands if available
 
         if cli_config and cli_config.commands:
-
             code += "// Commands\n"
 
             for cmd_name, cmd_data in cli_config.commands.items():
-
                 safe_cmd_name = cmd_name.replace("-", "_")
 
                 function_name = f"on{safe_cmd_name.replace('_', '').title()}"
@@ -1431,15 +1323,11 @@ program
                 # Add arguments
 
                 if cmd_data.args:
-
                     for arg in cmd_data.args:
-
                         if arg.required:
-
                             arg_str = f"<{arg.name}>"
 
                         else:
-
                             arg_str = f"[{arg.name}]"
 
                         code += f"""
@@ -1449,13 +1337,10 @@ program
                 # Add options
 
                 if cmd_data.options:
-
                     for opt in cmd_data.options:
-
                         flags = f"-{opt.short}, --{opt.name}"
 
                         if opt.type != "flag":
-
                             flags += f" <{opt.type}>"
 
                         code += f"""
@@ -1467,7 +1352,6 @@ program
   .action(async ("""
 
                 if cmd_data.args:
-
                     code += ", ".join(arg.name for arg in cmd_data.args) + ", "
 
                 code += f"""options: any) => {{
@@ -1479,9 +1363,7 @@ program
       rawArgs: options,"""
 
                 if cmd_data.args:
-
                     for arg in cmd_data.args:
-
                         code += f"""
 
       {arg.name},"""
@@ -1489,8 +1371,6 @@ program
                 code += f"""
 
     }};
-
-    
 
     try {{
 
@@ -1516,8 +1396,6 @@ export function cli(): void {
 
   program.parse(process.argv);
 
-  
-
   // Show help if no command provided
 
   if (!process.argv.slice(2).length) {
@@ -1527,8 +1405,6 @@ export function cli(): void {
   }
 
 }
-
-
 
 // Default export for compatibility
 
@@ -1573,13 +1449,9 @@ export default program;
         # Add any npm packages from installation extras
 
         if context.get("installation") and hasattr(context["installation"], "extras"):
-
             if hasattr(context["installation"].extras, "npm"):
-
                 for package in context["installation"].extras.npm:
-
                     if "@" in package and not package.startswith("@"):
-
                         name, version = package.rsplit("@", 1)
 
                         package_json["dependencies"][name] = f"^{version}"
@@ -1589,7 +1461,6 @@ export default program;
                         and package.startswith("@")
                         and package.count("@") > 1
                     ):
-
                         # Handle scoped packages with version like @types/node@18.0.0
 
                         name, version = package.rsplit("@", 1)
@@ -1597,7 +1468,6 @@ export default program;
                         package_json["dependencies"][name] = f"^{version}"
 
                     else:
-
                         package_json["dependencies"][package] = "latest"
 
         return json.dumps(package_json, indent=2)
@@ -1678,15 +1548,11 @@ echo "TypeScript CLI setup complete!"
     def generate_error_message(self, error_type: str, **kwargs) -> str:
         """Generate TypeScript-appropriate error messages using shared component.
 
-
-
         Args:
 
             error_type: Type of error
 
             **kwargs: Error-specific parameters
-
-
 
         Returns:
 
@@ -1695,7 +1561,6 @@ echo "TypeScript CLI setup complete!"
         """
 
         if self.doc_generator:
-
             return self.doc_generator.generate_error_message(error_type, **kwargs)
 
         # Fallback error messages
@@ -1710,23 +1575,17 @@ echo "TypeScript CLI setup complete!"
         template = error_templates.get(error_type, f"Error: {error_type}")
 
         try:
-
             return template.format(**kwargs)
 
         except KeyError:
-
             return template
 
     def supports_feature(self, feature: str) -> bool:
         """Check if TypeScript supports a specific feature.
 
-
-
         Args:
 
             feature: Feature name to check
-
-
 
         Returns:
 
@@ -1735,7 +1594,6 @@ echo "TypeScript CLI setup complete!"
         """
 
         if self.doc_generator:
-
             return self.doc_generator.supports_feature(feature)
 
         # TypeScript-specific feature support
@@ -1763,19 +1621,15 @@ echo "TypeScript CLI setup complete!"
 
 /**
 
- * Interactive mode for {context['display_name']}
+ * Interactive mode for {context["display_name"]}
 
  * Basic fallback implementation
 
  */
 
-
-
 import * as readline from 'readline';
 
 import * as hooks from './src/hooks';
-
-
 
 interface Command {{
 
@@ -1785,17 +1639,13 @@ interface Command {{
 
 }}
 
-
-
-class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
+class {context["display_name"].replace("-", "").replace(" ", "")}Interactive {{
 
     private rl: readline.Interface;
 
     private commands: Record<string, Command>;
 
     private commandHistory: string[] = [];
-
-    
 
     constructor() {{
 
@@ -1805,13 +1655,11 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
             output: process.stdout,
 
-            prompt: '{context['command_name']}> ',
+            prompt: '{context["command_name"]}> ',
 
             completer: this.completer.bind(this)
 
         }});
-
-        
 
         this.commands = {{
 
@@ -1843,17 +1691,11 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
     }}
 
-    
-
     start(): void {{
 
-        console.log("Welcome to {context['display_name']} interactive mode. Type 'help' for commands, 'exit' to quit.");
-
-        
+        console.log("Welcome to {context["display_name"]} interactive mode. Type 'help' for commands, 'exit' to quit.");
 
         this.rl.prompt();
-
-        
 
         this.rl.on('line', async (line: string) => {{
 
@@ -1867,13 +1709,9 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
             }}
 
-            
-
             this.commandHistory.push(trimmed);
 
             const [cmd, ...args] = trimmed.split(/\\s+/);
-
-            
 
             if (this.commands[cmd]) {{
 
@@ -1895,13 +1733,9 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
             }}
 
-            
-
             this.rl.prompt();
 
         }});
-
-        
 
         this.rl.on('close', () => {{
 
@@ -1913,8 +1747,6 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
     }}
 
-    
-
     private completer(line: string): [string[], string] {{
 
         const completions = Object.keys(this.commands);
@@ -1924,8 +1756,6 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
         return [hits.length ? hits : completions, line];
 
     }}
-
-    
 
     private handleHelp(args: string[]): void {{
 
@@ -1941,8 +1771,6 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
     }}
 
-    
-
     private handleExit(args: string[]): void {{
 
         this.rl.close();
@@ -1951,17 +1779,13 @@ class {context['display_name'].replace('-', '').replace(' ', '')}Interactive {{
 
 }}
 
-
-
 export function runInteractive(): void {{
 
-    const interactive = new {context['display_name'].replace('-', '').replace(' ', '')}Interactive();
+    const interactive = new {context["display_name"].replace("-", "").replace(" ", "")}Interactive();
 
     interactive.start();
 
 }}
-
-
 
 if (require.main === module) {{
 

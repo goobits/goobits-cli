@@ -5,6 +5,7 @@ scenarios and edge cases.
 """
 
 from typing import Dict, List
+
 from goobits_cli.core.schemas import GoobitsConfigSchema
 
 

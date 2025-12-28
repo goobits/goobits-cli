@@ -5,7 +5,8 @@ files in both the legacy CLI-only format and the new unified goobits.yaml format
 It supports multi-language CLI generation including Python, Node.js, TypeScript, and Rust.
 """
 
-from typing import Dict, List, Optional, Any, Union, Literal
+from typing import Any, Dict, List, Literal, Optional, Union
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 

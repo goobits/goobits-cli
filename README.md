@@ -213,7 +213,6 @@ mypy src/goobits_cli/
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contributing guidelines
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 - [CLAUDE.md](CLAUDE.md) - AI assistant instructions
-- [CODEMAP.md](CODEMAP.md) - Codebase structure
 
 ## Examples
 

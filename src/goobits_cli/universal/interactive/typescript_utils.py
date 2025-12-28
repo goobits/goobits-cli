@@ -2,8 +2,6 @@
 
 TypeScript-specific utilities for interactive mode implementation in Goobits CLI Framework.
 
-
-
 This module provides enhanced TypeScript interactive features including:
 
 - Full type safety in interactive mode
@@ -16,12 +14,9 @@ This module provides enhanced TypeScript interactive features including:
 
 """
 
-from typing import Dict, List, Any, Optional
-
-from dataclasses import dataclass
-
-
 import re
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -51,8 +46,6 @@ class TypeScriptCompletionProvider:
 
         Initialize the TypeScript completion provider.
 
-
-
         Args:
 
             cli_config: CLI configuration dictionary
@@ -73,7 +66,6 @@ class TypeScriptCompletionProvider:
         # Extract global options type
 
         if "options" in self.cli_config:
-
             types["GlobalOptions"] = self._create_options_type(
                 self.cli_config["options"]
             )
@@ -83,7 +75,6 @@ class TypeScriptCompletionProvider:
         root_command = self.cli_config.get("root_command", {})
 
         for command in root_command.get("subcommands", []):
-
             cmd_name = command["name"].replace("-", "_")
 
             pascal_name = self._to_pascal_case(cmd_name)
@@ -91,7 +82,6 @@ class TypeScriptCompletionProvider:
             # Command arguments type
 
             if "arguments" in command:
-
                 types[f"{pascal_name}Args"] = self._create_args_type(
                     command["arguments"]
                 )
@@ -99,7 +89,6 @@ class TypeScriptCompletionProvider:
             # Command options type
 
             if "options" in command:
-
                 types[f"{pascal_name}Options"] = self._create_options_type(
                     command["options"]
                 )
@@ -114,7 +103,6 @@ class TypeScriptCompletionProvider:
         root_command = self.cli_config.get("root_command", {})
 
         for command in root_command.get("subcommands", []):
-
             cmd_name = command["name"]
 
             command_types[cmd_name] = {
@@ -136,7 +124,6 @@ class TypeScriptCompletionProvider:
         properties = {}
 
         for arg in arguments:
-
             arg_type = self._map_python_to_typescript_type(arg.get("type", "string"))
 
             properties[arg["name"]] = TypeScriptType(
@@ -156,7 +143,6 @@ class TypeScriptCompletionProvider:
         properties = {}
 
         for option in options:
-
             option_name = option["name"].replace("-", "_")
 
             option_type = self._map_python_to_typescript_type(
@@ -212,17 +198,14 @@ class TypeScriptCompletionProvider:
         """Get type-aware completions for command options."""
 
         if command not in self.command_types:
-
             return []
 
         options = []
 
         for option in self.command_types[command]["options"]:
-
             options.append(f"--{option['name']}")
 
             if "short" in option:
-
                 options.append(f"-{option['short']}")
 
         return [opt for opt in options if opt.startswith(text)]
@@ -231,19 +214,15 @@ class TypeScriptCompletionProvider:
         """Get type-aware completions for option values."""
 
         if command not in self.command_types:
-
             return []
 
         option_name = option.lstrip("-")
 
         for opt in self.command_types[command]["options"]:
-
             if opt["name"] == option_name or opt.get("short") == option_name:
-
                 choices = opt.get("choices", [])
 
                 if choices:
-
                     return [choice for choice in choices if choice.startswith(text)]
 
                 # Provide type-based suggestions
@@ -251,7 +230,6 @@ class TypeScriptCompletionProvider:
                 opt_type = opt.get("type", "string")
 
                 if opt_type == "boolean":
-
                     return ["true", "false"]
 
         return []
@@ -264,8 +242,6 @@ class TypeScriptExpressionEvaluator:
         """
 
         Initialize the expression evaluator.
-
-
 
         Args:
 
@@ -299,13 +275,9 @@ class TypeScriptExpressionEvaluator:
 
         Validate a TypeScript expression for type correctness.
 
-
-
         Args:
 
             expression: TypeScript expression to validate
-
-
 
         Returns:
 
@@ -321,11 +293,9 @@ class TypeScriptExpressionEvaluator:
         }
 
         try:
-
             # Basic syntax validation
 
             if not self._is_valid_typescript_syntax(expression):
-
                 result["is_valid"] = False
 
                 result["errors"].append("Invalid TypeScript syntax")
@@ -339,7 +309,6 @@ class TypeScriptExpressionEvaluator:
             result["inferred_type"] = inferred_type
 
         except Exception as e:
-
             result["is_valid"] = False
 
             result["errors"].append(f"Expression validation failed: {str(e)}")
@@ -352,7 +321,6 @@ class TypeScriptExpressionEvaluator:
         # Basic syntax checks
 
         if not expression.strip():
-
             return False
 
         # Check for balanced parentheses and brackets
@@ -360,29 +328,22 @@ class TypeScriptExpressionEvaluator:
         paren_count = bracket_count = brace_count = 0
 
         for char in expression:
-
             if char == "(":
-
                 paren_count += 1
 
             elif char == ")":
-
                 paren_count -= 1
 
             elif char == "[":
-
                 bracket_count += 1
 
             elif char == "]":
-
                 bracket_count -= 1
 
             elif char == "{":
-
                 brace_count += 1
 
             elif char == "}":
-
                 brace_count -= 1
 
         return paren_count == 0 and bracket_count == 0 and brace_count == 0
@@ -402,15 +363,12 @@ class TypeScriptExpressionEvaluator:
         # Template literals
 
         if expression.startswith("`") and expression.endswith("`"):
-
             return "string"
 
         # Number literals
 
         if re.match(r"^-?\d+(\.\d+)?$", expression):
-
             if "." in expression:
-
                 return "number"
 
             return "number"
@@ -418,27 +376,22 @@ class TypeScriptExpressionEvaluator:
         # Boolean literals
 
         if expression in ["true", "false"]:
-
             return "boolean"
 
         # Array literals
 
         if expression.startswith("[") and expression.endswith("]"):
-
             return "any[]"
 
         # Object literals
 
         if expression.startswith("{") and expression.endswith("}"):
-
             return "Record<string, unknown>"
 
         # Function calls
 
         for func_name, signature in self.builtin_functions.items():
-
             if expression.startswith(func_name + "("):
-
                 return self._extract_return_type(signature)
 
         # Default
@@ -451,7 +404,6 @@ class TypeScriptExpressionEvaluator:
         match = re.search(r"=>\s*([^,\)]+)", signature)
 
         if match:
-
             return match.group(1).strip()
 
         return "unknown"
@@ -464,8 +416,6 @@ class TypeScriptErrorHandler:
         """
 
         Initialize the error handler.
-
-
 
         Args:
 
@@ -480,15 +430,11 @@ class TypeScriptErrorHandler:
 
         Format a type error with TypeScript context.
 
-
-
         Args:
 
             error: The error to format
 
             context: Error context information
-
-
 
         Returns:
 
@@ -501,15 +447,12 @@ class TypeScriptErrorHandler:
         command = context.get("command")
 
         if command and command in self.type_definitions:
-
             type_info = self.type_definitions[command]
 
             error_msg += f"\n\nExpected types for {command}:"
 
             if type_info.properties:
-
                 for prop_name, prop_type in type_info.properties.items():
-
                     optional = "?" if prop_type.is_optional else ""
 
                     error_msg += f"\n  {prop_name}{optional}: {prop_type.base_type}"
@@ -523,15 +466,11 @@ class TypeScriptErrorHandler:
 
         Suggest fixes for type-related errors.
 
-
-
         Args:
 
             error: The error to analyze
 
             context: Error context information
-
-
 
         Returns:
 
@@ -544,7 +483,6 @@ class TypeScriptErrorHandler:
         error_msg = str(error).lower()
 
         if "type" in error_msg and "expected" in error_msg:
-
             suggestions.append("Check the expected type for this parameter")
 
             suggestions.append(
@@ -552,7 +490,6 @@ class TypeScriptErrorHandler:
             )
 
         if "undefined" in error_msg:
-
             suggestions.append(
                 "Check if the property exists and is properly initialized"
             )
@@ -560,7 +497,6 @@ class TypeScriptErrorHandler:
             suggestions.append("Use optional chaining: object?.property")
 
         if "null" in error_msg:
-
             suggestions.append("Add null check: if (value !== null)")
 
             suggestions.append("Use nullish coalescing: value ?? defaultValue")
@@ -575,8 +511,6 @@ class TypeScriptInteractiveRenderer:
         """
 
         Initialize the renderer.
-
-
 
         Args:
 
@@ -598,8 +532,6 @@ class TypeScriptInteractiveRenderer:
         """
 
         Get enhanced template context for TypeScript interactive mode.
-
-
 
         Returns:
 
@@ -634,15 +566,11 @@ class TypeScriptInteractiveRenderer:
         lines.append("")
 
         for type_name, type_def in self.type_definitions.items():
-
             if type_def.base_type == "interface":
-
                 lines.append(f"interface {type_name} {{")
 
                 if type_def.properties:
-
                     for prop_name, prop_type in type_def.properties.items():
-
                         optional = "?" if prop_type.is_optional else ""
 
                         type_str = self._format_type_string(prop_type)
@@ -659,17 +587,14 @@ class TypeScriptInteractiveRenderer:
         """Format TypeScript type definition as string."""
 
         if type_def.literal_values:
-
             return " | ".join(f'"{val}"' for val in type_def.literal_values)
 
         if type_def.union_types:
-
             return " | ".join(type_def.union_types)
 
         base_type = type_def.base_type
 
         if type_def.is_array:
-
             base_type += "[]"
 
         return base_type
@@ -685,15 +610,11 @@ private setupEnhancedCompletion(): void {
 
     const originalCompleter = this.rl.completer;
 
-    
-
     this.rl.completer = (line: string, callback?: (err: any, result?: [string[], string]) => void) => {
 
         const completions = this.getEnhancedCompletions(line);
 
         const hits = completions.filter(c => c.startsWith(line));
-
-        
 
         if (callback) {
 
@@ -709,15 +630,11 @@ private setupEnhancedCompletion(): void {
 
 }
 
-
-
 private getEnhancedCompletions(line: string): string[] {
 
     const trimmed = line.trim();
 
     const parts = trimmed.split(/\\s+/);
-
-    
 
     // Command completion
 
@@ -727,13 +644,9 @@ private getEnhancedCompletions(line: string): string[] {
 
     }
 
-    
-
     const command = parts[0];
 
     const lastPart = parts[parts.length - 1];
-
-    
 
     // Option completion
 
@@ -742,8 +655,6 @@ private getEnhancedCompletions(line: string): string[] {
         return this.getOptionCompletions(command, lastPart);
 
     }
-
-    
 
     // Value completion for previous option
 
@@ -754,8 +665,6 @@ private getEnhancedCompletions(line: string): string[] {
         return this.getValueCompletions(command, option, lastPart);
 
     }
-
-    
 
     return [];
 

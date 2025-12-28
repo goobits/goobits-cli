@@ -8,12 +8,12 @@ import typer
 
 from .utils import (
     _lazy_imports,
+    backup_file,
+    extract_version_from_pyproject,
+    generate_setup_script,
     load_goobits_config,
     normalize_dependencies_for_template,
-    generate_setup_script,
-    backup_file,
     update_pyproject_toml,
-    extract_version_from_pyproject,
 )
 
 
@@ -50,10 +50,10 @@ def build_command(
     _lazy_imports()
 
     # Import logging utilities
-    from goobits_cli.core.logging import get_logger, set_context, clear_context
-
     # Set up logging context for build operation
     import uuid
+
+    from goobits_cli.core.logging import clear_context, get_logger, set_context
 
     operation_id = str(uuid.uuid4())[:8]
     set_context(operation="build", operation_id=operation_id)
@@ -64,7 +64,6 @@ def build_command(
     # Determine config file path
 
     if config_path is None:
-
         config_path = Path.cwd() / "goobits.yaml"
 
     config_path = Path(config_path).resolve()
@@ -81,11 +80,9 @@ def build_command(
     # Determine output directory
 
     if output_dir is None:
-
         output_dir = config_path.parent
 
     else:
-
         output_dir = Path(output_dir).resolve()
 
     # Ensure output directory exists
@@ -97,7 +94,6 @@ def build_command(
     # Show backup status
 
     if not backup:
-
         typer.echo("\U0001f4a1 Backups disabled (use --backup to create .bak files)")
 
         typer.echo(
@@ -159,7 +155,6 @@ def build_command(
     # Generate CLI for each target language
 
     if goobits_config.cli:
-
         # Extract version from pyproject.toml if available
 
         pyproject_path = output_dir / "pyproject.toml"
@@ -167,7 +162,6 @@ def build_command(
         version = None
 
         if pyproject_path.exists():
-
             version = extract_version_from_pyproject(output_dir)
 
         # Multi-language generation loop
@@ -187,7 +181,9 @@ def build_command(
 
                 generator = NodeJSGenerator()
             elif language == "typescript":
-                from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+                from goobits_cli.generation.renderers.typescript import (
+                    TypeScriptGenerator,
+                )
 
                 generator = TypeScriptGenerator()
             elif language == "rust":
@@ -261,7 +257,6 @@ def build_command(
         # Extract package name and filename for pyproject.toml update (Python only)
 
         if "python" in target_languages:
-
             # Use configured output path for Python
 
             if goobits_config.cli_path:
@@ -280,21 +275,17 @@ def build_command(
             cli_path_parts = Path(cli_path).parts
 
             if "src" in cli_path_parts:
-
                 src_index = cli_path_parts.index("src")
 
                 if src_index + 1 < len(cli_path_parts):
-
                     module_name = cli_path_parts[src_index + 1]
 
                 else:
-
                     # Fallback to package name conversion
 
                     module_name = goobits_config.package_name.replace("-", "_")
 
             else:
-
                 # Fallback to package name conversion
 
                 module_name = goobits_config.package_name.replace("-", "_")
@@ -308,11 +299,9 @@ def build_command(
             # Find the path relative to the package directory
 
             if "src" in cli_path_parts:
-
                 src_index = cli_path_parts.index("src")
 
                 if src_index + 2 < len(cli_path_parts):  # src/package/...
-
                     # Get all parts after src/package/ up to filename
 
                     relative_parts = cli_path_parts[
@@ -322,7 +311,6 @@ def build_command(
                     # Join directory parts with dots, then add filename without .py
 
                     if len(relative_parts) > 1:
-
                         dir_parts = relative_parts[:-1]  # All but filename
 
                         filename_part = relative_parts[-1].replace(".py", "")
@@ -330,19 +318,16 @@ def build_command(
                         full_module_path = ".".join(dir_parts) + "." + filename_part
 
                     else:
-
                         # Just a filename
 
                         full_module_path = relative_parts[0].replace(".py", "")
 
                 else:
-
                     # Fallback to just filename
 
                     full_module_path = cli_path_obj.name.replace(".py", "")
 
             else:
-
                 # Fallback to just filename
 
                 full_module_path = cli_path_obj.name.replace(".py", "")
@@ -350,7 +335,6 @@ def build_command(
             # Update pyproject.toml to use the generated CLI (skip for goobits-cli itself)
 
             if goobits_config.package_name != "goobits-cli":
-
                 if update_pyproject_toml(
                     output_dir,
                     module_name,
@@ -358,7 +342,6 @@ def build_command(
                     full_module_path + ".py",
                     backup,
                 ):
-
                     typer.echo(
                         f"\u2705 Updated {output_dir}/pyproject.toml to use generated CLI"
                     )
@@ -370,7 +353,6 @@ def build_command(
                     typer.echo("   ./setup.sh install --dev")
 
                 else:
-
                     typer.echo(
                         "\u26a0\ufe0f  Could not update pyproject.toml automatically"
                     )
@@ -380,7 +362,6 @@ def build_command(
                     )
 
             else:
-
                 # For goobits-cli, we maintain pyproject.toml manually
 
                 typer.echo(
@@ -400,7 +381,6 @@ def build_command(
                 typer.echo("   ./setup.sh install --dev")
 
     else:
-
         typer.echo(
             "\u26a0\ufe0f  No CLI configuration found, skipping cli.py generation"
         )
@@ -408,7 +388,6 @@ def build_command(
     # Generate setup.sh (Python only - Node.js generates its own)
 
     if "python" in target_languages and goobits_config.cli:
-
         typer.echo("Generating setup script...")
 
         # Normalize dependencies for backward compatibility
@@ -420,7 +399,6 @@ def build_command(
         setup_output_path = output_dir / "setup.sh"
 
         with open(setup_output_path, "w") as f:
-
             f.write(setup_script)
 
         # Make setup.sh executable
@@ -434,7 +412,6 @@ def build_command(
     if (
         "python" in target_languages and goobits_config.cli
     ):  # Only copy if CLI is configured
-
         # Find the package source directory
 
         if goobits_config.cli_path:
@@ -453,21 +430,17 @@ def build_command(
         package_src_dir = None
 
         if "src" in cli_path_parts:
-
             src_index = cli_path_parts.index("src")
 
             if src_index + 1 < len(cli_path_parts):
-
                 package_src_dir = output_dir / "src" / cli_path_parts[src_index + 1]
 
         if package_src_dir and package_src_dir.exists():
-
             # Copy setup.sh to package source directory
 
             package_setup_path = package_src_dir / "setup.sh"
 
             try:
-
                 shutil.copy2(setup_output_path, package_setup_path)
 
                 typer.echo(
@@ -475,13 +448,11 @@ def build_command(
                 )
 
             except Exception as e:
-
                 typer.echo(
                     f"\u26a0\ufe0f  Could not copy setup.sh to package directory: {e}"
                 )
 
         else:
-
             typer.echo(
                 "\u2139\ufe0f  Package source directory not found, setup.sh not copied to package"
             )

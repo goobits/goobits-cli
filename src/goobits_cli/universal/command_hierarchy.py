@@ -5,8 +5,8 @@ This module implements the flat generation + post-processing approach for
 unlimited depth nested command support in the Goobits CLI Framework.
 """
 
-from typing import Dict, List, Any, Tuple, Callable
 from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Tuple
 
 
 @dataclass
@@ -262,7 +262,6 @@ class HierarchyBuilder:
         for cmd in all_commands:
             # Check if this command is a direct child
             if len(cmd.path) == len(parent.path) + 1 and cmd.path[:-1] == parent.path:
-
                 # Build command node
                 children = []
                 if cmd.is_group:

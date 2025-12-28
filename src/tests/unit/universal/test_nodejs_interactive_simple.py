@@ -13,9 +13,9 @@ This module tests the Node.js-specific enhancements including async command hand
 tab completion, NPM package integration, and JavaScript expression evaluation.
 """
 
-import unittest
-import tempfile
 import subprocess
+import tempfile
+import unittest
 from unittest.mock import patch
 
 from goobits_cli.universal.interactive.nodejs_utils_simple import (

@@ -2,8 +2,6 @@
 
 Template Analysis Tool for Universal Template System
 
-
-
 This module provides tools to analyze template differences and commonalities
 
 across different programming languages in the Goobits CLI framework.
@@ -11,18 +9,12 @@ across different programming languages in the Goobits CLI framework.
 """
 
 import json
-
-
+from dataclasses import asdict, dataclass
 from pathlib import Path
-
-from typing import Dict, List, Set, Optional
-
-from dataclasses import dataclass, asdict
-
-import typer
+from typing import Dict, List, Optional, Set
 
 import jinja2
-
+import typer
 from jinja2 import meta
 
 
@@ -88,8 +80,6 @@ class TemplateAnalyzer:
 
         Initialize the analyzer.
 
-
-
         Args:
 
             templates_dir: Path to templates directory containing language subdirs
@@ -138,15 +128,11 @@ class TemplateAnalyzer:
 
         Analyze a single template file.
 
-
-
         Args:
 
             template_path: Path to the template file
 
             language: Programming language of the template
-
-
 
         Returns:
 
@@ -155,11 +141,9 @@ class TemplateAnalyzer:
         """
 
         try:
-
             content = template_path.read_text(encoding="utf-8")
 
         except Exception as e:
-
             typer.echo(f"Warning: Could not read {template_path}: {e}", err=True)
 
             return TemplateAnalysis(
@@ -181,7 +165,6 @@ class TemplateAnalyzer:
         env = jinja2.Environment()
 
         try:
-
             ast = env.parse(content)
 
             variables = meta.find_undeclared_variables(ast)
@@ -189,7 +172,6 @@ class TemplateAnalyzer:
             referenced_templates = meta.find_referenced_templates(ast)
 
         except Exception as e:
-
             typer.echo(
                 f"Warning: Could not parse template {template_path}: {e}", err=True
             )
@@ -276,15 +258,11 @@ class TemplateAnalyzer:
 
         Calculate a complexity score for the template.
 
-
-
         Args:
 
             content: Template content
 
             language: Programming language
-
-
 
         Returns:
 
@@ -316,7 +294,6 @@ class TemplateAnalyzer:
         ]
 
         for pattern in control_patterns:
-
             matches = len(re.findall(pattern, content))
 
             score += matches * 2.0
@@ -340,15 +317,11 @@ class TemplateAnalyzer:
         # Language-specific complexity
 
         if language in self.language_patterns:
-
             patterns = self.language_patterns[language]
 
             for pattern_group in patterns.values():
-
                 if isinstance(pattern_group, list):
-
                     for pattern in pattern_group:
-
                         matches = len(re.findall(pattern, content, re.MULTILINE))
 
                         score += matches * 0.3
@@ -359,8 +332,6 @@ class TemplateAnalyzer:
         """
 
         Analyze all templates in the templates directory.
-
-
 
         Returns:
 
@@ -373,9 +344,7 @@ class TemplateAnalyzer:
         # Find all language directories
 
         for lang_dir in self.templates_dir.iterdir():
-
             if lang_dir.is_dir() and lang_dir.name in self.language_patterns:
-
                 language = lang_dir.name
 
                 results[language] = {}
@@ -383,7 +352,6 @@ class TemplateAnalyzer:
                 # Analyze all templates in this language
 
                 for template_file in lang_dir.glob("*.j2"):
-
                     analysis = self.analyze_template(template_file, language)
 
                     results[language][template_file.name] = analysis
@@ -403,13 +371,9 @@ class TemplateAnalyzer:
 
         Compare templates with the same base name across different languages.
 
-
-
         Args:
 
             template_base_name: Base name of template (e.g., "cli_template")
-
-
 
         Returns:
 
@@ -422,17 +386,14 @@ class TemplateAnalyzer:
         matching_templates = {}
 
         for key, analysis in self.analyses.items():
-
             language, template_name = key.split(":", 1)
 
             # Check if this template matches the base name
 
             if template_base_name in template_name.lower():
-
                 matching_templates[language] = analysis
 
         if len(matching_templates) < 2:
-
             return ComparisonResult(
                 common_variables=set(),
                 unique_variables={},
@@ -467,7 +428,6 @@ class TemplateAnalyzer:
         unique_blocks = {}
 
         for language, template in matching_templates.items():
-
             unique_variables[language] = template.variables - common_variables
 
             unique_filters[language] = template.filters - common_filters
@@ -502,13 +462,9 @@ class TemplateAnalyzer:
 
         Calculate a similarity score between templates.
 
-
-
         Args:
 
             templates: Dictionary of language to template analysis
-
-
 
         Returns:
 
@@ -517,7 +473,6 @@ class TemplateAnalyzer:
         """
 
         if len(templates) < 2:
-
             return 0.0
 
         # Calculate based on common vs unique elements
@@ -529,9 +484,7 @@ class TemplateAnalyzer:
         comparisons = 0
 
         for i in range(len(template_list)):
-
             for j in range(i + 1, len(template_list)):
-
                 t1, t2 = template_list[i], template_list[j]
 
                 # Compare variables
@@ -590,13 +543,11 @@ class TemplateAnalyzer:
         # Check if templates are similar enough for unification
 
         if len(common_vars) >= 5:
-
             recommendations.append(
                 f"High variable overlap ({len(common_vars)} common variables) - good candidate for universal template"
             )
 
         if len(common_blocks) >= 2:
-
             recommendations.append(
                 f"Common block structure ({len(common_blocks)} shared blocks) supports universal template"
             )
@@ -606,7 +557,6 @@ class TemplateAnalyzer:
         complexities = [t.complexity_score for t in templates.values()]
 
         if max(complexities) - min(complexities) > 20:
-
             recommendations.append(
                 "Large complexity differences - consider separate implementation paths"
             )
@@ -616,15 +566,12 @@ class TemplateAnalyzer:
         unique_patterns = {}
 
         for lang, template in templates.items():
-
             unique_count = len(template.variables) - len(common_vars)
 
             if unique_count > 5:
-
                 unique_patterns[lang] = unique_count
 
         if unique_patterns:
-
             recommendations.append(
                 f"Languages with many unique patterns: {', '.join(unique_patterns.keys())}"
             )
@@ -636,13 +583,9 @@ class TemplateAnalyzer:
 
         Generate a comprehensive analysis report.
 
-
-
         Args:
 
             output_format: Format for the report ("text", "json", "markdown")
-
-
 
         Returns:
 
@@ -651,19 +594,15 @@ class TemplateAnalyzer:
         """
 
         if not self.analyses:
-
             return "No templates analyzed yet. Run analyze_all_templates() first."
 
         if output_format == "json":
-
             return self._generate_json_report()
 
         elif output_format == "markdown":
-
             return self._generate_markdown_report()
 
         else:
-
             return self._generate_text_report()
 
     def _generate_text_report(self) -> str:
@@ -688,7 +627,6 @@ class TemplateAnalyzer:
         # Per-language breakdown
 
         for language in sorted(languages):
-
             lang_templates = [
                 a for k, a in self.analyses.items() if k.startswith(f"{language}:")
             ]
@@ -701,7 +639,6 @@ class TemplateAnalyzer:
             )
 
             if lang_templates:
-
                 avg_complexity = sum(t.complexity_score for t in lang_templates) / len(
                     lang_templates
                 )
@@ -711,7 +648,6 @@ class TemplateAnalyzer:
                 # List templates with key metrics
 
                 for template in sorted(lang_templates, key=self._get_template_name):
-
                     lines.append(
                         f"  - {template.name}: {len(template.variables)} vars, "
                         f"{len(template.filters)} filters, complexity {template.complexity_score}"
@@ -727,11 +663,9 @@ class TemplateAnalyzer:
         report_data = {}
 
         for key, analysis in self.analyses.items():
-
             language, template_name = key.split(":", 1)
 
             if language not in report_data:
-
                 report_data[language] = {}
 
             # Convert sets to lists for JSON serialization
@@ -746,9 +680,7 @@ class TemplateAnalyzer:
                 "includes",
                 "dependencies",
             ]:
-
                 if isinstance(template_data[field], set):
-
                     template_data[field] = list(template_data[field])
 
             report_data[language][template_name] = template_data
@@ -780,7 +712,6 @@ class TemplateAnalyzer:
         )
 
         for language in sorted(languages):
-
             lang_templates = [
                 a for k, a in self.analyses.items() if k.startswith(f"{language}:")
             ]
@@ -802,7 +733,6 @@ class TemplateAnalyzer:
         # Detailed per-language sections
 
         for language in sorted(languages):
-
             lang_templates = [
                 a for k, a in self.analyses.items() if k.startswith(f"{language}:")
             ]
@@ -810,7 +740,6 @@ class TemplateAnalyzer:
             lines.extend([f"### {language.capitalize()}", ""])
 
             if lang_templates:
-
                 lines.extend(
                     [
                         "| Template | Variables | Filters | Blocks | Complexity |",
@@ -819,7 +748,6 @@ class TemplateAnalyzer:
                 )
 
                 for template in sorted(lang_templates, key=self._get_template_name):
-
                     lines.append(
                         f"| {template.name} | {len(template.variables)} | "
                         f"{len(template.filters)} | {len(template.blocks)} | "
@@ -847,8 +775,6 @@ def analyze_templates_command(
 
     Analyze templates to identify patterns and opportunities for unification.
 
-
-
     This command analyzes all templates in the specified directory and generates
 
     a comprehensive report showing commonalities and differences across languages.
@@ -858,7 +784,6 @@ def analyze_templates_command(
     typer.echo(f"Analyzing templates in: {templates_dir}")
 
     if not templates_dir.exists():
-
         typer.echo(f"Error: Templates directory not found: {templates_dir}", err=True)
 
         return 1
@@ -878,7 +803,6 @@ def analyze_templates_command(
     # Generate comparison if requested
 
     if compare:
-
         typer.echo(f"\nComparing templates matching '{compare}':")
 
         comparison = analyzer.compare_templates_across_languages(compare)
@@ -892,11 +816,9 @@ def analyze_templates_command(
         typer.echo(f"Common blocks: {len(comparison.common_blocks)}")
 
         if comparison.recommendations:
-
             typer.echo("\nRecommendations:")
 
             for rec in comparison.recommendations:
-
                 typer.echo(f"  • {rec}")
 
     # Generate report
@@ -904,18 +826,15 @@ def analyze_templates_command(
     report = analyzer.generate_analysis_report(output_format)
 
     if output_file:
-
         output_file.write_text(report, encoding="utf-8")
 
         typer.echo(f"Report saved to: {output_file}")
 
     else:
-
         typer.echo("\n" + report)
 
     return 0
 
 
 if __name__ == "__main__":
-
     typer.run(analyze_templates_command)

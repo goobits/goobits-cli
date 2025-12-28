@@ -7,7 +7,8 @@ Migrates deprecated field names to new standardized names:
 - types_output_path → cli_types_path
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from .migration import Migration
 
 

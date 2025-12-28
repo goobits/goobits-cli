@@ -5,7 +5,8 @@ This module provides the migration registry and orchestration for applying
 version-specific YAML configuration migrations.
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
 from .migration import Migration
 from .v3_0_0 import V3_0_0_Migration
 from .v3_0_2 import V3_0_2_Migration

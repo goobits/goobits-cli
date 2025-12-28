@@ -13,8 +13,8 @@ import logging
 import os
 import sys
 from contextvars import ContextVar
-from typing import Dict, Any
 from pathlib import Path
+from typing import Any, Dict
 
 # Context variables for structured logging
 _log_context: ContextVar[Dict[str, Any]] = ContextVar("log_context", default={})

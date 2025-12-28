@@ -2,30 +2,25 @@
 
 Universal completion system for Goobits CLI Framework.
 
-
-
 This module provides dynamic, context-aware completion capabilities
 
 that work across all supported languages (Python, Node.js, TypeScript, Rust).
 
 """
 
-from .registry import DynamicCompletionRegistry, CompletionProvider, CompletionContext
-
 from .providers import (
-    FilePathCompletionProvider,
-    EnvironmentVariableProvider,
     ConfigKeyProvider,
+    EnvironmentVariableProvider,
+    FilePathCompletionProvider,
     HistoryProvider,
 )
-
+from .registry import CompletionContext, CompletionProvider, DynamicCompletionRegistry
 from .smart_completion import (
-    SmartCompletionEngine,
-    HistoryCompletionProvider,
     FuzzyMatchProvider,
+    HistoryCompletionProvider,
+    SmartCompletionEngine,
     get_smart_completion_registry,
 )
-
 
 __all__ = [
     "DynamicCompletionRegistry",

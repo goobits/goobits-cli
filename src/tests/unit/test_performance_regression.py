@@ -5,12 +5,13 @@ These tests ensure that lazy loading optimizations continue to work
 and that startup performance doesn't degrade over time.
 """
 
-import time
-import pytest
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
+
+import pytest
 
 
 class TestPerformanceRegression:
@@ -25,9 +26,9 @@ class TestPerformanceRegression:
         import_time = (end - start) * 1000
 
         # Basic CLI imports should be fast
-        assert (
-            import_time < 100
-        ), f"Basic CLI imports took {import_time:.1f}ms (target: <100ms)"
+        assert import_time < 100, (
+            f"Basic CLI imports took {import_time:.1f}ms (target: <100ms)"
+        )
 
     def test_lazy_loading_overhead(self):
         """Test that lazy loading callbacks add minimal overhead."""
@@ -42,9 +43,9 @@ class TestPerformanceRegression:
         callback_time = (end - start) * 1000
 
         # Lazy loading setup should add <50ms overhead
-        assert (
-            callback_time < 50
-        ), f"Lazy loading overhead: {callback_time:.1f}ms (target: <50ms)"
+        assert callback_time < 50, (
+            f"Lazy loading overhead: {callback_time:.1f}ms (target: <50ms)"
+        )
 
     def test_interactive_mode_lazy_loading(self):
         """Test that interactive mode uses lazy loading."""
@@ -62,12 +63,12 @@ def start_interactive_mode(ctx, param, value):
     """Lazy loading callback."""
     if not value or ctx.resilient_parsing:
         return
-    
+
     _lazy_load_and_start_interactive()
     sys.exit(0)
 
 @click.command()
-@click.option('--interactive', is_flag=True, is_eager=True, 
+@click.option('--interactive', is_flag=True, is_eager=True,
               callback=start_interactive_mode)
 def test_cli(interactive=False):
     """Test CLI."""
@@ -100,7 +101,6 @@ if __name__ == "__main__":
         """Test that Universal Template imports are not loaded eagerly."""
         # This test ensures we don't regress to eager loading
         import sys
-        import importlib
 
         # Store original module state
         module_name = "goobits_cli.universal.template_engine"
@@ -129,9 +129,9 @@ if __name__ == "__main__":
             # The import itself should be fast due to lazy loading
             # More lenient threshold for different environments
             max_import_time = 200 if import_time < 200 else 500
-            assert (
-                import_time < max_import_time
-            ), f"Universal template engine import: {import_time:.1f}ms (target: <{max_import_time}ms)"
+            assert import_time < max_import_time, (
+                f"Universal template engine import: {import_time:.1f}ms (target: <{max_import_time}ms)"
+            )
 
         except ImportError:
             # If import fails, that's ok - this is an optional optimization test
@@ -197,9 +197,9 @@ if __name__ == "__main__":
         else:
             max_time = 500  # Slower system or busy environment
 
-        assert (
-            startup_time < max_time
-        ), f"Generated CLI startup: {startup_time:.1f}ms (target: <{max_time}ms for this environment)"
+        assert startup_time < max_time, (
+            f"Generated CLI startup: {startup_time:.1f}ms (target: <{max_time}ms for this environment)"
+        )
 
         print(
             f"✅ CLI startup performance: {startup_time:.1f}ms (target: <{max_time}ms)"
@@ -229,12 +229,12 @@ def test_performance_targets():
     # Validate targets
     total_time = basic_time + overhead_time
 
-    assert (
-        total_time < 100
-    ), f"Total CLI startup time: {total_time:.1f}ms (target: <100ms)"
-    assert (
-        overhead_time < 50
-    ), f"Advanced features overhead: {overhead_time:.1f}ms (target: <50ms)"
+    assert total_time < 100, (
+        f"Total CLI startup time: {total_time:.1f}ms (target: <100ms)"
+    )
+    assert overhead_time < 50, (
+        f"Advanced features overhead: {overhead_time:.1f}ms (target: <50ms)"
+    )
 
 
 if __name__ == "__main__":

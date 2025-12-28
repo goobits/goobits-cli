@@ -2,8 +2,6 @@
 
 Rust-specific utilities for interactive mode in Goobits CLI Framework.
 
-
-
 This module provides Rust-specific functionality for enhanced interactive
 
 modes, including command parsing, tab completion, and integration with
@@ -12,19 +10,13 @@ Rust's ecosystem.
 
 """
 
-import re
-import tempfile
-
-from typing import Dict, List, Optional, Any, Tuple
-
-from dataclasses import dataclass
-
-from pathlib import Path
-
-import subprocess
-
 import json
-
+import re
+import subprocess
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from .base import InteractiveEngine
 
@@ -49,13 +41,11 @@ class RustCommand:
         # Add flags first
 
         for flag in self.flags:
-
             result.append(f"--{flag}")
 
         # Add options
 
         for key, value in self.options.items():
-
             result.extend([f"--{key}", str(value)])
 
         # Add positional arguments
@@ -85,8 +75,6 @@ class RustCommandParser:
 
     Rust-specific command parser with proper error handling and type conversion.
 
-
-
     Handles Rust-style command parsing with Result-type error handling patterns
 
     and integration with Clap-style argument parsing.
@@ -94,7 +82,6 @@ class RustCommandParser:
     """
 
     def __init__(self):
-
         self.type_converters = {
             "String": str,
             "i32": int,
@@ -112,15 +99,11 @@ class RustCommandParser:
 
         Parse a command line with Rust-specific type conversion and error handling.
 
-
-
         Args:
 
             line: Command line to parse
 
             command_schema: Schema defining expected arguments and options
-
-
 
         Returns:
 
@@ -131,7 +114,6 @@ class RustCommandParser:
         parts = line.strip().split()
 
         if not parts:
-
             return None, "Empty command"
 
         command_name = parts[0]
@@ -139,7 +121,6 @@ class RustCommandParser:
         remaining_parts = parts[1:]
 
         try:
-
             # Parse options and flags
 
             options = {}
@@ -151,11 +132,9 @@ class RustCommandParser:
             i = 0
 
             while i < len(remaining_parts):
-
                 part = remaining_parts[i]
 
                 if part.startswith("--"):
-
                     option_name = part[2:]
 
                     # Check if it's a flag or option with value
@@ -165,27 +144,22 @@ class RustCommandParser:
                     )
 
                     if option_def and option_def.get("type") in ["bool", "flag"]:
-
                         flags.append(option_name)
 
                         i += 1
 
                     else:
-
                         # Option with value
 
                         if i + 1 < len(remaining_parts):
-
                             option_value = remaining_parts[i + 1]
 
                             # Type conversion
 
                             if option_def:
-
                                 rust_type = option_def.get("rust_type", "String")
 
                                 try:
-
                                     converted_value = self._convert_value(
                                         option_value, rust_type
                                     )
@@ -193,24 +167,20 @@ class RustCommandParser:
                                     options[option_name] = converted_value
 
                                 except ValueError as e:
-
                                     return (
                                         None,
                                         f"Invalid value for --{option_name}: {e}",
                                     )
 
                             else:
-
                                 options[option_name] = option_value
 
                             i += 2
 
                         else:
-
                             return None, f"Option --{option_name} requires a value"
 
                 elif part.startswith("-") and len(part) == 2:
-
                     # Short option
 
                     short_name = part[1]
@@ -220,23 +190,18 @@ class RustCommandParser:
                     )
 
                     if option_def:
-
                         if option_def.get("type") in ["bool", "flag"]:
-
                             flags.append(option_def["name"])
 
                             i += 1
 
                         else:
-
                             if i + 1 < len(remaining_parts):
-
                                 option_value = remaining_parts[i + 1]
 
                                 rust_type = option_def.get("rust_type", "String")
 
                                 try:
-
                                     converted_value = self._convert_value(
                                         option_value, rust_type
                                     )
@@ -244,21 +209,17 @@ class RustCommandParser:
                                     options[option_def["name"]] = converted_value
 
                                 except ValueError as e:
-
                                     return None, f"Invalid value for -{short_name}: {e}"
 
                                 i += 2
 
                             else:
-
                                 return None, f"Option -{short_name} requires a value"
 
                     else:
-
                         return None, f"Unknown short option: -{short_name}"
 
                 else:
-
                     # Positional argument
 
                     args.append(part)
@@ -274,7 +235,6 @@ class RustCommandParser:
             )
 
             if len(args) < required_count:
-
                 return (
                     None,
                     f"Command {command_name} requires at least {required_count} arguments, got {len(args)}",
@@ -285,28 +245,23 @@ class RustCommandParser:
             converted_args = []
 
             for i, arg_value in enumerate(args):
-
                 if i < len(required_args):
-
                     arg_def = required_args[i]
 
                     rust_type = arg_def.get("rust_type", "String")
 
                     try:
-
                         converted_value = self._convert_value(arg_value, rust_type)
 
                         converted_args.append(converted_value)
 
                     except ValueError as e:
-
                         return (
                             None,
                             f"Invalid value for argument {arg_def['name']}: {e}",
                         )
 
                 else:
-
                     converted_args.append(arg_value)
 
             return (
@@ -317,7 +272,6 @@ class RustCommandParser:
             )
 
         except Exception as e:
-
             return None, f"Parse error: {e}"
 
     def _find_option_definition(
@@ -326,9 +280,7 @@ class RustCommandParser:
         """Find option definition in command schema."""
 
         for option in schema.get("options", []):
-
             if option["name"] == option_name:
-
                 return dict(option)
 
         return None
@@ -339,9 +291,7 @@ class RustCommandParser:
         """Find option definition by short name."""
 
         for option in schema.get("options", []):
-
             if option.get("short") == short:
-
                 return dict(option)
 
         return None
@@ -354,13 +304,11 @@ class RustCommandParser:
         ]  # Handle Option<T> and paths
 
         if base_type in self.type_converters:
-
             converter = self.type_converters[base_type]
 
             return converter(value)
 
         else:
-
             return value  # Default to string
 
 
@@ -368,8 +316,6 @@ class RustCompletionProvider:
     """
 
     Provides tab completion for Rust CLI commands with cargo integration.
-
-
 
     Includes completion for:
 
@@ -384,7 +330,6 @@ class RustCompletionProvider:
     """
 
     def __init__(self, cli_schema: Dict[str, Any]):
-
         self.cli_schema = cli_schema
 
         self.cargo_info = self._get_cargo_info()
@@ -396,15 +341,11 @@ class RustCompletionProvider:
 
         Get tab completions for the current input.
 
-
-
         Args:
 
             text: The text being completed
 
             line: The full command line
-
-
 
         Returns:
 
@@ -415,7 +356,6 @@ class RustCompletionProvider:
         parts = line.split()
 
         if not parts or (len(parts) == 1 and not line.endswith(" ")):
-
             # Complete command names
 
             return self._complete_commands(text)
@@ -425,13 +365,11 @@ class RustCompletionProvider:
         command_schema = self._find_command_schema(command_name)
 
         if not command_schema:
-
             return []
 
         # Check if we're completing an option value
 
         if len(parts) >= 2 and parts[-2].startswith("-"):
-
             option_name = parts[-2].lstrip("-")
 
             return self._complete_option_value(option_name, text, command_schema)
@@ -439,7 +377,6 @@ class RustCompletionProvider:
         # Check if we're completing an option name
 
         if text.startswith("-"):
-
             return self._complete_option_names(text, command_schema)
 
         # Complete positional arguments or subcommands
@@ -454,9 +391,7 @@ class RustCompletionProvider:
         # Add CLI commands
 
         for command in self.cli_schema.get("commands", {}).keys():
-
             if command.startswith(text):
-
                 commands.append(command)
 
         # Add built-in commands
@@ -464,9 +399,7 @@ class RustCompletionProvider:
         builtins = ["help", "exit", "quit", "history", "cargo"]
 
         for builtin in builtins:
-
             if builtin.startswith(text):
-
                 commands.append(builtin)
 
         return sorted(commands)
@@ -479,19 +412,15 @@ class RustCompletionProvider:
         options = []
 
         for option in command_schema.get("options", []):
-
             long_form = f"--{option['name']}"
 
             if long_form.startswith(text):
-
                 options.append(long_form)
 
             if "short" in option:
-
                 short_form = f"-{option['short']}"
 
                 if short_form.startswith(text):
-
                     options.append(short_form)
 
         return sorted(options)
@@ -504,15 +433,12 @@ class RustCompletionProvider:
         option_def = None
 
         for opt in command_schema.get("options", []):
-
             if opt["name"] == option_name or opt.get("short") == option_name:
-
                 option_def = opt
 
                 break
 
         if not option_def:
-
             return []
 
         # Handle different option types
@@ -520,7 +446,6 @@ class RustCompletionProvider:
         option_type = option_def.get("type", "string")
 
         if "choices" in option_def:
-
             # Predefined choices
 
             return [
@@ -528,19 +453,16 @@ class RustCompletionProvider:
             ]
 
         elif option_type in ["path", "file", "directory"]:
-
             # File/directory completion
 
             return self._complete_paths(text, option_type)
 
         elif option_type == "bool":
-
             # Boolean completion
 
             return [val for val in ["true", "false"] if val.startswith(text.lower())]
 
         elif option_name in ["crate", "dependency"]:
-
             # Crate name completion
 
             return self._complete_crate_names(text)
@@ -557,19 +479,16 @@ class RustCompletionProvider:
         arg_index = len(current_args) - (1 if text else 0)
 
         if arg_index < len(arguments):
-
             arg_def = arguments[arg_index]
 
             arg_type = arg_def.get("type", "string")
 
             if "choices" in arg_def:
-
                 return [
                     choice for choice in arg_def["choices"] if choice.startswith(text)
                 ]
 
             elif arg_type in ["path", "file", "directory"]:
-
                 return self._complete_paths(text, arg_type)
 
         # Check for subcommands
@@ -577,7 +496,6 @@ class RustCompletionProvider:
         subcommands = command_schema.get("subcommands", [])
 
         if subcommands:
-
             return [sub["name"] for sub in subcommands if sub["name"].startswith(text)]
 
         return []
@@ -586,25 +504,20 @@ class RustCompletionProvider:
         """Complete file and directory paths."""
 
         try:
-
             if not text or text == ".":
-
                 base_path = Path(".")
 
                 prefix = ""
 
             else:
-
                 path = Path(text)
 
                 if text.endswith("/") or path.is_dir():
-
                     base_path = path
 
                     prefix = text
 
                 else:
-
                     base_path = path.parent
 
                     prefix = str(path.parent) + "/" if path.parent != Path(".") else ""
@@ -612,40 +525,31 @@ class RustCompletionProvider:
             completions = []
 
             for item in base_path.iterdir():
-
                 item_name = prefix + item.name
 
                 if path_type == "directory" and not item.is_dir():
-
                     continue
 
                 elif path_type == "file" and not item.is_file():
-
                     continue
 
                 if item_name.startswith(text):
-
                     if item.is_dir():
-
                         completions.append(item_name + "/")
 
                     else:
-
                         completions.append(item_name)
 
             return sorted(completions)
 
         except (OSError, PermissionError):
-
             return []
 
     def _complete_crate_names(self, text: str) -> List[str]:
         """Complete crate names from crates.io (cached)."""
 
         if self.crate_cache is None:
-
             try:
-
                 # Use cargo search to get popular crates (limited)
 
                 result = subprocess.run(
@@ -656,13 +560,10 @@ class RustCompletionProvider:
                 )
 
                 if result.returncode == 0:
-
                     crates = []
 
                     for line in result.stdout.split("\n"):
-
                         if " = " in line:
-
                             crate_name = line.split(" = ")[0].strip()
 
                             crates.append(crate_name)
@@ -670,11 +571,9 @@ class RustCompletionProvider:
                     self.crate_cache = crates
 
                 else:
-
                     self.crate_cache = []
 
             except (subprocess.TimeoutExpired, FileNotFoundError):
-
                 self.crate_cache = []
 
         return [crate for crate in self.crate_cache if crate.startswith(text)]
@@ -689,7 +588,6 @@ class RustCompletionProvider:
         """Get information about the current Cargo project."""
 
         try:
-
             result = subprocess.run(
                 ["cargo", "metadata", "--format-version", "1"],
                 capture_output=True,
@@ -698,7 +596,6 @@ class RustCompletionProvider:
             )
 
             if result.returncode == 0:
-
                 metadata = json.loads(result.stdout)
 
                 package = metadata.get("packages", [{}])[0]
@@ -713,7 +610,6 @@ class RustCompletionProvider:
                 )
 
         except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError):
-
             pass
 
         return None
@@ -723,8 +619,6 @@ class RustHistoryManager:
     """
 
     Advanced history management for Rust interactive mode.
-
-
 
     Features:
 
@@ -742,8 +636,6 @@ class RustHistoryManager:
         """
 
         Initialize history manager.
-
-
 
         Args:
 
@@ -765,7 +657,6 @@ class RustHistoryManager:
         """Get the history file path."""
 
         if custom_path:
-
             return Path(custom_path)
 
         # Use XDG base directory or fallback
@@ -780,46 +671,35 @@ class RustHistoryManager:
         """Load history from file."""
 
         if self.history_file.exists():
-
             try:
-
-                with open(self.history_file, "r", encoding="utf-8") as f:
-
+                with open(self.history_file, encoding="utf-8") as f:
                     self.history = [line.strip() for line in f.readlines()]
 
                     # Keep only last max_entries
 
                     if len(self.history) > self.max_entries:
-
                         self.history = self.history[-self.max_entries :]
 
-            except (IOError, UnicodeDecodeError) as e:
-
+            except (OSError, UnicodeDecodeError) as e:
                 print(f"Warning: Could not load history from {self.history_file}: {e}")
 
     def save_history(self):
         """Save history to file."""
 
         try:
-
             self.history_file.parent.mkdir(parents=True, exist_ok=True)
 
             with open(self.history_file, "w", encoding="utf-8") as f:
-
                 for entry in self.history[-self.max_entries :]:
-
                     f.write(f"{entry}\n")
 
-        except IOError as e:
-
+        except OSError as e:
             print(f"Warning: Could not save history to {self.history_file}: {e}")
 
     def add_entry(self, command: str):
         """
 
         Add a command to history with smart deduplication.
-
-
 
         Args:
 
@@ -830,13 +710,11 @@ class RustHistoryManager:
         command = command.strip()
 
         if not command or command.startswith(" "):
-
             return  # Skip empty commands or commands starting with space
 
         # Remove previous occurrence of the same command
 
         if command in self.history:
-
             self.history.remove(command)
 
         # Add to end
@@ -846,7 +724,6 @@ class RustHistoryManager:
         # Trim if too long
 
         if len(self.history) > self.max_entries:
-
             self.history = self.history[-self.max_entries :]
 
     def search_history(
@@ -856,15 +733,11 @@ class RustHistoryManager:
 
         Search history for commands matching pattern.
 
-
-
         Args:
 
             pattern: Search pattern (supports regex)
 
             case_sensitive: Whether search should be case sensitive
-
-
 
         Returns:
 
@@ -875,21 +748,17 @@ class RustHistoryManager:
         flags = 0 if case_sensitive else re.IGNORECASE
 
         try:
-
             regex = re.compile(pattern, flags)
 
             results = []
 
             for i, cmd in enumerate(self.history):
-
                 if regex.search(cmd):
-
                     results.append((i, cmd))
 
             return results
 
         except re.error:
-
             # If regex is invalid, fall back to simple string matching
 
             pattern_lower = pattern.lower() if not case_sensitive else pattern
@@ -897,11 +766,9 @@ class RustHistoryManager:
             results = []
 
             for i, cmd in enumerate(self.history):
-
                 cmd_compare = cmd.lower() if not case_sensitive else cmd
 
                 if pattern_lower in cmd_compare:
-
                     results.append((i, cmd))
 
             return results
@@ -917,13 +784,10 @@ class RustHistoryManager:
         self.history.clear()
 
         if self.history_file.exists():
-
             try:
-
                 self.history_file.unlink()
 
             except OSError:
-
                 pass
 
 
@@ -931,8 +795,6 @@ class RustExpressionEvaluator:
     """
 
     Advanced Rust expression evaluator with compilation and execution.
-
-
 
     Features:
 
@@ -947,7 +809,6 @@ class RustExpressionEvaluator:
     """
 
     def __init__(self):
-
         self.temp_dir = Path("/tmp/rust_eval")
 
         self.temp_dir.mkdir(exist_ok=True)
@@ -968,8 +829,6 @@ class RustExpressionEvaluator:
 
         Evaluate a Rust expression.
 
-
-
         Args:
 
             expression: Rust code to evaluate
@@ -978,19 +837,15 @@ class RustExpressionEvaluator:
 
             timeout_seconds: Execution timeout
 
-
-
         Returns:
 
             Dictionary with 'success', 'output', 'error', and 'compile_time' keys
 
         """
 
-        import time
-
-        import tempfile
-
         import hashlib
+        import tempfile
+        import time
 
         # Create hash for caching
 
@@ -1005,13 +860,11 @@ class RustExpressionEvaluator:
         # Create temporary files
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".rs", delete=False) as f:
-
             f.write(program)
 
             rust_file = Path(f.name)
 
         try:
-
             # Compile
 
             compile_result = self._compile_expression(rust_file, timeout_seconds)
@@ -1019,7 +872,6 @@ class RustExpressionEvaluator:
             compile_time = time.time() - start_time
 
             if not compile_result["success"]:
-
                 return {
                     "success": False,
                     "output": "",
@@ -1030,7 +882,6 @@ class RustExpressionEvaluator:
             # Execute if compilation succeeded
 
             if with_output:
-
                 exec_result = self._execute_binary(
                     compile_result["binary_path"], timeout_seconds
                 )
@@ -1043,7 +894,6 @@ class RustExpressionEvaluator:
                 }
 
             else:
-
                 return {
                     "success": True,
                     "output": "",
@@ -1052,13 +902,11 @@ class RustExpressionEvaluator:
                 }
 
         finally:
-
             # Cleanup
 
             rust_file.unlink(missing_ok=True)
 
             if "binary_path" in locals():
-
                 Path(compile_result.get("binary_path", "")).unlink(missing_ok=True)
 
     def _generate_program(self, expression: str) -> str:
@@ -1067,7 +915,6 @@ class RustExpressionEvaluator:
         # Check if it's a complete program or just an expression
 
         if "fn main" in expression:
-
             # It's already a complete program
 
             imports = "\n".join(self.default_imports)
@@ -1083,20 +930,16 @@ class RustExpressionEvaluator:
         if expression.strip().endswith(";") or any(
             keyword in expression for keyword in ["let", "if", "for", "while", "match"]
         ):
-
             # Statement(s)
 
             main_body = expression
 
         else:
-
             # Expression - print the result
 
             main_body = f'println!("{{}}", ({expression}));'
 
         return f"""{imports}
-
-
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {{
 
@@ -1112,7 +955,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
         binary_path = rust_file.with_suffix("")
 
         try:
-
             result = subprocess.run(
                 ["rustc", str(rust_file), "-o", str(binary_path), "--edition=2021"],
                 capture_output=True,
@@ -1121,15 +963,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
             )
 
             if result.returncode == 0:
-
                 return {"success": True, "binary_path": str(binary_path), "error": ""}
 
             else:
-
                 return {"success": False, "binary_path": "", "error": result.stderr}
 
         except subprocess.TimeoutExpired:
-
             return {
                 "success": False,
                 "binary_path": "",
@@ -1137,7 +976,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
             }
 
         except FileNotFoundError:
-
             return {
                 "success": False,
                 "binary_path": "",
@@ -1148,7 +986,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
         """Execute the compiled binary."""
 
         try:
-
             result = subprocess.run(
                 [binary_path], capture_output=True, text=True, timeout=timeout_seconds
             )
@@ -1160,7 +997,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
             }
 
         except subprocess.TimeoutExpired:
-
             return {
                 "success": False,
                 "output": "",
@@ -1168,7 +1004,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
             }
 
         except Exception as e:
-
             return {"success": False, "output": "", "error": f"Execution failed: {e}"}
 
     def validate_syntax(self, code: str) -> dict:
@@ -1176,13 +1011,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
 
         Validate Rust syntax without compilation.
 
-
-
         Args:
 
             code: Rust code to validate
-
-
 
         Returns:
 
@@ -1195,13 +1026,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
         program = self._generate_program(code)
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".rs", delete=False) as f:
-
             f.write(program)
 
             rust_file = Path(f.name)
 
         try:
-
             result = subprocess.run(
                 ["rustc", str(rust_file), "--parse-only"],
                 capture_output=True,
@@ -1215,15 +1044,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {{
             }
 
         except subprocess.TimeoutExpired:
-
             return {"valid": False, "errors": "Syntax checking timed out"}
 
         except FileNotFoundError:
-
             return {"valid": False, "errors": "rustc not found"}
 
         finally:
-
             rust_file.unlink(missing_ok=True)
 
 
@@ -1231,8 +1057,6 @@ class RustDocumentationHelper:
     """
 
     Helper for accessing Rust documentation and help system.
-
-
 
     Features:
 
@@ -1247,7 +1071,6 @@ class RustDocumentationHelper:
     """
 
     def __init__(self):
-
         self.std_docs_cache = {}
 
         self.crate_docs_cache = {}
@@ -1256,11 +1079,9 @@ class RustDocumentationHelper:
         """Get documentation for a standard library item."""
 
         if item in self.std_docs_cache:
-
             return str(self.std_docs_cache[item])
 
         try:
-
             # Try to get documentation using rustdoc
 
             result = subprocess.run(
@@ -1268,7 +1089,6 @@ class RustDocumentationHelper:
             )
 
             if result.returncode == 0 and result.stdout.strip():
-
                 doc = result.stdout.strip()
 
                 self.std_docs_cache[item] = doc
@@ -1276,7 +1096,6 @@ class RustDocumentationHelper:
                 return doc
 
         except (subprocess.TimeoutExpired, FileNotFoundError):
-
             pass
 
         return None
@@ -1286,13 +1105,9 @@ class RustDocumentationHelper:
 
         Search for documentation matching the query.
 
-
-
         Args:
 
             query: Search term
-
-
 
         Returns:
 
@@ -1316,9 +1131,7 @@ class RustDocumentationHelper:
         ]
 
         for item, description in std_items:
-
             if query.lower() in item.lower() or query.lower() in description.lower():
-
                 results.append(
                     {"name": item, "description": description, "type": "std"}
                 )
@@ -1345,8 +1158,6 @@ class RustInteractiveEngine(InteractiveEngine):
 
     Enhanced Rust-specific interactive engine with advanced features.
 
-
-
     Provides:
 
     - Rust-specific command parsing with Result error handling
@@ -1366,7 +1177,6 @@ class RustInteractiveEngine(InteractiveEngine):
     """
 
     def __init__(self, cli_config: Dict[str, Any]):
-
         super().__init__(cli_config)
 
         self.rust_parser = RustCommandParser()
@@ -1433,7 +1243,6 @@ class RustInteractiveEngine(InteractiveEngine):
         )
 
         if self.cargo_info:
-
             self.register_command(
                 InteractiveCommand(
                     name="info",
@@ -1499,13 +1308,11 @@ class RustInteractiveEngine(InteractiveEngine):
         rust_command, error = self.rust_parser.parse_command(line, command)
 
         if error or rust_command is None:
-
             print(f"Error: {error or 'Unknown error'}")
 
             return
 
         try:
-
             # Call the appropriate hook function
 
             hook_name = command.get(
@@ -1527,20 +1334,17 @@ class RustInteractiveEngine(InteractiveEngine):
             print(f"Hook function '{hook_name}' would be called here")
 
         except Exception as e:
-
             print(f"Error executing command: {e}")
 
     def handle_cargo_command(self, args: List[str]):
         """Handle cargo commands."""
 
         if not args:
-
             print("Available cargo commands: build, test, check, run, clean, doc")
 
             return
 
         try:
-
             cmd = ["cargo"] + args
 
             print(f"Running: {' '.join(cmd)}")
@@ -1548,34 +1352,27 @@ class RustInteractiveEngine(InteractiveEngine):
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.stdout:
-
                 print(result.stdout)
 
             if result.stderr:
-
                 print(result.stderr)
 
             if result.returncode != 0:
-
                 print(f"Command failed with exit code {result.returncode}")
 
         except subprocess.TimeoutExpired:
-
             print("Command timed out")
 
         except FileNotFoundError:
-
             print("Cargo not found. Make sure Rust is installed.")
 
         except Exception as e:
-
             print(f"Error running cargo command: {e}")
 
     def handle_rustc_command(self, args: List[str]):
         """Handle Rust expression compilation."""
 
         if not args:
-
             print("Usage: rustc <expression>")
 
             print("Example: rustc 'println!(\"Hello, world!\");'")
@@ -1597,19 +1394,15 @@ fn main() {{
 """
 
         try:
-
+            import os
             import tempfile
 
-            import os
-
             with tempfile.NamedTemporaryFile(mode="w", suffix=".rs", delete=False) as f:
-
                 f.write(program)
 
                 temp_file = f.name
 
             try:
-
                 # Compile and run
 
                 result = subprocess.run(
@@ -1620,7 +1413,6 @@ fn main() {{
                 )
 
                 if result.returncode == 0:
-
                     # Run the compiled program
 
                     run_result = subprocess.run(
@@ -1628,33 +1420,25 @@ fn main() {{
                     )
 
                     if run_result.stdout:
-
                         print(run_result.stdout)
 
                     if run_result.stderr:
-
                         print(f"Runtime error: {run_result.stderr}")
 
                 else:
-
                     print(f"Compilation error: {result.stderr}")
 
             finally:
-
                 # Clean up
 
                 for ext in ["", ".exe"]:
-
                     try:
-
                         os.unlink(temp_file + ext)
 
                     except OSError:
-
                         pass
 
         except Exception as e:
-
             print(f"Error compiling Rust expression: {e}")
 
     def handle_check_command(self, args: List[str]):
@@ -1676,7 +1460,6 @@ fn main() {{
         """Handle project info command."""
 
         if self.cargo_info:
-
             print(f"Project: {self.cargo_info.name}")
 
             print(f"Version: {self.cargo_info.version}")
@@ -1686,7 +1469,6 @@ fn main() {{
             print(f"Features: {', '.join(self.cargo_info.features)}")
 
         else:
-
             print("No Cargo project information available")
 
     def get_completions(self, text: str, state: int) -> Optional[str]:
@@ -1710,7 +1492,6 @@ fn main() {{
         """Handle Rust expression evaluation."""
 
         if not args:
-
             print("Usage: eval <rust-expression>")
 
             print("Examples:")
@@ -1736,9 +1517,7 @@ fn main() {{
         result = self.expression_evaluator.evaluate_expression(expression, not no_run)
 
         if result["success"]:
-
             if result["output"]:
-
                 print("Output:")
 
                 print(result["output"])
@@ -1746,7 +1525,6 @@ fn main() {{
             print(f"✅ Success (compiled in {result['compile_time']:.2f}s)")
 
         else:
-
             print("❌ Error:")
 
             print(result["error"])
@@ -1755,7 +1533,6 @@ fn main() {{
         """Handle documentation search."""
 
         if not args:
-
             print("Usage: doc <search-term>")
 
             print("Examples:")
@@ -1773,11 +1550,9 @@ fn main() {{
         results = self.documentation_helper.search_documentation(query)
 
         if results:
-
             print(f"Documentation results for '{query}':")
 
             for result in results:
-
                 print(f"  {result['name']}: {result['description']}")
 
                 # Try to get detailed documentation
@@ -1785,11 +1560,9 @@ fn main() {{
                 detailed = self.documentation_helper.get_std_doc(result["name"])
 
                 if detailed:
-
                     print(f"    {detailed[:100]}...")
 
         else:
-
             print(f"No documentation found for '{query}'")
 
             # Try function signature lookup
@@ -1797,14 +1570,12 @@ fn main() {{
             signature = self.documentation_helper.get_function_signature(query)
 
             if signature:
-
                 print(f"Function signature: {signature}")
 
     def handle_validate_command(self, args: List[str]):
         """Handle syntax validation."""
 
         if not args:
-
             print("Usage: validate <rust-code>")
 
             print("Example: validate 'let x: i32 = 42;'")
@@ -1816,11 +1587,9 @@ fn main() {{
         result = self.expression_evaluator.validate_syntax(code)
 
         if result["valid"]:
-
             print("✅ Syntax is valid")
 
         else:
-
             print("❌ Syntax errors:")
 
             print(result["errors"])
@@ -1829,7 +1598,6 @@ fn main() {{
         """Handle history search."""
 
         if not args:
-
             print("Usage: search-history <pattern>")
 
             print("Examples:")
@@ -1845,7 +1613,6 @@ fn main() {{
         case_sensitive = "--case-sensitive" in args or "-c" in args
 
         if case_sensitive:
-
             pattern = " ".join(
                 [arg for arg in args if arg not in ["--case-sensitive", "-c"]]
             )
@@ -1853,22 +1620,18 @@ fn main() {{
         results = self.history_manager.search_history(pattern, case_sensitive)
 
         if results:
-
             print(f"History search results for '{pattern}':")
 
             for index, command in results[-20:]:  # Show last 20 results
-
                 print(f"  {index:4d}  {command}")
 
         else:
-
             print(f"No history entries found matching '{pattern}'")
 
     def handle_crate_command(self, args: List[str]):
         """Handle crate information and search."""
 
         if not args:
-
             print("Usage: crate <search-term>")
 
             print("Examples:")
@@ -1886,15 +1649,12 @@ fn main() {{
         crates = self.completion_provider._complete_crate_names(query)
 
         if crates:
-
             print(f"Crates matching '{query}':")
 
             for crate in crates[:10]:  # Limit to top 10
-
                 print(f"  {crate}")
 
         else:
-
             print(f"No crates found matching '{query}'")
 
         # If we have cargo info, also show project dependencies
@@ -1902,15 +1662,12 @@ fn main() {{
         if self.cargo_info and query.lower() in [
             dep.lower() for dep in self.cargo_info.dependencies
         ]:
-
             print(f"\n'{query}' is a dependency in the current project")
 
     def run(self):
         """
 
         Enhanced run method with history integration.
-
-
 
         This method would be called by the actual Rust interactive implementation
 
@@ -1946,13 +1703,9 @@ def create_rust_interactive_engine(cli_config: Dict[str, Any]) -> RustInteractiv
 
     Factory function to create a Rust interactive engine.
 
-
-
     Args:
 
         cli_config: CLI configuration dictionary
-
-
 
     Returns:
 

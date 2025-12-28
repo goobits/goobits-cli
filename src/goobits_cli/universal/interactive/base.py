@@ -2,26 +2,18 @@
 
 Base classes for interactive mode support in Goobits CLI Framework.
 
-
-
 This module provides abstract base classes and utilities for implementing
 
 interactive modes across different programming languages.
 
 """
 
-from abc import ABC, abstractmethod
-
-from typing import Dict, List, Optional, Callable, Any, Union
-
-from dataclasses import dataclass
-
-import shlex
-
-
-import time
-
 import re
+import shlex
+import time
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Union
 
 
 @dataclass
@@ -46,8 +38,6 @@ class InteractiveEngine(ABC):
 
     Abstract base class for interactive mode engines.
 
-
-
     This class provides the foundation for implementing interactive
 
     modes in different programming languages while maintaining a
@@ -60,8 +50,6 @@ class InteractiveEngine(ABC):
         """
 
         Initialize the interactive engine.
-
-
 
         Args:
 
@@ -127,7 +115,6 @@ class InteractiveEngine(ABC):
         root_command = self.cli_config.get("root_command", {})
 
         for command in root_command.get("subcommands", []):
-
             self.register_command(
                 InteractiveCommand(
                     name=command["name"],
@@ -145,8 +132,6 @@ class InteractiveEngine(ABC):
 
         Register a command in the interactive engine.
 
-
-
         Args:
 
             command: The command to register.
@@ -158,9 +143,7 @@ class InteractiveEngine(ABC):
         # Register aliases
 
         if command.aliases:
-
             for alias in command.aliases:
-
                 self.commands[alias] = command
 
     def parse_line(self, line: str) -> tuple[str, List[str]]:
@@ -168,13 +151,9 @@ class InteractiveEngine(ABC):
 
         Parse a command line into command and arguments.
 
-
-
         Args:
 
             line: The input line to parse.
-
-
 
         Returns:
 
@@ -183,21 +162,17 @@ class InteractiveEngine(ABC):
         """
 
         if not line.strip():
-
             return "", []
 
         try:
-
             parts = shlex.split(line)
 
         except ValueError:
-
             # Handle unclosed quotes or other parsing errors
 
             parts = line.split()
 
         if not parts:
-
             return "", []
 
         return parts[0], parts[1:]
@@ -207,15 +182,11 @@ class InteractiveEngine(ABC):
 
         Get tab completions for the given text.
 
-
-
         Args:
 
             text: The text to complete.
 
             state: The state of completion (for iterating through options).
-
-
 
         Returns:
 
@@ -224,48 +195,39 @@ class InteractiveEngine(ABC):
         """
 
         if state == 0:
-
             # Generate completions
 
             if not text:
-
                 self.completions = list(self.commands.keys())
 
             else:
-
                 self.completions = [
                     cmd for cmd in self.commands.keys() if cmd.startswith(text)
                 ]
 
         try:
-
             return self.completions[state]
 
         except IndexError:
-
             return None
 
     def handle_help(self, args: List[str]):
         """Handle the help command."""
 
         if args:
-
             # Show help for specific command
 
             cmd_name = args[0]
 
             if cmd_name in self.commands:
-
                 command = self.commands[cmd_name]
 
                 print(f"\n{command.name}: {command.description}")
 
                 if command.arguments:
-
                     print("\nArguments:")
 
                     for arg in command.arguments:
-
                         required = (
                             "required" if arg.get("required", True) else "optional"
                         )
@@ -275,21 +237,17 @@ class InteractiveEngine(ABC):
                         )
 
                 if command.options:
-
                     print("\nOptions:")
 
                     for opt in command.options:
-
                         short = f", -{opt['short']}" if opt.get("short") else ""
 
                         print(f"  --{opt['name']}{short}: {opt.get('description', '')}")
 
             else:
-
                 print(f"Unknown command: {cmd_name}")
 
         else:
-
             # Show all commands
 
             print("\nAvailable commands:")
@@ -299,9 +257,7 @@ class InteractiveEngine(ABC):
             shown = set()
 
             for name, command in sorted(self.commands.items()):
-
                 if command.name not in shown:
-
                     print(f"  {command.name:15} {command.description}")
 
                     shown.add(command.name)
@@ -319,13 +275,10 @@ class InteractiveEngine(ABC):
         """Handle the history command."""
 
         if not self.command_history:
-
             print("No command history available.")
 
         else:
-
             for i, cmd in enumerate(self.command_history, 1):
-
                 print(f"{i:4d}  {cmd}")
 
     @abstractmethod
@@ -334,13 +287,9 @@ class InteractiveEngine(ABC):
 
         Handle a CLI command in interactive mode.
 
-
-
         This method should be implemented by subclasses to execute
 
         the actual command logic.
-
-
 
         Args:
 
@@ -358,8 +307,6 @@ class InteractiveEngine(ABC):
 
         Run the interactive loop.
 
-
-
         This method should be implemented by subclasses to provide
 
         the actual REPL functionality.
@@ -373,13 +320,9 @@ class InteractiveEngine(ABC):
 
         Execute a command line.
 
-
-
         Args:
 
             line: The command line to execute.
-
-
 
         Returns:
 
@@ -390,25 +333,20 @@ class InteractiveEngine(ABC):
         command_name, args = self.parse_line(line)
 
         if not command_name:
-
             return False
 
         if command_name in self.commands:
-
             command = self.commands[command_name]
 
             try:
-
                 result = command.handler(args)
 
                 return result is True  # Exit if handler returns True
 
             except Exception as e:
-
                 print(f"Error executing command: {e}")
 
         else:
-
             print(f"Unknown command: {command_name}")
 
             print("Type 'help' for available commands")
@@ -419,7 +357,6 @@ class InteractiveEngine(ABC):
         """Add a command to the history."""
 
         if line.strip() and not line.startswith("help"):
-
             self.command_history.append(line)
 
 
@@ -427,8 +364,6 @@ class InteractiveRenderer:
     """
 
     Helper class for rendering interactive mode templates.
-
-
 
     This class provides utilities for language-specific renderers
 
@@ -457,15 +392,11 @@ class InteractiveRenderer:
 
         Format command name for the target language.
 
-
-
         Args:
 
             name: The command name.
 
             language: The target language.
-
-
 
         Returns:
 
@@ -474,17 +405,14 @@ class InteractiveRenderer:
         """
 
         if language in ["python", "rust"]:
-
             return name.replace("-", "_")
 
         elif language in ["nodejs", "typescript"]:
-
             # JavaScript typically uses camelCase
 
             parts = name.split("-")
 
             if len(parts) > 1:
-
                 return parts[0] + "".join(p.title() for p in parts[1:])
 
             return name
@@ -497,13 +425,9 @@ class InteractiveRenderer:
 
         Get the dependencies required for interactive mode.
 
-
-
         Args:
 
             language: The target language.
-
-
 
         Returns:
 
@@ -559,8 +483,8 @@ class BasicREPL(InteractiveEngine):
     def _setup_readline(self):
         """Setup readline functionality for enhanced input."""
         try:
-            import readline
             import atexit
+            import readline
 
             # Configure history
             readline.set_completer_delims(" \t\n`!@#$%^&*()=+[{]}\\|;:'\",<>?")
@@ -1097,7 +1021,6 @@ class SessionREPL(BasicREPL):
                 and self.session_history.entries
                 and self.current_session_name
             ):
-
                 print(f"\nAuto-saving session '{self.current_session_name}'...")
                 success = self.session_manager.save_session(
                     self.current_session_name, self.session_history
@@ -1347,7 +1270,6 @@ class VariableREPL(SessionREPL):
             and self.variable_store
             and "$" in line
         ):
-
             original_line = line
             line = self.variable_store.substitute_variables(line)
 
@@ -1363,7 +1285,6 @@ class VariableREPL(SessionREPL):
 
         # Add variable completions for $var_name patterns
         if self.variables_enabled and self.variable_store and text.startswith("$"):
-
             var_prefix = text[1:]  # Remove $
             var_completions = self.variable_store.get_completions_for_prefix(var_prefix)
             completions.extend(f"${name}" for name in var_completions)
@@ -1729,7 +1650,6 @@ class PipelineREPL(VariableREPL):
             and not line.strip().startswith('"')
             and not line.strip().startswith("'")
         ):
-
             # Execute as pipeline
             import asyncio
 
@@ -1767,7 +1687,6 @@ class PipelineREPL(VariableREPL):
             and self.pipeline_processor
             and text.startswith("run ")
         ):
-
             templates = self.pipeline_processor.list_pipeline_templates()
             template_names = [template["name"] for template in templates]
 
@@ -1795,7 +1714,6 @@ class PipelineREPL(VariableREPL):
             and self.pipeline_processor
             and self.current_session_name == args[0]
         ):
-
             templates = self.pipeline_processor.list_pipeline_templates()
             if templates:
                 print(f"Session includes {len(templates)} pipeline templates")

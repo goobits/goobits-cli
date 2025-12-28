@@ -30,10 +30,12 @@ from typing import Dict, List, Optional, Union
 
 # Import shared utilities
 from ...utils.strings import (
-    to_camel_case,
-    to_pascal_case,
-    to_kebab_case,
     escape_javascript_string,
+    to_camel_case,
+    to_kebab_case,
+    to_pascal_case,
+)
+from ...utils.strings import (
     json_stringify as shared_json_stringify,
 )
 
@@ -63,30 +65,34 @@ def _lazy_imports():
 
 
 # Base generator imports
-from .. import BaseGenerator
 from ...core.schemas import ConfigSchema, GoobitsConfigSchema
-from ...utils.formatter import align_header_items, format_icon_spacing, align_setup_steps
-
-# Universal Template System imports
-# Universal Template System is required
-from ...universal.template_engine import UniversalTemplateEngine
-from ...universal.renderers.nodejs_renderer import (
-    NodeJSRenderer as UniversalNodeJSRenderer,
-)
-from ...universal.interactive import integrate_interactive_mode
-from ...universal.completion import (
-    integrate_completion_system,
-)
-from ...universal.plugins import integrate_plugin_system
 
 # Phase 2 shared components
 from ...shared.components.validation_framework import ValidationRunner
 from ...shared.components.validators import (
-    CommandValidator,
     ArgumentValidator,
-    OptionValidator,
+    CommandValidator,
     ConfigValidator,
+    OptionValidator,
 )
+from ...universal.completion import (
+    integrate_completion_system,
+)
+from ...universal.interactive import integrate_interactive_mode
+from ...universal.plugins import integrate_plugin_system
+from ...universal.renderers.nodejs_renderer import (
+    NodeJSRenderer as UniversalNodeJSRenderer,
+)
+
+# Universal Template System imports
+# Universal Template System is required
+from ...universal.template_engine import UniversalTemplateEngine
+from ...utils.formatter import (
+    align_header_items,
+    align_setup_steps,
+    format_icon_spacing,
+)
+from .. import BaseGenerator
 
 try:
     from ...shared.components.doc_generator import DocumentationGenerator
@@ -182,19 +188,15 @@ class NodeJSGenerator(BaseGenerator):
         # Determine the directory to check for conflicts
 
         for filepath, content in target_files.items():
-
             # Construct the full path for conflict checking
 
             if target_directory:
-
                 check_path = os.path.join(target_directory, filepath)
 
             else:
-
                 check_path = filepath
 
             if filepath == "cli.js" and os.path.exists(check_path):
-
                 # cli.js exists, warn but still generate (user can choose to overwrite)
 
                 warnings.append(
@@ -208,7 +210,6 @@ class NodeJSGenerator(BaseGenerator):
                 adjusted_files[filepath] = content
 
             elif filepath == "package.json" and os.path.exists(check_path):
-
                 warnings.append(
                     "⚠️  Existing package.json detected. Review and merge dependencies manually."
                 )
@@ -216,17 +217,14 @@ class NodeJSGenerator(BaseGenerator):
                 adjusted_files[filepath] = content  # Still generate, but warn user
 
             else:
-
                 adjusted_files[filepath] = content
 
         # Print warnings if any
 
         if warnings:
-
             typer.echo("\n🔍 File Conflict Detection:")
 
             for warning in warnings:
-
                 typer.echo(f"   {warning}")
 
             typer.echo("")
@@ -253,15 +251,11 @@ class NodeJSGenerator(BaseGenerator):
     ) -> None:
         """Validate configuration using shared validators when available.
 
-
-
         Args:
 
             config: The configuration object
 
             cli_config: The CLI configuration extracted from config
-
-
 
         Raises:
 
@@ -280,21 +274,16 @@ class NodeJSGenerator(BaseGenerator):
         # Current validation logic
 
         if hasattr(config, "package_name"):  # GoobitsConfigSchema
-
             if not cli_config:
-
                 raise ValueError("No CLI configuration found")
 
         # Additional validations can be added here
 
         if cli_config:
-
             # Validate commands
 
             if hasattr(cli_config, "commands") and cli_config.commands:
-
                 for cmd_name, cmd_data in cli_config.commands.items():
-
                     # Validation with CommandValidator available
                     if self.validation_runner:
                         cmd_validator = CommandValidator()
@@ -310,9 +299,7 @@ class NodeJSGenerator(BaseGenerator):
                     # Validate arguments
 
                     if hasattr(cmd_data, "args") and cmd_data.args:
-
                         for arg in cmd_data.args:
-
                             # ArgumentValidator available
                             if self.validation_runner:
                                 arg_validator = ArgumentValidator()
@@ -327,9 +314,7 @@ class NodeJSGenerator(BaseGenerator):
                     # Validate options
 
                     if hasattr(cmd_data, "options") and cmd_data.options:
-
                         for opt in cmd_data.options:
-
                             # OptionValidator available
                             if self.validation_runner:
                                 opt_validator = OptionValidator()
@@ -415,8 +400,6 @@ class NodeJSGenerator(BaseGenerator):
 
         Generate using Universal Template System.
 
-
-
         Args:
 
             config: The configuration object
@@ -425,8 +408,6 @@ class NodeJSGenerator(BaseGenerator):
 
             version: Optional version string
 
-
-
         Returns:
 
             Generated Node.js CLI code
@@ -434,17 +415,14 @@ class NodeJSGenerator(BaseGenerator):
         """
 
         try:
-
             # Ensure universal engine is available
 
             if not self.universal_engine:
-
                 raise RuntimeError("Universal Template Engine not initialized")
 
             # Convert config to GoobitsConfigSchema if needed
 
             if isinstance(config, ConfigSchema):
-
                 # Create minimal GoobitsConfigSchema for universal system
 
                 goobits_config = GoobitsConfigSchema(
@@ -463,13 +441,11 @@ class NodeJSGenerator(BaseGenerator):
                 )
 
             else:
-
                 goobits_config = config
 
             # Integrate interactive mode support
 
             if integrate_interactive_mode:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -485,7 +461,6 @@ class NodeJSGenerator(BaseGenerator):
             # Integrate completion system support
 
             if integrate_completion_system:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -501,7 +476,6 @@ class NodeJSGenerator(BaseGenerator):
             # Integrate plugin system support
 
             if integrate_plugin_system:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -539,7 +513,6 @@ class NodeJSGenerator(BaseGenerator):
             self._generated_files = {}
 
             for file_path, content in generated_files.items():
-
                 # Store full relative path (not just filename) for proper file access
 
                 self._generated_files[file_path] = content
@@ -556,7 +529,6 @@ class NodeJSGenerator(BaseGenerator):
             )
 
             if not main_file:
-
                 # If no main file found, use the first available content
 
                 main_file = next(iter(generated_files.values()), "")
@@ -564,16 +536,15 @@ class NodeJSGenerator(BaseGenerator):
             return main_file
 
         except Exception as e:
-
             # Universal Templates failed - provide helpful error message
             error_msg = f"""❌ Universal Template System failed: {type(e).__name__}: {e}
-            
+
 🔧 Troubleshooting suggestions:
 1. Check your YAML configuration syntax
-2. Ensure all required fields are present  
+2. Ensure all required fields are present
 3. Try regenerating with `goobits build --debug` for detailed logs
 4. Report this issue if the problem persists
-            
+
 💡 CLI generation uses universal templates."""
 
             typer.echo(error_msg, err=True)
@@ -670,28 +641,17 @@ class NodeJSGenerator(BaseGenerator):
         # Generate a basic Commander.js CLI using ES modules
 
         code = f"""/**
-
  * Generated by goobits-cli
-
- * 
-
+ *
  * Modern Node.js CLI with Commander.js framework
-
  * Full template system available at src/goobits_cli/templates/nodejs/
-
  */
-
-
 
 import {{ Command }} from 'commander';
 
 import chalk from 'chalk';
 
-
-
 const program = new Command();
-
-
 
 program
 
@@ -701,24 +661,18 @@ program
 
   .version('{version}');
 
-
-
-// Configuration from {context['file_name']}
+// Configuration from {context["file_name"]}
 
 const config = {json.dumps(cli_config.model_dump() if cli_config else {}, indent=2)};
-
-
 
 """
 
         # Add commands if available
 
         if cli_config and cli_config.commands:
-
             code += "// Commands\n"
 
             for cmd_name, cmd_data in cli_config.commands.items():
-
                 code += f"""
 
 program
@@ -730,15 +684,11 @@ program
                 # Add arguments
 
                 if cmd_data.args:
-
                     for arg in cmd_data.args:
-
                         if arg.required:
-
                             arg_str = f"<{arg.name}>"
 
                         else:
-
                             arg_str = f"[{arg.name}]"
 
                         code += f"""
@@ -748,13 +698,10 @@ program
                 # Add options
 
                 if cmd_data.options:
-
                     for opt in cmd_data.options:
-
                         flags = f"-{opt.short}, --{opt.name}"
 
                         if opt.type != "flag":
-
                             flags += f" <{opt.type}>"
 
                         code += f"""
@@ -766,7 +713,6 @@ program
   .action(("""
 
                 if cmd_data.args:
-
                     code += ", ".join(arg.name for arg in cmd_data.args) + ", "
 
                 code += f"""options) => {{
@@ -787,8 +733,6 @@ export function cli() {
 
   program.parse(process.argv);
 
-  
-
   // Show help if no command provided
 
   if (!process.argv.slice(2).length) {
@@ -798,8 +742,6 @@ export function cli() {
   }
 
 }
-
-
 
 // Export for use as a module
 
@@ -820,8 +762,6 @@ export default cli;
 
         Generate all files needed for the Node.js CLI.
 
-
-
         Args:
 
             config: The configuration object
@@ -829,8 +769,6 @@ export default cli;
             config_filename: Name of the configuration file
 
             version: Optional version string
-
-
 
         Returns:
 
@@ -849,29 +787,19 @@ export default cli;
         cli_config = context.get("cli")
 
         hooks_content = f"""/**
-
- * Hook functions for {context['display_name']}
-
- * Auto-generated from {context['file_name']}
-
- * 
-
+ * Hook functions for {context["display_name"]}
+ * Auto-generated from {context["file_name"]}
+ *
  * Implement your business logic in these hook functions.
-
  * Each command will call its corresponding hook function.
-
  */
-
-
 
 """
 
         # Generate hook functions for each command
 
         if cli_config and hasattr(cli_config, "commands"):
-
             for cmd_name, cmd_data in cli_config.commands.items():
-
                 safe_cmd_name = cmd_name.replace("-", "_")
 
                 hooks_content += f"""/**
@@ -884,15 +812,13 @@ export default cli;
 
  */
 
-export async function on{safe_cmd_name.replace('_', '').title()}(args) {{
+export async function on{safe_cmd_name.replace("_", "").title()}(args) {{
 
     // Add your '{cmd_name}' command logic here
 
     console.log('🚀 Executing {cmd_name} command...');
 
     console.log('   Command:', args.commandName);
-
-    
 
     // Example: access raw arguments
 
@@ -906,13 +832,9 @@ export async function on{safe_cmd_name.replace('_', '').title()}(args) {{
 
     }}
 
-    
-
     console.log('✅ {cmd_name} command completed successfully!');
 
 }}
-
-
 
 """
 
@@ -943,19 +865,13 @@ export async function onUnknownCommand(args) {
 
         return f"""#!/bin/bash
 
-# Setup script for {context['display_name']}
+# Setup script for {context["display_name"]}
 
-# Auto-generated from {context['file_name']}
-
-
+# Auto-generated from {context["file_name"]}
 
 set -e
 
-
-
-echo "🔧 Setting up {context['display_name']}..."
-
-
+echo "🔧 Setting up {context["display_name"]}..."
 
 # Check if Node.js is installed
 
@@ -969,8 +885,6 @@ if ! command -v node &> /dev/null; then
 
 fi
 
-
-
 # Check if npm is installed
 
 if ! command -v npm &> /dev/null; then
@@ -981,21 +895,17 @@ if ! command -v npm &> /dev/null; then
 
 fi
 
-
-
 # Install dependencies
 
 echo "📦 Installing dependencies..."
 
 npm install
 
-
-
 if [ $? -eq 0 ]; then
 
     echo "✅ Setup successful!"
 
-    echo "📍 CLI location: {context.get('main_entry_file', 'cli.js')}"
+    echo "📍 CLI location: {context.get("main_entry_file", "cli.js")}"
 
     echo ""
 
@@ -1007,7 +917,7 @@ if [ $? -eq 0 ]; then
 
     echo "To run locally:"
 
-    echo "   node {context.get('main_entry_file', 'cli.js')} --help"
+    echo "   node {context.get("main_entry_file", "cli.js")} --help"
 
 else
 
@@ -1047,13 +957,9 @@ fi
         # Add any npm packages from installation extras
 
         if context.get("installation") and hasattr(context["installation"], "extras"):
-
             if hasattr(context["installation"].extras, "npm"):
-
                 for package in context["installation"].extras.npm:
-
                     if "@" in package and not package.startswith("@"):
-
                         name, version = package.rsplit("@", 1)
 
                         package_data["dependencies"][name] = f"^{version}"
@@ -1063,7 +969,6 @@ fi
                         and package.startswith("@")
                         and package.count("@") > 1
                     ):
-
                         # Handle scoped packages with version like @types/node@18.0.0
 
                         name, version = package.rsplit("@", 1)
@@ -1071,7 +976,6 @@ fi
                         package_data["dependencies"][name] = f"^{version}"
 
                     else:
-
                         package_data["dependencies"][package] = "latest"
 
         # Update package.json with metadata from context
@@ -1081,19 +985,15 @@ fi
         package_data["license"] = context.get("license", "MIT")
 
         if context.get("homepage"):
-
             package_data["homepage"] = context["homepage"]
 
         if context.get("repository"):
-
             package_data["repository"] = {"type": "git", "url": context["repository"]}
 
         if context.get("bugs_url"):
-
             package_data["bugs"] = {"url": context["bugs_url"]}
 
         if context.get("keywords"):
-
             package_data["keywords"].extend(context["keywords"])
 
         return json.dumps(package_data, indent=2)
@@ -1104,40 +1004,29 @@ fi
         # Use DocumentationGenerator if available
 
         if self.doc_generator and DocumentationGenerator:
-
             try:
-
                 return self.doc_generator.generate_readme()
 
             except Exception:
-
                 # Fallback to manual generation if doc_generator fails
 
                 pass
 
         # Fallback to existing implementation
 
-        return f"""# {context['display_name']}
+        return f"""# {context["display_name"]}
 
-
-
-{context['description']}
-
-
+{context["description"]}
 
 ## Installation
-
-
 
 ### From npm (when published)
 
 ```bash
 
-npm install -g {context['package_name']}
+npm install -g {context["package_name"]}
 
 ```
-
-
 
 ### For development
 
@@ -1147,9 +1036,7 @@ npm install -g {context['package_name']}
 
 git clone <your-repo-url>
 
-cd {context['package_name']}
-
-
+cd {context["package_name"]}
 
 # Install dependencies and link globally
 
@@ -1159,31 +1046,19 @@ npm link
 
 ```
 
-
-
 ## Usage
-
-
 
 ```bash
 
-{context['command_name']} --help
+{context["command_name"]} --help
 
 ```
 
-
-
 ## Commands
-
-
 
 {self._generate_commands_documentation(context)}
 
-
-
 ## Development
-
-
 
 To run in development mode:
 
@@ -1193,23 +1068,15 @@ To run in development mode:
 
 npm install
 
-
-
 # Run locally
 
 node cli.js --help
 
 ```
 
-
-
 To implement command logic, edit the hook functions in `src/hooks.js`.
 
-
-
 ## License
-
-
 
 MIT
 
@@ -1221,13 +1088,11 @@ MIT
         cli_config = context.get("cli")
 
         if not cli_config or not hasattr(cli_config, "commands"):
-
             return "No commands configured."
 
         commands_doc = []
 
         for cmd_name, cmd_data in cli_config.commands.items():
-
             cmd_desc = (
                 cmd_data.desc if hasattr(cmd_data, "desc") else "Command description"
             )
@@ -1237,9 +1102,7 @@ MIT
             # Add subcommands if they exist
 
             if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
-
                 for sub_name, sub_data in cmd_data.subcommands.items():
-
                     sub_desc = (
                         sub_data.desc
                         if hasattr(sub_data, "desc")
@@ -1267,8 +1130,6 @@ lerna-debug.log*
 
 .npm
 
-
-
 # Environment variables
 
 .env
@@ -1281,15 +1142,11 @@ lerna-debug.log*
 
 .env.production.local
 
-
-
 # OS files
 
 .DS_Store
 
 Thumbs.db
-
-
 
 # IDE files
 
@@ -1301,15 +1158,11 @@ Thumbs.db
 
 *.swo
 
-
-
 # Test coverage
 
 coverage/
 
 .nyc_output/
-
-
 
 # Build outputs
 
@@ -1317,15 +1170,11 @@ dist/
 
 build/
 
-
-
 # Logs
 
 logs/
 
 *.log
-
-
 
 # Config (keep local config private)
 

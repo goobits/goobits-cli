@@ -3,7 +3,7 @@
 import json
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 import typer
 
@@ -33,6 +33,8 @@ def _lazy_imports():
     if Environment is None:
         from jinja2 import (
             Environment as _Environment,
+        )
+        from jinja2 import (
             FileSystemLoader as _FileSystemLoader,
         )
 
@@ -61,9 +63,7 @@ def load_goobits_config(file_path: Path) -> "GoobitsConfigSchema":
     _lazy_imports()
 
     try:
-
-        with open(file_path, "r") as f:
-
+        with open(file_path) as f:
             data = yaml.safe_load(f)
 
         config = GoobitsConfigSchema(**data)
@@ -71,7 +71,6 @@ def load_goobits_config(file_path: Path) -> "GoobitsConfigSchema":
         return config
 
     except FileNotFoundError:
-
         typer.echo(f"Error: File '{file_path}' not found.", err=True)
 
         raise typer.Exit(1)
@@ -90,7 +89,7 @@ def load_goobits_config(file_path: Path) -> "GoobitsConfigSchema":
 
             # Try to show the problematic line
             try:
-                with open(file_path, "r") as f:
+                with open(file_path) as f:
                     lines = f.readlines()
                     if 0 <= mark.line < len(lines):
                         error_msg += (
@@ -161,23 +160,18 @@ def dependency_to_dict(dep):
     """Convert DependencyItem to dict for JSON serialization."""
 
     if isinstance(dep, str):
-
         return {"name": dep, "type": "command"}
 
     elif hasattr(dep, "model_dump"):
-
         return dep.model_dump()
 
     elif hasattr(dep, "dict"):
-
         return dep.dict()
 
     elif isinstance(dep, dict):
-
         return dep
 
     else:
-
         return {"name": str(dep), "type": "command"}
 
 
@@ -194,13 +188,10 @@ def extract_version_from_pyproject(project_dir: Path) -> str:
     pyproject_path = project_dir / "pyproject.toml"
 
     if not pyproject_path.exists():
-
         return "unknown"
 
     try:
-
-        with open(pyproject_path, "r") as f:
-
+        with open(pyproject_path) as f:
             data = toml.load(f)
 
         # Try different locations for version
@@ -210,19 +201,15 @@ def extract_version_from_pyproject(project_dir: Path) -> str:
             and "poetry" in data["tool"]
             and "version" in data["tool"]["poetry"]
         ):
-
             return data["tool"]["poetry"]["version"]
 
         elif "project" in data and "version" in data["project"]:
-
             return data["project"]["version"]
 
         else:
-
             return "unknown"
 
     except Exception:
-
         return "unknown"
 
 
@@ -362,7 +349,6 @@ def backup_file(file_path: Path, create_backup: bool = False) -> Optional[Path]:
     """Create a backup of a file if it exists and backup is requested."""
 
     if create_backup and file_path.exists():
-
         backup_path = file_path.with_suffix(file_path.suffix + ".bak")
 
         shutil.copy2(file_path, backup_path)
@@ -385,7 +371,6 @@ def update_pyproject_toml(
     pyproject_path = project_dir / "pyproject.toml"
 
     if not pyproject_path.exists():
-
         typer.echo(
             "[warn]  No pyproject.toml found, skipping entry point update", err=True
         )
@@ -393,19 +378,16 @@ def update_pyproject_toml(
         return False
 
     try:
-
         # Backup pyproject.toml if requested
 
         backup_path = backup_file(pyproject_path, create_backup)
 
         if backup_path:
-
             typer.echo(f"[backup] Created backup: {backup_path}")
 
         # Read pyproject.toml
 
-        with open(pyproject_path, "r") as f:
-
+        with open(pyproject_path) as f:
             data = toml.load(f)
 
         # Update the entry points
@@ -419,60 +401,51 @@ def update_pyproject_toml(
             and "poetry" in data["tool"]
             and "scripts" in data["tool"]["poetry"]
         ):
-
             # Poetry format
 
-            data["tool"]["poetry"]["scripts"][
-                command_name
-            ] = f"{package_name}.{cli_module_name}:cli_entry"
+            data["tool"]["poetry"]["scripts"][command_name] = (
+                f"{package_name}.{cli_module_name}:cli_entry"
+            )
 
             typer.echo(f"[check] Updated Poetry entry point for '{command_name}'")
 
         elif "project" in data and "scripts" in data["project"]:
-
             # PEP 621 format
             # Convert package name hyphens to underscores for Python module naming
             module_name = package_name.replace("-", "_")
-            data["project"]["scripts"][
-                command_name
-            ] = f"{module_name}.{cli_module_name}:cli_entry"
+            data["project"]["scripts"][command_name] = (
+                f"{module_name}.{cli_module_name}:cli_entry"
+            )
 
             typer.echo(f"[check] Updated PEP 621 entry point for '{command_name}'")
 
         else:
-
             # Create project.scripts section if it doesn't exist
 
             if "project" not in data:
-
                 data["project"] = {}
 
             if "scripts" not in data["project"]:
-
                 data["project"]["scripts"] = {}
 
             # Convert package name hyphens to underscores for Python module naming
             module_name = package_name.replace("-", "_")
-            data["project"]["scripts"][
-                command_name
-            ] = f"{module_name}.{cli_module_name}:cli_entry"
+            data["project"]["scripts"][command_name] = (
+                f"{module_name}.{cli_module_name}:cli_entry"
+            )
 
             typer.echo(f"[check] Created entry point for '{command_name}'")
 
         # Add package-data configuration for setup.sh
 
         if "project" in data:  # PEP 621 format
-
             if "tool" not in data:
-
                 data["tool"] = {}
 
             if "setuptools" not in data["tool"]:
-
                 data["tool"]["setuptools"] = {}
 
             if "package-data" not in data["tool"]["setuptools"]:
-
                 data["tool"]["setuptools"]["package-data"] = {}
 
             # Add setup.sh to package-data
@@ -480,7 +453,6 @@ def update_pyproject_toml(
             module_name = package_name.replace("-", "_")
 
             if module_name not in data["tool"]["setuptools"]["package-data"]:
-
                 data["tool"]["setuptools"]["package-data"][module_name] = ["setup.sh"]
 
                 typer.echo(
@@ -488,11 +460,9 @@ def update_pyproject_toml(
                 )
 
             else:
-
                 existing = data["tool"]["setuptools"]["package-data"][module_name]
 
                 if isinstance(existing, list) and "setup.sh" not in existing:
-
                     existing.append("setup.sh")
 
                     typer.echo(
@@ -500,7 +470,6 @@ def update_pyproject_toml(
                     )
 
                 elif isinstance(existing, str) and existing != "setup.sh":
-
                     # Convert single string to list and add setup.sh
 
                     data["tool"]["setuptools"]["package-data"][module_name] = [
@@ -513,23 +482,19 @@ def update_pyproject_toml(
                     )
 
                 elif "setup.sh" in existing or existing == "setup.sh":
-
                     typer.echo(
                         f"[info]  setup.sh already in package-data for '{module_name}'"
                     )
 
         elif "tool" in data and "poetry" in data["tool"]:
-
             # Poetry format - handle includes differently
 
             if "packages" not in data["tool"]["poetry"]:
-
                 data["tool"]["poetry"]["packages"] = []
 
             # Poetry uses include for additional files
 
             if "include" not in data["tool"]["poetry"]:
-
                 data["tool"]["poetry"]["include"] = []
 
             # Add setup.sh to includes if not already present
@@ -537,7 +502,6 @@ def update_pyproject_toml(
             setup_include = {"path": "setup.sh", "format": "sdist"}
 
             if setup_include not in data["tool"]["poetry"]["include"]:
-
                 data["tool"]["poetry"]["include"].append(setup_include)
 
                 typer.echo(
@@ -545,7 +509,6 @@ def update_pyproject_toml(
                 )
 
             else:
-
                 typer.echo(
                     f"[info]  setup.sh already in Poetry includes for '{package_name}'"
                 )
@@ -553,13 +516,11 @@ def update_pyproject_toml(
         # Write back the modified pyproject.toml
 
         with open(pyproject_path, "w") as f:
-
             toml.dump(data, f)
 
         return True
 
     except Exception as e:
-
         typer.echo(f"[error] Error updating pyproject.toml: {e}", err=True)
 
         return False

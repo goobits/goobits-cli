@@ -6,12 +6,12 @@ mode responsiveness. Analyzes user patterns and pre-loads likely next prompts.
 """
 
 import asyncio
+import logging
 import time
-from typing import Dict, List, Optional, Any, Callable, Tuple
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from threading import Lock
-from collections import defaultdict, deque
-import logging
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 

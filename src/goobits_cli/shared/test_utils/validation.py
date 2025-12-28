@@ -7,13 +7,13 @@ NOTE: ValidationResult is now imported from the unified goobits_cli.validation
 module. It is re-exported here for backward compatibility.
 """
 
-import yaml
-
-from typing import Dict, List, Any, Optional
 from pathlib import Path
+from typing import Dict, Optional
+
+import yaml
+from pydantic import ValidationError
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from pydantic import ValidationError
 
 # Import unified ValidationResult from canonical location
 from goobits_cli.validation import ValidationResult
@@ -23,9 +23,7 @@ class TestDataValidator:
     """Validator for test data and configurations."""
 
     def __init__(self, test_data_path: Optional[Path] = None):
-
         if test_data_path is None:
-
             test_data_path = Path(__file__).parent.parent / "test_data"
 
         self.test_data_path = Path(test_data_path)
@@ -38,7 +36,6 @@ class TestDataValidator:
         configs_path = self.test_data_path / "configs"
 
         if not configs_path.exists():
-
             result.add_error(f"Configs directory not found: {configs_path}")
 
             return result
@@ -48,9 +45,7 @@ class TestDataValidator:
         # Validate configs in each complexity directory
 
         for complexity_dir in configs_path.iterdir():
-
             if not complexity_dir.is_dir():
-
                 continue
 
             complexity = complexity_dir.name
@@ -58,19 +53,15 @@ class TestDataValidator:
             validated_configs[complexity] = {}
 
             for config_file in complexity_dir.glob("*.yaml"):
-
                 language = config_file.stem
 
                 try:
-
                     # Load and validate YAML syntax
 
                     with open(config_file) as f:
-
                         config_data = yaml.safe_load(f)
 
                     if config_data is None:
-
                         result.add_error(f"{config_file}: Empty configuration")
 
                         continue
@@ -78,23 +69,19 @@ class TestDataValidator:
                     # Validate against schema
 
                     try:
-
                         config_schema = GoobitsConfigSchema(**config_data)
 
                         validated_configs[complexity][language] = config_schema
 
                     except ValidationError as e:
-
                         result.add_error(
                             f"{config_file}: Schema validation failed: {e}"
                         )
 
                 except yaml.YAMLError as e:
-
                     result.add_error(f"{config_file}: YAML parsing failed: {e}")
 
                 except Exception as e:
-
                     result.add_error(f"{config_file}: Unexpected error: {e}")
 
         result.details["validated_configs"] = validated_configs
@@ -109,7 +96,6 @@ class TestDataValidator:
         outputs_path = self.test_data_path / "expected_outputs"
 
         if not outputs_path.exists():
-
             result.add_error(f"Expected outputs directory not found: {outputs_path}")
 
             return result
@@ -121,9 +107,7 @@ class TestDataValidator:
         found_categories = []
 
         for category_dir in outputs_path.iterdir():
-
             if category_dir.is_dir():
-
                 found_categories.append(category_dir.name)
 
                 # Validate files in each category
@@ -131,15 +115,12 @@ class TestDataValidator:
                 files_count = len(list(category_dir.glob("*")))
 
                 if files_count == 0:
-
                     result.add_warning(f"No files in {category_dir.name} category")
 
         # Check for missing required categories
 
         for required in required_categories:
-
             if required not in found_categories:
-
                 result.add_warning(f"Missing expected output category: {required}")
 
         result.details["found_categories"] = found_categories
@@ -154,7 +135,6 @@ class TestDataValidator:
         scenarios_path = self.test_data_path / "scenarios"
 
         if not scenarios_path.exists():
-
             result.add_error(f"Scenarios directory not found: {scenarios_path}")
 
             return result
@@ -162,13 +142,10 @@ class TestDataValidator:
         validated_scenarios = {}
 
         for scenario_file in scenarios_path.glob("*.yaml"):
-
             scenario_name = scenario_file.stem
 
             try:
-
                 with open(scenario_file) as f:
-
                     scenario_data = yaml.safe_load(f)
 
                 # Validate scenario structure
@@ -176,9 +153,7 @@ class TestDataValidator:
                 required_fields = ["name", "description", "test_cases"]
 
                 for field in required_fields:
-
                     if field not in scenario_data:
-
                         result.add_error(
                             f"{scenario_file}: Missing required field '{field}'"
                         )
@@ -186,17 +161,13 @@ class TestDataValidator:
                 # Validate test cases
 
                 if "test_cases" in scenario_data:
-
                     for i, test_case in enumerate(scenario_data["test_cases"]):
-
                         if "name" not in test_case:
-
                             result.add_error(
                                 f"{scenario_file}: Test case {i} missing 'name'"
                             )
 
                         if "command" not in test_case:
-
                             result.add_error(
                                 f"{scenario_file}: Test case {i} missing 'command'"
                             )
@@ -204,11 +175,9 @@ class TestDataValidator:
                 validated_scenarios[scenario_name] = scenario_data
 
             except yaml.YAMLError as e:
-
                 result.add_error(f"{scenario_file}: YAML parsing failed: {e}")
 
             except Exception as e:
-
                 result.add_error(f"{scenario_file}: Unexpected error: {e}")
 
         result.details["validated_scenarios"] = validated_scenarios
@@ -225,7 +194,6 @@ class TestDataValidator:
         config_validation = self.validate_all_test_configs()
 
         if not config_validation.passed:
-
             result.add_error("Cannot validate consistency: Config validation failed")
 
             return result
@@ -235,9 +203,7 @@ class TestDataValidator:
         # Check consistency within each complexity level
 
         for complexity, configs in validated_configs.items():
-
             if len(configs) < 2:
-
                 result.add_warning(
                     f"Only {len(configs)} language(s) in {complexity} complexity"
                 )
@@ -253,9 +219,7 @@ class TestDataValidator:
             # Compare other configs to reference
 
             for language, config in configs.items():
-
                 if language == reference_lang:
-
                     continue
 
                 # Compare CLI structure
@@ -265,7 +229,6 @@ class TestDataValidator:
                 lang_commands = set(config.cli.commands.keys())
 
                 if ref_commands != lang_commands:
-
                     result.add_warning(
                         f"{complexity}/{language}: Command set differs from {reference_lang}: "
                         f"missing: {ref_commands - lang_commands}, "
@@ -279,7 +242,6 @@ class TestDataValidator:
                 lang_options = len(config.cli.options or [])
 
                 if ref_options != lang_options:
-
                     result.add_warning(
                         f"{complexity}/{language}: Different number of global options: "
                         f"{lang_options} vs {ref_options} in {reference_lang}"
@@ -306,11 +268,9 @@ class FrameworkIntegrationValidator:
         # Test imports
 
         try:
-
             # Import from the test conftest.py file
 
             import sys
-
             from pathlib import Path
 
             # Add tests directory to path to import from conftest
@@ -319,28 +279,24 @@ class FrameworkIntegrationValidator:
 
             sys.path.insert(0, str(tests_dir))
 
-            from conftest import generate_cli, determine_language
+            from conftest import determine_language, generate_cli
 
             result.details["phase1_helpers_imported"] = True
 
         except ImportError as e:
-
             result.add_error(f"Cannot import Phase 1 helpers: {e}")
 
         try:
-
             from tests.test_helpers import create_test_goobits_config
 
             result.details["phase1_test_helpers_imported"] = True
 
         except ImportError as e:
-
             result.add_error(f"Cannot import Phase 1 test helpers: {e}")
 
         # Test shared utilities
 
         try:
-
             from goobits_cli.shared.test_utils.fixtures import TestFixtures
 
             # Test basic functionality
@@ -352,13 +308,11 @@ class FrameworkIntegrationValidator:
             result.details["shared_utilities_functional"] = True
 
         except Exception as e:
-
             result.add_error(f"Shared utilities not functional: {e}")
 
         # Test integration
 
         try:
-
             from goobits_cli.shared.test_utils.phase1_integration import (
                 validate_phase1_compatibility,
             )
@@ -366,17 +320,14 @@ class FrameworkIntegrationValidator:
             integration_result = validate_phase1_compatibility()
 
             if integration_result["compatible"]:
-
                 result.details["integration_test_passed"] = True
 
             else:
-
                 result.add_error(
                     f"Integration test failed: {integration_result['message']}"
                 )
 
         except Exception as e:
-
             result.add_error(f"Integration test error: {e}")
 
         return result
@@ -387,9 +338,7 @@ class FrameworkIntegrationValidator:
         result = ValidationResult(passed=True, errors=[], warnings=[], details={})
 
         try:
-
             from goobits_cli.core.schemas import GoobitsConfigSchema
-
             from goobits_cli.shared.test_utils.fixtures import create_test_config
 
             # Test creating configs for all languages
@@ -399,21 +348,17 @@ class FrameworkIntegrationValidator:
             created_configs = {}
 
             for language in languages:
-
                 try:
-
                     config = create_test_config(f"test-{language}", language, "basic")
 
                     created_configs[language] = config
 
                 except Exception as e:
-
                     result.add_error(f"Cannot create {language} config: {e}")
 
             result.details["created_configs"] = list(created_configs.keys())
 
         except ImportError as e:
-
             result.add_error(f"Schema compatibility test failed: {e}")
 
         return result
@@ -425,13 +370,9 @@ class FrameworkIntegrationValidator:
 def validate_test_data(test_data_path: Optional[Path] = None) -> ValidationResult:
     """Validate all test data.
 
-
-
     Args:
 
         test_data_path: Path to test data directory
-
-
 
     Returns:
 

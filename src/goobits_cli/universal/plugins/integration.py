@@ -2,29 +2,23 @@
 
 Plugin system integration utilities for Goobits CLI Framework.
 
-
-
 Provides helper functions and classes to integrate the plugin system
 
 with CLI generation and interactive modes across all supported languages.
 
 """
 
-from typing import List, Dict, Any, Set
-
+from typing import Any, Dict, List, Set
 
 from jinja2 import Template
 
-
-from .manager import get_plugin_manager, PluginInfo, PluginType, PluginStatus
+from .manager import PluginInfo, PluginStatus, PluginType, get_plugin_manager
 
 
 class PluginCLIIntegrator:
     """
 
     Integrates plugins with CLI generation and command systems.
-
-
 
     Provides seamless integration between plugins and the main CLI
 
@@ -44,8 +38,6 @@ class PluginCLIIntegrator:
 
         Get all plugin-provided commands organized by plugin.
 
-
-
         Returns:
 
             Dictionary mapping plugin names to their command plugins
@@ -57,9 +49,7 @@ class PluginCLIIntegrator:
         plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
         for plugin in plugins:
-
             if plugin.plugin_type == PluginType.COMMAND:
-
                 command_plugins[plugin.name] = plugin
 
         return command_plugins
@@ -68,8 +58,6 @@ class PluginCLIIntegrator:
         """
 
         Get all plugin-provided completion providers.
-
-
 
         Returns:
 
@@ -82,9 +70,7 @@ class PluginCLIIntegrator:
         plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
         for plugin in plugins:
-
             if plugin.plugin_type == PluginType.COMPLETION:
-
                 completion_plugins.append(plugin)
 
         return completion_plugins
@@ -96,13 +82,9 @@ class PluginCLIIntegrator:
 
         Integrate enabled plugins with CLI configuration.
 
-
-
         Args:
 
             cli_config: Base CLI configuration
-
-
 
         Returns:
 
@@ -119,13 +101,10 @@ class PluginCLIIntegrator:
         # Add plugin commands to CLI configuration
 
         if "commands" not in enhanced_config:
-
             enhanced_config["commands"] = {}
 
         for plugin_name, plugin in plugin_commands.items():
-
             for command_name in plugin.provides_commands:
-
                 plugin_command_config = {
                     "description": f"Command from {plugin.name} plugin",
                     "plugin_name": plugin.name,
@@ -142,13 +121,9 @@ class PluginCLIIntegrator:
 
         Generate language-specific code to integrate plugins.
 
-
-
         Args:
 
             plugins: List of plugins to integrate
-
-
 
         Returns:
 
@@ -157,23 +132,18 @@ class PluginCLIIntegrator:
         """
 
         if self.language == "python":
-
             return self._generate_python_integration_code(plugins)
 
         elif self.language == "nodejs":
-
             return self._generate_nodejs_integration_code(plugins)
 
         elif self.language == "typescript":
-
             return self._generate_typescript_integration_code(plugins)
 
         elif self.language == "rust":
-
             return self._generate_rust_integration_code(plugins)
 
         else:
-
             return ""
 
     def _generate_python_integration_code(self, plugins: List[PluginInfo]) -> str:
@@ -189,8 +159,6 @@ import importlib
 import sys
 
 from typing import Dict, Any
-
-
 
 # Plugin registry
 
@@ -214,15 +182,11 @@ PLUGINS = {
 
 }
 
-
-
 def load_plugins():
 
     """Load all enabled plugins."""
 
     loaded_plugins = {}
-
-    
 
     for name, info in PLUGINS.items():
 
@@ -236,15 +200,11 @@ def load_plugins():
 
                 sys.path.insert(0, str(plugin_path))
 
-            
-
             # Import plugin module
 
             module = importlib.import_module(name)
 
             plugin_instance = module.create_plugin()
-
-            
 
             loaded_plugins[name] = {
 
@@ -256,17 +216,11 @@ def load_plugins():
 
             }
 
-            
-
         except Exception as e:
 
             print(f"Failed to load plugin {name}: {e}")
 
-    
-
     return loaded_plugins
-
-
 
 def activate_plugins(plugins: Dict[str, Any]):
 
@@ -299,8 +253,6 @@ def activate_plugins(plugins: Dict[str, Any]):
 
 const path = require('path');
 
-
-
 // Plugin registry
 
 const PLUGINS = {
@@ -323,8 +275,6 @@ const PLUGINS = {
 
 };
 
-
-
 /**
 
  * Load all enabled plugins.
@@ -334,8 +284,6 @@ const PLUGINS = {
 function loadPlugins() {
 
   const loadedPlugins = {};
-
-  
 
   for (const [name, info] of Object.entries(PLUGINS)) {
 
@@ -349,8 +297,6 @@ function loadPlugins() {
 
       const pluginInstance = pluginModule.createPlugin();
 
-      
-
       loadedPlugins[name] = {
 
         instance: pluginInstance,
@@ -361,8 +307,6 @@ function loadPlugins() {
 
       };
 
-      
-
     } catch (error) {
 
       console.error(`Failed to load plugin ${name}:`, error);
@@ -371,13 +315,9 @@ function loadPlugins() {
 
   }
 
-  
-
   return loadedPlugins;
 
 }
-
-
 
 /**
 
@@ -405,8 +345,6 @@ async function activatePlugins(plugins) {
 
 }
 
-
-
 module.exports = { loadPlugins, activatePlugins, PLUGINS };
 
 """
@@ -423,8 +361,6 @@ module.exports = { loadPlugins, activatePlugins, PLUGINS };
 // Plugin Integration Code (Generated)
 
 import * as path from 'path';
-
-
 
 // Plugin registry
 
@@ -448,8 +384,6 @@ const PLUGINS: Record<string, any> = {
 
 };
 
-
-
 /**
 
  * Load all enabled plugins.
@@ -459,8 +393,6 @@ const PLUGINS: Record<string, any> = {
 export function loadPlugins(): Record<string, any> {
 
   const loadedPlugins: Record<string, any> = {};
-
-  
 
   for (const [name, info] of Object.entries(PLUGINS)) {
 
@@ -474,8 +406,6 @@ export function loadPlugins(): Record<string, any> {
 
       const pluginInstance = pluginModule.createPlugin();
 
-      
-
       loadedPlugins[name] = {
 
         instance: pluginInstance,
@@ -486,8 +416,6 @@ export function loadPlugins(): Record<string, any> {
 
       };
 
-      
-
     } catch (error) {
 
       console.error(`Failed to load plugin ${name}:`, error);
@@ -496,13 +424,9 @@ export function loadPlugins(): Record<string, any> {
 
   }
 
-  
-
   return loadedPlugins;
 
 }
-
-
 
 /**
 
@@ -530,8 +454,6 @@ export async function activatePlugins(plugins: Record<string, any>): Promise<voi
 
 }
 
-
-
 export { PLUGINS };
 
 """
@@ -554,8 +476,6 @@ use std::path::PathBuf;
 use async_trait::async_trait;
 
 use log::{info, error};
-
-
 
 // Plugin registry
 
@@ -589,8 +509,6 @@ lazy_static::lazy_static! {
 
 }
 
-
-
 #[derive(Debug, Clone)]
 
 pub struct PluginInfo {
@@ -607,8 +525,6 @@ pub struct PluginInfo {
 
 }
 
-
-
 /**
 
  * Load all enabled plugins.
@@ -618,8 +534,6 @@ pub struct PluginInfo {
 pub fn load_plugins() -> HashMap<String, Box<dyn Plugin>> {
 
     let mut loaded_plugins: HashMap<String, Box<dyn Plugin>> = HashMap::new();
-
-    
 
     for (name, info) in PLUGINS.iter() {
 
@@ -643,13 +557,9 @@ pub fn load_plugins() -> HashMap<String, Box<dyn Plugin>> {
 
     }
 
-    
-
     loaded_plugins
 
 }
-
-
 
 /**
 
@@ -672,8 +582,6 @@ pub async fn activate_plugins(plugins: &mut HashMap<String, Box<dyn Plugin>>) {
     }
 
 }
-
-
 
 fn load_plugin_from_path(path: &PathBuf) -> Result<Box<dyn Plugin>, Box<dyn std::error::Error>> {
 
@@ -710,8 +618,6 @@ class PluginCommandManager:
 
         Register all plugin-provided commands.
 
-
-
         Returns:
 
             Dictionary of registered commands and their plugins
@@ -723,13 +629,9 @@ class PluginCommandManager:
         plugins = self.manager.list_plugins(status=PluginStatus.ENABLED)
 
         for plugin in plugins:
-
             if plugin.plugin_type == PluginType.COMMAND:
-
                 for command_name in plugin.provides_commands:
-
                     if command_name not in self.registered_commands:
-
                         registered[command_name] = plugin
 
                         self.registered_commands.add(command_name)
@@ -741,8 +643,6 @@ class PluginCommandManager:
 
         Unregister commands from a specific plugin.
 
-
-
         Args:
 
             plugin_name: Name of the plugin to unregister
@@ -752,9 +652,7 @@ class PluginCommandManager:
         plugin = self.manager.get_plugin_info(plugin_name)
 
         if plugin:
-
             for command_name in plugin.provides_commands:
-
                 self.registered_commands.discard(command_name)
 
     def is_plugin_command(self, command_name: str) -> bool:
@@ -762,13 +660,9 @@ class PluginCommandManager:
 
         Check if a command is provided by a plugin.
 
-
-
         Args:
 
             command_name: Name of the command to check
-
-
 
         Returns:
 
@@ -784,13 +678,9 @@ def setup_plugin_integration(language: str) -> PluginCLIIntegrator:
 
     Setup plugin integration for a specific language.
 
-
-
     Args:
 
         language: Target language (python, nodejs, typescript, rust)
-
-
 
     Returns:
 
@@ -808,8 +698,6 @@ def create_plugin_template_context(
 
     Create template context for plugin generation.
 
-
-
     Args:
 
         plugin_name: Name of the plugin
@@ -819,8 +707,6 @@ def create_plugin_template_context(
         language: Target language
 
         **kwargs: Additional template variables
-
-
 
     Returns:
 
@@ -885,7 +771,6 @@ def get_plugin_command_manager() -> PluginCommandManager:
     global _command_manager
 
     if _command_manager is None:
-
         _command_manager = PluginCommandManager()
 
     return _command_manager

@@ -2,8 +2,6 @@
 
 Node.js Renderer for Universal Template System
 
-
-
 This module provides Node.js-specific rendering capabilities using Commander.js
 
 framework for CLI generation. It converts universal component templates into
@@ -13,8 +11,8 @@ Node.js/JavaScript code with proper ES module support.
 """
 
 import re
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
 
 # Lazy import for version to avoid early import overhead
 _version = None
@@ -53,8 +51,6 @@ class NodeJSRenderer(LanguageRenderer):
 
     Node.js/JavaScript renderer for the Universal Template System.
 
-
-
     Converts universal component templates into Node.js CLI implementations
 
     using Commander.js framework with ES module support.
@@ -88,13 +84,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Transform intermediate representation into Node.js-specific context.
 
-
-
         Args:
 
             ir: Intermediate representation from UniversalTemplateEngine
-
-
 
         Returns:
 
@@ -184,8 +176,6 @@ class NodeJSRenderer(LanguageRenderer):
 
         Return Node.js-specific Jinja2 filters.
 
-
-
         Returns:
 
             Dictionary of filter functions
@@ -216,8 +206,6 @@ class NodeJSRenderer(LanguageRenderer):
 
         Render a specific component template for Node.js.
 
-
-
         Args:
 
             component_name: Name of the component being rendered
@@ -225,8 +213,6 @@ class NodeJSRenderer(LanguageRenderer):
             template_content: Universal template content
 
             context: Node.js-specific template context
-
-
 
         Returns:
 
@@ -251,7 +237,6 @@ class NodeJSRenderer(LanguageRenderer):
             # Add custom filters
 
             for filter_name, filter_func in self.get_custom_filters().items():
-
                 self._jinja_env.filters[filter_name] = filter_func
 
         # Render the template
@@ -269,13 +254,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Define the output file structure for Node.js CLI (minimal consolidation).
 
-
-
         Args:
 
             ir: Intermediate representation
-
-
 
         Returns:
 
@@ -314,13 +295,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Build Commander.js specific command structure.
 
-
-
         Args:
 
             cli_schema: CLI schema from IR
-
-
 
         Returns:
 
@@ -344,7 +321,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Convert options to Commander format
 
         for option in root_command.get("options", []):
-
             commander_option = {
                 "flags": self._build_option_flags(option),
                 "description": option.get("description", ""),
@@ -357,7 +333,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Convert commands to Commander format
 
         for command in root_command.get("subcommands", []):
-
             commander_cmd = {
                 "name": command.get("name", "command"),
                 "description": command.get("description", ""),
@@ -384,13 +359,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Build NPM dependencies from IR.
 
-
-
         Args:
 
             ir: Intermediate representation
-
-
 
         Returns:
 
@@ -406,7 +377,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Add enhanced interactive mode dependencies if interactive features are enabled
 
         if self._has_interactive_features(ir):
-
             dependencies.update(
                 {
                     "chalk": "^5.3.0",  # Already included but ensure version
@@ -420,15 +390,12 @@ class NodeJSRenderer(LanguageRenderer):
         npm_deps = ir.get("dependencies", {}).get("npm", [])
 
         for dep in npm_deps:
-
             if "@" in dep and not dep.startswith("@"):
-
                 name, version = dep.rsplit("@", 1)
 
                 dependencies[name] = f"^{version}"
 
             elif "@" in dep and dep.startswith("@") and dep.count("@") > 1:
-
                 # Handle scoped packages with version like @types/node@18.0.0
 
                 name, version = dep.rsplit("@", 1)
@@ -436,7 +403,6 @@ class NodeJSRenderer(LanguageRenderer):
                 dependencies[name] = f"^{version}"
 
             else:
-
                 dependencies[dep] = "latest"
 
         return dependencies
@@ -446,13 +412,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Build ES module imports for the CLI.
 
-
-
         Args:
 
             ir: Intermediate representation
-
-
 
         Returns:
 
@@ -471,7 +433,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Add enhanced interactive mode imports if interactive features are enabled
 
         if self._has_interactive_features(ir):
-
             imports.extend(
                 [
                     "import readline from 'readline';",
@@ -484,11 +445,9 @@ class NodeJSRenderer(LanguageRenderer):
         npm_deps = ir.get("dependencies", {}).get("npm", [])
 
         for dep in npm_deps:
-
             dep_name = dep.split("@")[0] if "@" in dep else dep
 
             if dep_name not in ["commander", "chalk"]:
-
                 imports.append(
                     f"import {self._to_js_variable_name(dep_name)} from '{dep_name}';"
                 )
@@ -500,13 +459,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Build hook function definitions from CLI schema.
 
-
-
         Args:
 
             cli_schema: CLI schema from IR
-
-
 
         Returns:
 
@@ -521,7 +476,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Generate hooks for each command
 
         for command in root_command.get("subcommands", []):
-
             hook = {
                 "name": command.get(
                     "hook_name", f"on_{command.get('name', 'command')}"
@@ -538,7 +492,6 @@ class NodeJSRenderer(LanguageRenderer):
             # Handle nested subcommands recursively
 
             if command.get("subcommands"):
-
                 hooks.extend(
                     self._build_subcommand_hooks(
                         command["subcommands"], command.get("name", "command")
@@ -555,7 +508,6 @@ class NodeJSRenderer(LanguageRenderer):
         hooks = []
 
         for subcmd in subcommands:
-
             hook = {
                 "name": subcmd["hook_name"],
                 "js_name": self._hook_name_filter(f"{parent_name}_{subcmd['name']}"),
@@ -571,7 +523,6 @@ class NodeJSRenderer(LanguageRenderer):
             # Recursively handle nested subcommands
 
             if subcmd.get("subcommands"):
-
                 hooks.extend(
                     self._build_subcommand_hooks(
                         subcmd["subcommands"], f"{parent_name}_{subcmd['name']}"
@@ -586,7 +537,6 @@ class NodeJSRenderer(LanguageRenderer):
         flags = []
 
         if option.get("short"):
-
             flags.append(f"-{option['short']}")
 
         flags.append(f"--{option['name']}")
@@ -596,7 +546,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Add value placeholder for non-flag options
 
         if option["type"] != "flag":
-
             flag_str += f" <{option['name']}>"
 
         return flag_str
@@ -605,15 +554,12 @@ class NodeJSRenderer(LanguageRenderer):
         """Build Commander.js argument definition."""
 
         if arg["required"]:
-
             arg_pattern = f"<{arg['name']}>"
 
         else:
-
             arg_pattern = f"[{arg['name']}]"
 
         if arg.get("multiple"):
-
             arg_pattern = arg_pattern.replace(">", "...>").replace("]", "...]")
 
         return {
@@ -639,13 +585,9 @@ class NodeJSRenderer(LanguageRenderer):
 
         Post-process JavaScript code for better formatting.
 
-
-
         Args:
 
             content: Raw rendered JavaScript
-
-
 
         Returns:
 
@@ -668,7 +610,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Clean up any remaining multiple blank lines
 
         while "\n\n\n" in content:
-
             content = content.replace("\n\n\n", "\n\n")
 
         # Split into lines for more precise control
@@ -680,21 +621,17 @@ class NodeJSRenderer(LanguageRenderer):
         consecutive_empty_count = 0
 
         for line in lines:
-
             is_empty = line.strip() == ""
 
             if is_empty:
-
                 consecutive_empty_count += 1
 
                 # Allow max 1 consecutive blank line
 
                 if consecutive_empty_count <= 1:
-
                     processed_lines.append(line)
 
             else:
-
                 consecutive_empty_count = 0
 
                 processed_lines.append(line)
@@ -787,7 +724,6 @@ class NodeJSRenderer(LanguageRenderer):
         """Convert name to camelCase."""
 
         if not name:
-
             return ""
 
         # Handle kebab-case and snake_case
@@ -795,7 +731,6 @@ class NodeJSRenderer(LanguageRenderer):
         parts = re.split(r"[-_]", name)
 
         if len(parts) == 1:
-
             return name
 
         # First part stays lowercase, rest are capitalized
@@ -820,7 +755,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Handle different option structures
 
         if "flags" in option:
-
             # Commander option object
 
             flags = option["flags"]
@@ -830,7 +764,6 @@ class NodeJSRenderer(LanguageRenderer):
             default_val = option.get("default")
 
         else:
-
             # Direct option dict
 
             flags = self._build_option_flags(option)
@@ -844,17 +777,13 @@ class NodeJSRenderer(LanguageRenderer):
         # Add default value if present
 
         if default_val is not None:
-
             if isinstance(default_val, str):
-
                 option_call += f", '{default_val}'"
 
             elif isinstance(default_val, bool):
-
                 option_call += f", {str(default_val).lower()}"
 
             else:
-
                 option_call += f", {default_val}"
 
         option_call += ")"
@@ -870,7 +799,6 @@ class NodeJSRenderer(LanguageRenderer):
         """Convert name to camelCase JavaScript variable name with proper validation."""
 
         if not name:
-
             return ""
 
         # First convert to camelCase
@@ -880,7 +808,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Handle edge cases for valid JS variable names
 
         if camel_name and camel_name[0].isdigit():
-
             # Can't start with number, prefix with underscore
 
             return f"_{camel_name}"
@@ -964,7 +891,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Check if it's a reserved word and prefix with underscore if needed
 
         if camel_name.lower() in js_reserved_words:
-
             return f"_{camel_name}"
 
         return camel_name
@@ -983,7 +909,6 @@ class NodeJSRenderer(LanguageRenderer):
         """
 
         if not isinstance(value, str):
-
             return f'"{str(value)}"'
 
         # Only escape characters that would break JavaScript syntax
@@ -1008,7 +933,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Handle cases where "on_" is already present in hook name
 
         if command_name.startswith("on_"):
-
             # Remove the on_ prefix and convert to camelCase
 
             parts = command_name[3:].replace("-", "_").split("_")
@@ -1016,7 +940,6 @@ class NodeJSRenderer(LanguageRenderer):
             return "on" + "".join(word.capitalize() for word in parts)
 
         else:
-
             # Convert command-name to onCommandName
 
             parts = command_name.replace("-", "_").split("_")
@@ -1029,7 +952,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Handle different argument structures
 
         if "required" in arg:
-
             # Direct argument dict
 
             pattern = self._build_commander_argument(arg)["pattern"]
@@ -1037,7 +959,6 @@ class NodeJSRenderer(LanguageRenderer):
             description = arg["description"]
 
         else:
-
             # Commander argument object
 
             pattern = arg.get("pattern", f"<{arg.get('name', 'arg')}>")
@@ -1050,17 +971,14 @@ class NodeJSRenderer(LanguageRenderer):
         """Format text as JavaScript comment."""
 
         if not text:
-
             return ""
 
         lines = text.split("\n")
 
         if len(lines) == 1:
-
             return f"// {lines[0]}"
 
         else:
-
             comment_lines = ["/**"] + [f" * {line}" for line in lines] + [" */"]
 
             return "\n".join(comment_lines)
@@ -1077,7 +995,6 @@ class NodeJSRenderer(LanguageRenderer):
         # Ensure it starts with letter or underscore
 
         if js_name and js_name[0].isdigit():
-
             js_name = "_" + js_name
 
         return js_name or "default"
@@ -1107,19 +1024,15 @@ class NodeJSRenderer(LanguageRenderer):
         opt_type = option.get("type", "string").lower()
 
         if opt_type in ["flag", "boolean", "bool"]:
-
             return "boolean"
 
         elif opt_type in ["int", "integer", "number", "float"]:
-
             return "number"
 
         elif opt_type in ["list", "array"]:
-
             return "array"
 
         else:
-
             return "string"
 
     def _has_interactive_features(self, cli_schema: Dict[str, Any]) -> bool:

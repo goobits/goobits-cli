@@ -2,8 +2,6 @@
 
 Integration utilities for dynamic completion with interactive modes.
 
-
-
 Provides helper functions and classes to integrate the completion system
 
 with existing interactive modes across all supported languages.
@@ -11,21 +9,16 @@ with existing interactive modes across all supported languages.
 """
 
 import asyncio
-
-from typing import List, Dict, Any, Optional, Callable
-
-
-from .registry import get_completion_registry, CompletionContext
+from typing import Any, Callable, Dict, List, Optional
 
 from .providers import setup_default_providers
+from .registry import CompletionContext, get_completion_registry
 
 
 class InteractiveCompletionIntegrator:
     """
 
     Integrates dynamic completion with interactive CLI modes.
-
-
 
     Provides seamless integration between the completion system and
 
@@ -50,11 +43,9 @@ class InteractiveCompletionIntegrator:
         # Only setup if no providers are registered
 
         if not self.registry.get_providers():
-
             providers = setup_default_providers()
 
             for provider in providers:
-
                 self.registry.register_provider(provider)
 
     async def get_completions_for_interactive(
@@ -64,15 +55,11 @@ class InteractiveCompletionIntegrator:
 
         Get completions for interactive mode input.
 
-
-
         Args:
 
             current_input: The current input line
 
             cursor_position: Position of cursor in input (default: end of input)
-
-
 
         Returns:
 
@@ -81,7 +68,6 @@ class InteractiveCompletionIntegrator:
         """
 
         if cursor_position is None:
-
             cursor_position = len(current_input)
 
         # Extract the current word being completed
@@ -105,8 +91,6 @@ class InteractiveCompletionIntegrator:
 
         Create a completion function compatible with readline/prompt_toolkit.
 
-
-
         Returns:
 
             A completion function that can be used with interactive prompts
@@ -117,7 +101,6 @@ class InteractiveCompletionIntegrator:
             """Completion function for readline interface."""
 
             if not hasattr(completion_function, "_completions"):
-
                 # Get completions asynchronously
 
                 loop = asyncio.new_event_loop()
@@ -125,7 +108,6 @@ class InteractiveCompletionIntegrator:
                 asyncio.set_event_loop(loop)
 
                 try:
-
                     completions = loop.run_until_complete(
                         self.get_completions_for_interactive(text)
                     )
@@ -133,17 +115,14 @@ class InteractiveCompletionIntegrator:
                     completion_function._completions = completions
 
                 finally:
-
                     loop.close()
 
             completions = getattr(completion_function, "_completions", [])
 
             try:
-
                 return completions[state]
 
             except IndexError:
-
                 return None
 
         return completion_function
@@ -152,17 +131,13 @@ class InteractiveCompletionIntegrator:
         """Setup completion for prompt_toolkit (if available)."""
 
         try:
-
             from prompt_toolkit.completion import Completer, Completion
 
             class DynamicCompleter(Completer):
-
                 def __init__(self, integrator: InteractiveCompletionIntegrator):
-
                     self.integrator = integrator
 
                 def get_completions(self, document, complete_event):
-
                     # Get completions synchronously for prompt_toolkit
 
                     loop = asyncio.new_event_loop()
@@ -170,7 +145,6 @@ class InteractiveCompletionIntegrator:
                     asyncio.set_event_loop(loop)
 
                     try:
-
                         completions = loop.run_until_complete(
                             self.integrator.get_completions_for_interactive(
                                 document.current_line, document.cursor_position
@@ -178,17 +152,14 @@ class InteractiveCompletionIntegrator:
                         )
 
                         for completion in completions:
-
                             yield Completion(completion)
 
                     finally:
-
                         loop.close()
 
             return DynamicCompleter(self)
 
         except ImportError:
-
             # prompt_toolkit not available
 
             return None
@@ -199,13 +170,9 @@ def setup_completion_for_language(language: str) -> InteractiveCompletionIntegra
 
     Setup completion integration for a specific language.
 
-
-
     Args:
 
         language: Target language (python, nodejs, typescript, rust)
-
-
 
     Returns:
 
@@ -221,8 +188,6 @@ def add_plugin_commands_to_context(context: CompletionContext) -> None:
 
     Add plugin-provided commands to completion context.
 
-
-
     This function integrates with the plugin system to provide
 
     completions for dynamically loaded plugin commands.
@@ -230,7 +195,6 @@ def add_plugin_commands_to_context(context: CompletionContext) -> None:
     """
 
     try:
-
         from ..plugins import get_plugin_manager
 
         manager = get_plugin_manager()
@@ -238,7 +202,6 @@ def add_plugin_commands_to_context(context: CompletionContext) -> None:
         plugins = manager.list_plugins(status="enabled")
 
         for plugin in plugins:
-
             # Add plugin commands to available commands
 
             context.available_commands.update(plugin.provides_commands)
@@ -246,11 +209,9 @@ def add_plugin_commands_to_context(context: CompletionContext) -> None:
             # Add plugin-specific completion options
 
             if plugin.plugin_type.value == "completion":
-
                 context.metadata["plugin_completions"] = True
 
     except ImportError:
-
         # Plugin system not available
 
         pass

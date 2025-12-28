@@ -5,7 +5,7 @@ Provides the abstract base class that all version-specific migrations inherit fr
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 
 class Migration(ABC):

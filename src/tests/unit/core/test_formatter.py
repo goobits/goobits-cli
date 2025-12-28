@@ -1,14 +1,15 @@
 """Unit tests for formatter.py module."""
 
 from unittest.mock import Mock
+
 from goobits_cli.utils.formatter import (
     align_examples,
-    format_multiline_text,
+    align_header_items,
     align_setup_steps,
     escape_for_docstring,
-    get_icon_width,
     format_icon_spacing,
-    align_header_items,
+    format_multiline_text,
+    get_icon_width,
 )
 
 

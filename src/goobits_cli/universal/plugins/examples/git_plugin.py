@@ -7,18 +7,11 @@ Provides Git repository management capabilities for CLI applications
 """
 
 import asyncio
-
-
 import subprocess
-
-
-from pathlib import Path
-
-from typing import Dict, List, Optional, Any
-
 from dataclasses import dataclass
-
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 
 class GitStatus(Enum):
@@ -67,7 +60,6 @@ class GitPlugin:
     """Git integration plugin for CLI applications"""
 
     def __init__(self, repo_path: Optional[Path] = None):
-
         self.repo_path = repo_path or Path.cwd()
 
         self.git_executable = self._find_git_executable()
@@ -80,7 +72,6 @@ class GitPlugin:
         git_path = shutil.which("git")
 
         if not git_path:
-
             raise RuntimeError("Git executable not found in PATH")
 
         return git_path
@@ -91,17 +82,14 @@ class GitPlugin:
         cmd = [self.git_executable, "init"]
 
         if bare:
-
             cmd.append("--bare")
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def clone_repository(
@@ -112,17 +100,14 @@ class GitPlugin:
         cmd = [self.git_executable, "clone", url]
 
         if target_dir:
-
             cmd.append(str(target_dir))
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def get_status(self) -> List[GitFileStatus]:
@@ -131,19 +116,15 @@ class GitPlugin:
         cmd = [self.git_executable, "status", "--porcelain=v1"]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             if result.returncode != 0:
-
                 return []
 
             file_statuses = []
 
             for line in result.stdout.decode().strip().split("\n"):
-
                 if not line:
-
                     continue
 
                 status_code = line[:2]
@@ -157,23 +138,18 @@ class GitPlugin:
                 modified = status_code[1] != " "
 
                 if status_code.startswith("??"):
-
                     status = GitStatus.UNTRACKED
 
                 elif status_code.startswith("UU"):
-
                     status = GitStatus.CONFLICTED
 
                 elif staged:
-
                     status = GitStatus.STAGED
 
                 elif modified:
-
                     status = GitStatus.MODIFIED
 
                 else:
-
                     status = GitStatus.CLEAN
 
                 file_statuses.append(
@@ -185,7 +161,6 @@ class GitPlugin:
             return file_statuses
 
         except Exception:
-
             return []
 
     async def add_files(self, files: List[str] = None) -> bool:
@@ -194,21 +169,17 @@ class GitPlugin:
         cmd = [self.git_executable, "add"]
 
         if files:
-
             cmd.extend(files)
 
         else:
-
             cmd.append(".")
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def commit(self, message: str, author: Optional[str] = None) -> bool:
@@ -217,17 +188,14 @@ class GitPlugin:
         cmd = [self.git_executable, "commit", "-m", message]
 
         if author:
-
             cmd.extend(["--author", author])
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def push(self, remote: str = "origin", branch: str = "main") -> bool:
@@ -236,13 +204,11 @@ class GitPlugin:
         cmd = [self.git_executable, "push", remote, branch]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def pull(self, remote: str = "origin", branch: str = "main") -> bool:
@@ -251,13 +217,11 @@ class GitPlugin:
         cmd = [self.git_executable, "pull", remote, branch]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def get_log(self, limit: int = 10) -> List[GitCommit]:
@@ -273,11 +237,9 @@ class GitPlugin:
         ]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             if result.returncode != 0:
-
                 return []
 
             commits = []
@@ -287,11 +249,9 @@ class GitPlugin:
             i = 0
 
             while i < len(output_lines):
-
                 line = output_lines[i].strip()
 
                 if not line or "|" not in line:
-
                     i += 1
 
                     continue
@@ -299,7 +259,6 @@ class GitPlugin:
                 parts = line.split("|")
 
                 if len(parts) >= 4:
-
                     commit_hash = parts[0]
 
                     author = parts[1]
@@ -319,9 +278,7 @@ class GitPlugin:
                         and output_lines[i]
                         and "|" not in output_lines[i]
                     ):
-
                         if output_lines[i].strip():
-
                             files_changed += 1
 
                         i += 1
@@ -337,13 +294,11 @@ class GitPlugin:
                     )
 
                 else:
-
                     i += 1
 
             return commits
 
         except Exception:
-
             return []
 
     async def create_branch(self, branch_name: str, checkout: bool = True) -> bool:
@@ -352,21 +307,17 @@ class GitPlugin:
         cmd = [self.git_executable, "branch", branch_name]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             if result.returncode != 0:
-
                 return False
 
             if checkout:
-
                 return await self.checkout_branch(branch_name)
 
             return True
 
         except Exception:
-
             return False
 
     async def checkout_branch(self, branch_name: str) -> bool:
@@ -375,13 +326,11 @@ class GitPlugin:
         cmd = [self.git_executable, "checkout", branch_name]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def get_current_branch(self) -> Optional[str]:
@@ -390,17 +339,14 @@ class GitPlugin:
         cmd = [self.git_executable, "branch", "--show-current"]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             if result.returncode == 0:
-
                 return result.stdout.decode().strip()
 
             return None
 
         except Exception:
-
             return None
 
     async def get_remote_url(self, remote: str = "origin") -> Optional[str]:
@@ -409,17 +355,14 @@ class GitPlugin:
         cmd = [self.git_executable, "remote", "get-url", remote]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             if result.returncode == 0:
-
                 return result.stdout.decode().strip()
 
             return None
 
         except Exception:
-
             return None
 
     async def is_repository(self) -> bool:
@@ -428,13 +371,11 @@ class GitPlugin:
         cmd = [self.git_executable, "rev-parse", "--is-inside-work-tree"]
 
         try:
-
             result = await self._run_git_command(cmd)
 
             return result.returncode == 0
 
         except Exception:
-
             return False
 
     async def _run_git_command(self, cmd: List[str]) -> subprocess.CompletedProcess:
@@ -489,7 +430,6 @@ async def on_git_status(*args, **kwargs):
     plugin = GitPlugin()
 
     if not await plugin.is_repository():
-
         print("❌ Not a git repository")
 
         return
@@ -499,7 +439,6 @@ async def on_git_status(*args, **kwargs):
     status = await plugin.get_status()
 
     if not status:
-
         print("✅ Working tree clean")
 
         return
@@ -509,9 +448,7 @@ async def on_git_status(*args, **kwargs):
     status_groups = {}
 
     for file_status in status:
-
         if file_status.status not in status_groups:
-
             status_groups[file_status.status] = []
 
         status_groups[file_status.status].append(file_status.path)
@@ -526,13 +463,11 @@ async def on_git_status(*args, **kwargs):
     }
 
     for status_type, files in status_groups.items():
-
         icon = status_icons.get(status_type, "📄")
 
         print(f"\n{icon} {status_type.value.title()}:")
 
         for file in files:
-
             print(f"  {file}")
 
 
@@ -542,7 +477,6 @@ async def on_git_quick_commit(*args, **kwargs):
     plugin = GitPlugin()
 
     if not await plugin.is_repository():
-
         print("❌ Not a git repository")
 
         return
@@ -556,11 +490,9 @@ async def on_git_quick_commit(*args, **kwargs):
     # Add all files
 
     if await plugin.add_files():
-
         print("✅ Files staged")
 
     else:
-
         print("❌ Failed to stage files")
 
         return
@@ -568,11 +500,9 @@ async def on_git_quick_commit(*args, **kwargs):
     # Commit
 
     if await plugin.commit(message):
-
         print(f"✅ Committed: {message}")
 
     else:
-
         print("❌ Failed to create commit")
 
 
@@ -582,7 +512,6 @@ async def on_git_branch_info(*args, **kwargs):
     plugin = GitPlugin()
 
     if not await plugin.is_repository():
-
         print("❌ Not a git repository")
 
         return
@@ -594,7 +523,6 @@ async def on_git_branch_info(*args, **kwargs):
     current_branch = await plugin.get_current_branch()
 
     if current_branch:
-
         print(f"  Current: {current_branch}")
 
     # Remote URL
@@ -602,7 +530,6 @@ async def on_git_branch_info(*args, **kwargs):
     remote_url = await plugin.get_remote_url()
 
     if remote_url:
-
         print(f"  Remote: {remote_url}")
 
 
@@ -612,7 +539,6 @@ async def on_git_sync(*args, **kwargs):
     plugin = GitPlugin()
 
     if not await plugin.is_repository():
-
         print("❌ Not a git repository")
 
         return
@@ -622,36 +548,29 @@ async def on_git_sync(*args, **kwargs):
     # Pull latest changes
 
     if await plugin.pull():
-
         print("✅ Pulled latest changes")
 
     else:
-
         print("⚠️ Failed to pull (may be up to date)")
 
     # Push local commits
 
     if await plugin.push():
-
         print("✅ Pushed local commits")
 
     else:
-
         print("⚠️ Failed to push (may be up to date)")
 
     print("🎉 Sync complete!")
 
 
 if __name__ == "__main__":
-
     # Example usage
 
     async def demo():
-
         plugin = GitPlugin()
 
         if await plugin.is_repository():
-
             print("Git repository detected")
 
             # Show status
@@ -667,11 +586,9 @@ if __name__ == "__main__":
             print(f"Recent commits: {len(commits)}")
 
             for commit in commits[:3]:
-
                 print(f"  {commit.hash[:8]}: {commit.message}")
 
         else:
-
             print("Not a git repository")
 
     asyncio.run(demo())

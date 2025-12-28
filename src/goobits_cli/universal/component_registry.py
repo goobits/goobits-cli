@@ -21,7 +21,6 @@ from typing import Dict, List, Optional
 
 import jinja2
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -65,7 +64,6 @@ class ComponentMetadata:
         """Check if the component file has been modified since last load."""
 
         if not self.path.exists():
-
             return True
 
         return self.path.stat().st_mtime > self.last_modified
@@ -74,7 +72,6 @@ class ComponentMetadata:
         """Refresh metadata from file system."""
 
         if self.path.exists():
-
             self.last_modified = self.path.stat().st_mtime
 
         self.loaded_at = datetime.now()
@@ -142,8 +139,6 @@ class ComponentRegistry:
 
         Load all component templates from the components directory.
 
-
-
         Args:
 
             force_reload: Force reload all components even if cached
@@ -151,7 +146,6 @@ class ComponentRegistry:
         """
 
         if not self.components_dir.exists():
-
             logger.warning(f"Components directory not found: {self.components_dir}")
 
             return
@@ -163,17 +157,14 @@ class ComponentRegistry:
         logger.info(f"Loading components from: {self.components_dir}")
 
         for template_file in self.components_dir.rglob("*.j2"):
-
             # Create component name with path relative to components_dir
 
             relative_path = template_file.relative_to(self.components_dir)
 
             if relative_path.parent != Path("."):
-
                 component_name = str(relative_path.with_suffix("")).replace("\\", "/")
 
             else:
-
                 component_name = template_file.stem
 
             # Check if we need to load/reload this component
@@ -186,9 +177,7 @@ class ComponentRegistry:
                     and self._metadata[component_name].is_stale()
                 )
             ):
-
                 try:
-
                     content = template_file.read_text(encoding="utf-8")
 
                     self._components[component_name] = content
@@ -210,7 +199,6 @@ class ComponentRegistry:
                     logger.debug(f"Loaded component: {component_name}")
 
                 except Exception as e:
-
                     logger.error(f"Failed to load component {component_name}: {e}")
 
                     continue
@@ -222,21 +210,15 @@ class ComponentRegistry:
 
         Get a component template by name.
 
-
-
         Args:
 
             name: Component name (without .j2 extension)
 
             auto_reload: Override auto-reload setting for this request
 
-
-
         Returns:
 
             Template content as string
-
-
 
         Raises:
 
@@ -249,9 +231,7 @@ class ComponentRegistry:
         # Check if component needs reloading
 
         if should_reload and name in self._metadata:
-
             if self._metadata[name].is_stale():
-
                 logger.debug(f"Reloading stale component: {name}")
 
                 self._load_single_component(name)
@@ -259,11 +239,9 @@ class ComponentRegistry:
         # Load on-demand if not in cache
 
         if name not in self._components:
-
             self._load_single_component(name)
 
         if name not in self._components:
-
             raise KeyError(f"Component '{name}' not found")
 
         return self._components[name]
@@ -272,8 +250,6 @@ class ComponentRegistry:
         """
 
         List all available components as ComponentInfo objects.
-
-
 
         Returns:
 
@@ -284,13 +260,11 @@ class ComponentRegistry:
         # If registry has been cleared, only show loaded components
 
         if self._cleared:
-
             loaded = set(self._components.keys())
 
             all_components = loaded
 
         else:
-
             # Include both loaded and discoverable components
 
             loaded = set(self._components.keys())
@@ -302,17 +276,14 @@ class ComponentRegistry:
             discoverable = set()
 
             for f in discoverable_files:
-
                 relative_path = f.relative_to(self.components_dir)
 
                 if relative_path.parent != Path("."):
-
                     component_name = str(relative_path.with_suffix("")).replace(
                         "\\", "/"
                     )
 
                 else:
-
                     component_name = f.stem
 
                 discoverable.add(component_name)
@@ -322,17 +293,14 @@ class ComponentRegistry:
         component_infos = []
 
         for name in sorted(all_components):
-
             # Find the corresponding file path
 
             component_file = self.components_dir / f"{name}.j2"
 
             if component_file.exists():
-
                 component_infos.append(ComponentInfo(name, component_file))
 
             else:
-
                 component_infos.append(ComponentInfo(name))
 
         return component_infos
@@ -342,13 +310,9 @@ class ComponentRegistry:
 
         Check if a component exists.
 
-
-
         Args:
 
             name: Component name
-
-
 
         Returns:
 
@@ -359,11 +323,9 @@ class ComponentRegistry:
         # If registry has been cleared, only check loaded components
 
         if self._cleared:
-
             return name in self._components
 
         else:
-
             return (
                 name in self._components
                 or (self.components_dir / f"{name}.j2").exists()
@@ -374,13 +336,9 @@ class ComponentRegistry:
 
         Get metadata for a component.
 
-
-
         Args:
 
             name: Component name
-
-
 
         Returns:
 
@@ -407,13 +365,9 @@ class ComponentRegistry:
 
         Get dependencies for a component.
 
-
-
         Args:
 
             name: Component name
-
-
 
         Returns:
 
@@ -430,8 +384,6 @@ class ComponentRegistry:
 
         Validate all loaded components.
 
-
-
         Returns:
 
             Dictionary mapping component names to lists of validation errors
@@ -441,17 +393,13 @@ class ComponentRegistry:
         errors = {}
 
         for name, content in self._components.items():
-
             try:
-
                 component_errors = self._validate_template(name, content)
 
                 if component_errors:
-
                     errors[name] = component_errors
 
             except Exception as e:
-
                 errors[name] = [str(e)]
 
         return errors
@@ -461,13 +409,9 @@ class ComponentRegistry:
 
         Force reload a specific component.
 
-
-
         Args:
 
             name: Component name to reload
-
-
 
         Returns:
 
@@ -476,13 +420,11 @@ class ComponentRegistry:
         """
 
         try:
-
             self._load_single_component(name)
 
             return True
 
         except Exception as e:
-
             logger.error(f"Failed to reload component {name}: {e}")
 
             return False
@@ -492,13 +434,9 @@ class ComponentRegistry:
 
         Check if a component exists (alias for has_component for test compatibility).
 
-
-
         Args:
 
             name: Component name
-
-
 
         Returns:
 
@@ -513,13 +451,9 @@ class ComponentRegistry:
 
         Get dependencies for a component (alias for get_dependencies).
 
-
-
         Args:
 
             name: Component name
-
-
 
         Returns:
 
@@ -649,19 +583,15 @@ class ComponentRegistry:
         component_file = self.components_dir / f"{name}.j2"
 
         if not component_file.exists():
-
             # Check if this component was previously loaded (file was deleted)
 
             if name in self._components:
-
                 raise FileNotFoundError(f"Component file was deleted: {component_file}")
 
             else:
-
                 raise KeyError(f"Component '{name}' not found")
 
         try:
-
             content = component_file.read_text(encoding="utf-8")
 
             self._components[name] = content
@@ -679,7 +609,6 @@ class ComponentRegistry:
             self._validate_template(name, content)
 
         except Exception as e:
-
             logger.error(f"Failed to load component {name}: {e}")
 
             raise
@@ -689,13 +618,9 @@ class ComponentRegistry:
 
         Extract template dependencies from Jinja2 includes, extends, and dependency comments.
 
-
-
         Args:
 
             template_content: Template content to analyze
-
-
 
         Returns:
 
@@ -716,17 +641,14 @@ class ComponentRegistry:
         extends_pattern = r'{%\s*extends\s+[\'"]([^\'"]+)[\'"]\s*%}'
 
         for pattern in [include_pattern, extends_pattern]:
-
             matches = re.findall(pattern, template_content)
 
             for match in matches:
-
                 # Remove .j2 extension if present
 
                 dep_name = match.replace(".j2", "")
 
                 if dep_name not in dependencies:
-
                     dependencies.append(dep_name)
 
         # Also check for dependency comments: {{# Dependencies: base.j2, utils.j2 #}}
@@ -736,19 +658,16 @@ class ComponentRegistry:
         comment_matches = re.findall(comment_pattern, template_content)
 
         for match in comment_matches:
-
             # Split by comma and clean up each dependency name
 
             deps = [dep.strip() for dep in match.split(",")]
 
             for dep in deps:
-
                 # Remove .j2 extension if present
 
                 dep_name = dep.replace(".j2", "")
 
                 if dep_name and dep_name not in dependencies:
-
                     dependencies.append(dep_name)
 
         return dependencies
@@ -758,15 +677,11 @@ class ComponentRegistry:
 
         Validate template syntax.
 
-
-
         Args:
 
             name: Template name
 
             content: Template content
-
-
 
         Returns:
 
@@ -777,7 +692,6 @@ class ComponentRegistry:
         errors = []
 
         try:
-
             # Parse template to check for syntax errors
 
             self._env.from_string(content)
@@ -791,15 +705,12 @@ class ComponentRegistry:
             # - Check for common patterns
 
         except jinja2.TemplateSyntaxError as e:
-
             errors.append(f"Syntax error at line {e.lineno}: {e.message}")
 
         except Exception as e:
-
             errors.append(f"Validation error: {str(e)}")
 
         if errors:
-
             logger.warning(f"Template validation errors in {name}: {errors}")
 
         return errors

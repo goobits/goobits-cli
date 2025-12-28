@@ -2,23 +2,17 @@
 
 Context-aware completion providers for Goobits CLI Framework.
 
-
-
 Provides intelligent completion for files, environment variables,
 
 configuration keys, and command history.
 
 """
 
-from pathlib import Path
-
-from typing import List, Dict, Any
-
 import logging
+from pathlib import Path
+from typing import Any, Dict, List
 
-
-from .registry import CompletionProvider, CompletionContext
-
+from .registry import CompletionContext, CompletionProvider
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +21,6 @@ class FilePathCompletionProvider(CompletionProvider):
     """
 
     Intelligent file path completion with context-aware filtering.
-
-
 
     Features:
 
@@ -97,19 +89,16 @@ class FilePathCompletionProvider(CompletionProvider):
             or context.current_word.startswith(".")
             or context.current_word.startswith("~")
         ):
-
             return True
 
         # Provide if command typically expects files
 
         if context.current_command in self.file_commands:
-
             return True
 
         # Provide if previous argument suggests file input
 
         if context.args:
-
             prev_args = " ".join(context.args[-2:]).lower()
 
             if any(
@@ -124,7 +113,6 @@ class FilePathCompletionProvider(CompletionProvider):
                     "save",
                 ]
             ):
-
                 return True
 
         # Check metadata for file context
@@ -135,31 +123,26 @@ class FilePathCompletionProvider(CompletionProvider):
         """Provide file path completions."""
 
         try:
-
             current_word = context.current_word
 
             # Handle empty input - show current directory
 
             if not current_word:
-
                 return await self._complete_directory(context.cwd)
 
             # Expand user home directory
 
             if current_word.startswith("~"):
-
                 current_word = str(Path(current_word).expanduser())
 
             # Handle absolute vs relative paths
 
             if current_word.startswith("/"):
-
                 base_path = Path("/")
 
                 pattern = current_word[1:]
 
             else:
-
                 base_path = context.cwd
 
                 pattern = current_word
@@ -167,15 +150,13 @@ class FilePathCompletionProvider(CompletionProvider):
             # Split path into directory and filename parts
 
             if "/" in pattern:
-
                 dir_part, file_part = pattern.rsplit("/", 1)
 
                 search_dir = base_path / dir_part
 
-                prefix = f"{pattern[:len(pattern)-len(file_part)]}"
+                prefix = f"{pattern[: len(pattern) - len(file_part)]}"
 
             else:
-
                 search_dir = base_path
 
                 file_part = pattern
@@ -183,7 +164,6 @@ class FilePathCompletionProvider(CompletionProvider):
                 prefix = ""
 
             if not search_dir.exists():
-
                 return []
 
             # Get completions from directory
@@ -191,21 +171,17 @@ class FilePathCompletionProvider(CompletionProvider):
             completions = []
 
             try:
-
                 for item in search_dir.iterdir():
-
                     name = item.name
 
                     # Skip hidden files unless explicitly requested
 
                     if name.startswith(".") and not file_part.startswith("."):
-
                         continue
 
                     # Filter by partial match
 
                     if not name.startswith(file_part):
-
                         continue
 
                     # Build completion string
@@ -215,7 +191,6 @@ class FilePathCompletionProvider(CompletionProvider):
                     # Add trailing slash for directories
 
                     if item.is_dir():
-
                         completion += "/"
 
                     completions.append(completion)
@@ -229,13 +204,11 @@ class FilePathCompletionProvider(CompletionProvider):
                 return sorted(filtered, key=self._sort_path_completions)
 
             except PermissionError:
-
                 logger.debug(f"Permission denied accessing {search_dir}")
 
                 return []
 
         except Exception as e:
-
             logger.error(f"Error in file path completion: {e}")
 
             return []
@@ -246,29 +219,23 @@ class FilePathCompletionProvider(CompletionProvider):
         completions = []
 
         try:
-
             for item in directory.iterdir():
-
                 name = item.name
 
                 # Skip hidden files by default
 
                 if name.startswith("."):
-
                     continue
 
                 if item.is_dir():
-
                     completions.append(name + "/")
 
                 else:
-
                     completions.append(name)
 
             return sorted(completions, key=self._sort_path_completions)
 
         except (PermissionError, OSError):
-
             return []
 
     def _apply_context_filtering(
@@ -287,21 +254,17 @@ class FilePathCompletionProvider(CompletionProvider):
         expected_types = set()
 
         if "config" in command or "config" in args_text:
-
             expected_types.update(self.file_filters["config"])
 
         if any(lang in command for lang in ["python", "node", "npm", "cargo", "rust"]):
-
             expected_types.update(self.file_filters["source"])
 
         if "data" in args_text or command in ["load", "import", "export"]:
-
             expected_types.update(self.file_filters["data"])
 
         # If no specific type expected, return all
 
         if not expected_types:
-
             return completions
 
         # Filter files by expected types (keep all directories)
@@ -309,19 +272,14 @@ class FilePathCompletionProvider(CompletionProvider):
         filtered = []
 
         for completion in completions:
-
             if completion.endswith("/"):  # Directory
-
                 filtered.append(completion)
 
             else:
-
                 # Check if file extension matches expected types
 
                 for ext in expected_types:
-
                     if completion.lower().endswith(ext.lower()):
-
                         filtered.append(completion)
 
                         break
@@ -333,8 +291,6 @@ class EnvironmentVariableProvider(CompletionProvider):
     """
 
     Environment variable completion with expansion support.
-
-
 
     Features:
 
@@ -381,7 +337,6 @@ class EnvironmentVariableProvider(CompletionProvider):
         # Direct variable reference
 
         if word.startswith("$") or word.startswith("${"):
-
             return True
 
         # Environment-related commands
@@ -389,13 +344,11 @@ class EnvironmentVariableProvider(CompletionProvider):
         env_commands = {"env", "export", "set", "unset", "printenv"}
 
         if context.current_command in env_commands:
-
             return True
 
         # Check for environment context in arguments
 
         if any("env" in arg.lower() for arg in context.args):
-
             return True
 
         return False
@@ -404,7 +357,6 @@ class EnvironmentVariableProvider(CompletionProvider):
         """Provide environment variable completions."""
 
         try:
-
             word = context.current_word
 
             completions = []
@@ -412,7 +364,6 @@ class EnvironmentVariableProvider(CompletionProvider):
             # Handle different variable syntax formats
 
             if word.startswith("${"):
-
                 # ${VAR} format
 
                 prefix = "${"
@@ -422,7 +373,6 @@ class EnvironmentVariableProvider(CompletionProvider):
                 suffix = "}"
 
             elif word.startswith("$"):
-
                 # $VAR format
 
                 prefix = "$"
@@ -432,7 +382,6 @@ class EnvironmentVariableProvider(CompletionProvider):
                 suffix = ""
 
             else:
-
                 # Plain variable name
 
                 prefix = ""
@@ -446,9 +395,7 @@ class EnvironmentVariableProvider(CompletionProvider):
             available_vars = set(context.env.keys()) | self.common_vars
 
             for var in available_vars:
-
                 if var.startswith(var_part.upper()):
-
                     completion = prefix + var + suffix
 
                     completions.append(completion)
@@ -456,7 +403,6 @@ class EnvironmentVariableProvider(CompletionProvider):
             # Sort by relevance - common vars first
 
             def sort_key(var):
-
                 clean_var = var.replace("$", "").replace("{", "").replace("}", "")
 
                 is_common = clean_var in self.common_vars
@@ -466,7 +412,6 @@ class EnvironmentVariableProvider(CompletionProvider):
             return sorted(completions, key=sort_key)
 
         except Exception as e:
-
             logger.error(f"Error in environment variable completion: {e}")
 
             return []
@@ -476,8 +421,6 @@ class ConfigKeyProvider(CompletionProvider):
     """
 
     Configuration key completion for YAML/JSON config files.
-
-
 
     Features:
 
@@ -519,7 +462,6 @@ class ConfigKeyProvider(CompletionProvider):
         # Check if we're in a configuration context
 
         if context.config:
-
             return True
 
         # Check for config-related commands or arguments
@@ -531,7 +473,6 @@ class ConfigKeyProvider(CompletionProvider):
             for arg in context.args
             for indicator in config_indicators
         ):
-
             return True
 
         return False
@@ -540,7 +481,6 @@ class ConfigKeyProvider(CompletionProvider):
         """Provide configuration key completions."""
 
         try:
-
             completions = []
 
             current_word = context.current_word
@@ -548,15 +488,12 @@ class ConfigKeyProvider(CompletionProvider):
             # If we have loaded configuration, use its keys
 
             if context.config:
-
                 completions.extend(self._get_config_keys(context.config, current_word))
 
             # Add common configuration keys
 
             for key in self.common_keys:
-
                 if key.startswith(current_word.lower()):
-
                     completions.append(key)
 
             # Remove duplicates and sort
@@ -566,7 +503,6 @@ class ConfigKeyProvider(CompletionProvider):
             return unique_completions
 
         except Exception as e:
-
             logger.error(f"Error in config key completion: {e}")
 
             return []
@@ -577,15 +513,12 @@ class ConfigKeyProvider(CompletionProvider):
         keys = []
 
         for key, value in config.items():
-
             if not prefix or key.startswith(prefix):
-
                 keys.append(key)
 
                 # For nested dictionaries, add dot-notation keys
 
                 if isinstance(value, dict) and prefix:
-
                     nested_keys = self._get_nested_keys(value, f"{key}.")
 
                     keys.extend(nested_keys)
@@ -598,13 +531,11 @@ class ConfigKeyProvider(CompletionProvider):
         keys = []
 
         for key, value in config.items():
-
             full_key = prefix + key
 
             keys.append(full_key)
 
             if isinstance(value, dict):
-
                 nested = self._get_nested_keys(value, full_key + ".")
 
                 keys.extend(nested)
@@ -616,8 +547,6 @@ class HistoryProvider(CompletionProvider):
     """
 
     Command history completion with intelligent ranking.
-
-
 
     Features:
 
@@ -647,9 +576,7 @@ class HistoryProvider(CompletionProvider):
         """Provide command history completions."""
 
         try:
-
             if not context.history:
-
                 return []
 
             current_word = context.current_word
@@ -659,23 +586,18 @@ class HistoryProvider(CompletionProvider):
             # Filter history for matching commands
 
             for cmd in reversed(context.history):  # Most recent first
-
                 if cmd.startswith(current_word) and cmd != current_word:
-
                     if cmd not in completions:  # Avoid duplicates
-
                         completions.append(cmd)
 
                     # Limit number of suggestions
 
                     if len(completions) >= self.max_suggestions:
-
                         break
 
             return completions
 
         except Exception as e:
-
             logger.error(f"Error in history completion: {e}")
 
             return []

@@ -9,18 +9,16 @@ imported from the unified goobits_cli.validation module. They are re-exported
 here for backward compatibility.
 """
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-import re
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 # Import unified validation classes from the canonical location
 from goobits_cli.validation import (
-    ValidationMessage,
     ValidationResult,
-    ValidationSeverity,
 )
 
 

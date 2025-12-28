@@ -1,10 +1,9 @@
 """Tests for the --verbose flag functionality."""
 
-import pytest
-from goobits_cli.core.schemas import OptionSchema, CLISchema, ConfigSchema
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+from goobits_cli.core.schemas import CLISchema, ConfigSchema, OptionSchema
 from goobits_cli.generation.builder import Builder
+from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+from goobits_cli.generation.renderers.python import PythonGenerator
 
 
 class TestVerboseFlag:
@@ -218,13 +217,14 @@ class TestVerboseFlag:
     def test_self_hosted_goobits_includes_verbose_option(self):
         """Test that the self-hosted goobits CLI includes verbose option."""
         # Read the actual goobits.yaml file
-        import yaml
         import os
+
+        import yaml
 
         goobits_yaml_path = os.path.join(
             os.path.dirname(__file__), "../../../../goobits.yaml"
         )
-        with open(goobits_yaml_path, "r") as f:
+        with open(goobits_yaml_path) as f:
             goobits_config = yaml.safe_load(f)
 
         # Check that verbose option is in the CLI configuration
@@ -234,10 +234,10 @@ class TestVerboseFlag:
         )
 
         assert verbose_option is not None, "verbose option not found in goobits.yaml"
-        assert (
-            verbose_option.get("short") == "v"
-        ), "verbose option should have short form -v"
+        assert verbose_option.get("short") == "v", (
+            "verbose option should have short form -v"
+        )
         assert verbose_option.get("type") == "flag", "verbose option should be a flag"
-        assert (
-            "verbose" in verbose_option.get("desc", "").lower()
-        ), "verbose option should have appropriate description"
+        assert "verbose" in verbose_option.get("desc", "").lower(), (
+            "verbose option should have appropriate description"
+        )

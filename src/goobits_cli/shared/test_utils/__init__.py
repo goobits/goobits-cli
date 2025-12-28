@@ -1,16 +1,10 @@
 """Shared test utilities for goobits-cli testing framework.
 
-
-
 This module provides common test utilities, fixtures, and comparison tools
 
 that can be used across all language generators and testing scenarios.
 
-
-
 ## Key Components
-
-
 
 ### Fixtures (`fixtures.py`)
 
@@ -19,8 +13,6 @@ that can be used across all language generators and testing scenarios.
 - `create_test_config()`: Create test configurations for any language
 
 - Common command, option, and argument schemas
-
-
 
 ### Comparison Tools (`comparison_tools.py`)
 
@@ -32,8 +24,6 @@ that can be used across all language generators and testing scenarios.
 
 - `generate_diff_report()`: Generate detailed diff reports
 
-
-
 ### Test Helpers (`test_helpers.py`)
 
 - `TestEnvironment`: Isolated test environment management
@@ -44,8 +34,6 @@ that can be used across all language generators and testing scenarios.
 
 - Context managers for temporary environments
 
-
-
 ### Phase 1 Integration (`phase1_integration.py`)
 
 - `Phase1IntegrationRunner`: Enhanced test runner for Phase 1 framework
@@ -53,8 +41,6 @@ that can be used across all language generators and testing scenarios.
 - Scenario-based testing capabilities
 
 - Cross-language test validation
-
-
 
 ### Validation (`validation.py`)
 
@@ -64,11 +50,7 @@ that can be used across all language generators and testing scenarios.
 
 - Quality assurance for test utilities
 
-
-
 ## Usage Example
-
-
 
 ```python
 
@@ -82,13 +64,9 @@ from goobits_cli.shared.test_utils import (
 
 )
 
-
-
 # Create test configuration
 
 config = create_test_config('my-cli', 'python', 'basic')
-
-
 
 # Run tests in isolated environment
 
@@ -97,8 +75,6 @@ with create_isolated_test_env() as env:
     runner = CLITestRunner(env)
 
     result = runner.test_cli_help('my-cli')
-
-
 
 # Compare outputs across languages
 
@@ -110,59 +86,54 @@ comparison = compare_command_outputs(outputs, ['--help'])
 
 """
 
-from .fixtures import (
-    TestFixtures,
-    create_test_config,
-    create_minimal_cli_config,
-    create_complex_cli_config,
-    get_test_command_data,
-    get_test_option_data,
-    get_test_argument_data,
-    get_error_scenario,
-    get_expected_patterns,
-)
-
 from .comparison_tools import (
-    CrossLanguageComparator,
     ComparisonResult,
-    normalize_cli_output,
+    CrossLanguageComparator,
     compare_command_outputs,
-    generate_diff_report,
     compare_file_structures,
     extract_command_help_sections,
+    generate_diff_report,
+    normalize_cli_output,
     validate_cross_language_consistency,
 )
-
-from .test_helpers import (
-    TestEnvironment,
-    CLITestRunner,
-    FileSystemHelper,
-    CommandResult,
-    cleanup_test_environment,
-    capture_command_output,
-    validate_cli_execution,
-    create_isolated_test_env,
-    generate_cli_and_test,
-    compare_cli_behaviors,
+from .fixtures import (
+    TestFixtures,
+    create_complex_cli_config,
+    create_minimal_cli_config,
+    create_test_config,
+    get_error_scenario,
+    get_expected_patterns,
+    get_test_argument_data,
+    get_test_command_data,
+    get_test_option_data,
 )
-
 from .phase1_integration import (
     Phase1IntegrationRunner,
     create_phase1_integration_suite,
+    enhance_test_with_cross_language_validation,
     run_comprehensive_cross_language_tests,
     validate_phase1_compatibility,
-    enhance_test_with_cross_language_validation,
 )
-
+from .test_helpers import (
+    CLITestRunner,
+    CommandResult,
+    FileSystemHelper,
+    TestEnvironment,
+    capture_command_output,
+    cleanup_test_environment,
+    compare_cli_behaviors,
+    create_isolated_test_env,
+    generate_cli_and_test,
+    validate_cli_execution,
+)
 from .validation import (
-    ValidationResult,
-    TestDataValidator,
     FrameworkIntegrationValidator,
-    validate_test_data,
-    validate_framework_integration,
+    TestDataValidator,
+    ValidationResult,
     run_complete_validation,
+    validate_framework_integration,
+    validate_test_data,
 )
-
 
 __all__ = [
     # Fixtures

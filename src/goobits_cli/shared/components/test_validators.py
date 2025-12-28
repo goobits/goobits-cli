@@ -5,9 +5,10 @@ Tests all validators against real configurations, edge cases, and cross-language
 """
 
 import sys
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 # Add project paths for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -15,23 +16,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 try:
     from validation_framework import (
-        ValidationContext,
-        ValidationResult,
-        ValidationMode,
-        ValidationSeverity,
-        ValidationRegistry,
-        ValidationRunner,
         BaseValidator,
+        ValidationContext,
+        ValidationMode,
+        ValidationRegistry,
+        ValidationResult,
+        ValidationRunner,
+        ValidationSeverity,
     )
     from validators import (
-        CommandValidator,
         ArgumentValidator,
+        CommandValidator,
+        CompletionValidator,
+        ConfigValidator,
+        ErrorCodeValidator,
         HookValidator,
         OptionValidator,
-        ErrorCodeValidator,
         TypeValidator,
-        ConfigValidator,
-        CompletionValidator,
     )
 except ImportError as e:
     pytest.skip(f"Could not import required modules: {e}", allow_module_level=True)
@@ -1010,9 +1011,9 @@ class TestIntegrationScenarios:
         result = runner.validate_all(context)
 
         # The real goobits config should validate successfully
-        assert (
-            result.is_valid is True
-        ), f"Validation errors: {[str(e) for e in result.get_errors()]}"
+        assert result.is_valid is True, (
+            f"Validation errors: {[str(e) for e in result.get_errors()]}"
+        )
 
     def test_cross_language_validation(self):
         """Test that the same configuration validates correctly for different languages."""
@@ -1128,9 +1129,9 @@ class TestIntegrationScenarios:
         execution_time = (end_time - start_time) * 1000  # Convert to ms
 
         # Should complete reasonably quickly (under 1 second for 50 commands)
-        assert (
-            execution_time < 1000
-        ), f"Validation took too long: {execution_time:.2f}ms"
+        assert execution_time < 1000, (
+            f"Validation took too long: {execution_time:.2f}ms"
+        )
         assert result.is_valid is True
 
 

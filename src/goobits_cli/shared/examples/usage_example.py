@@ -2,19 +2,14 @@
 
 """Example usage of the shared documentation templates.
 
-
-
 This script demonstrates how to use the documentation generator
 
 to create consistent documentation across different languages.
 
 """
 
-
 import sys
-
 from pathlib import Path
-
 
 # Add the parent directory to Python path for imports
 
@@ -130,11 +125,11 @@ def create_sample_config():
 def demonstrate_language_generation(config: dict, language: str):
     """Demonstrate documentation generation for a specific language."""
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
 
     print(f"GENERATING DOCUMENTATION FOR {language.upper()}")
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Create documentation generator
 
@@ -205,20 +200,17 @@ def main():
     languages = ["python", "nodejs", "typescript", "rust"]
 
     for language in languages:
-
         try:
-
             demonstrate_language_generation(config, language)
 
         except Exception as e:
-
             print(f"Error generating documentation for {language}: {e}")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
 
     print("DEMONSTRATION COMPLETE")
 
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Show file generation example
 
@@ -236,5 +228,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()

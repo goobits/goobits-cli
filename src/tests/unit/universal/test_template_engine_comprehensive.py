@@ -21,24 +21,25 @@ This consolidated file provides complete test coverage for:
 All unique tests from the original 4 files have been preserved to maintain complete test coverage.
 """
 
-import pytest
-import tempfile
-import time
 import shutil
 import sys
+import tempfile
+import time
 from pathlib import Path
+from typing import Any, Dict
 from unittest.mock import Mock, patch
-from typing import Dict, Any
 
-from goobits_cli.universal.template_engine import (
-    UniversalTemplateEngine,
-    LanguageRenderer,
-)
-from goobits_cli.universal.component_registry import (
-    ComponentRegistry,
-    ComponentMetadata,
-)
+import pytest
+
 from goobits_cli.core.schemas import GoobitsConfigSchema
+from goobits_cli.universal.component_registry import (
+    ComponentMetadata,
+    ComponentRegistry,
+)
+from goobits_cli.universal.template_engine import (
+    LanguageRenderer,
+    UniversalTemplateEngine,
+)
 
 
 class MockRenderer(LanguageRenderer):
@@ -155,7 +156,7 @@ function {{ command.name }}Command() {
 }
 {% endfor %}
 
-module.exports = { 
+module.exports = {
     {% for command in commands %}
     {{ command.name }}: {{ command.name }}Command{{ "," if not loop.last }}
     {% endfor %}
@@ -620,24 +621,24 @@ program.parse(process.argv);
         if "cli.py" in python_files:
             python_content = python_files["cli.py"]
             assert "import click" in python_content, "Python CLI should import click"
-            assert (
-                "Hello from python CLI!" in python_content
-            ), "Python CLI should render language correctly"
-            assert (
-                "syntax error" not in python_content.lower()
-            ), f"Python syntax error: {python_content}"
+            assert "Hello from python CLI!" in python_content, (
+                "Python CLI should render language correctly"
+            )
+            assert "syntax error" not in python_content.lower(), (
+                f"Python syntax error: {python_content}"
+            )
 
         if "cli.js" in nodejs_files:
             nodejs_content = nodejs_files["cli.js"]
-            assert (
-                "require('commander')" in nodejs_content
-            ), "Node.js CLI should require commander"
-            assert (
-                "Hello from nodejs CLI!" in nodejs_content
-            ), "Node.js CLI should render language correctly"
-            assert (
-                "Template variables not processed" not in nodejs_content
-            ), f"Node.js template error: {nodejs_content}"
+            assert "require('commander')" in nodejs_content, (
+                "Node.js CLI should require commander"
+            )
+            assert "Hello from nodejs CLI!" in nodejs_content, (
+                "Node.js CLI should render language correctly"
+            )
+            assert "Template variables not processed" not in nodejs_content, (
+                f"Node.js template error: {nodejs_content}"
+            )
 
     def test_template_context_transformation(self):
         """Test template context transformation through renderers"""
@@ -787,26 +788,26 @@ Test template with filters:
         component_names = [c.name for c in components]
 
         # Verify our test templates are actually loaded
-        assert (
-            "cli" in component_names
-        ), f"CLI template not found in components: {component_names}"
-        assert (
-            "package.json" in component_names
-        ), f"Package.json template not found: {component_names}"
-        assert (
-            "error_check" in component_names
-        ), f"Error check template not found: {component_names}"
+        assert "cli" in component_names, (
+            f"CLI template not found in components: {component_names}"
+        )
+        assert "package.json" in component_names, (
+            f"Package.json template not found: {component_names}"
+        )
+        assert "error_check" in component_names, (
+            f"Error check template not found: {component_names}"
+        )
 
         # Test REAL component content retrieval
         cli_template = engine.component_registry.get_component("cli")
         assert isinstance(cli_template, str)
         assert len(cli_template) > 0
-        assert (
-            "Generated CLI for" in cli_template
-        ), "CLI template should contain expected header"
-        assert (
-            "{{" in cli_template and "}}" in cli_template
-        ), "Template should contain Jinja2 variables"
+        assert "Generated CLI for" in cli_template, (
+            "CLI template should contain expected header"
+        )
+        assert "{{" in cli_template and "}}" in cli_template, (
+            "Template should contain Jinja2 variables"
+        )
 
         # Test component existence checking with REAL components
         assert engine.component_registry.component_exists("cli")
@@ -819,16 +820,16 @@ Test template with filters:
         assert cli_metadata.name == "cli"
         assert cli_metadata.path.exists(), "Component file should exist on disk"
         assert cli_metadata.last_modified > 0, "Should have valid modification time"
-        assert (
-            not cli_metadata.is_stale()
-        ), "Newly created component should not be stale"
+        assert not cli_metadata.is_stale(), (
+            "Newly created component should not be stale"
+        )
 
         # Test component registry properties with REAL values
         assert hasattr(engine.component_registry, "components_dir")
         assert engine.component_registry.components_dir == self.templates_dir
-        assert (
-            engine.component_registry.components_dir.exists()
-        ), "Components directory should exist"
+        assert engine.component_registry.components_dir.exists(), (
+            "Components directory should exist"
+        )
 
 
 class SimpleTestRenderer(LanguageRenderer):
@@ -1344,7 +1345,7 @@ def main():
     print("Hello from {{ project.name }}!")
     print("Description: {{ project.description }}")
     print("Version: {{ cli.root_command.version }}")
-    
+
     {% for command_name, command in cli.commands.items() %}
     # Command: {{ command_name }}
     # Description: {{ command.description }}
@@ -1867,7 +1868,7 @@ Template A content
 End Template A
 """
         template_b = """
-Template B content  
+Template B content
 {% include 'template_a.j2' %}
 End Template B
 """

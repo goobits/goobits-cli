@@ -11,12 +11,13 @@ Consolidated from test_builder_integration.py and test_cli_generation_integratio
 """
 
 import shutil
-import pytest
 from pathlib import Path
+
+import pytest
 from click.exceptions import Exit
 
-from goobits_cli.generation.builder import load_yaml_config, generate_cli_code, Builder
 from goobits_cli.core.schemas import ConfigSchema
+from goobits_cli.generation.builder import Builder, generate_cli_code, load_yaml_config
 
 
 class TestBuilderIntegration:
@@ -304,10 +305,10 @@ class TestCLIGenerationIntegration:
         )
 
         # Test each generator
-        from goobits_cli.generation.renderers.python import PythonGenerator
         from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-        from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+        from goobits_cli.generation.renderers.python import PythonGenerator
         from goobits_cli.generation.renderers.rust import RustGenerator
+        from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
 
         generators = [
             ("python", PythonGenerator),
@@ -330,20 +331,20 @@ class TestCLIGenerationIntegration:
                 results[lang] = {"success": False, "error": str(e)}
 
         # At least Python and Node.js should succeed
-        assert results["python"][
-            "success"
-        ], f"Python generation failed: {results['python']['error']}"
-        assert results["nodejs"][
-            "success"
-        ], f"Node.js generation failed: {results['nodejs']['error']}"
+        assert results["python"]["success"], (
+            f"Python generation failed: {results['python']['error']}"
+        )
+        assert results["nodejs"]["success"], (
+            f"Node.js generation failed: {results['nodejs']['error']}"
+        )
 
         # TypeScript should also succeed
-        assert results["typescript"][
-            "success"
-        ], f"TypeScript generation failed: {results['typescript']['error']}"
+        assert results["typescript"]["success"], (
+            f"TypeScript generation failed: {results['typescript']['error']}"
+        )
 
         # Rust might fail if cargo is not available, but that's acceptable
         if shutil.which("cargo"):
-            assert results["rust"][
-                "success"
-            ], f"Rust generation failed: {results['rust']['error']}"
+            assert results["rust"]["success"], (
+                f"Rust generation failed: {results['rust']['error']}"
+            )

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Run feature parity tests across all supported languages"""
 
-import sys
 import argparse
+import sys
 from pathlib import Path
+
 from runner.parity_runner import ParityTestRunner
 
 

@@ -6,8 +6,8 @@ BEFORE: subcommands: [{name: "start", ...}, {name: "stop", ...}]
 AFTER:  subcommands: {start: {...}, stop: {...}}
 """
 
-from typing import Dict, Any, List
-from pathlib import Path
+from typing import Any, Dict, List
+
 from .migration import Migration
 
 

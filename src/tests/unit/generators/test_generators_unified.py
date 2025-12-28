@@ -17,16 +17,14 @@ This file focuses on:
 """
 
 import pytest
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
-from goobits_cli.generation.renderers.rust import RustGenerator
+
 from goobits_cli.core.schemas import (
-    ConfigSchema,
     CLISchema,
     CommandSchema,
+    ConfigSchema,
     GoobitsConfigSchema,
 )
+
 from ...conftest import create_test_goobits_config
 
 
@@ -127,9 +125,7 @@ class TestGeneratorBasicGeneration:
         assert isinstance(output_files, dict), (
             f"{language} generator did not return a dict"
         )
-        assert len(output_files) > 0, (
-            f"{language} generator returned empty file dict"
-        )
+        assert len(output_files) > 0, f"{language} generator returned empty file dict"
 
         # All generated files should have content
         for filename, content in output_files.items():

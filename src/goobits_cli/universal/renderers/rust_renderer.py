@@ -2,17 +2,15 @@
 
 Rust Renderer for Universal Template System
 
-
-
 This renderer generates Rust CLI implementations using universal components
 
 with proper type safety, structs, and Rust-specific conventions using clap.
 
 """
 
-from typing import Dict, Any, List
-from datetime import datetime
 import re
+from datetime import datetime
+from typing import Any, Dict, List
 
 try:
     from ... import __version__ as _version
@@ -23,9 +21,6 @@ import json
 
 import jinja2
 
-from datetime import datetime
-
-
 from ..template_engine import LanguageRenderer
 
 
@@ -33,8 +28,6 @@ class RustRenderer(LanguageRenderer):
     """
 
     Rust-specific renderer for the Universal Template System.
-
-
 
     Generates Rust CLI implementations with:
 
@@ -80,13 +73,9 @@ class RustRenderer(LanguageRenderer):
 
         Transform IR into Rust-specific template context.
 
-
-
         Args:
 
             ir: Intermediate representation from UniversalTemplateEngine
-
-
 
         Returns:
 
@@ -120,7 +109,6 @@ class RustRenderer(LanguageRenderer):
         # Transform CLI schema for Rust
 
         if "cli" in ir:
-
             context["cli"]["rust"] = self._transform_cli_schema(ir["cli"])
 
         # Add Cargo configuration
@@ -201,7 +189,6 @@ class RustRenderer(LanguageRenderer):
         """Add custom filters to the Jinja2 environment."""
 
         for name, filter_func in self.get_custom_filters().items():
-
             self._env.filters[name] = filter_func
 
     def get_output_structure(self, ir: Dict[str, Any]) -> Dict[str, str]:
@@ -209,13 +196,9 @@ class RustRenderer(LanguageRenderer):
 
         Define the output file structure for Rust CLI.
 
-
-
         Args:
 
             ir: Intermediate representation
-
-
 
         Returns:
 
@@ -261,8 +244,6 @@ class RustRenderer(LanguageRenderer):
 
         Render a component template for Rust.
 
-
-
         Args:
 
             component_name: Name of the component
@@ -270,8 +251,6 @@ class RustRenderer(LanguageRenderer):
             template_content: Universal template content
 
             context: Rust-specific context
-
-
 
         Returns:
 
@@ -307,9 +286,7 @@ class RustRenderer(LanguageRenderer):
         # Generate CLI args struct
 
         if "cli" in ir and "commands" in ir["cli"]:
-
             for cmd_name, cmd_data in ir["cli"]["commands"].items():
-
                 struct_name = self._pascal_case_filter(f"{cmd_name}_args")
 
                 fields = []
@@ -317,13 +294,10 @@ class RustRenderer(LanguageRenderer):
                 # Add arguments as fields
 
                 if "args" in cmd_data:
-
                     for arg in cmd_data["args"]:
-
                         field_type = self._rust_type_filter(arg.get("type", "String"))
 
                         if not arg.get("required", True):
-
                             field_type = f"Option<{field_type}>"
 
                         fields.append(
@@ -337,17 +311,13 @@ class RustRenderer(LanguageRenderer):
                 # Add options as fields
 
                 if "options" in cmd_data:
-
                     for opt in cmd_data["options"]:
-
                         field_type = self._rust_type_filter(opt.get("type", "String"))
 
                         if opt.get("type") == "flag":
-
                             field_type = "bool"
 
                         elif not opt.get("required", False):
-
                             field_type = f"Option<{field_type}>"
 
                         fields.append(
@@ -399,19 +369,16 @@ class RustRenderer(LanguageRenderer):
         # Add additional imports based on CLI features
 
         if "cli" in ir:
-
             cli_data = ir["cli"]
 
             # Check if we need async features
 
             if self._needs_async_features(cli_data):
-
                 imports.append("use tokio;")
 
             # Check if we need file I/O
 
             if self._needs_file_io(cli_data):
-
                 imports.extend(["use std::fs;", "use std::path::Path;"])
 
         return imports
@@ -448,11 +415,9 @@ class RustRenderer(LanguageRenderer):
         # Add conditional dependencies
 
         if "cli" in ir:
-
             cli_data = ir["cli"]
 
             if self._needs_async_features(cli_data):
-
                 deps["tokio"] = '{ version = "1.0", features = ["full"] }'
 
         return deps
@@ -465,15 +430,12 @@ class RustRenderer(LanguageRenderer):
         # Add conditional modules based on features
 
         if "cli" in ir:
-
             cli_data = ir["cli"]
 
             if self._has_config_features(cli_data):
-
                 modules.append("mod config;")
 
             if self._has_completion_features(cli_data):
-
                 modules.append("mod completion;")
 
         return modules
@@ -484,11 +446,9 @@ class RustRenderer(LanguageRenderer):
         rust_cli = {}
 
         if "commands" in cli_data:
-
             rust_cli["commands"] = {}
 
             for cmd_name, cmd_data in cli_data["commands"].items():
-
                 rust_cmd = cmd_data.copy()
 
                 rust_cmd["struct_name"] = self._pascal_case_filter(f"{cmd_name}_args")
@@ -527,13 +487,11 @@ class RustRenderer(LanguageRenderer):
         # Convert package names
 
         if "package_name" in context:
-
             context["rust_package_name"] = self._snake_case_filter(
                 context["package_name"]
             )
 
         if "command_name" in context:
-
             context["rust_command_name"] = self._snake_case_filter(
                 context["command_name"]
             )
@@ -541,9 +499,7 @@ class RustRenderer(LanguageRenderer):
         # Convert CLI commands
 
         if "cli" in context and "commands" in context["cli"]:
-
             for cmd_name, cmd_data in context["cli"]["commands"].items():
-
                 cmd_data["rust_name"] = self._snake_case_filter(cmd_name)
 
                 cmd_data["rust_struct"] = self._pascal_case_filter(f"{cmd_name}_args")
@@ -597,7 +553,6 @@ class RustRenderer(LanguageRenderer):
         """Convert text to snake_case."""
 
         if not text:
-
             return text
 
         # Replace hyphens and spaces with underscores, then convert to lowercase
@@ -614,7 +569,6 @@ class RustRenderer(LanguageRenderer):
         """Convert text to PascalCase."""
 
         if not text:
-
             return text
 
         # Split by various separators and capitalize each word
@@ -677,7 +631,6 @@ class RustRenderer(LanguageRenderer):
         safe_name = self._snake_case_filter(name)
 
         if safe_name in rust_keywords:
-
             return f"r#{safe_name}"
 
         return safe_name
@@ -764,23 +717,15 @@ class RustRenderer(LanguageRenderer):
         # Check for file-related commands or options
 
         if "commands" in cli_data:
-
             for cmd_data in cli_data["commands"].values():
-
                 if "args" in cmd_data:
-
                     for arg in cmd_data["args"]:
-
                         if "file" in arg.get("name", "").lower():
-
                             return True
 
                 if "options" in cmd_data:
-
                     for opt in cmd_data["options"]:
-
                         if "file" in opt.get("name", "").lower():
-
                             return True
 
         return False

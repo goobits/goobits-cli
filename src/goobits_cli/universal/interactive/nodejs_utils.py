@@ -2,8 +2,6 @@
 
 Node.js Interactive Mode Utilities
 
-
-
 This module provides Node.js-specific utilities for enhanced interactive mode features,
 
 including async command handling, Node.js-specific error formatting, history management,
@@ -12,7 +10,7 @@ and tab completion for npm packages and Node.js modules.
 
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 
 class NodeJSInteractiveUtils:
@@ -23,8 +21,6 @@ class NodeJSInteractiveUtils:
         """
 
         Get enhanced readline configuration with custom key bindings.
-
-
 
         Returns:
 
@@ -65,8 +61,6 @@ class NodeJSInteractiveUtils:
 
         Generate async command handling code for Node.js.
 
-
-
         Returns:
 
             JavaScript code for async command execution
@@ -81,13 +75,9 @@ class NodeJSInteractiveUtils:
 
         if (!trimmed) return false;
 
-        
-
         this.addToHistory(trimmed);
 
         const [cmd, ...args] = this.parseCommandLine(trimmed);
-
-        
 
         if (this.commands[cmd]) {
 
@@ -103,15 +93,13 @@ class NodeJSInteractiveUtils:
 
                     command.handler(args),
 
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
 
                         setTimeout(() => reject(new Error('Command timeout')), timeoutMs)
 
                     )
 
                 ]);
-
-                
 
                 return result === true; // Exit if handler returns true
 
@@ -135,8 +123,6 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     parseCommandLine(line) {
 
         // Advanced command line parsing with quote support
@@ -151,13 +137,9 @@ class NodeJSInteractiveUtils:
 
         let escaped = false;
 
-        
-
         for (let i = 0; i < line.length; i++) {
 
             const char = line[i];
-
-            
 
             if (escaped) {
 
@@ -169,8 +151,6 @@ class NodeJSInteractiveUtils:
 
             }
 
-            
-
             if (char === '\\\\') {
 
                 escaped = true;
@@ -178,8 +158,6 @@ class NodeJSInteractiveUtils:
                 continue;
 
             }
-
-            
 
             if (!inQuotes && (char === '"' || char === "'")) {
 
@@ -191,8 +169,6 @@ class NodeJSInteractiveUtils:
 
             }
 
-            
-
             if (inQuotes && char === quoteChar) {
 
                 inQuotes = false;
@@ -202,8 +178,6 @@ class NodeJSInteractiveUtils:
                 continue;
 
             }
-
-            
 
             if (!inQuotes && char === ' ') {
 
@@ -219,21 +193,15 @@ class NodeJSInteractiveUtils:
 
             }
 
-            
-
             current += char;
 
         }
-
-        
 
         if (current.length > 0) {
 
             args.push(current);
 
         }
-
-        
 
         return args;
 
@@ -246,8 +214,6 @@ class NodeJSInteractiveUtils:
         """
 
         Generate Node.js-specific error formatting code.
-
-
 
         Returns:
 
@@ -321,8 +287,6 @@ class NodeJSInteractiveUtils:
 
         Generate history management code with file persistence.
 
-
-
         Returns:
 
             JavaScript code for history management
@@ -341,8 +305,6 @@ class NodeJSInteractiveUtils:
 
         let historyDir;
 
-        
-
         if (process.platform === 'win32') {
 
             historyDir = path.join(process.env.APPDATA || homeDir, this.projectName);
@@ -357,11 +319,7 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         this.historyFile = path.join(historyDir, 'interactive_history');
-
-        
 
         // Create directory if it doesn't exist
 
@@ -375,11 +333,7 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         this.loadHistory();
-
-        
 
         // Save history on exit
 
@@ -403,8 +357,6 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     loadHistory() {
 
         try {
@@ -414,8 +366,6 @@ class NodeJSInteractiveUtils:
                 const historyData = fs.readFileSync(this.historyFile, 'utf8');
 
                 this.commandHistory = historyData.split('\\n').filter(line => line.trim());
-
-                
 
                 // Load into readline interface
 
@@ -439,8 +389,6 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     saveHistory() {
 
         try {
@@ -462,8 +410,6 @@ class NodeJSInteractiveUtils:
         }
 
     }
-
-    
 
     addToHistory(line) {
 
@@ -491,8 +437,6 @@ class NodeJSInteractiveUtils:
 
         Generate advanced tab completion for Node.js-specific features.
 
-
-
         Returns:
 
             JavaScript code for tab completion
@@ -509,8 +453,6 @@ class NodeJSInteractiveUtils:
 
         this.nodeModules = [];
 
-        
-
         // Load available npm packages (cached)
 
         this.loadNpmPackages();
@@ -519,19 +461,17 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     async loadNpmPackages() {
 
         try {
 
             // Get globally installed packages
 
-            const result = execSync('npm list -g --depth=0 --json', { 
+            const result = execSync('npm list -g --depth=0 --json', {
 
-                encoding: 'utf8', 
+                encoding: 'utf8',
 
-                timeout: 5000 
+                timeout: 5000
 
             });
 
@@ -557,8 +497,6 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     loadNodeModules() {
 
         try {
@@ -574,8 +512,6 @@ class NodeJSInteractiveUtils:
                 'child_process', 'cluster', 'worker_threads', 'async_hooks'
 
             ];
-
-            
 
             // Add project's node_modules if package.json exists
 
@@ -603,15 +539,11 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     completeCommand(line) {
 
         const args = this.parseCommandLine(line);
 
         const partial = args[args.length - 1] || '';
-
-        
 
         // Command completion
 
@@ -625,11 +557,7 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         const [command, ...cmdArgs] = args;
-
-        
 
         // Context-aware completion
 
@@ -639,21 +567,15 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         return [[], partial];
 
     }
-
-    
 
     completeCommandContext(command, args, partial) {
 
         const commandDef = this.commands[command];
 
         const completions = [];
-
-        
 
         // Option completion
 
@@ -679,8 +601,6 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         // File/directory completion
 
         else if (this.shouldCompleteFiles(command, args)) {
@@ -688,8 +608,6 @@ class NodeJSInteractiveUtils:
             return this.completeFiles(partial);
 
         }
-
-        
 
         // NPM package completion for relevant commands
 
@@ -701,8 +619,6 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         // Node.js module completion
 
         else if (this.shouldCompleteNodeModules(command, args)) {
@@ -713,13 +629,9 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         return [completions, partial];
 
     }
-
-    
 
     completeFiles(partial) {
 
@@ -729,9 +641,7 @@ class NodeJSInteractiveUtils:
 
             const basename = path.basename(partial);
 
-            
-
-            const files = fs.readdirSync(dir).filter(file => 
+            const files = fs.readdirSync(dir).filter(file =>
 
                 file.startsWith(basename)
 
@@ -745,8 +655,6 @@ class NodeJSInteractiveUtils:
 
             });
 
-            
-
             return [files, basename];
 
         } catch (err) {
@@ -757,21 +665,17 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     shouldCompleteFiles(command, args) {
 
         // Commands that typically work with files
 
         const fileCommands = ['install', 'build', 'run', 'test', 'deploy'];
 
-        return fileCommands.includes(command) || 
+        return fileCommands.includes(command) ||
 
                args.some(arg => arg.includes('.') || arg.includes('/'));
 
     }
-
-    
 
     shouldCompleteNpmPackages(command, args) {
 
@@ -783,15 +687,13 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     shouldCompleteNodeModules(command, args) {
 
         // Commands that work with Node.js modules
 
         const moduleCommands = ['import', 'require', 'load'];
 
-        return moduleCommands.includes(command) || 
+        return moduleCommands.includes(command) ||
 
                args.some(arg => arg.startsWith('require') || arg.startsWith('import'));
 
@@ -804,8 +706,6 @@ class NodeJSInteractiveUtils:
         """
 
         Generate JavaScript expression evaluation support.
-
-
 
         Returns:
 
@@ -824,7 +724,7 @@ class NodeJSInteractiveUtils:
             const jsCode = expression.substring(3).trim();
 
             try {
-                
+
                 // Secure evaluation using vm module instead of unsafe eval()
                 const vm = require('vm');
                 const context = vm.createContext({
@@ -832,7 +732,7 @@ class NodeJSInteractiveUtils:
                     setInterval, clearInterval, setImmediate, clearImmediate,
                     chalk, fs, path, os, util, crypto
                 });
-                
+
                 const result = vm.runInContext(jsCode, context, {
                     timeout: 5000, // 5 second timeout
                     displayErrors: true
@@ -856,8 +756,6 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         // Support async expressions
 
         if (expression.startsWith('await ')) {
@@ -866,14 +764,14 @@ class NodeJSInteractiveUtils:
 
                 const asyncCode = `(async () => { return ${expression}; })()`;
 
-                // Secure evaluation using vm module instead of unsafe eval()  
+                // Secure evaluation using vm module instead of unsafe eval()
                 const vm = require('vm');
                 const context = vm.createContext({
                     console, require, process, Buffer, setTimeout, clearTimeout,
                     setInterval, clearInterval, setImmediate, clearImmediate,
                     chalk, fs, path, os, util, crypto
                 });
-                
+
                 const result = await vm.runInContext(asyncCode, context, {
                     timeout: 5000, // 5 second timeout
                     displayErrors: true
@@ -897,13 +795,9 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         return null; // Not an expression
 
     }
-
-    
 
     setupReplCommands() {
 
@@ -923,11 +817,9 @@ class NodeJSInteractiveUtils:
 
         };
 
-        
-
         this.commands.await = {
 
-            description: 'Evaluate async JavaScript expression', 
+            description: 'Evaluate async JavaScript expression',
 
             handler: async (args) => {
 
@@ -938,8 +830,6 @@ class NodeJSInteractiveUtils:
             }
 
         };
-
-        
 
         this.commands.require = {
 
@@ -954,8 +844,6 @@ class NodeJSInteractiveUtils:
                     return false;
 
                 }
-
-                
 
                 const moduleName = args[0];
 
@@ -989,8 +877,6 @@ class NodeJSInteractiveUtils:
 
         Generate Node.js integration features.
 
-
-
         Returns:
 
             JavaScript code for Node.js integration
@@ -1005,13 +891,9 @@ class NodeJSInteractiveUtils:
 
         this.setupProcessMonitoring();
 
-        
-
         // Setup module hot-reloading
 
         this.setupModuleReloading();
-
-        
 
         // Setup environment management
 
@@ -1019,15 +901,11 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     setupProcessMonitoring() {
 
         // Monitor child processes
 
         this.childProcesses = new Set();
-
-        
 
         this.commands['ps'] = {
 
@@ -1057,8 +935,6 @@ class NodeJSInteractiveUtils:
 
         };
 
-        
-
         this.commands['kill'] = {
 
             description: 'Kill a child process by PID',
@@ -1073,13 +949,9 @@ class NodeJSInteractiveUtils:
 
                 }
 
-                
-
                 const pid = parseInt(args[0]);
 
                 let found = false;
-
-                
 
                 this.childProcesses.forEach(proc => {
 
@@ -1097,8 +969,6 @@ class NodeJSInteractiveUtils:
 
                 });
 
-                
-
                 if (!found) {
 
                     console.log(chalk.yellow(`Process ${pid} not found`));
@@ -1112,8 +982,6 @@ class NodeJSInteractiveUtils:
         };
 
     }
-
-    
 
     setupModuleReloading() {
 
@@ -1139,15 +1007,11 @@ class NodeJSInteractiveUtils:
 
                     ];
 
-                    
-
                     hooksPaths.forEach(hookPath => {
 
                         delete require.cache[require.resolve(hookPath)];
 
                     });
-
-                    
 
                     // Re-require hooks
 
@@ -1168,8 +1032,6 @@ class NodeJSInteractiveUtils:
         };
 
     }
-
-    
 
     setupEnvironmentManagement() {
 
@@ -1239,8 +1101,6 @@ class NodeJSInteractiveUtils:
 
         Generate the complete enhanced Node.js interactive mode template.
 
-
-
         Returns:
 
             Complete JavaScript template code
@@ -1257,8 +1117,6 @@ class NodeJSInteractiveUtils:
 
  */
 
-
-
 const readline = require('readline');
 
 const chalk = require('chalk');
@@ -1270,8 +1128,6 @@ const path = require('path');
 const os = require('os');
 
 const { spawn, execSync } = require('child_process');
-
-
 
 // Import hooks dynamically to support hot reloading
 
@@ -1297,8 +1153,6 @@ try {
 
 }
 
-
-
 class {{ project.name | replace('-', '') | title }}Interactive {
 
     constructor() {
@@ -1313,8 +1167,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         this.hooks = hooks;
 
-        
-
         // Enhanced readline configuration (simplified)
 
         const config = {
@@ -1324,8 +1176,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
             historySize: 1000
 
         };
-
-        
 
         this.rl = readline.createInterface({
 
@@ -1342,8 +1192,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
             historySize: config.historySize
 
         });
-
-        
 
         this.commands = {
 
@@ -1373,7 +1221,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             'exit': {
 
-                description: 'Exit interactive mode', 
+                description: 'Exit interactive mode',
 
                 handler: this.handleExit.bind(this)
 
@@ -1405,8 +1253,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         };
 
-        
-
         // Setup enhanced features
 
         this.setupHistoryPersistence();
@@ -1418,8 +1264,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         this.setupNodeJSIntegration();
 
     }
-
-    
 
     start() {
 
@@ -1439,11 +1283,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         console.log(chalk.dim("Type 'help' for commands, 'exit' to quit.\\n"));
 
-        
-
         this.rl.prompt();
-
-        
 
         this.rl.on('line', async (line) => {
 
@@ -1457,8 +1297,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             }
 
-            
-
             // Check for expression evaluation first
 
             const expressionResult = await this.evaluateExpression(trimmed);
@@ -1471,8 +1309,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             }
 
-            
-
             // Execute command
 
             const shouldExit = await this.executeCommand(trimmed);
@@ -1483,13 +1319,9 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             }
 
-            
-
             this.rl.prompt();
 
         });
-
-        
 
         this.rl.on('close', () => {
 
@@ -1500,8 +1332,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
             process.exit(0);
 
         });
-
-        
 
         // Handle interrupts gracefully
 
@@ -1515,21 +1345,15 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     async executeCommand(line) {
 
         const trimmed = line.trim();
 
         if (!trimmed) return false;
 
-        
-
         this.addToHistory(trimmed);
 
         const [cmd, ...args] = this.parseCommandLine(trimmed);
-
-        
 
         if (this.commands[cmd]) {
 
@@ -1543,7 +1367,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
                     command.handler(args),
 
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
 
                         setTimeout(() => reject(new Error('Command timeout')), timeoutMs)
 
@@ -1573,8 +1397,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     formatError(error) {
 
         if (error.code === 'ENOENT') {
@@ -1599,15 +1421,11 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     setupHistoryPersistence() {
 
         const homeDir = os.homedir();
 
         let historyDir;
-
-        
 
         if (process.platform === 'win32') {
 
@@ -1623,11 +1441,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         }
 
-        
-
         this.historyFile = path.join(historyDir, 'interactive_history');
-
-        
 
         try {
 
@@ -1639,13 +1453,9 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         }
 
-        
-
         this.loadHistory();
 
     }
-
-    
 
     parseCommandLine(line) {
 
@@ -1654,8 +1464,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         return line.trim().split(/\\s+/);
 
     }
-
-    
 
     addToHistory(line) {
 
@@ -1668,8 +1476,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         }
 
     }
-
-    
 
     loadHistory() {
 
@@ -1691,8 +1497,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     setupAdvancedCompletion() {
 
         this.completionCache = new Map();
@@ -1701,25 +1505,21 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         this.nodeModules = [];
 
-        
-
         this.loadNpmPackages();
 
         this.loadNodeModules();
 
     }
 
-    
-
     async loadNpmPackages() {
 
         try {
 
-            const result = execSync('npm list -g --depth=0 --json', { 
+            const result = execSync('npm list -g --depth=0 --json', {
 
-                encoding: 'utf8', 
+                encoding: 'utf8',
 
-                timeout: 5000 
+                timeout: 5000
 
             });
 
@@ -1738,8 +1538,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         }
 
     }
-
-    
 
     loadNodeModules() {
 
@@ -1763,8 +1561,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     async evaluateExpression(expression) {
 
         if (expression.startsWith('js:')) {
@@ -1780,7 +1576,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
                     setInterval, clearInterval, setImmediate, clearImmediate,
                     chalk, fs, path, os, util, crypto
                 });
-                
+
                 const result = vm.runInContext(jsCode, context, {
                     timeout: 5000, // 5 second timeout
                     displayErrors: true
@@ -1808,8 +1604,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     setupReplCommands() {
 
         this.commands.js = {
@@ -1828,8 +1622,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     setupNodeJSIntegration() {
 
         this.setupProcessMonitoring();
@@ -1840,15 +1632,11 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     setupProcessMonitoring() {
 
         this.childProcesses = new Set();
 
     }
-
-    
 
     setupModuleReloading() {
 
@@ -1880,8 +1668,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     setupEnvironmentManagement() {
 
         this.commands['env'] = {
@@ -1910,11 +1696,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     // Built-in command handlers
-
-    
 
     handleHelp(args) {
 
@@ -1929,8 +1711,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
                 console.log(chalk.bold(`\\n{{ cli.root_command.name }} ${cmdName}`));
 
                 console.log(`${command.description}`);
-
-                
 
                 if (command.options && command.options.length > 0) {
 
@@ -1960,8 +1740,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             const maxLen = Math.max(...Object.keys(this.commands).map(cmd => cmd.length));
 
-            
-
             Object.entries(this.commands).forEach(([cmd, info]) => {
 
                 const padding = ' '.repeat(maxLen - cmd.length + 2);
@@ -1969,8 +1747,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
                 console.log(`  ${chalk.cyan(cmd)}${padding}${info.description}`);
 
             });
-
-            
 
             console.log(chalk.dim('\\nEnhanced features:'));
 
@@ -1988,8 +1764,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     handleExit(args) {
 
         this.rl.close();
@@ -1998,8 +1772,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     handleClear(args) {
 
         console.clear();
@@ -2007,8 +1779,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         return false;
 
     }
-
-    
 
     handleHistory(args) {
 
@@ -2036,11 +1806,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-
-
 {% for command in cli.root_command.subcommands %}
-
-    
 
     async handle{{ command.name | replace('-', '') | title }}(args) {
 
@@ -2076,23 +1842,17 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
 {% endfor %}
 
-    
-
     parseArgsForCommand(commandName, args) {
 
         const command = this.commands[commandName];
 
         const parsed = { _: [] };
 
-        
-
         if (!command || !command.options) {
 
             return { args, options: {} };
 
         }
-
-        
 
         // Parse options and flags
 
@@ -2101,8 +1861,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         while (i < args.length) {
 
             const arg = args[i];
-
-            
 
             if (arg.startsWith('--')) {
 
@@ -2162,15 +1920,11 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         }
 
-        
-
         return parsed;
 
     }
 
 }
-
-
 
 function runInteractive() {
 
@@ -2180,11 +1934,7 @@ function runInteractive() {
 
 }
 
-
-
 module.exports = { runInteractive };
-
-
 
 if (require.main === module) {
 
@@ -2199,8 +1949,6 @@ def get_nodejs_interactive_dependencies() -> Dict[str, List[str]]:
     """
 
     Get the dependencies required for enhanced Node.js interactive mode.
-
-
 
     Returns:
 
@@ -2219,8 +1967,6 @@ def get_nodejs_interactive_tests() -> str:
 
     Generate test cases for Node.js interactive mode.
 
-
-
     Returns:
 
         JavaScript test code
@@ -2235,13 +1981,9 @@ def get_nodejs_interactive_tests() -> str:
 
  */
 
-
-
 const { spawn } = require('child_process');
 
 const { EventEmitter } = require('events');
-
-
 
 class InteractiveModeTester {
 
@@ -2251,21 +1993,15 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async testAsyncCommandExecution() {
 
         console.log('Testing async command execution...');
-
-        
 
         const child = spawn(this.cliCommand, ['interactive'], {
 
             stdio: ['pipe', 'pipe', 'pipe']
 
         });
-
-        
 
         let output = '';
 
@@ -2275,31 +2011,23 @@ class InteractiveModeTester {
 
         });
 
-        
-
         // Test basic command
 
         child.stdin.write('help\\n');
-
-        
 
         // Test async operation
 
         child.stdin.write('js: Promise.resolve("test")\\n');
 
-        
-
         // Exit
 
         child.stdin.write('exit\\n');
-
-        
 
         return new Promise((resolve) => {
 
             child.on('close', () => {
 
-                const success = output.includes('Available commands') && 
+                const success = output.includes('Available commands') &&
 
                                output.includes('"test"');
 
@@ -2311,13 +2039,9 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async testTabCompletion() {
 
         console.log('Testing tab completion...');
-
-        
 
         // This would require a more sophisticated test setup
 
@@ -2327,21 +2051,15 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async testNpmPackageIntegration() {
 
         console.log('Testing npm package integration...');
-
-        
 
         const child = spawn(this.cliCommand, ['interactive'], {
 
             stdio: ['pipe', 'pipe', 'pipe']
 
         });
-
-        
 
         let output = '';
 
@@ -2351,15 +2069,11 @@ class InteractiveModeTester {
 
         });
 
-        
-
         // Test require command
 
         child.stdin.write('require fs\\n');
 
         child.stdin.write('exit\\n');
-
-        
 
         return new Promise((resolve) => {
 
@@ -2375,13 +2089,9 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async testHistoryPersistence() {
 
         console.log('Testing history persistence...');
-
-        
 
         const child1 = spawn(this.cliCommand, ['interactive'], {
 
@@ -2389,19 +2099,13 @@ class InteractiveModeTester {
 
         });
 
-        
-
         child1.stdin.write('help\\n');
 
         child1.stdin.write('test-command arg1\\n');
 
         child1.stdin.write('exit\\n');
 
-        
-
         await new Promise((resolve) => child1.on('close', resolve));
-
-        
 
         // Start second session
 
@@ -2411,8 +2115,6 @@ class InteractiveModeTester {
 
         });
 
-        
-
         let output = '';
 
         child2.stdout.on('data', (data) => {
@@ -2421,13 +2123,9 @@ class InteractiveModeTester {
 
         });
 
-        
-
         child2.stdin.write('history\\n');
 
         child2.stdin.write('exit\\n');
-
-        
 
         return new Promise((resolve) => {
 
@@ -2443,8 +2141,6 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async runAllTests() {
 
         const tests = [
@@ -2459,11 +2155,7 @@ class InteractiveModeTester {
 
         ];
 
-        
-
         console.log('Running Node.js Interactive Mode Tests...\\n');
-
-        
 
         const results = [];
 
@@ -2493,21 +2185,15 @@ class InteractiveModeTester {
 
         }
 
-        
-
         const passCount = results.filter(r => r.success).length;
 
         console.log(`\\nTest Results: ${passCount}/${results.length} tests passed`);
-
-        
 
         return results;
 
     }
 
 }
-
-
 
 module.exports = InteractiveModeTester;
 

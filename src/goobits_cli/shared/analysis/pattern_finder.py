@@ -6,10 +6,10 @@ This module analyzes templates across Python, Node.js, TypeScript, and Rust
 to identify common patterns that can be extracted into shared components.
 """
 
-from pathlib import Path
-from typing import Dict, List, Set, Any
-from dataclasses import dataclass, field
 import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Set
 
 
 @dataclass
@@ -40,7 +40,7 @@ class PatternAnalyzer:
             "rust": self.base_path / "rust",
         }
         self.patterns: Dict[str, Pattern] = {}
-        self.pattern_categories: Dict[str, List["Pattern"]] = {
+        self.pattern_categories: Dict[str, List[Pattern]] = {
             "code_structure": [],
             "operational": [],
             "documentation": [],

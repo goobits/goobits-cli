@@ -10,16 +10,17 @@ from 0% to 70% by testing:
 - Hot-reloading capabilities
 """
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 import time
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from goobits_cli.universal.component_registry import (
-    ComponentRegistry,
     ComponentMetadata,
+    ComponentRegistry,
 )
 
 
@@ -106,7 +107,7 @@ class ConfigManager:
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
         self._config: Dict[str, Any] = {}
         self.load()
-    
+
     def load(self) -> None:
         '''Load configuration from file'''
         if self.config_file.exists():
@@ -115,21 +116,21 @@ class ConfigManager:
         else:
             self._config = self.get_default_config()
             self.save()
-    
+
     def save(self) -> None:
         '''Save configuration to file'''
         with open(self.config_file, 'w') as f:
             json.dump(self._config, f, indent=2)
-    
+
     def get(self, key: str, default: Any = None) -> Any:
         '''Get configuration value'''
         return self._config.get(key, default)
-    
+
     def set(self, key: str, value: Any) -> None:
         '''Set configuration value'''
         self._config[key] = value
         self.save()
-    
+
     def get_default_config(self) -> Dict[str, Any]:
         '''Get default configuration'''
         return {
@@ -152,12 +153,12 @@ class ConfigManager {
         this._config = {};
         this.load();
     }
-    
+
     load() {
         if (!fs.existsSync(this.configDir)) {
             fs.mkdirSync(this.configDir, { recursive: true });
         }
-        
+
         if (fs.existsSync(this.configFile)) {
             const data = fs.readFileSync(this.configFile, 'utf8');
             this._config = JSON.parse(data);
@@ -166,20 +167,20 @@ class ConfigManager {
             this.save();
         }
     }
-    
+
     save() {
         fs.writeFileSync(this.configFile, JSON.stringify(this._config, null, 2));
     }
-    
+
     get(key, defaultValue = null) {
         return this._config[key] !== undefined ? this._config[key] : defaultValue;
     }
-    
+
     set(key, value) {
         this._config[key] = value;
         this.save();
     }
-    
+
     getDefaultConfig() {
         return {
             version: '{{ project.version }}',
@@ -227,11 +228,11 @@ def {{ command.hook_name }}(*args, **kwargs) -> Dict[str, Any]:
     '''
     Hook for {{ command_name }} command
     {{ command.description }}
-    
+
     Args:
         *args: Positional arguments from CLI
         **kwargs: Keyword arguments from CLI options
-    
+
     Returns:
         Dict with command result
     '''
@@ -322,7 +323,7 @@ module.exports = {
         # 5. Invalid template for error testing
         invalid_template = """
 {# Invalid Template with syntax errors #}
-{% if language == 'python' 
+{% if language == 'python'
 # Missing closing %}
 This template has syntax errors
 {% endfor without matching for %}

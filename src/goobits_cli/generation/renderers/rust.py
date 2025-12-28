@@ -1,17 +1,15 @@
 """Rust CLI generator implementation."""
 
-from pathlib import Path
-
-from typing import List, Optional, Union, Dict
-
-
 import threading
-
 from functools import wraps
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
 # Import shared utilities
 from ...utils.strings import (
     to_pascal_case,
+)
+from ...utils.strings import (
     to_snake_case as shared_to_snake_case,
 )
 
@@ -40,44 +38,37 @@ def _lazy_imports():
         typer = _typer
 
 
-from .. import (
-    BaseGenerator,
-    TemplateError,
-    DependencyError,
-    ValidationError,
-)
-
 from ...core.schemas import ConfigSchema, GoobitsConfigSchema
-
-from ...utils.formatter import (
-    align_examples,
-    format_multiline_text,
-    escape_for_docstring,
-    align_setup_steps,
-    format_icon_spacing,
-    align_header_items,
+from ...universal.completion import (
+    integrate_completion_system,
 )
-
+from ...universal.interactive import integrate_interactive_mode
+from ...universal.plugins import integrate_plugin_system
+from ...universal.renderers.rust_renderer import RustRenderer
 
 # Universal Template System imports
 # Universal Template System is required
 from ...universal.template_engine import UniversalTemplateEngine
-from ...universal.renderers.rust_renderer import RustRenderer
-from ...universal.interactive import integrate_interactive_mode
-from ...universal.completion import (
-    integrate_completion_system,
+from ...utils.formatter import (
+    align_examples,
+    align_header_items,
+    align_setup_steps,
+    escape_for_docstring,
+    format_icon_spacing,
+    format_multiline_text,
 )
-from ...universal.plugins import integrate_plugin_system
-
+from .. import (
+    BaseGenerator,
+    DependencyError,
+    TemplateError,
+    ValidationError,
+)
 
 try:
-
     from ...shared.components.doc_generator import DocumentationGenerator
 
 except ImportError:
-
     DocumentationGenerator = None
-
 
 # Error classes now imported from shared generators.__init__ module
 
@@ -158,7 +149,6 @@ class RustGenerator(BaseGenerator):
         # Try rust subdirectory first, fallback to main templates
 
         if template_dir.exists():
-
             self.env = Environment(
                 loader=FileSystemLoader([template_dir, fallback_dir]),
                 trim_blocks=True,
@@ -166,7 +156,6 @@ class RustGenerator(BaseGenerator):
             )
 
         else:
-
             # If rust subdirectory doesn't exist, use main templates dir
 
             self.env = Environment(
@@ -180,7 +169,6 @@ class RustGenerator(BaseGenerator):
         # Add custom filters
 
         try:
-
             self.env.filters["align_examples"] = align_examples
 
             self.env.filters["format_multiline"] = format_multiline_text
@@ -204,7 +192,6 @@ class RustGenerator(BaseGenerator):
             self.env.filters["escape_rust_string"] = self._escape_rust_string
 
         except Exception as e:
-
             raise DependencyError(
                 f"Failed to register template filters: {str(e)}",
                 dependency="goobits-cli formatter",
@@ -228,8 +215,6 @@ class RustGenerator(BaseGenerator):
 
         Generate Rust CLI code from configuration.
 
-
-
         Args:
 
             config: The configuration object
@@ -237,8 +222,6 @@ class RustGenerator(BaseGenerator):
             config_filename: Name of the configuration file
 
             version: Optional version string
-
-
 
         Returns:
 
@@ -267,7 +250,6 @@ class RustGenerator(BaseGenerator):
                 and ("pytest" in config_filename or config_filename.endswith("_test"))
             )
         ):
-
             # For E2E tests, generate all files and write them to the output directory
             generated_files = self.generate_all_files(config, "test.yaml", version)
 
@@ -309,8 +291,6 @@ class RustGenerator(BaseGenerator):
 
         Generate using Universal Template System.
 
-
-
         Args:
 
             config: The configuration object
@@ -319,8 +299,6 @@ class RustGenerator(BaseGenerator):
 
             version: Optional version string
 
-
-
         Returns:
 
             Generated Rust CLI code
@@ -328,17 +306,14 @@ class RustGenerator(BaseGenerator):
         """
 
         try:
-
             # Ensure universal engine is available
 
             if not self.universal_engine:
-
                 raise RuntimeError("Universal Template Engine not initialized")
 
             # Convert config to GoobitsConfigSchema if needed
 
             if isinstance(config, ConfigSchema):
-
                 # Create minimal GoobitsConfigSchema for universal system
 
                 goobits_config = GoobitsConfigSchema(
@@ -357,13 +332,11 @@ class RustGenerator(BaseGenerator):
                 )
 
             else:
-
                 goobits_config = config
 
             # Integrate interactive mode support
 
             if integrate_interactive_mode:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -379,7 +352,6 @@ class RustGenerator(BaseGenerator):
             # Integrate completion system support
 
             if integrate_completion_system:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -395,7 +367,6 @@ class RustGenerator(BaseGenerator):
             # Integrate plugin system support
 
             if integrate_plugin_system:
-
                 config_dict = (
                     goobits_config.model_dump()
                     if hasattr(goobits_config, "model_dump")
@@ -421,7 +392,6 @@ class RustGenerator(BaseGenerator):
             self._generated_files = {}
 
             for file_path, content in generated_files.items():
-
                 # Extract relative path from output_dir for compatibility
 
                 relative_path = Path(file_path).relative_to(output_dir)
@@ -440,7 +410,6 @@ class RustGenerator(BaseGenerator):
             )
 
             if not main_cli_file:
-
                 # If no main CLI file found, use the first available content
 
                 main_cli_file = next(iter(generated_files.values()), "")
@@ -448,7 +417,6 @@ class RustGenerator(BaseGenerator):
             return main_cli_file
 
         except Exception as e:
-
             # Handle template generation failure
 
             typer.echo(
@@ -459,10 +427,10 @@ class RustGenerator(BaseGenerator):
 
             # Rust Universal Templates failed - provide helpful error
             error_msg = f"""❌ Rust Universal Templates failed: {type(e).__name__}: {e}
-            
+
 🔧 Troubleshooting:
 1. Check Rust configuration syntax
-2. Ensure all required fields are present  
+2. Ensure all required fields are present
 3. Try with --debug flag for detailed logs"""
 
             typer.echo(error_msg, err=True)
@@ -475,8 +443,6 @@ class RustGenerator(BaseGenerator):
 
         Generate all files needed for the Rust CLI.
 
-
-
         Args:
 
             config: The configuration object
@@ -485,8 +451,6 @@ class RustGenerator(BaseGenerator):
 
             version: Optional version string
 
-
-
         Returns:
 
             Dictionary mapping file paths to their contents
@@ -494,7 +458,6 @@ class RustGenerator(BaseGenerator):
         """
 
         try:
-
             # Generate main file first to populate _generated_files
 
             self.generate(config, config_filename, version)
@@ -504,7 +467,6 @@ class RustGenerator(BaseGenerator):
             return self._generated_files.copy() if self._generated_files else {}
 
         except Exception as e:
-
             # Wrap and re-raise any errors
 
             raise TemplateError(f"Failed to generate all files: {str(e)}") from e
@@ -584,13 +546,10 @@ class RustGenerator(BaseGenerator):
         # Validate command groups reference existing commands
 
         if cli.command_groups:
-
             for group in cli.command_groups:
-
                 invalid_commands = set(group.commands) - defined_commands
 
                 if invalid_commands:
-
                     raise ValidationError(
                         f"Command group '{group.name}' references non-existent commands: {', '.join(sorted(invalid_commands))}",
                         field=f"command_groups.{group.name}.commands",
@@ -601,9 +560,7 @@ class RustGenerator(BaseGenerator):
         # Validate command structure
 
         for cmd_name, cmd_data in cli.commands.items():
-
             if not cmd_data.desc:
-
                 raise ValidationError(
                     f"Command '{cmd_name}' is missing required description",
                     field=f"commands.{cmd_name}.desc",
@@ -613,11 +570,8 @@ class RustGenerator(BaseGenerator):
             # Validate arguments
 
             if cmd_data.args:
-
                 for arg in cmd_data.args:
-
                     if not arg.desc:
-
                         raise ValidationError(
                             f"Argument '{arg.name}' in command '{cmd_name}' is missing required description",
                             field=f"commands.{cmd_name}.args.{arg.name}.desc",
@@ -627,13 +581,10 @@ class RustGenerator(BaseGenerator):
             # Validate options
 
             if cmd_data.options:
-
                 valid_types = ["str", "string", "int", "float", "bool", "flag"]
 
                 for opt in cmd_data.options:
-
                     if not opt.desc:
-
                         raise ValidationError(
                             f"Option '{opt.name}' in command '{cmd_name}' is missing required description",
                             field=f"commands.{cmd_name}.options.{opt.name}.desc",
@@ -641,7 +592,6 @@ class RustGenerator(BaseGenerator):
                         )
 
                     if opt.type not in valid_types:
-
                         raise ValidationError(
                             f"Option '{opt.name}' in command '{cmd_name}' has invalid type '{opt.type}'",
                             field=f"commands.{cmd_name}.options.{opt.name}.type",
@@ -710,8 +660,8 @@ class RustGenerator(BaseGenerator):
 //! ║                           AUTO-GENERATED FILE                               ║
 //! ║                                                                              ║
 //! ║  Generated by: goobits-cli v{version}                                       ║
-//! ║  Generated from: {context.get('file_name', 'goobits.yaml')}                 ║
-//! ║  Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}               ║
+//! ║  Generated from: {context.get("file_name", "goobits.yaml")}                 ║
+//! ║  Generated on: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}               ║
 //! ║                                                                              ║
 //! ║  ⚠️  DO NOT EDIT THIS FILE MANUALLY                                         ║
 //! ║  Changes will be overwritten on next generation                             ║
@@ -721,9 +671,7 @@ class RustGenerator(BaseGenerator):
 //! ╚══════════════════════════════════════════════════════════════════════════╝
 //!
 //! {command_name} CLI - Rust Implementation
-//! Generated from {context.get('file_name', 'goobits.yaml')}
-
-
+//! Generated from {context.get("file_name", "goobits.yaml")}
 
 use clap::{{Arg, ArgMatches, Command}};
 
@@ -733,17 +681,11 @@ use anyhow::Result;
 
 use serde_json::json;
 
-
-
 mod hooks;
 
 mod logger;
 
-
-
 use logger::{{setup_logging, info, error, set_context, create_command_context}};
-
-
 
 fn main() {{
 
@@ -757,11 +699,7 @@ fn main() {{
 
     }}
 
-    
-
     info("main", "Starting {command_name} CLI", None);
-
-    
 
     let app = Command::new("{command_name}")
 
@@ -797,13 +735,9 @@ fn main() {{
 
             .global(true));
 
-    
-
     let app = build_cli(app);
 
     let matches = app.get_matches();
-
-    
 
     if let Err(e) = handle_command(&matches) {{
 
@@ -813,31 +747,21 @@ fn main() {{
 
     }}
 
-    
-
     info("main", "CLI execution completed successfully", None);
 
 }}
-
-
 
 fn build_cli(app: Command) -> Command {{
 
     let mut app = app;
 
-    
-
     // Add commands from configuration
 
     {self._generate_fallback_commands(context)}
 
-    
-
     app
 
 }}
-
-
 
 fn handle_command(matches: &ArgMatches) -> Result<()> {{
 
@@ -876,7 +800,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                     result += f"""
                     .arg(Arg::new("{arg.name}")
                         .help("{arg.desc}")
-                        .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
+                        .required({str(arg.required).lower() if hasattr(arg, "required") else "true"})
                         .value_name("{arg.name.upper()}"))"""
 
         # Add options for this command
@@ -915,7 +839,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 result += f"""
             .subcommand(
                 Command::new("{sub_name}")
-                    .about("{sub_data.desc if hasattr(sub_data, 'desc') else 'Subcommand description'}")"""
+                    .about("{sub_data.desc if hasattr(sub_data, "desc") else "Subcommand description"}")"""
 
                 # Recursively process this subcommand
                 result += self._generate_subcommand_recursively(
@@ -933,7 +857,6 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
         cli_config = context.get("cli")
 
         if not cli_config or not hasattr(cli_config, "commands"):
-
             return "// No commands configured"
 
         commands = []
@@ -948,7 +871,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
             if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
                 cmd_def = f"""app = app.subcommand(
         Command::new("{cmd_name}")
-            .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")
+            .about("{cmd_data.desc if hasattr(cmd_data, "desc") else "Command description"}")
             .subcommand_required(true)
             .arg_required_else_help(true)"""
 
@@ -961,7 +884,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 # Simple command without subcommands
                 cmd_def = f"""app = app.subcommand(
         Command::new("{cmd_name}")
-            .about("{cmd_data.desc if hasattr(cmd_data, 'desc') else 'Command description'}")"""
+            .about("{cmd_data.desc if hasattr(cmd_data, "desc") else "Command description"}")"""
 
                 # Add arguments
                 if hasattr(cmd_data, "args") and cmd_data.args:
@@ -976,7 +899,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                             cmd_def += f"""
             .arg(Arg::new("{arg.name}")
                 .help("{arg.desc}")
-                .required({str(arg.required).lower() if hasattr(arg, 'required') else 'true'})
+                .required({str(arg.required).lower() if hasattr(arg, "required") else "true"})
                 .value_name("{arg.name.upper()}"))"""
 
                 # Add options
@@ -1024,7 +947,6 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
         cli_config = context.get("cli")
 
         if not cli_config or not hasattr(cli_config, "commands"):
-
             return ""
 
         handlers = []
@@ -1055,7 +977,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
                 let context = create_command_context("{cmd_name}-{sub_name}", &[]);
                 set_context(context);
                 info("main", "Executing {cmd_name} {sub_name} command", None);
-                
+
                 {param_extraction}
                 if let Err(e) = hooks::{hook_call} {{
                     logger::log_error("main", &e);
@@ -1093,7 +1015,7 @@ fn handle_command(matches: &ArgMatches) -> Result<()> {{
             let context = create_command_context("{cmd_name}", &[]);
             set_context(context);
             info("main", "Executing {cmd_name} command", None);
-            
+
             {param_extraction}
             if let Err(e) = hooks::{hook_call} {{
                 logger::log_error("main", &e);
@@ -1219,15 +1141,11 @@ description = "{description}"
 
 edition = "2021"
 
-
-
 [[bin]]
 
-name = "{context['command_name']}"
+name = "{context["command_name"]}"
 
 path = "src/main.rs"
-
-
 
 [dependencies]
 
@@ -1250,17 +1168,15 @@ thiserror = "1.0"
 
         cli_config = context.get("cli")
 
-        hooks_content = f"""//! Hook functions for {context['display_name']}
+        hooks_content = f"""//! Hook functions for {context["display_name"]}
 
-//! Auto-generated from {context['file_name']}
+//! Auto-generated from {context["file_name"]}
 
-//! 
+//!
 
 //! Implement your business logic in these hook functions.
 
 //! Each command will call its corresponding hook function.
-
-
 
 use clap::ArgMatches;
 
@@ -1271,8 +1187,6 @@ use std::fs;
 use std::path::Path;
 
 use std::env;
-
-
 
 """
 
@@ -1308,8 +1222,6 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
 }}
 
-
-
 """
                 else:
                     # Generate hook for the command itself
@@ -1326,8 +1238,6 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
     {self._generate_hook_placeholder(cmd_name, None, cmd_data)}
 
 }}
-
-
 
 """
 
@@ -1388,7 +1298,7 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
     Ok(())"""
         elif command_key == "config_get":
             return """let theme = env::var("TEST_CLI_THEME").unwrap_or_else(|_| "default".to_string());
-    
+
     let value = match key {
         "theme" => theme,
         "api_key" => "".to_string(),
@@ -1398,7 +1308,7 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
             std::process::exit(1);
         }
     };
-    
+
     println!("{}: {}", key, value);
     Ok(())"""
         elif command_key == "config_set":
@@ -1413,16 +1323,16 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
             return """if !force {
         print!("Are you sure you want to reset the configuration? (y/N): ");
         io::stdout().flush()?;
-        
+
         let mut input = String::new();
         io::stdin().read_line(&mut input)?;
-        
+
         if input.trim().to_lowercase() != "y" {
             println!("Reset cancelled");
             return Ok(());
         }
     }
-    
+
     println!("Configuration reset to defaults");
     Ok(())"""
         elif command_key == "fail":
@@ -1436,17 +1346,17 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
     Ok(())"""
         elif command_key == "file_create":
             return """let file_path = Path::new(path);
-    
+
     if let Some(parent) = file_path.parent() {
         fs::create_dir_all(parent)?;
     }
-    
+
     if let Some(content) = content {
         fs::write(file_path, content)?;
     } else {
         fs::write(file_path, "")?;
     }
-    
+
     println!("Created file: {}", path);
     Ok(())"""
         elif command_key == "file_delete":
@@ -1476,11 +1386,7 @@ pub fn {hook_name}{signature} -> Result<(), Box<dyn std::error::Error>> {{
 
         return """//! CLI command definitions and parsing logic
 
-
-
 use clap::Command;
-
-
 
 pub fn build_cli() -> Command {
 
@@ -1499,19 +1405,13 @@ pub fn build_cli() -> Command {
 
         return f"""#!/bin/bash
 
-# Setup script for {context['display_name']}
+# Setup script for {context["display_name"]}
 
-# Auto-generated from {context['file_name']}
-
-
+# Auto-generated from {context["file_name"]}
 
 set -e
 
-
-
-echo "🔧 Setting up {context['display_name']}..."
-
-
+echo "🔧 Setting up {context["display_name"]}..."
 
 # Check if Rust is installed
 
@@ -1525,8 +1425,6 @@ if ! command -v rustc &> /dev/null; then
 
 fi
 
-
-
 # Check if Cargo is installed
 
 if ! command -v cargo &> /dev/null; then
@@ -1537,21 +1435,17 @@ if ! command -v cargo &> /dev/null; then
 
 fi
 
-
-
 # Build the project
 
 echo "🔨 Building Rust project..."
 
 cargo build --release
 
-
-
 if [ $? -eq 0 ]; then
 
     echo "✅ Build successful!"
 
-    echo "📍 Binary location: target/release/{context['command_name']}"
+    echo "📍 Binary location: target/release/{context["command_name"]}"
 
     echo ""
 
@@ -1567,7 +1461,7 @@ if [ $? -eq 0 ]; then
 
     echo "   # or"
 
-    echo "   ./target/release/{context['command_name']} --help"
+    echo "   ./target/release/{context["command_name"]} --help"
 
 else
 
@@ -1585,40 +1479,29 @@ fi
         # Use DocumentationGenerator if available
 
         if self.doc_generator and DocumentationGenerator:
-
             try:
-
                 return self.doc_generator.generate_readme()
 
             except Exception:
-
                 # Fallback to manual generation if doc_generator fails
 
                 pass
 
         # Fallback to existing implementation
 
-        return f"""# {context['display_name']}
+        return f"""# {context["display_name"]}
 
-
-
-{context.get('description', 'A CLI tool built with Rust')}
-
-
+{context.get("description", "A CLI tool built with Rust")}
 
 ## Installation
-
-
 
 ### From crates.io (when published)
 
 ```bash
 
-cargo install {context['package_name']}
+cargo install {context["package_name"]}
 
 ```
-
-
 
 ### For development
 
@@ -1628,9 +1511,7 @@ cargo install {context['package_name']}
 
 git clone <your-repo-url>
 
-cd {context['package_name']}
-
-
+cd {context["package_name"]}
 
 # Build and install locally
 
@@ -1638,31 +1519,19 @@ cargo install --path .
 
 ```
 
-
-
 ## Usage
-
-
 
 ```bash
 
-{context['command_name']} --help
+{context["command_name"]} --help
 
 ```
 
-
-
 ## Commands
-
-
 
 {self._generate_commands_documentation(context)}
 
-
-
 ## Development
-
-
 
 To run in development mode:
 
@@ -1672,25 +1541,17 @@ To run in development mode:
 
 cargo build
 
-
-
 # Run locally
 
 cargo run -- --help
-
-
 
 # Run tests
 
 cargo test
 
-
-
 # Format code
 
 cargo fmt
-
-
 
 # Check with clippy
 
@@ -1698,15 +1559,9 @@ cargo clippy
 
 ```
 
-
-
 To implement command logic, edit the hook functions in `src/hooks.rs`.
 
-
-
 ## License
-
-
 
 MIT
 
@@ -1718,7 +1573,6 @@ MIT
         cli_config = context.get("cli")
 
         if not cli_config or not hasattr(cli_config, "commands"):
-
             return "No commands configured."
 
         commands_doc = []
@@ -1737,9 +1591,7 @@ MIT
             # Add subcommands if they exist
 
             if hasattr(cmd_data, "subcommands") and cmd_data.subcommands:
-
                 for sub_name, sub_data in cmd_data.subcommands.items():
-
                     sub_desc = (
                         sub_data.desc
                         if hasattr(sub_data, "desc")
@@ -1759,8 +1611,6 @@ MIT
 
 Cargo.lock
 
-
-
 # IDE files
 
 .idea/
@@ -1771,15 +1621,11 @@ Cargo.lock
 
 *.swo
 
-
-
 # OS files
 
 .DS_Store
 
 Thumbs.db
-
-
 
 # Environment variables
 
@@ -1787,13 +1633,9 @@ Thumbs.db
 
 .env.local
 
-
-
 # Logs
 
 *.log
-
-
 
 # Config (keep local config private)
 

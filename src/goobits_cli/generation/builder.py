@@ -6,11 +6,11 @@ including Python, Node.js, TypeScript, and Rust. It handles YAML configuration
 loading, validation, and routing to appropriate language-specific generators.
 """
 
-import yaml
 from typing import Optional
 
-from pydantic import ValidationError
 import typer
+import yaml
+from pydantic import ValidationError
 
 # Lazy import for heavy schemas to improve startup performance
 _schemas = None
@@ -53,7 +53,7 @@ def load_yaml_config(file_path: str):
         typer.Exit: If file not found, YAML parsing fails, or validation fails
     """
     try:
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             data = yaml.safe_load(f)
 
         # Get schema classes lazily

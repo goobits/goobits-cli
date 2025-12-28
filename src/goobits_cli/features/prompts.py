@@ -18,33 +18,24 @@ Interactive prompts and input helpers for Goobits CLI Framework
 """
 
 import sys
-
-from typing import Any, List, Optional, Union, Callable, Dict
-
 from pathlib import Path
-
+from typing import Any, Callable, Dict, List, Optional, Union
 
 try:
-
-    from rich.prompt import Prompt, Confirm, IntPrompt, FloatPrompt
-
     from rich.console import Console
+    from rich.prompt import Confirm, FloatPrompt, IntPrompt, Prompt
 
     HAS_RICH_PROMPT = True
 
 except ImportError:
-
     HAS_RICH_PROMPT = False
 
-
 try:
-
     import questionary
 
     HAS_QUESTIONARY = True
 
 except ImportError:
-
     HAS_QUESTIONARY = False
 
 
@@ -52,13 +43,10 @@ class PromptsHelper:
     """Helper class for interactive prompts and user input"""
 
     def __init__(self, console: Optional["Console"] = None):
-
         if HAS_RICH_PROMPT:
-
             self.console = console or Console()
 
         else:
-
             self.console = None
 
         self.use_questionary = HAS_QUESTIONARY
@@ -68,10 +56,9 @@ class PromptsHelper:
         # Initialize predictive prompting if available
         try:
             from ..universal.performance.predictive_prompts import (
-                get_prompt_manager,
-                PromptConfig,
-                record_prompt_shown,
                 get_prepared_prompt,
+                get_prompt_manager,
+                record_prompt_shown,
             )
 
             self.predictive_enabled = True
@@ -90,21 +77,17 @@ class PromptsHelper:
         """Prompt for text input"""
 
         if self.use_questionary:
-
             return questionary.text(message, default=default, validate=validate).ask()
 
         elif self.use_rich:
-
             return Prompt.ask(message, default=default, console=self.console)
 
         else:
-
             # Fallback to built-in input
 
             prompt_text = message
 
             if default:
-
                 prompt_text += f" [{default}]"
 
             prompt_text += ": "
@@ -117,17 +100,14 @@ class PromptsHelper:
         """Prompt for password input (hidden)"""
 
         if self.use_questionary:
-
             return questionary.password(message).ask()
 
         elif self.use_rich:
-
             import getpass
 
             return getpass.getpass(f"{message}: ")
 
         else:
-
             import getpass
 
             return getpass.getpass(f"{message}: ")
@@ -136,15 +116,12 @@ class PromptsHelper:
         """Prompt for yes/no confirmation"""
 
         if self.use_questionary:
-
             return questionary.confirm(message, default=default).ask()
 
         elif self.use_rich:
-
             return Confirm.ask(message, default=default, console=self.console)
 
         else:
-
             # Fallback implementation
 
             default_text = "Y/n" if default else "y/N"
@@ -152,7 +129,6 @@ class PromptsHelper:
             response = input(f"{message} ({default_text}): ").strip().lower()
 
             if not response:
-
                 return default
 
             return response in ("y", "yes", "1", "true")
@@ -171,11 +147,9 @@ class PromptsHelper:
             self.record_prompt("select_prompt", context)
 
         if self.use_questionary:
-
             return questionary.select(message, choices=choices, default=default).ask()
 
         else:
-
             # Fallback implementation
 
             print(f"\n{message}")
@@ -184,18 +158,13 @@ class PromptsHelper:
 
             formatted_choices = []
 
-            for i, choice in enumerate(choices):
-
+            for choice in choices:
                 if isinstance(choice, dict):
-
                     formatted_choices.append(choice.get("name", str(choice)))
-
                 else:
-
                     formatted_choices.append(str(choice))
 
             for i, choice in enumerate(formatted_choices):
-
                 marker = (
                     ">"
                     if (isinstance(default, int) and i == default) or choice == default
@@ -205,39 +174,30 @@ class PromptsHelper:
                 print(f"  {marker} {i + 1}. {choice}")
 
             while True:
-
                 try:
-
                     response = input("\nSelect (number): ").strip()
 
                     if not response and default is not None:
-
                         if isinstance(default, int):
-
                             return formatted_choices[default]
 
                         else:
-
                             return default
 
                     index = int(response) - 1
 
                     if 0 <= index < len(formatted_choices):
-
                         return formatted_choices[index]
 
                     else:
-
                         print(
                             f"Please enter a number between 1 and {len(formatted_choices)}"
                         )
 
                 except ValueError:
-
                     print("Please enter a valid number")
 
                 except KeyboardInterrupt:
-
                     print("\nCanceled")
 
                     sys.exit(1)
@@ -251,11 +211,9 @@ class PromptsHelper:
         """Prompt for multiple selections from a list of choices"""
 
         if self.use_questionary:
-
             return questionary.checkbox(message, choices=choices, default=default).ask()
 
         else:
-
             # Fallback implementation
 
             print(f"\n{message}")
@@ -267,19 +225,15 @@ class PromptsHelper:
             formatted_choices = []
 
             for choice in choices:
-
                 if isinstance(choice, dict):
-
                     formatted_choices.append(choice.get("name", str(choice)))
 
                 else:
-
                     formatted_choices.append(str(choice))
 
             selected = set(default or [])
 
             for i, choice in enumerate(formatted_choices):
-
                 marker = "[x]" if choice in selected else "[ ]"
 
                 print(f"  {marker} {i + 1}. {choice}")
@@ -289,13 +243,10 @@ class PromptsHelper:
             )
 
             while True:
-
                 try:
-
                     response = input("Select: ").strip().lower()
 
                     if response in ("done", "finish", ""):
-
                         break
 
                     # Parse space-separated numbers
@@ -303,35 +254,28 @@ class PromptsHelper:
                     indices = [int(x) - 1 for x in response.split()]
 
                     for index in indices:
-
                         if 0 <= index < len(formatted_choices):
-
                             choice = formatted_choices[index]
 
                             if choice in selected:
-
                                 selected.remove(choice)
 
                                 print(f"  Deselected: {choice}")
 
                             else:
-
                                 selected.add(choice)
 
                                 print(f"  Selected: {choice}")
 
                         else:
-
                             print(f"Invalid choice: {index + 1}")
 
                     print("Current selection:", list(selected))
 
                 except ValueError:
-
                     print("Please enter valid numbers separated by spaces")
 
                 except KeyboardInterrupt:
-
                     print("\nCanceled")
 
                     sys.exit(1)
@@ -350,23 +294,18 @@ class PromptsHelper:
         if self.use_questionary:
 
             def validate_int(val):
-
                 try:
-
                     num = int(val)
 
                     if min_value is not None and num < min_value:
-
                         return f"Value must be at least {min_value}"
 
                     if max_value is not None and num > max_value:
-
                         return f"Value must be at most {max_value}"
 
                     return True
 
                 except ValueError:
-
                     return "Please enter a valid integer"
 
             return int(
@@ -378,21 +317,16 @@ class PromptsHelper:
             )
 
         elif self.use_rich:
-
             return IntPrompt.ask(message, default=default, console=self.console)
 
         else:
-
             # Fallback implementation
 
             while True:
-
                 try:
-
                     prompt_text = message
 
                     if default is not None:
-
                         prompt_text += f" [{default}]"
 
                     prompt_text += ": "
@@ -400,19 +334,16 @@ class PromptsHelper:
                     response = input(prompt_text).strip()
 
                     if not response and default is not None:
-
                         return default
 
                     value = int(response)
 
                     if min_value is not None and value < min_value:
-
                         print(f"Value must be at least {min_value}")
 
                         continue
 
                     if max_value is not None and value > max_value:
-
                         print(f"Value must be at most {max_value}")
 
                         continue
@@ -420,11 +351,9 @@ class PromptsHelper:
                     return value
 
                 except ValueError:
-
                     print("Please enter a valid integer")
 
                 except KeyboardInterrupt:
-
                     print("\nCanceled")
 
                     sys.exit(1)
@@ -439,21 +368,16 @@ class PromptsHelper:
         """Prompt for float input"""
 
         if self.use_rich:
-
             return FloatPrompt.ask(message, default=default, console=self.console)
 
         else:
-
             # Fallback implementation (similar to integer)
 
             while True:
-
                 try:
-
                     prompt_text = message
 
                     if default is not None:
-
                         prompt_text += f" [{default}]"
 
                     prompt_text += ": "
@@ -461,19 +385,16 @@ class PromptsHelper:
                     response = input(prompt_text).strip()
 
                     if not response and default is not None:
-
                         return default
 
                     value = float(response)
 
                     if min_value is not None and value < min_value:
-
                         print(f"Value must be at least {min_value}")
 
                         continue
 
                     if max_value is not None and value > max_value:
-
                         print(f"Value must be at most {max_value}")
 
                         continue
@@ -481,11 +402,9 @@ class PromptsHelper:
                     return value
 
                 except ValueError:
-
                     print("Please enter a valid number")
 
                 except KeyboardInterrupt:
-
                     print("\nCanceled")
 
                     sys.exit(1)
@@ -501,53 +420,42 @@ class PromptsHelper:
         """Prompt for file/directory path"""
 
         def validate_path(path_str: str) -> Union[bool, str]:
-
             try:
-
                 path_obj = Path(path_str).expanduser()
 
                 if exists and not path_obj.exists():
-
                     return f"Path does not exist: {path_obj}"
 
                 if is_dir and path_obj.exists() and not path_obj.is_dir():
-
                     return f"Path is not a directory: {path_obj}"
 
                 if is_file and path_obj.exists() and not path_obj.is_file():
-
                     return f"Path is not a file: {path_obj}"
 
                 return True
 
             except Exception as e:
-
                 return f"Invalid path: {e}"
 
         if self.use_questionary:
-
             result = questionary.path(
                 message, default=default, validate=validate_path
             ).ask()
 
         else:
-
             # Fallback implementation
 
             while True:
-
                 path_str = self.text(message, default)
 
                 validation_result = validate_path(path_str)
 
                 if validation_result is True:
-
                     result = path_str
 
                     break
 
                 else:
-
                     print(validation_result)
 
         return Path(result).expanduser()
@@ -564,7 +472,6 @@ def get_prompts_helper() -> PromptsHelper:
     global _default_prompts
 
     if _default_prompts is None:
-
         _default_prompts = PromptsHelper()
 
     return _default_prompts

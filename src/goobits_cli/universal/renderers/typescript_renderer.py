@@ -2,17 +2,15 @@
 
 TypeScript Renderer for Universal Template System
 
-
-
 This renderer generates TypeScript CLI implementations using universal components
 
 with proper type safety, interfaces, and TypeScript-specific conventions.
 
 """
 
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 # Lazy import for version to avoid early import overhead
 _version = None
@@ -50,8 +48,6 @@ class TypeScriptRenderer(LanguageRenderer):
     """
 
     TypeScript-specific renderer for the Universal Template System.
-
-
 
     Generates TypeScript CLI implementations with:
 
@@ -109,13 +105,9 @@ class TypeScriptRenderer(LanguageRenderer):
 
         Transform IR into TypeScript-specific template context.
 
-
-
         Args:
 
             ir: Intermediate representation from UniversalTemplateEngine
-
-
 
         Returns:
 
@@ -155,7 +147,6 @@ class TypeScriptRenderer(LanguageRenderer):
         # Transform CLI schema for TypeScript
 
         if "cli" in ir:
-
             context["cli"]["typescript"] = self._transform_cli_schema(ir["cli"])
 
         # Add TypeScript build configuration
@@ -210,8 +201,6 @@ class TypeScriptRenderer(LanguageRenderer):
 
         Render a component template for TypeScript.
 
-
-
         Args:
 
             component_name: Name of the component
@@ -219,8 +208,6 @@ class TypeScriptRenderer(LanguageRenderer):
             template_content: Universal template content
 
             context: TypeScript-specific template context
-
-
 
         Returns:
 
@@ -241,15 +228,12 @@ class TypeScriptRenderer(LanguageRenderer):
         # Apply TypeScript-specific processing based on component type
 
         if component_name == "command_handler":
-
             render_context = self._enhance_command_context(render_context)
 
         elif component_name == "config_manager":
-
             render_context = self._enhance_config_context(render_context)
 
         elif component_name == "completion_engine":
-
             render_context = self._enhance_completion_context(render_context)
 
         return template.render(**render_context)
@@ -259,13 +243,9 @@ class TypeScriptRenderer(LanguageRenderer):
 
         Define the output file structure for TypeScript CLIs.
 
-
-
         Args:
 
             ir: Intermediate representation
-
-
 
         Returns:
 
@@ -305,7 +285,6 @@ class TypeScriptRenderer(LanguageRenderer):
         """Add TypeScript-specific filters to Jinja2 environment."""
 
         for name, filter_func in self.get_custom_filters().items():
-
             self._env.filters[name] = filter_func
 
     def _generate_interfaces(self, ir: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -316,7 +295,6 @@ class TypeScriptRenderer(LanguageRenderer):
         # Generate global options interface
 
         if "cli" in ir and "global_options" in ir["cli"]:
-
             interfaces.append(
                 {
                     "name": "GlobalOptions",
@@ -333,9 +311,7 @@ class TypeScriptRenderer(LanguageRenderer):
             and "root_command" in ir["cli"]
             and "subcommands" in ir["cli"]["root_command"]
         ):
-
             for command in ir["cli"]["root_command"]["subcommands"]:
-
                 cmd_name = command.get("name", "Command")
 
                 interface_name = f"{self._pascal_case_filter(cmd_name)}Options"
@@ -345,7 +321,6 @@ class TypeScriptRenderer(LanguageRenderer):
                 # Add options as properties
 
                 for option in command.get("options", []):
-
                     prop_name = option.get("name", "option")
 
                     prop_type = self._ts_type_filter(option.get("type", "string"))
@@ -402,7 +377,6 @@ class TypeScriptRenderer(LanguageRenderer):
         properties = {}
 
         for option in options:
-
             prop_name = option.get("name", "option")
 
             prop_type = self._ts_type_filter(option.get("type", "string"))
@@ -452,11 +426,9 @@ class TypeScriptRenderer(LanguageRenderer):
         # Add conditional imports based on features used
 
         if self._uses_child_process(ir):
-
             imports.append("import { spawn, execSync } from 'child_process';")
 
         if self._uses_async_features(ir):
-
             imports.append("import { promisify } from 'util';")
 
         return imports
@@ -473,7 +445,6 @@ class TypeScriptRenderer(LanguageRenderer):
         # Export interfaces if needed
 
         if self._needs_interface_exports(ir):
-
             exports.append("export type { CommandArgs, HookFunction, GlobalOptions };")
 
         return exports
@@ -486,9 +457,7 @@ class TypeScriptRenderer(LanguageRenderer):
         # Convert command names to TypeScript-safe identifiers
 
         if "commands" in transformed:
-
             for cmd_name, cmd_data in transformed["commands"].items():
-
                 # Add TypeScript-specific metadata
 
                 cmd_data["typescript"] = {
@@ -500,9 +469,7 @@ class TypeScriptRenderer(LanguageRenderer):
                 # Transform options with TypeScript types
 
                 if "options" in cmd_data:
-
                     for option in cmd_data["options"]:
-
                         option["typescript_type"] = self._ts_type_filter(
                             option.get("type", "string")
                         )
@@ -534,7 +501,6 @@ class TypeScriptRenderer(LanguageRenderer):
         # Convert project names to appropriate cases
 
         if "project" in context:
-
             project = context["project"]
 
             # Keep original names but add TypeScript variants
@@ -597,7 +563,6 @@ class TypeScriptRenderer(LanguageRenderer):
         """Convert generic types to TypeScript types."""
 
         if type_str is None or type_str == "":
-
             return "any"
 
         mappings = self._get_type_mappings()
@@ -613,13 +578,11 @@ class TypeScriptRenderer(LanguageRenderer):
         """Generate TypeScript import statement."""
 
         if items:
-
             import_list = ", ".join(items)
 
             return f"import {{ {import_list} }} from '{module}';"
 
         else:
-
             return f"import * as {self._camel_case_filter(module)} from '{module}';"
 
     def _ts_commander_option_filter(self, option: Dict[str, Any]) -> str:
@@ -638,13 +601,11 @@ class TypeScriptRenderer(LanguageRenderer):
         flags = f"--{name}"
 
         if short:
-
             flags = f"-{short}, {flags}"
 
         # Add value placeholder for non-boolean types
 
         if type_str != "flag" and type_str != "boolean":
-
             flags += f" <{self._ts_type_filter(type_str)}>"
 
         return f".option('{flags}', '{desc}')"
@@ -749,7 +710,6 @@ class TypeScriptRenderer(LanguageRenderer):
         """Convert text to camelCase."""
 
         if not text:
-
             return text
 
         words = re.split(r"[-_\s]+", text.lower())
@@ -760,7 +720,6 @@ class TypeScriptRenderer(LanguageRenderer):
         """Convert text to PascalCase."""
 
         if not text:
-
             return text
 
         words = re.split(r"[-_\s]+", text.lower())
@@ -855,13 +814,11 @@ class TypeScriptRenderer(LanguageRenderer):
         # Ensure doesn't start with number
 
         if safe and safe[0].isdigit():
-
             safe = "_" + safe
 
         # Check for reserved words
 
         if safe.lower() in ts_reserved_words:
-
             safe = "_" + safe
 
         return safe or "_unnamed"
@@ -872,33 +829,27 @@ class TypeScriptRenderer(LanguageRenderer):
         # Handle different input types
 
         if isinstance(arg, dict):
-
             # Check if it's a property definition with optional field
 
             if "optional" in arg:
-
                 return "?" if arg["optional"] else ""
 
             # Check if it's an option definition with required field
 
             elif "required" in arg:
-
                 return "" if arg.get("required", True) else "?"
 
             else:
-
                 # Default to required
 
                 return ""
 
         elif hasattr(arg, "optional"):
-
             # Handle object with optional attribute
 
             return "?" if getattr(arg, "optional", False) else ""
 
         else:
-
             # For any other type, assume it's required
 
             return ""
@@ -918,13 +869,11 @@ class TypeScriptRenderer(LanguageRenderer):
         # Handle different input formats
 
         if isinstance(params, dict) and ("arguments" in params or "options" in params):
-
             # Command data structure with arguments and options
 
             # Add arguments as positional parameters
 
             for arg in params.get("arguments", []):
-
                 name = arg.get("name", "arg")
 
                 type_str = self._ts_type_filter(arg.get("type", "any"))
@@ -936,17 +885,14 @@ class TypeScriptRenderer(LanguageRenderer):
             # Add options as a typed object if there are any
 
             if params.get("options"):
-
                 param_strs.append(
                     "options?: any"
                 )  # Could be more specific based on option types
 
         elif isinstance(params, list):
-
             # Direct list of parameters
 
             for param in params:
-
                 name = param.get("name", "arg")
 
                 type_str = self._ts_type_filter(param.get("type", "any"))
@@ -967,13 +913,11 @@ class TypeScriptRenderer(LanguageRenderer):
         """Generate interface for global options."""
 
         if not options:
-
             return "interface GlobalOptions {}"
 
         properties = []
 
         for option in options:
-
             name = self._camel_case_filter(option.get("name", ""))
 
             type_str = self._ts_optional_filter(
@@ -990,9 +934,7 @@ class TypeScriptRenderer(LanguageRenderer):
         properties = ["  debug?: boolean;"]  # Always include debug option
 
         if "options" in cmd_data:
-
             for option in cmd_data["options"]:
-
                 name = self._camel_case_filter(option.get("name", ""))
 
                 type_str = self._ts_optional_filter(
@@ -1115,7 +1057,6 @@ class TypeScriptRenderer(LanguageRenderer):
         """
 
         if not isinstance(value, str):
-
             return str(value)
 
         # Only escape characters that would break JavaScript/TypeScript syntax

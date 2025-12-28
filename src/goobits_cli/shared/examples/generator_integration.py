@@ -1,18 +1,14 @@
 """Example of how language generators can integrate with shared documentation templates.
 
-
-
 This demonstrates how to modify existing language generators to use the shared
 
 documentation system instead of maintaining separate templates.
 
 """
 
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 # Import the shared documentation generator
-
 from goobits_cli.shared.components.doc_generator import DocumentationGenerator
 
 
@@ -20,7 +16,6 @@ class EnhancedPythonGenerator:
     """Example of how PythonGenerator can be enhanced with shared documentation."""
 
     def __init__(self, config: Dict[str, Any]):
-
         self.config = config
 
         self.doc_generator = DocumentationGenerator("python", config)
@@ -45,7 +40,6 @@ class EnhancedPythonGenerator:
         # Apply Python/Click specific formatting
 
         if self.doc_generator.get_language_config("click_style"):
-
             # Convert to Click-compatible docstring format
 
             return f'"""\n{help_text}\n"""'
@@ -60,7 +54,6 @@ class EnhancedPythonGenerator:
         # Generate error handlers for common cases
 
         for error_type in ["missing_dependency", "permission_error"]:
-
             template = self.doc_generator.generate_error_message(
                 error_type, dependency="{dependency}", package="{package}"
             )
@@ -74,7 +67,6 @@ class EnhancedNodeJSGenerator:
     """Example of how NodeJSGenerator can use shared documentation."""
 
     def __init__(self, config: Dict[str, Any]):
-
         self.config = config
 
         self.doc_generator = DocumentationGenerator("nodejs", config)
@@ -91,10 +83,9 @@ class EnhancedNodeJSGenerator:
             "engines": {
                 "node": f">={self.doc_generator.get_language_config('minimum_version')}"
             },
-            "dependencies": {
-                dep: "latest"
-                for dep in self.doc_generator.get_language_config("dependencies")
-            },
+            "dependencies": dict.fromkeys(
+                self.doc_generator.get_language_config("dependencies"), "latest"
+            ),
         }
 
     def generate_commander_help(
@@ -120,7 +111,6 @@ class EnhancedRustGenerator:
     """Example of how RustGenerator can leverage shared templates."""
 
     def __init__(self, config: Dict[str, Any]):
-
         self.config = config
 
         self.doc_generator = DocumentationGenerator("rust", config)
@@ -129,26 +119,19 @@ class EnhancedRustGenerator:
         """Generate help text for Cargo.toml documentation."""
 
         if self.doc_generator.supports_feature("cargo_features"):
-
             return self.doc_generator.generate_custom_section(
                 "cargo_features",
                 """
 
 ## Cargo Features
 
-
-
 This crate supports the following optional features:
-
-
 
 {% for feature, desc in cargo_features.items() %}
 
 - `{{ feature }}`: {{ desc }}
 
 {% endfor %}
-
-
 
 Enable features with: `cargo install {{ package_name }} --features feature1,feature2`
 
@@ -182,7 +165,6 @@ class SharedDocumentationDemo:
     """Demonstrates the benefits of using shared documentation templates."""
 
     def __init__(self):
-
         self.sample_config = {
             "display_name": "Multi-Language CLI",
             "package_name": "multi-cli",
@@ -218,21 +200,16 @@ class SharedDocumentationDemo:
         print("=== CONSISTENCY DEMONSTRATION ===\n")
 
         for language in languages:
-
             if language == "python":
-
                 generator = EnhancedPythonGenerator(self.sample_config)
 
             elif language == "nodejs":
-
                 generator = EnhancedNodeJSGenerator(self.sample_config)
 
             elif language == "rust":
-
                 generator = EnhancedRustGenerator(self.sample_config)
 
             else:
-
                 # Fallback to base generator
 
                 generator = DocumentationGenerator(language, self.sample_config)
@@ -242,7 +219,6 @@ class SharedDocumentationDemo:
             # Show README excerpt for each language
 
             if hasattr(generator, "generate_readme"):
-
                 readme = generator.generate_readme()
 
                 installation_section = self.extract_section(readme, "## Installation")
@@ -263,19 +239,15 @@ class SharedDocumentationDemo:
         section_lines = []
 
         for line in lines:
-
             if line.startswith(section_header):
-
                 in_section = True
 
                 section_lines.append(line)
 
             elif in_section and line.startswith("## "):
-
                 break
 
             elif in_section:
-
                 section_lines.append(line)
 
         return "\n".join(section_lines)
@@ -286,7 +258,6 @@ class SharedDocumentationDemo:
         print("=== CUSTOMIZATION DEMONSTRATION ===\n")
 
         for language in ["python", "nodejs", "rust"]:
-
             doc_gen = DocumentationGenerator(language, self.sample_config)
 
             print(f"--- {language.upper()} Customizations ---")
@@ -327,5 +298,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()

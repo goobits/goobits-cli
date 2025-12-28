@@ -189,7 +189,6 @@ class TestFixtures:
         languages = ["python", "nodejs", "typescript", "rust"]
 
         for language in languages:
-
             # Minimal configuration
 
             self.minimal_configs[language] = {
@@ -347,15 +346,11 @@ class TestFixtures:
     def get_config(self, complexity: str, language: str) -> Dict[str, Any]:
         """Get a test configuration by complexity and language.
 
-
-
         Args:
 
             complexity: 'minimal', 'basic', or 'complex'
 
             language: 'python', 'nodejs', 'typescript', or 'rust'
-
-
 
         Returns:
 
@@ -370,11 +365,9 @@ class TestFixtures:
         }
 
         if complexity not in config_map:
-
             raise ValueError(f"Unknown complexity: {complexity}")
 
         if language not in config_map[complexity]:
-
             raise ValueError(f"Unknown language: {language}")
 
         return config_map[complexity][language]
@@ -383,7 +376,6 @@ class TestFixtures:
         """Get a common command schema by name."""
 
         if command_name not in self.common_commands:
-
             raise ValueError(f"Unknown command: {command_name}")
 
         return self.common_commands[command_name]
@@ -392,7 +384,6 @@ class TestFixtures:
         """Get a common option schema by name."""
 
         if option_name not in self.common_options:
-
             raise ValueError(f"Unknown option: {option_name}")
 
         return self.common_options[option_name]
@@ -401,7 +392,6 @@ class TestFixtures:
         """Get a common argument schema by name."""
 
         if arg_name not in self.common_arguments:
-
             raise ValueError(f"Unknown argument: {arg_name}")
 
         return self.common_arguments[arg_name]
@@ -420,8 +410,6 @@ def create_test_config(
 ) -> GoobitsConfigSchema:
     """Create a test GoobitsConfigSchema with common defaults.
 
-
-
     Args:
 
         package_name: Package name for the CLI
@@ -431,8 +419,6 @@ def create_test_config(
         complexity: Configuration complexity ('minimal', 'basic', 'complex')
 
         custom_commands: Optional custom commands to include
-
-
 
     Returns:
 
@@ -449,7 +435,6 @@ def create_test_config(
     config_data["display_name"] = package_name.replace("-", " ").title()
 
     if custom_commands:
-
         config_data["cli"]["commands"].update(
             {name: cmd.model_dump() for name, cmd in custom_commands.items()}
         )
@@ -521,7 +506,6 @@ def get_error_scenario(scenario_name: str) -> Dict[str, Any]:
     """Get an error scenario for testing error conditions."""
 
     if scenario_name not in fixtures.error_scenarios:
-
         raise ValueError(f"Unknown error scenario: {scenario_name}")
 
     return fixtures.error_scenarios[scenario_name].copy()
@@ -531,11 +515,9 @@ def get_expected_patterns(category: str, language: str) -> List[str]:
     """Get expected output patterns for a category and language."""
 
     if category not in fixtures.expected_outputs:
-
         raise ValueError(f"Unknown pattern category: {category}")
 
     if language not in fixtures.expected_outputs[category]:
-
         raise ValueError(f"Unknown language for {category}: {language}")
 
     return fixtures.expected_outputs[category][language].copy()

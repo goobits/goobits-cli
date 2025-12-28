@@ -13,21 +13,22 @@ These tests simulate the complete user experience:
 - Verify output, stderr, and exit codes
 """
 
-import pytest
 import shutil
 import subprocess
+import sys
 import tempfile
 import venv
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.generation.builder import load_yaml_config, Builder
+from goobits_cli.core.schemas import ConfigSchema
+from goobits_cli.generation.builder import Builder, load_yaml_config
 from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
 from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
-from goobits_cli.core.schemas import ConfigSchema
 
 
 class TestCLIE2E:

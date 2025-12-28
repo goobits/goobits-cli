@@ -8,17 +8,14 @@ Validates that each language generates minimal files as per PROPOSAL_08_FILE_CON
 - Rust: 2 files (src/main.rs with inline modules, setup.sh)
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-from typing import Dict, Any
 
-from goobits_cli.universal.template_engine import UniversalTemplateEngine
-from goobits_cli.universal.renderers.python_renderer import PythonRenderer
-from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
-from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
-from goobits_cli.universal.renderers.rust_renderer import RustRenderer
 from goobits_cli.core.schemas import GoobitsConfigSchema
+from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
+from goobits_cli.universal.renderers.python_renderer import PythonRenderer
+from goobits_cli.universal.renderers.rust_renderer import RustRenderer
+from goobits_cli.universal.renderers.typescript_renderer import TypeScriptRenderer
+from goobits_cli.universal.template_engine import UniversalTemplateEngine
 
 
 class TestFileConsolidation:
@@ -72,7 +69,7 @@ class TestFileConsolidation:
 #!/usr/bin/env python3
 # Consolidated Python CLI with embedded utilities
 # Config Manager embedded
-# Error Handler embedded  
+# Error Handler embedded
 # Logger embedded
 import click
 # {{ cli.name }} - {{ cli.description }}
@@ -257,9 +254,9 @@ anyhow = "1"
         files = result.get("files", {})
 
         # Rust generates 4 files (main CLI, hooks, Cargo manifest, setup script)
-        assert (
-            len(files) == 4
-        ), f"Expected 4 files, got {len(files)}: {list(files.keys())}"
+        assert len(files) == 4, (
+            f"Expected 4 files, got {len(files)}: {list(files.keys())}"
+        )
 
         # Check for required files
         assert "src/cli.rs" in files, "Missing cli.rs"
@@ -302,9 +299,9 @@ anyhow = "1"
 
             # Assert NO README.md is generated
             assert "README.md" not in files, f"{lang} should NOT generate README.md"
-            assert not any(
-                "readme" in path.lower() for path in files.keys()
-            ), f"{lang} should not generate any readme files"
+            assert not any("readme" in path.lower() for path in files.keys()), (
+                f"{lang} should not generate any readme files"
+            )
 
     def test_no_auxiliary_files(self):
         """Ensure no auxiliary files like config.js, errors.js are generated."""
@@ -376,9 +373,9 @@ anyhow = "1"
             reduction = (old_count - new_count) / old_count * 100
 
             # Should achieve at least 60% reduction (conservative due to setup.sh)
-            assert (
-                reduction >= 60
-            ), f"{lang} should reduce files by at least 60%, got {reduction:.1f}%"
+            assert reduction >= 60, (
+                f"{lang} should reduce files by at least 60%, got {reduction:.1f}%"
+            )
 
             # Optimal reduction targets from proposal
             if lang == "python":

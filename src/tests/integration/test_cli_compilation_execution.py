@@ -17,10 +17,10 @@ from pathlib import Path
 import pytest
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.generation.renderers.python import PythonGenerator
 from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.generation.renderers.python import PythonGenerator
 from goobits_cli.generation.renderers.rust import RustGenerator
+from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
 
 # Timeout configurations for different operations
 QUICK_CHECK_TIMEOUT = 45  # Quick syntax/import checks (increased from 30s)
@@ -259,15 +259,15 @@ class TestPythonCLICompilation:
                 cwd=temp_dir,
             )
 
-            assert (
-                help_result.returncode == 0
-            ), f"Python CLI help failed: {help_result.stderr}"
-            assert (
-                "hello" in help_result.stdout.lower()
-            ), "Help should show hello command"
-            assert (
-                "config" in help_result.stdout.lower()
-            ), "Help should show config command"
+            assert help_result.returncode == 0, (
+                f"Python CLI help failed: {help_result.stderr}"
+            )
+            assert "hello" in help_result.stdout.lower(), (
+                "Help should show hello command"
+            )
+            assert "config" in help_result.stdout.lower(), (
+                "Help should show config command"
+            )
 
             print("✅ Python CLI execution with dependencies passed")
 
@@ -399,12 +399,12 @@ class TestNodeJSCLICompilation:
                 cwd=temp_dir,
             )
 
-            assert (
-                help_result.returncode == 0
-            ), f"Node.js CLI help failed: {help_result.stderr}"
-            assert (
-                "hello" in help_result.stdout.lower()
-            ), "Help should show hello command"
+            assert help_result.returncode == 0, (
+                f"Node.js CLI help failed: {help_result.stderr}"
+            )
+            assert "hello" in help_result.stdout.lower(), (
+                "Help should show hello command"
+            )
 
             print("✅ Node.js CLI execution with dependencies passed")
 
@@ -514,19 +514,19 @@ class TestCrossLanguageConsistency:
                         ):
                             cli_file = file_path
 
-                    assert (
-                        cli_file is not None
-                    ), f"No main CLI file found for {language}"
+                    assert cli_file is not None, (
+                        f"No main CLI file found for {language}"
+                    )
 
                     # Basic validation that file has expected structure
                     content = cli_file.read_text()
                     assert len(content) > 100, f"{language} CLI file is too short"
-                    assert (
-                        "hello" in content.lower()
-                    ), f"{language} CLI should contain hello command"
-                    assert (
-                        "config" in content.lower()
-                    ), f"{language} CLI should contain config command"
+                    assert "hello" in content.lower(), (
+                        f"{language} CLI should contain hello command"
+                    )
+                    assert "config" in content.lower(), (
+                        f"{language} CLI should contain config command"
+                    )
 
                     help_outputs[language] = "Generated successfully"
 
@@ -539,9 +539,9 @@ class TestCrossLanguageConsistency:
             for lang, result in help_outputs.items()
             if "Generated successfully" in result
         ]
-        assert (
-            len(successful) > 0
-        ), f"No languages generated successfully: {help_outputs}"
+        assert len(successful) > 0, (
+            f"No languages generated successfully: {help_outputs}"
+        )
 
         print(f"✅ Cross-language consistency test passed for: {', '.join(successful)}")
         if len(successful) < len(help_outputs):

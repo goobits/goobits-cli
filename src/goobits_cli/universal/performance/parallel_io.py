@@ -5,10 +5,10 @@ Provides concurrent file operations to improve performance by 30-50%
 """
 
 import asyncio
-from pathlib import Path
-from typing import List, Dict, Any, Tuple, Optional
-from concurrent.futures import ThreadPoolExecutor
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 # Try to import aiofiles, but work without it
 try:
@@ -162,7 +162,7 @@ class ParallelIOManager:
 
                 if AIOFILES_AVAILABLE:
                     # Read file asynchronously with aiofiles
-                    async with aiofiles.open(path, "r", encoding="utf-8") as f:
+                    async with aiofiles.open(path, encoding="utf-8") as f:
                         content = await f.read()
                 else:
                     # Fallback to thread pool executor

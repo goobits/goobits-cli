@@ -7,12 +7,12 @@ patterns as the subprocess cache system for consistency and reliability.
 """
 
 import json
-import time
-from typing import Dict, List, Optional, Any, TYPE_CHECKING
-from pathlib import Path
-from dataclasses import dataclass, asdict
-from threading import Lock
 import logging
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from threading import Lock
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 if TYPE_CHECKING:
     from .variable_store import VariableStore
@@ -383,7 +383,7 @@ class SessionManager:
 
         try:
             with self._lock:
-                with open(session_file, "r", encoding="utf-8") as f:
+                with open(session_file, encoding="utf-8") as f:
                     session_data = json.load(f)
 
                 # Validate session data
@@ -439,7 +439,7 @@ class SessionManager:
 
             for session_file in session_files:
                 try:
-                    with open(session_file, "r", encoding="utf-8") as f:
+                    with open(session_file, encoding="utf-8") as f:
                         session_data = json.load(f)
 
                     metadata = session_data.get("metadata", {})

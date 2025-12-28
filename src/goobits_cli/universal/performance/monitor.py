@@ -6,32 +6,19 @@ Provides benchmarking, profiling, and performance tracking
 
 """
 
+import cProfile
 import gc
-
-
-import psutil
-
-
+import pstats
 import threading
-
 import time
-
+import tracemalloc
 from collections import defaultdict, deque
-
 from contextlib import contextmanager
-
 from dataclasses import dataclass, field
-
-
+from io import StringIO
 from typing import Any, Dict, List, Optional
 
-import cProfile
-
-import pstats
-
-import tracemalloc
-
-from io import StringIO
+import psutil
 
 
 @dataclass
@@ -49,7 +36,6 @@ class PerformanceMetric:
     tags: Dict[str, str] = field(default_factory=dict)
 
     def __str__(self) -> str:
-
         tags_str = ", ".join(f"{k}={v}" for k, v in self.tags.items())
 
         return f"{self.name}: {self.value:.4f}{self.unit} [{tags_str}]"
@@ -85,16 +71,15 @@ class StartupMetrics:
         return (self.total_time * 1000) < target_ms
 
     def __str__(self) -> str:
-
         return (
             f"Startup Metrics:\n"
-            f"  Total: {self.total_time*1000:.2f}ms\n"
-            f"  Import: {self.import_time*1000:.2f}ms ({self.import_count} modules)\n"
-            f"  Init: {self.initialization_time*1000:.2f}ms\n"
-            f"  Components: {self.component_load_time*1000:.2f}ms ({self.component_count} loaded)\n"
-            f"  Templates: {self.template_load_time*1000:.2f}ms ({self.template_count} loaded)\n"
-            f"  Config: {self.config_load_time*1000:.2f}ms\n"
-            f"  Memory: {self.memory_usage/1024/1024:.2f}MB\n"
+            f"  Total: {self.total_time * 1000:.2f}ms\n"
+            f"  Import: {self.import_time * 1000:.2f}ms ({self.import_count} modules)\n"
+            f"  Init: {self.initialization_time * 1000:.2f}ms\n"
+            f"  Components: {self.component_load_time * 1000:.2f}ms ({self.component_count} loaded)\n"
+            f"  Templates: {self.template_load_time * 1000:.2f}ms ({self.template_count} loaded)\n"
+            f"  Config: {self.config_load_time * 1000:.2f}ms\n"
+            f"  Memory: {self.memory_usage / 1024 / 1024:.2f}MB\n"
             f"  Target: {'✓' if self.is_under_target() else '✗'} <100ms"
         )
 
@@ -103,7 +88,6 @@ class StartupBenchmark:
     """Benchmarks CLI startup performance"""
 
     def __init__(self):
-
         self.start_time: Optional[float] = None
 
         self.phases: Dict[str, float] = {}
@@ -137,7 +121,6 @@ class StartupBenchmark:
         self.original_import = __builtins__.__import__
 
         def tracking_import(name, *args, **kwargs):
-
             self.import_count += 1
 
             return self.original_import(name, *args, **kwargs)
@@ -153,11 +136,9 @@ class StartupBenchmark:
         self.phase_stack.append(name)
 
         try:
-
             yield
 
         finally:
-
             end_time = time.perf_counter()
 
             phase_time = end_time - start_time
@@ -180,7 +161,6 @@ class StartupBenchmark:
         """Finish benchmarking and return metrics"""
 
         if not self.start_time:
-
             raise RuntimeError("Benchmark not started")
 
         total_time = time.perf_counter() - self.start_time
@@ -188,7 +168,6 @@ class StartupBenchmark:
         # Restore original import
 
         if self.original_import:
-
             __builtins__.__import__ = self.original_import
 
         # Get memory usage
@@ -215,7 +194,6 @@ class MemoryTracker:
     """Tracks memory usage during CLI execution"""
 
     def __init__(self, sample_interval: float = 1.0):
-
         self.sample_interval = sample_interval
 
         self.samples: deque = deque(maxlen=1000)
@@ -232,7 +210,6 @@ class MemoryTracker:
         """Start memory tracking"""
 
         if self._tracking:
-
             return
 
         self.baseline_memory = psutil.Process().memory_info().rss
@@ -251,11 +228,9 @@ class MemoryTracker:
         self._tracking = False
 
         if self._tracking_thread:
-
             self._tracking_thread.join(timeout=1.0)
 
         if not self.samples:
-
             return {"error": "No samples collected"}
 
         memory_values = [sample[1] for sample in self.samples]
@@ -277,9 +252,7 @@ class MemoryTracker:
         process = psutil.Process()
 
         while self._tracking:
-
             try:
-
                 memory_info = process.memory_info()
 
                 current_memory = memory_info.rss
@@ -287,13 +260,11 @@ class MemoryTracker:
                 self.samples.append((time.time(), current_memory))
 
                 if current_memory > self.peak_memory:
-
                     self.peak_memory = current_memory
 
                 time.sleep(self.sample_interval)
 
             except Exception:
-
                 break
 
     @contextmanager
@@ -319,7 +290,6 @@ class CommandProfiler:
     """Profiles command execution for performance optimization"""
 
     def __init__(self):
-
         self.profiles: Dict[str, pstats.Stats] = {}
 
         self.execution_times: Dict[str, List[float]] = defaultdict(list)
@@ -335,11 +305,9 @@ class CommandProfiler:
         profiler.enable()
 
         try:
-
             yield
 
         finally:
-
             profiler.disable()
 
             execution_time = time.perf_counter() - start_time
@@ -353,18 +321,15 @@ class CommandProfiler:
             stats = pstats.Stats(profiler)
 
             if command_name in self.profiles:
-
                 self.profiles[command_name].add(stats)
 
             else:
-
                 self.profiles[command_name] = stats
 
     def get_command_stats(self, command_name: str) -> Optional[Dict[str, Any]]:
         """Get statistics for a command"""
 
         if command_name not in self.execution_times:
-
             return None
 
         times = self.execution_times[command_name]
@@ -378,7 +343,6 @@ class CommandProfiler:
         }
 
         if command_name in self.profiles:
-
             # Get top functions from profiler
 
             from contextlib import redirect_stdout
@@ -406,7 +370,6 @@ class PerformanceMonitor:
     """Main performance monitoring system"""
 
     def __init__(self):
-
         self.startup_benchmark = StartupBenchmark()
 
         self.memory_tracker = MemoryTracker()
@@ -438,11 +401,9 @@ class PerformanceMonitor:
         # Check for regression
 
         if name in self.baseline_metrics:
-
             baseline = self.baseline_metrics[name]
 
             if value > baseline * (1 + self.regression_threshold):
-
                 print(
                     f"⚠️  Performance regression detected in {name}: "
                     f"{value:.4f}{unit} vs baseline {baseline:.4f}{unit}"
@@ -459,11 +420,9 @@ class PerformanceMonitor:
         start_memory = psutil.Process().memory_info().rss
 
         try:
-
             yield
 
         finally:
-
             end_time = time.perf_counter()
 
             end_memory = psutil.Process().memory_info().rss
@@ -475,7 +434,6 @@ class PerformanceMonitor:
             self.record_metric(f"{operation_name}_time", execution_time, "s", tags)
 
             if memory_increase > 0:
-
                 self.record_metric(
                     f"{operation_name}_memory",
                     memory_increase / 1024 / 1024,
@@ -507,13 +465,10 @@ class PerformanceMonitor:
         regressions = []
 
         for metric_name, new_value in new_metrics.items():
-
             if metric_name in self.baseline_metrics:
-
                 baseline = self.baseline_metrics[metric_name]
 
                 if new_value > baseline * (1 + self.regression_threshold):
-
                     regression_pct = ((new_value - baseline) / baseline) * 100
 
                     regressions.append(
@@ -541,7 +496,6 @@ class PerformanceMonitor:
             hasattr(self.startup_benchmark, "start_time")
             and self.startup_benchmark.start_time
         ):
-
             startup_metrics = self.startup_benchmark.finish()
 
             report.append("Startup Performance:")
@@ -555,7 +509,6 @@ class PerformanceMonitor:
         memory_stats = self.memory_tracker.stop()
 
         if "error" not in memory_stats:
-
             report.append("Memory Usage:")
 
             report.append(f"  Peak: {memory_stats['peak_mb']:.2f}MB")
@@ -573,19 +526,17 @@ class PerformanceMonitor:
         command_stats = self.command_profiler.get_all_stats()
 
         if command_stats:
-
             report.append("Command Performance:")
 
             for cmd_name, stats in command_stats.items():
-
                 report.append(f"  {cmd_name}:")
 
                 report.append(f"    Executions: {stats['execution_count']}")
 
-                report.append(f"    Avg Time: {stats['avg_time']*1000:.2f}ms")
+                report.append(f"    Avg Time: {stats['avg_time'] * 1000:.2f}ms")
 
                 report.append(
-                    f"    Min/Max: {stats['min_time']*1000:.2f}ms / {stats['max_time']*1000:.2f}ms"
+                    f"    Min/Max: {stats['min_time'] * 1000:.2f}ms / {stats['max_time'] * 1000:.2f}ms"
                 )
 
             report.append("")
@@ -593,11 +544,9 @@ class PerformanceMonitor:
         # Recent metrics
 
         if self.metrics:
-
             report.append("Recent Metrics:")
 
             for metric in self.metrics[-10:]:  # Last 10 metrics
-
                 report.append(f"  {metric}")
 
             report.append("")
@@ -605,7 +554,6 @@ class PerformanceMonitor:
         # Regression analysis
 
         if self.baseline_metrics:
-
             current_metrics = {
                 metric.name: metric.value
                 for metric in self.metrics[-len(self.baseline_metrics) :]
@@ -615,11 +563,9 @@ class PerformanceMonitor:
             regressions = self.detect_regressions(current_metrics)
 
             if regressions:
-
                 report.append("⚠️  Performance Regressions Detected:")
 
                 for regression in regressions:
-
                     report.append(f"  {regression}")
 
                 report.append("")
@@ -654,7 +600,6 @@ class PerformanceMonitor:
         memory_stats = self.memory_tracker.stop()
 
         if "error" not in memory_stats:
-
             session_metrics.update(
                 {
                     "memory_peak_mb": memory_stats.get("peak_mb", 0),
@@ -675,7 +620,6 @@ class PerformanceMonitor:
         metric_groups = defaultdict(list)
 
         for metric in recent_metrics:
-
             metric_groups[metric.name].append(
                 {
                     "value": metric.value,
@@ -703,7 +647,6 @@ class PerformanceOptimizer:
     """Automated performance optimization suggestions"""
 
     def __init__(self, monitor: PerformanceMonitor):
-
         self.monitor = monitor
 
     def analyze_startup_performance(self, metrics: StartupMetrics) -> List[str]:
@@ -712,36 +655,31 @@ class PerformanceOptimizer:
         suggestions = []
 
         if not metrics.is_under_target():
-
             suggestions.append(
-                f"Startup time ({metrics.total_time*1000:.2f}ms) exceeds 100ms target"
+                f"Startup time ({metrics.total_time * 1000:.2f}ms) exceeds 100ms target"
             )
 
             if metrics.import_time > 0.05:  # 50ms
-
                 suggestions.append(
-                    f"Import time is high ({metrics.import_time*1000:.2f}ms). "
+                    f"Import time is high ({metrics.import_time * 1000:.2f}ms). "
                     "Consider lazy imports or reducing import count."
                 )
 
             if metrics.component_load_time > 0.02:  # 20ms
-
                 suggestions.append(
-                    f"Component loading is slow ({metrics.component_load_time*1000:.2f}ms). "
+                    f"Component loading is slow ({metrics.component_load_time * 1000:.2f}ms). "
                     "Consider lazy loading components."
                 )
 
             if metrics.template_load_time > 0.02:  # 20ms
-
                 suggestions.append(
-                    f"Template loading is slow ({metrics.template_load_time*1000:.2f}ms). "
+                    f"Template loading is slow ({metrics.template_load_time * 1000:.2f}ms). "
                     "Consider template caching or lazy loading."
                 )
 
         if metrics.memory_usage > 50 * 1024 * 1024:  # 50MB
-
             suggestions.append(
-                f"Memory usage is high ({metrics.memory_usage/1024/1024:.2f}MB). "
+                f"Memory usage is high ({metrics.memory_usage / 1024 / 1024:.2f}MB). "
                 "Consider memory optimization."
             )
 
@@ -755,19 +693,16 @@ class PerformanceOptimizer:
         suggestions = []
 
         for cmd_name, cmd_stats in stats.items():
-
             if cmd_stats["avg_time"] > 1.0:  # 1 second
-
                 suggestions.append(
-                    f"Command '{cmd_name}' is slow (avg: {cmd_stats['avg_time']*1000:.2f}ms). "
+                    f"Command '{cmd_name}' is slow (avg: {cmd_stats['avg_time'] * 1000:.2f}ms). "
                     "Consider optimization or async execution."
                 )
 
             if cmd_stats["max_time"] > cmd_stats["avg_time"] * 3:
-
                 suggestions.append(
                     f"Command '{cmd_name}' has inconsistent performance. "
-                    f"Max time ({cmd_stats['max_time']*1000:.2f}ms) is much higher than average."
+                    f"Max time ({cmd_stats['max_time'] * 1000:.2f}ms) is much higher than average."
                 )
 
         return suggestions

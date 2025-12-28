@@ -1,18 +1,19 @@
 """Unit tests for builder.py module."""
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
+
+import pytest
 from click.exceptions import Exit
 
-from goobits_cli.generation.builder import load_yaml_config, Builder
 from goobits_cli.core.schemas import (
-    ConfigSchema,
+    ArgumentSchema,
     CLISchema,
     CommandSchema,
-    ArgumentSchema,
+    ConfigSchema,
     OptionSchema,
 )
+from goobits_cli.generation.builder import Builder, load_yaml_config
 
 
 class TestBuilder:

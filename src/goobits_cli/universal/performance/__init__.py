@@ -6,14 +6,10 @@ Provides lazy loading, caching, and performance monitoring
 
 """
 
+from .cache import ComponentCache, TemplateCache
 from .lazy_loader import LazyLoader, LoadingStrategy
-
-from .monitor import PerformanceMonitor, StartupBenchmark, MemoryTracker
-
-from .cache import TemplateCache, ComponentCache
-
+from .monitor import MemoryTracker, PerformanceMonitor, StartupBenchmark
 from .optimizer import CLIOptimizer
-
 
 __all__ = [
     "LazyLoader",

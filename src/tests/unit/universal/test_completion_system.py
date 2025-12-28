@@ -15,27 +15,28 @@ Test suite for the dynamic completion system.
 Tests the DynamicCompletionRegistry, providers, and integration components.
 """
 
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from goobits_cli.universal.completion.registry import (
-    DynamicCompletionRegistry,
-    CompletionProvider,
-    CompletionContext,
-    get_completion_registry,
-)
-from goobits_cli.universal.completion.providers import (
-    FilePathCompletionProvider,
-    EnvironmentVariableProvider,
-    ConfigKeyProvider,
-    HistoryProvider,
-    setup_default_providers,
-)
+import pytest
+
 from goobits_cli.universal.completion.integration import (
     InteractiveCompletionIntegrator,
     setup_completion_for_language,
+)
+from goobits_cli.universal.completion.providers import (
+    ConfigKeyProvider,
+    EnvironmentVariableProvider,
+    FilePathCompletionProvider,
+    HistoryProvider,
+    setup_default_providers,
+)
+from goobits_cli.universal.completion.registry import (
+    CompletionContext,
+    CompletionProvider,
+    DynamicCompletionRegistry,
+    get_completion_registry,
 )
 
 
@@ -338,7 +339,6 @@ class TestInteractiveCompletionIntegrator:
             "get_completions",
             AsyncMock(return_value=["test1", "test2"]),
         ):
-
             completions = await self.integrator.get_completions_for_interactive(
                 "test input"
             )

@@ -9,12 +9,13 @@ This package contains:
 """
 
 import json
-import tomllib
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Optional, Union, Dict, Any
+from typing import Any, Dict, List, Optional, Union
 
-from ..core.schemas import GoobitsConfigSchema, ConfigSchema
+import tomllib
+
+from ..core.schemas import ConfigSchema, GoobitsConfigSchema
 
 
 class BaseGenerator(ABC):
@@ -31,8 +32,6 @@ class BaseGenerator(ABC):
 
         Generate CLI code for the target language.
 
-
-
         Args:
 
             config: The configuration object (ConfigSchema or GoobitsConfigSchema)
@@ -40,8 +39,6 @@ class BaseGenerator(ABC):
             config_filename: Name of the configuration file (e.g., "goobits.yaml")
 
             version: Optional version string to embed in generated code
-
-
 
         Returns:
 
@@ -57,8 +54,6 @@ class BaseGenerator(ABC):
 
         Return list of files this generator creates.
 
-
-
         Returns:
 
             List of file paths relative to the output directory
@@ -73,13 +68,9 @@ class BaseGenerator(ABC):
 
         Get the default output path for the generated CLI file.
 
-
-
         Args:
 
             package_name: The package name
-
-
 
         Returns:
 
@@ -124,13 +115,9 @@ class BaseGenerator(ABC):
 
         Extract metadata from configuration object.
 
-
-
         Args:
 
             config: The configuration object
-
-
 
         Returns:
 
@@ -139,7 +126,6 @@ class BaseGenerator(ABC):
         """
 
         if hasattr(config, "package_name"):  # GoobitsConfigSchema
-
             return {
                 "cli_config": config.cli,
                 "package_name": config.package_name,
@@ -158,7 +144,6 @@ class BaseGenerator(ABC):
             }
 
         else:  # ConfigSchema
-
             cli = config.cli
 
             return {
@@ -204,7 +189,7 @@ class BaseGenerator(ABC):
                 # Read from package.json
                 package_json = project_path / "package.json"
                 if package_json.exists():
-                    with open(package_json, "r") as f:
+                    with open(package_json) as f:
                         data = json.load(f)
                         return data.get("version")
 
@@ -367,14 +352,14 @@ def _safe_to_dict(obj: Any) -> Dict[str, Any]:
         return obj
 
     # Try Pydantic v2 model_dump() first
-    if hasattr(obj, "model_dump") and callable(getattr(obj, "model_dump")):
+    if hasattr(obj, "model_dump") and callable(obj.model_dump):
         try:
             return obj.model_dump()
         except Exception:
             pass
 
     # Try Pydantic v1 dict() method
-    if hasattr(obj, "dict") and callable(getattr(obj, "dict")):
+    if hasattr(obj, "dict") and callable(obj.dict):
         try:
             return obj.dict()
         except Exception:
@@ -392,13 +377,13 @@ def _safe_to_dict(obj: Any) -> Dict[str, Any]:
 
 
 # Import renderers after defining base classes to avoid circular imports
+from .builder import Builder, generate_cli_code, load_yaml_config
 from .renderers import (
-    PythonGenerator,
     NodeJSGenerator,
-    TypeScriptGenerator,
+    PythonGenerator,
     RustGenerator,
+    TypeScriptGenerator,
 )
-from .builder import Builder, load_yaml_config, generate_cli_code
 
 __all__ = [
     # Base classes

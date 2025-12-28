@@ -17,7 +17,7 @@ import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
 import jinja2
 
@@ -25,7 +25,6 @@ try:
     from ... import __version__ as _version
 except ImportError:
     _version = "3.0.0"  # Fallback version
-
 
 from ..template_engine import LanguageRenderer
 
@@ -112,7 +111,6 @@ class PythonRenderer(LanguageRenderer):
         # Ensure core fields have defensive defaults
 
         if "project" in context:
-
             context["project"] = {
                 "name": context["project"].get("name", "Unknown CLI"),
                 "description": context["project"].get(
@@ -188,29 +186,24 @@ class PythonRenderer(LanguageRenderer):
         # Ensure CLI field has defensive defaults
 
         if "cli" not in context:
-
             context["cli"] = {}
 
         # Add defensive defaults for CLI options
 
         if "options" not in context["cli"]:
-
             context["cli"]["options"] = []
 
         # Ensure root_command structure exists with defensive defaults
 
         if "root_command" not in context["cli"]:
-
             context["cli"]["root_command"] = {}
 
         if "subcommands" not in context["cli"]["root_command"]:
-
             context["cli"]["root_command"]["subcommands"] = []
 
         # Transform CLI structure for Python/Click
 
         if "cli" in context:
-
             context["cli"] = self._transform_cli_for_python(context["cli"])
 
             # Ensure command_hierarchy is present in CLI section for template compatibility
@@ -225,7 +218,6 @@ class PythonRenderer(LanguageRenderer):
         # Ensure command_hierarchy is present for template compatibility
 
         if "command_hierarchy" not in context:
-
             context["command_hierarchy"] = {
                 "groups": [],
                 "leaves": [],
@@ -399,7 +391,7 @@ setup(
     }},
     install_requires=[
         "click",
-        "rich-click", 
+        "rich-click",
     ],
 )
 """
@@ -599,21 +591,17 @@ setup(
         cli_schema = ir.get("cli", {})
 
         if self._has_config_features(cli_schema):
-
             imports.append("import json")
 
             imports.append("import configparser")
 
         if self._has_async_features(cli_schema):
-
             imports.append("import asyncio")
 
         if self._has_completion_features(cli_schema):
-
             imports.append("import subprocess")
 
         if self._has_interactive_features(cli_schema):
-
             imports.append("import cmd")
 
             imports.append("import shlex")
@@ -647,7 +635,6 @@ setup(
         # Transform root command
 
         if "root_command" in transformed:
-
             transformed["root_command"] = self._transform_command_for_python(
                 transformed["root_command"]
             )
@@ -655,11 +642,9 @@ setup(
         # Transform all commands
 
         if "commands" in transformed:
-
             transformed_commands = {}
 
             for cmd_name, cmd_data in transformed["commands"].items():
-
                 transformed_commands[cmd_name] = self._transform_command_for_python(
                     cmd_data
                 )
@@ -682,7 +667,6 @@ setup(
         # Transform arguments
 
         if "arguments" in transformed:
-
             transformed["arguments"] = [
                 self._transform_argument_for_python(arg)
                 for arg in transformed["arguments"]
@@ -691,7 +675,6 @@ setup(
         # Transform options
 
         if "options" in transformed:
-
             transformed["options"] = [
                 self._transform_option_for_python(opt) for opt in transformed["options"]
             ]
@@ -699,7 +682,6 @@ setup(
         # Transform subcommands recursively
 
         if "subcommands" in transformed:
-
             # Handle both list and dict formats for subcommands
             if isinstance(transformed["subcommands"], list):
                 transformed["subcommands"] = [
@@ -833,13 +815,10 @@ setup(
         processed_lines = []
 
         for line in lines:
-
             if line.strip():  # Non-empty line
-
                 processed_lines.append(line.rstrip())  # Remove trailing whitespace
 
             else:  # Empty line
-
                 processed_lines.append("")
 
         return "\n".join(processed_lines)
@@ -872,11 +851,9 @@ setup(
         """Generate Click decorator for option or argument."""
 
         if option_or_arg.get("type") == "argument":
-
             return self._click_argument_filter(option_or_arg)
 
         else:
-
             return self._click_option_filter(option_or_arg)
 
     def _click_argument_filter(self, argument: Dict[str, Any]) -> str:
@@ -891,13 +868,11 @@ setup(
         # Handle multiple values
 
         if argument.get("multiple", False):
-
             parts.append("nargs=-1")
 
         # Handle required
 
         if not argument.get("required", True):
-
             parts.append("required=False")
 
         # Handle type
@@ -905,11 +880,9 @@ setup(
         arg_type = argument.get("type", "string")
 
         if arg_type != "string":
-
             click_type = self._python_type_filter(arg_type)
 
             if click_type != "str":
-
                 parts.append(f"type={click_type}")
 
         decorator_args = ", ".join(parts)
@@ -928,7 +901,6 @@ setup(
         option_names = [f'"--{name}"']
 
         if short:
-
             option_names.insert(0, f'"-{short}"')
 
         parts = [", ".join(option_names)]
@@ -936,7 +908,6 @@ setup(
         # Add help text
 
         if "description" in option:
-
             parts.append(f'help="{option["description"]}"')
 
         # Handle type
@@ -944,21 +915,17 @@ setup(
         opt_type = option.get("type", "string")
 
         if opt_type == "flag" or opt_type == "boolean" or opt_type == "bool":
-
             parts.append("is_flag=True")
 
         elif opt_type != "string":
-
             click_type = self._python_type_filter(opt_type)
 
             if click_type != "str":
-
                 parts.append(f"type={click_type}")
 
         # Handle default value
 
         if "default" in option and option["default"] is not None:
-
             default_repr = self._python_repr_filter(option["default"])
 
             parts.append(f"default={default_repr}")
@@ -966,13 +933,11 @@ setup(
         # Handle multiple
 
         if option.get("multiple", False):
-
             parts.append("multiple=True")
 
         # Handle required
 
         if option.get("required", False):
-
             parts.append("required=True")
 
         decorator_args = ",\n    ".join(parts)
@@ -1011,7 +976,6 @@ setup(
         """Format text as Python docstring."""
 
         if not text:
-
             return '""""""'
 
         # Clean up the text
@@ -1021,11 +985,9 @@ setup(
         # Use triple quotes for multi-line docstrings
 
         if "\n" in text:
-
             return f'"""\n    {text}\n    """'
 
         else:
-
             return f'"""{text}"""'
 
     def _js_string_filter(self, value: str) -> str:
@@ -1042,7 +1004,6 @@ setup(
         """
 
         if not isinstance(value, str):
-
             return str(value)
 
         # Only escape characters that would break JavaScript syntax

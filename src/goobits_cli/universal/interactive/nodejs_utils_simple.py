@@ -2,8 +2,6 @@
 
 Node.js Interactive Mode Utilities (Simplified)
 
-
-
 This module provides Node.js-specific utilities for enhanced interactive mode features,
 
 including async command handling, Node.js-specific error formatting, history management,
@@ -12,7 +10,7 @@ and tab completion for npm packages and Node.js modules.
 
 """
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 
 class NodeJSInteractiveUtils:
@@ -61,13 +59,9 @@ class NodeJSInteractiveUtils:
 
         if (!trimmed) return false;
 
-        
-
         this.addToHistory(trimmed);
 
         const [cmd, ...args] = this.parseCommandLine(trimmed);
-
-        
 
         if (this.commands[cmd]) {
 
@@ -81,7 +75,7 @@ class NodeJSInteractiveUtils:
 
                     command.handler(args),
 
-                    new Promise((_, reject) => 
+                    new Promise((_, reject) =>
 
                         setTimeout(() => reject(new Error('Command timeout')), timeoutMs)
 
@@ -157,8 +151,6 @@ class NodeJSInteractiveUtils:
 
         let historyDir;
 
-        
-
         if (process.platform === 'win32') {
 
             historyDir = path.join(process.env.APPDATA || homeDir, this.projectName);
@@ -173,11 +165,7 @@ class NodeJSInteractiveUtils:
 
         }
 
-        
-
         this.historyFile = path.join(historyDir, 'interactive_history');
-
-        
 
         try {
 
@@ -188,8 +176,6 @@ class NodeJSInteractiveUtils:
             // Ignore if directory already exists
 
         }
-
-        
 
         this.loadHistory();
 
@@ -211,25 +197,21 @@ class NodeJSInteractiveUtils:
 
         this.nodeModules = [];
 
-        
-
         this.loadNpmPackages();
 
         this.loadNodeModules();
 
     }
 
-    
-
     async loadNpmPackages() {
 
         try {
 
-            const result = execSync('npm list -g --depth=0 --json', { 
+            const result = execSync('npm list -g --depth=0 --json', {
 
-                encoding: 'utf8', 
+                encoding: 'utf8',
 
-                timeout: 5000 
+                timeout: 5000
 
             });
 
@@ -248,8 +230,6 @@ class NodeJSInteractiveUtils:
         }
 
     }
-
-    
 
     loadNodeModules() {
 
@@ -295,7 +275,7 @@ class NodeJSInteractiveUtils:
                     console, require, process, Buffer, setTimeout, clearTimeout,
                     setInterval, clearInterval, setImmediate, clearImmediate
                 });
-                
+
                 const result = vm.runInContext(jsCode, context, {
                     timeout: 5000, // 5 second timeout
                     displayErrors: true
@@ -322,8 +302,6 @@ class NodeJSInteractiveUtils:
         return null;
 
     }
-
-    
 
     setupReplCommands() {
 
@@ -361,15 +339,11 @@ class NodeJSInteractiveUtils:
 
     }
 
-    
-
     setupProcessMonitoring() {
 
         this.childProcesses = new Set();
 
     }
-
-    
 
     setupModuleReloading() {
 
@@ -400,8 +374,6 @@ class NodeJSInteractiveUtils:
         };
 
     }
-
-    
 
     setupEnvironmentManagement() {
 
@@ -447,8 +419,6 @@ class NodeJSInteractiveUtils:
 
  */
 
-
-
 const readline = require('readline');
 
 const chalk = require('chalk');
@@ -460,8 +430,6 @@ const path = require('path');
 const os = require('os');
 
 const { spawn, execSync } = require('child_process');
-
-
 
 // Import hooks dynamically
 
@@ -487,8 +455,6 @@ try {
 
 }
 
-
-
 class {{ project.name | replace('-', '') | title }}Interactive {
 
     constructor() {
@@ -499,8 +465,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         this.hooks = hooks;
 
-        
-
         this.rl = readline.createInterface({
 
             input: process.stdin,
@@ -510,8 +474,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
             prompt: chalk.bold.cyan('{{ cli.root_command.name }}> ')
 
         });
-
-        
 
         this.commands = {
 
@@ -539,7 +501,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             'exit': {
 
-                description: 'Exit interactive mode', 
+                description: 'Exit interactive mode',
 
                 handler: this.handleExit.bind(this)
 
@@ -555,15 +517,11 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         };
 
-        
-
         // Setup basic features
 
         this.setupBasicFeatures();
 
     }
-
-    
 
     setupBasicFeatures() {
 
@@ -585,8 +543,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     start() {
 
         console.log(chalk.bold.green('Welcome to {{ project.name }} interactive mode!'));
@@ -595,11 +551,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         console.log(chalk.dim("Type 'help' for commands, 'exit' to quit.\\n"));
 
-        
-
         this.rl.prompt();
-
-        
 
         this.rl.on('line', async (line) => {
 
@@ -613,8 +565,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             }
 
-            
-
             // Check for expression evaluation first
 
             const expressionResult = await this.evaluateExpression(trimmed);
@@ -627,8 +577,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             }
 
-            
-
             // Execute command
 
             const shouldExit = await this.executeCommand(trimmed);
@@ -639,13 +587,9 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
             }
 
-            
-
             this.rl.prompt();
 
         });
-
-        
 
         this.rl.on('close', () => {
 
@@ -657,21 +601,15 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     async executeCommand(line) {
 
         const trimmed = line.trim();
 
         if (!trimmed) return false;
 
-        
-
         this.addToHistory(trimmed);
 
         const [cmd, ...args] = this.parseCommandLine(trimmed);
-
-        
 
         if (this.commands[cmd]) {
 
@@ -703,8 +641,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     formatError(error) {
 
         if (error.code === 'MODULE_NOT_FOUND') {
@@ -723,8 +659,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     parseCommandLine(line) {
 
         // Simple command line parsing
@@ -732,8 +666,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         return line.trim().split(/\\s+/);
 
     }
-
-    
 
     addToHistory(line) {
 
@@ -746,8 +678,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
         }
 
     }
-
-    
 
     async evaluateExpression(expression) {
 
@@ -763,7 +693,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
                     console, require, process, Buffer, setTimeout, clearTimeout,
                     setInterval, clearInterval, setImmediate, clearImmediate
                 });
-                
+
                 const result = vm.runInContext(jsCode, context, {
                     timeout: 5000, // 5 second timeout
                     displayErrors: true
@@ -791,19 +721,13 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     // Built-in command handlers
-
-    
 
     handleHelp(args) {
 
         console.log(chalk.bold('\\nAvailable commands:'));
 
         const maxLen = Math.max(...Object.keys(this.commands).map(cmd => cmd.length));
-
-        
 
         Object.entries(this.commands).forEach(([cmd, info]) => {
 
@@ -813,21 +737,15 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
         });
 
-        
-
         console.log(chalk.dim('\\nEnhanced features:'));
 
         console.log(chalk.dim('  js <expression>     Evaluate JavaScript'));
 
         console.log();
 
-        
-
         return false;
 
     }
-
-    
 
     handleExit(args) {
 
@@ -837,8 +755,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-    
-
     handleClear(args) {
 
         console.clear();
@@ -847,11 +763,7 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
     }
 
-
-
 {% for command in cli.root_command.subcommands %}
-
-    
 
     async handle{{ command.name | replace('-', '') | title }}(args) {
 
@@ -885,8 +797,6 @@ class {{ project.name | replace('-', '') | title }}Interactive {
 
 }
 
-
-
 function runInteractive() {
 
     const interactive = new {{ project.name | replace('-', '') | title }}Interactive();
@@ -895,11 +805,7 @@ function runInteractive() {
 
 }
 
-
-
 module.exports = { runInteractive };
-
-
 
 if (require.main === module) {
 
@@ -926,8 +832,6 @@ def get_nodejs_interactive_tests() -> str:
 
 const { spawn } = require('child_process');
 
-
-
 class InteractiveModeTester {
 
     constructor(cliCommand) {
@@ -936,21 +840,15 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async testAsyncCommandExecution() {
 
         console.log('Testing async command execution...');
-
-        
 
         const child = spawn(this.cliCommand, ['interactive'], {
 
             stdio: ['pipe', 'pipe', 'pipe']
 
         });
-
-        
 
         let output = '';
 
@@ -960,21 +858,17 @@ class InteractiveModeTester {
 
         });
 
-        
-
         child.stdin.write('help\\n');
 
         child.stdin.write('js: Promise.resolve("test")\\n');
 
         child.stdin.write('exit\\n');
 
-        
-
         return new Promise((resolve) => {
 
             child.on('close', () => {
 
-                const success = output.includes('Available commands') && 
+                const success = output.includes('Available commands') &&
 
                                output.includes('"test"');
 
@@ -986,15 +880,11 @@ class InteractiveModeTester {
 
     }
 
-    
-
     async runAllTests() {
 
         const tests = [this.testAsyncCommandExecution.bind(this)];
 
         const results = [];
-
-        
 
         for (const test of tests) {
 
@@ -1016,15 +906,11 @@ class InteractiveModeTester {
 
         }
 
-        
-
         return results;
 
     }
 
 }
-
-
 
 module.exports = InteractiveModeTester;
 

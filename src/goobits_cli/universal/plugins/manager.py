@@ -2,38 +2,23 @@
 
 Plugin Manager for Goobits CLI Framework.
 
-
-
 Provides secure plugin installation, management, and execution with
 
 marketplace integration and cross-language support.
 
 """
 
-import sys
-
 import json
-
-import shutil
-
-
-import subprocess
-
-from pathlib import Path
-
-from dataclasses import dataclass, field
-
-from typing import List, Dict, Any, Optional, Set
-
-from enum import Enum
-
 import logging
-
-
-from urllib.parse import urlparse
-
+import shutil
+import subprocess
+import sys
+from dataclasses import dataclass, field
 from datetime import datetime
-
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -193,36 +178,28 @@ class PluginInfo:
         # Handle enums
 
         if "plugin_type" in data:
-
             info.plugin_type = PluginType(data["plugin_type"])
 
         if "status" in data:
-
             info.status = PluginStatus(data["status"])
 
         # Handle optional fields
 
         for field_name, field_value in data.items():
-
             if hasattr(info, field_name) and field_name not in [
                 "plugin_type",
                 "status",
             ]:
-
                 if field_name == "install_path" and field_value:
-
                     setattr(info, field_name, Path(field_value))
 
                 elif field_name in ["supported_languages", "supported_platforms"]:
-
                     setattr(info, field_name, set(field_value))
 
                 elif field_name in ["install_date", "last_updated"] and field_value:
-
                     setattr(info, field_name, datetime.fromisoformat(field_value))
 
                 else:
-
                     setattr(info, field_name, field_value)
 
         return info
@@ -244,28 +221,22 @@ class PluginRegistry:
         """Load plugin registry from file."""
 
         try:
-
             if self.registry_file.exists():
-
                 with open(self.registry_file) as f:
-
                     data = json.load(f)
 
                 for plugin_data in data.get("plugins", []):
-
                     plugin = PluginInfo.from_dict(plugin_data)
 
                     self._plugins[plugin.name] = plugin
 
         except Exception as e:
-
             logger.error(f"Error loading plugin registry: {e}")
 
     def _save_registry(self) -> None:
         """Save plugin registry to file."""
 
         try:
-
             self.registry_file.parent.mkdir(parents=True, exist_ok=True)
 
             data = {
@@ -274,11 +245,9 @@ class PluginRegistry:
             }
 
             with open(self.registry_file, "w") as f:
-
                 json.dump(data, f, indent=2)
 
         except Exception as e:
-
             logger.error(f"Error saving plugin registry: {e}")
 
     def add_plugin(self, plugin: PluginInfo) -> None:
@@ -292,7 +261,6 @@ class PluginRegistry:
         """Remove plugin from registry."""
 
         if name in self._plugins:
-
             del self._plugins[name]
 
             self._save_registry()
@@ -312,7 +280,6 @@ class PluginRegistry:
         plugins = list(self._plugins.values())
 
         if status:
-
             plugins = [p for p in plugins if p.status == status]
 
         return sorted(plugins, key=self._get_plugin_name)
@@ -325,13 +292,11 @@ class PluginRegistry:
         results = []
 
         for plugin in self._plugins.values():
-
             if (
                 query in plugin.name.lower()
                 or query in plugin.description.lower()
                 or any(query in tag.lower() for tag in plugin.tags)
             ):
-
                 results.append(plugin)
 
         return sorted(results, key=self._get_plugin_name)
@@ -345,8 +310,6 @@ class PluginManager:
     """
 
     Secure plugin manager with marketplace integration.
-
-
 
     Features:
 
@@ -370,11 +333,9 @@ class PluginManager:
         # Default plugins directory
 
         if plugins_dir is None:
-
             self.plugins_dir = Path.home() / ".goobits" / "plugins"
 
         else:
-
             self.plugins_dir = plugins_dir
 
         self.plugins_dir.mkdir(parents=True, exist_ok=True)
@@ -418,8 +379,6 @@ class PluginManager:
 
         Install a plugin from various sources.
 
-
-
         Args:
 
             source: Plugin source (URL, local path, or name for marketplace)
@@ -428,8 +387,6 @@ class PluginManager:
 
             verify_checksum: Verify plugin integrity
 
-
-
         Returns:
 
             True if installation successful
@@ -437,7 +394,6 @@ class PluginManager:
         """
 
         try:
-
             logger.info(f"Installing plugin from: {source}")
 
             # Determine source type and get plugin info
@@ -445,7 +401,6 @@ class PluginManager:
             plugin_info = await self._resolve_plugin_source(source)
 
             if not plugin_info:
-
                 logger.error(f"Could not resolve plugin source: {source}")
 
                 return False
@@ -455,7 +410,6 @@ class PluginManager:
             existing = self.registry.get_plugin(plugin_info.name)
 
             if existing and existing.status == PluginStatus.INSTALLED and not force:
-
                 logger.info(f"Plugin {plugin_info.name} already installed")
 
                 return True
@@ -463,7 +417,6 @@ class PluginManager:
             # Security validation
 
             if not await self._validate_plugin_security(plugin_info):
-
                 logger.error(f"Plugin {plugin_info.name} failed security validation")
 
                 return False
@@ -473,13 +426,11 @@ class PluginManager:
             plugin_dir = await self._download_and_extract(plugin_info)
 
             if not plugin_dir:
-
                 return False
 
             # Install language-specific dependencies
 
             if not await self._install_dependencies(plugin_info, plugin_dir):
-
                 logger.error(f"Failed to install dependencies for {plugin_info.name}")
 
                 return False
@@ -487,7 +438,6 @@ class PluginManager:
             # Validate plugin structure
 
             if not await self._validate_plugin_structure(plugin_info, plugin_dir):
-
                 logger.error(f"Plugin {plugin_info.name} has invalid structure")
 
                 return False
@@ -513,7 +463,6 @@ class PluginManager:
             return True
 
         except Exception as e:
-
             logger.error(f"Error installing plugin {source}: {e}")
 
             return False
@@ -522,11 +471,9 @@ class PluginManager:
         """Uninstall a plugin."""
 
         try:
-
             plugin = self.registry.get_plugin(name)
 
             if not plugin:
-
                 logger.error(f"Plugin not found: {name}")
 
                 return False
@@ -538,7 +485,6 @@ class PluginManager:
             # Remove plugin files
 
             if plugin.install_path and plugin.install_path.exists():
-
                 shutil.rmtree(plugin.install_path)
 
             # Remove from registry
@@ -550,7 +496,6 @@ class PluginManager:
             return True
 
         except Exception as e:
-
             logger.error(f"Error uninstalling plugin {name}: {e}")
 
             return False
@@ -559,17 +504,14 @@ class PluginManager:
         """Enable a plugin."""
 
         try:
-
             plugin = self.registry.get_plugin(name)
 
             if not plugin:
-
                 logger.error(f"Plugin not found: {name}")
 
                 return False
 
             if plugin.status != PluginStatus.INSTALLED:
-
                 logger.error(f"Plugin {name} is not installed")
 
                 return False
@@ -577,7 +519,6 @@ class PluginManager:
             # Load and validate plugin
 
             if not await self._load_plugin(plugin):
-
                 logger.error(f"Failed to load plugin: {name}")
 
                 return False
@@ -593,7 +534,6 @@ class PluginManager:
             return True
 
         except Exception as e:
-
             logger.error(f"Error enabling plugin {name}: {e}")
 
             return False
@@ -602,11 +542,9 @@ class PluginManager:
         """Disable a plugin."""
 
         try:
-
             plugin = self.registry.get_plugin(name)
 
             if not plugin:
-
                 logger.error(f"Plugin not found: {name}")
 
                 return False
@@ -626,7 +564,6 @@ class PluginManager:
             return True
 
         except Exception as e:
-
             logger.error(f"Error disabling plugin {name}: {e}")
 
             return False
@@ -635,11 +572,9 @@ class PluginManager:
         """Update a plugin to latest version."""
 
         try:
-
             plugin = self.registry.get_plugin(name)
 
             if not plugin:
-
                 logger.error(f"Plugin not found: {name}")
 
                 return False
@@ -649,7 +584,6 @@ class PluginManager:
             latest_info = await self._check_for_updates(plugin)
 
             if not latest_info or latest_info.version == plugin.version:
-
                 logger.info(f"Plugin {name} is already up to date")
 
                 return True
@@ -665,13 +599,11 @@ class PluginManager:
             success = await self.install_plugin(plugin.source_url, force=True)
 
             if success:
-
                 logger.info(
                     f"Successfully updated plugin {name} to {latest_info.version}"
                 )
 
             else:
-
                 # Revert status on failure
 
                 plugin.status = PluginStatus.INSTALLED
@@ -681,7 +613,6 @@ class PluginManager:
             return success
 
         except Exception as e:
-
             logger.error(f"Error updating plugin {name}: {e}")
 
             return False
@@ -707,19 +638,16 @@ class PluginManager:
         # Handle different source types
 
         if source.startswith("http"):
-
             # URL source
 
             return await self._resolve_url_source(source)
 
         elif Path(source).exists():
-
             # Local path source
 
             return await self._resolve_local_source(Path(source))
 
         else:
-
             # Marketplace name
 
             return await self._resolve_marketplace_source(source)
@@ -734,7 +662,6 @@ class PluginManager:
         base_url = f"{parsed.scheme}://{parsed.netloc}"
 
         if base_url not in self.trusted_sources and not self.allow_untrusted:
-
             logger.error(f"Untrusted plugin source: {base_url}")
 
             return None
@@ -755,11 +682,9 @@ class PluginManager:
         manifest_files = ["plugin.yaml", "plugin.yml", "plugin.json", "package.json"]
 
         for manifest_file in manifest_files:
-
             manifest_path = path / manifest_file
 
             if manifest_path.exists():
-
                 return await self._parse_plugin_manifest(manifest_path)
 
         # Create basic info if no manifest found
@@ -779,23 +704,18 @@ class PluginManager:
         """Parse plugin manifest file."""
 
         try:
-
             with open(manifest_path) as f:
-
                 if manifest_path.suffix in [".yaml", ".yml"]:
-
                     import yaml
 
                     data = yaml.safe_load(f)
 
                 else:
-
                     data = json.load(f)
 
             return PluginInfo.from_dict(data)
 
         except Exception as e:
-
             logger.error(f"Error parsing plugin manifest {manifest_path}: {e}")
 
             return None
@@ -809,7 +729,6 @@ class PluginManager:
             not plugin.name
             or not plugin.name.replace("-", "").replace("_", "").isalnum()
         ):
-
             logger.error("Invalid plugin name")
 
             return False
@@ -819,7 +738,6 @@ class PluginManager:
         current_platform = sys.platform
 
         if current_platform not in plugin.supported_platforms:
-
             logger.error(f"Plugin not supported on {current_platform}")
 
             return False
@@ -845,19 +763,16 @@ class PluginManager:
         """Install plugin dependencies."""
 
         try:
-
             # Install language-specific dependencies
 
             manager = self.language_managers.get(plugin.language)
 
             if manager:
-
                 return await manager(plugin, plugin_dir, "install")
 
             return True
 
         except Exception as e:
-
             logger.error(f"Error installing dependencies: {e}")
 
             return False
@@ -879,9 +794,7 @@ class PluginManager:
         files = required_files.get(plugin.language, [])
 
         for file in files:
-
             if not (plugin_dir / file).exists():
-
                 logger.error(f"Missing required file: {file}")
 
                 return False
@@ -917,13 +830,10 @@ class PluginManager:
         """Manage Python plugin dependencies."""
 
         if action == "install":
-
             # Install Python requirements
 
             if plugin.python_requirements:
-
                 try:
-
                     subprocess.run(
                         [
                             sys.executable,
@@ -938,7 +848,6 @@ class PluginManager:
                     return True
 
                 except subprocess.CalledProcessError:
-
                     return False
 
         return True
@@ -949,19 +858,15 @@ class PluginManager:
         """Manage Node.js plugin dependencies."""
 
         if action == "install":
-
             # Run npm install in plugin directory
 
             if (plugin_dir / "package.json").exists():
-
                 try:
-
                     subprocess.run(["npm", "install"], cwd=plugin_dir, check=True)
 
                     return True
 
                 except subprocess.CalledProcessError:
-
                     return False
 
         return True
@@ -981,13 +886,10 @@ class PluginManager:
         """Manage Rust plugin dependencies."""
 
         if action == "install":
-
             # Run cargo build in plugin directory
 
             if (plugin_dir / "Cargo.toml").exists():
-
                 try:
-
                     subprocess.run(
                         ["cargo", "build", "--release"], cwd=plugin_dir, check=True
                     )
@@ -995,7 +897,6 @@ class PluginManager:
                     return True
 
                 except subprocess.CalledProcessError:
-
                     return False
 
         return True
@@ -1012,7 +913,6 @@ def get_plugin_manager() -> PluginManager:
     global _global_manager
 
     if _global_manager is None:
-
         _global_manager = PluginManager()
 
     return _global_manager

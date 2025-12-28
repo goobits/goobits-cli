@@ -2,27 +2,18 @@
 
 Dynamic Completion Registry for Goobits CLI Framework.
 
-
-
 Provides intelligent, context-aware completion that adapts to user input,
 
 command context, and available options across all supported languages.
 
 """
 
-import os
-
-
-from abc import ABC, abstractmethod
-
-from dataclasses import dataclass, field
-
-from typing import List, Dict, Any, Set, Callable
-
-from pathlib import Path
-
 import logging
-
+import os
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Set
 
 logger = logging.getLogger(__name__)
 
@@ -122,8 +113,6 @@ class DynamicCompletionRegistry:
 
     Registry for dynamic completion providers with context analysis.
 
-
-
     Features:
 
     - Multi-language support (Python, Node.js, TypeScript, Rust)
@@ -172,7 +161,6 @@ class DynamicCompletionRegistry:
         """Register a completion provider."""
 
         if provider not in self._providers:
-
             self._providers.append(provider)
 
             # Sort by priority (highest first)
@@ -187,7 +175,6 @@ class DynamicCompletionRegistry:
         """Unregister a completion provider."""
 
         if provider in self._providers:
-
             self._providers.remove(provider)
 
             logger.debug(
@@ -208,8 +195,6 @@ class DynamicCompletionRegistry:
 
         Get completion suggestions for the current context.
 
-
-
         Args:
 
             current_word: The partial word being completed
@@ -218,8 +203,6 @@ class DynamicCompletionRegistry:
 
             language: Target language (python, nodejs, typescript, rust)
 
-
-
         Returns:
 
             List of completion suggestions
@@ -227,7 +210,6 @@ class DynamicCompletionRegistry:
         """
 
         if not self._enabled:
-
             return []
 
         # Check cache first
@@ -235,11 +217,9 @@ class DynamicCompletionRegistry:
         cache_key = f"{language}:{current_word}:{full_command}"
 
         if cache_key in self._completion_cache:
-
             return self._completion_cache[cache_key]
 
         try:
-
             # Build context
 
             context = await self._build_context(current_word, full_command, language)
@@ -249,17 +229,13 @@ class DynamicCompletionRegistry:
             all_completions = []
 
             for provider in self._providers:
-
                 if provider.is_enabled() and provider.can_provide(context):
-
                     try:
-
                         completions = await provider.provide_completions(context)
 
                         all_completions.extend(completions)
 
                     except Exception as e:
-
                         logger.warning(
                             f"Provider {provider.__class__.__name__} failed: {e}"
                         )
@@ -279,9 +255,7 @@ class DynamicCompletionRegistry:
             seen = set()
 
             for completion in filtered_completions:
-
                 if completion not in seen:
-
                     unique_completions.append(completion)
 
                     seen.add(completion)
@@ -293,7 +267,6 @@ class DynamicCompletionRegistry:
             return unique_completions
 
         except Exception as e:
-
             logger.error(f"Error getting completions: {e}")
 
             return []
@@ -327,13 +300,10 @@ class DynamicCompletionRegistry:
         # Apply context analyzers
 
         for name, analyzer in self._context_analyzers.items():
-
             try:
-
                 analyzer(context)
 
             except Exception as e:
-
                 logger.warning(f"Context analyzer {name} failed: {e}")
 
         return context
@@ -371,21 +341,16 @@ class DynamicCompletionRegistry:
             ]
 
             for config_file in config_files:
-
                 if config_file.exists():
-
                     try:
-
                         import yaml
 
                         with open(config_file) as f:
-
                             context.config = yaml.safe_load(f) or {}
 
                         break
 
                     except Exception:
-
                         pass
 
         self.register_context_analyzer("command", command_analyzer)
@@ -406,17 +371,14 @@ class DynamicCompletionRegistry:
         other_completions = []
 
         for completion in completions:
-
             if (
                 completion.endswith(".py")
                 or completion.startswith("--")
                 or completion in ["install", "build", "test", "lint"]
             ):
-
                 python_priority.append(completion)
 
             else:
-
                 other_completions.append(completion)
 
         return python_priority + other_completions
@@ -433,17 +395,14 @@ class DynamicCompletionRegistry:
         other_completions = []
 
         for completion in completions:
-
             if (
                 completion.endswith(".js")
                 or completion.endswith(".json")
                 or completion in ["install", "start", "test", "build"]
             ):
-
                 nodejs_priority.append(completion)
 
             else:
-
                 other_completions.append(completion)
 
         return nodejs_priority + other_completions
@@ -460,18 +419,15 @@ class DynamicCompletionRegistry:
         other_completions = []
 
         for completion in completions:
-
             if (
                 completion.endswith(".ts")
                 or completion.endswith(".tsx")
                 or completion.endswith(".d.ts")
                 or completion in ["compile", "type-check", "build"]
             ):
-
                 ts_priority.append(completion)
 
             else:
-
                 other_completions.append(completion)
 
         return ts_priority + other_completions
@@ -488,17 +444,14 @@ class DynamicCompletionRegistry:
         other_completions = []
 
         for completion in completions:
-
             if (
                 completion.endswith(".rs")
                 or completion == "Cargo.toml"
                 or completion in ["build", "test", "check", "clippy", "fmt"]
             ):
-
                 rust_priority.append(completion)
 
             else:
-
                 other_completions.append(completion)
 
         return rust_priority + other_completions
@@ -514,7 +467,6 @@ class DynamicCompletionRegistry:
         """Cache completion results with size management."""
 
         if len(self._completion_cache) >= self._cache_max_size:
-
             # Remove oldest entries (simple FIFO)
 
             oldest_keys = list(self._completion_cache.keys())[
@@ -522,7 +474,6 @@ class DynamicCompletionRegistry:
             ]
 
             for old_key in oldest_keys:
-
                 del self._completion_cache[old_key]
 
         self._completion_cache[key] = completions

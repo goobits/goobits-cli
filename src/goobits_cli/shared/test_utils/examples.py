@@ -1,48 +1,39 @@
 """Usage examples for shared test utilities.
 
-
-
 This module demonstrates how to use the shared test utilities
 
 for different testing scenarios.
 
 """
 
+# Import Phase 1 testing framework
+# Import from the test conftest.py file
+import sys
+from pathlib import Path
+
 import pytest
 
-
 # Import the shared test utilities
-
 from goobits_cli.shared.test_utils import (
+    # Test helpers
+    CLITestRunner,
     # Fixtures
     TestFixtures,
-    create_test_config,
-    create_minimal_cli_config,
-    get_error_scenario,
+    compare_cli_behaviors,
     # Comparison tools
     compare_command_outputs,
     compare_file_structures,
-    normalize_cli_output,
-    # Test helpers
-    CLITestRunner,
     create_isolated_test_env,
-    compare_cli_behaviors,
+    create_minimal_cli_config,
+    create_test_config,
+    get_error_scenario,
+    normalize_cli_output,
     # Phase 1 integration
     run_comprehensive_cross_language_tests,
+    validate_framework_integration,
     # Validation
     validate_test_data,
-    validate_framework_integration,
 )
-
-
-# Import Phase 1 testing framework
-
-# Import from the test conftest.py file
-
-import sys
-
-from pathlib import Path
-
 
 # Add tests directory to path to import from conftest
 
@@ -109,7 +100,6 @@ class ExampleTestSuite:
         """Example: Using isolated test environments."""
 
         with create_isolated_test_env() as env:
-
             # Create a virtual environment
 
             venv_path = env.create_virtual_environment()
@@ -136,7 +126,6 @@ class ExampleTestSuite:
         config = create_test_config("example-cli", "python", "basic")
 
         with create_isolated_test_env() as env:
-
             # Generate and install CLI
 
             files = generate_cli(config, "example.yaml")
@@ -173,7 +162,6 @@ class ExampleTestSuite:
         configs = {}
 
         for lang in languages:
-
             configs[lang] = create_test_config(f"test-{lang}", lang, "minimal")
 
         # Generate CLIs and test help command
@@ -187,15 +175,12 @@ class ExampleTestSuite:
         help_outputs = {}
 
         for lang, results in all_results.items():
-
             if "--help" in results:
-
                 help_outputs[lang] = results["--help"].stdout
 
         # Compare outputs
 
         if len(help_outputs) > 1:
-
             comparison = compare_command_outputs(help_outputs, ["--help"], "help")
 
             # Verify comparison worked
@@ -215,17 +200,11 @@ class ExampleTestSuite:
 
 Usage: cli.py [OPTIONS] COMMAND [ARGS]...
 
-
-
 Test CLI
-
-
 
 Options:
 
   --help  Show this message and exit.
-
-
 
 Commands:
 
@@ -237,17 +216,11 @@ Commands:
 
 Usage: node index.js [options] <command> [args]
 
-
-
 Test CLI
-
-
 
 Options:
 
   -h, --help  display help for command
-
-
 
 Commands:
 
@@ -295,7 +268,6 @@ Commands:
         config = create_minimal_cli_config("python")
 
         with create_isolated_test_env() as env:
-
             files = generate_cli(config, "test.yaml")
 
             env.install_cli_from_files("test-cli", files)
@@ -316,9 +288,9 @@ Commands:
 
             found_patterns = [p for p in expected_patterns if p.lower() in error_output]
 
-            assert (
-                len(found_patterns) > 0
-            ), f"No expected patterns found in: {result.stderr}"
+            assert len(found_patterns) > 0, (
+                f"No expected patterns found in: {result.stderr}"
+            )
 
     def test_file_structure_comparison(self):
         """Example: Comparing generated file structures."""
@@ -350,13 +322,11 @@ Commands:
         common_files = ["README.md", "setup.sh"]
 
         for common_file in common_files:
-
             python_has = common_file in python_files
 
             nodejs_has = common_file in nodejs_files
 
             if python_has and nodejs_has:
-
                 # Should be noted as similarity
 
                 similarity_found = any(
@@ -454,21 +424,17 @@ class ExampleEnhancedTest:
         all_files = {}
 
         for lang, lang_config in all_configs.items():
-
             try:
-
                 lang_files = generate_cli(lang_config, f"{lang}.yaml")
 
                 all_files[lang] = lang_files
 
             except Exception as e:
-
                 pytest.fail(f"Failed to generate {lang} CLI: {e}")
 
         # Compare file structures
 
         if len(all_files) > 1:
-
             structure_comparison = compare_file_structures(all_files)
 
             # Enhanced assertions
@@ -478,7 +444,6 @@ class ExampleEnhancedTest:
             # If there are critical differences, provide detailed info
 
             if not structure_comparison.passed:
-
                 diff_details = [
                     diff["description"] for diff in structure_comparison.differences
                 ]
@@ -529,7 +494,6 @@ def isolated_test_environment():
     """Fixture providing isolated test environment."""
 
     with create_isolated_test_env() as env:
-
         yield env
 
 
@@ -560,7 +524,6 @@ class TestWithFixtures:
         assert len(cross_language_configs) >= 2
 
         for lang, config in cross_language_configs.items():
-
             assert config.language == lang
 
     def test_cli_execution_with_runner(
@@ -586,7 +549,6 @@ class TestWithFixtures:
 
 
 if __name__ == "__main__":
-
     """
 
     Run examples as a script to demonstrate functionality.

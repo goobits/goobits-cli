@@ -8,9 +8,7 @@ This file contains the actual implementation for CLI commands.
 
 """
 
-
 from pathlib import Path
-
 from typing import Optional
 
 
@@ -38,11 +36,9 @@ def on_build(
     # Call the actual build function
 
     try:
-
         main.build(config_path_obj, output_dir_obj, output, backup)
 
     except SystemExit:
-
         # Handle typer.Exit gracefully
 
         pass
@@ -59,11 +55,9 @@ def on_init(project_name: Optional[str], template: str, force: bool) -> None:
         from . import main  # type: ignore[import-untyped]
 
     try:
-
         main.init(project_name, template, force)
 
     except SystemExit:
-
         # Handle typer.Exit gracefully
 
         pass
@@ -82,11 +76,9 @@ def on_serve(directory: str, host: str, port: int) -> None:
     directory_obj = Path(directory)
 
     try:
-
         main.serve(directory_obj, host, port)
 
     except SystemExit:
-
         # Handle typer.Exit gracefully
 
         pass
@@ -105,11 +97,9 @@ def on_validate(config_path: Optional[str] = None, verbose: bool = False) -> Non
     config_path_obj = Path(config_path) if config_path else None
 
     try:
-
         main.validate(config_path_obj, verbose)
 
     except SystemExit:
-
         # Handle typer.Exit gracefully
 
         pass
@@ -128,11 +118,9 @@ def on_migrate(
         from . import main  # type: ignore[import-untyped]
 
     try:
-
         main.migrate(path, backup, dry_run, pattern)
 
     except SystemExit:
-
         # Handle typer.Exit gracefully
 
         pass

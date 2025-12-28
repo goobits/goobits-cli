@@ -7,12 +7,13 @@ Focus is on validating the framework's dependency handling logic.
 
 import tempfile
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict
 
 import pytest
 
-from .test_configs import TestConfigTemplates
 from goobits_cli.generation.builder import Builder
+
+from .test_configs import TestConfigTemplates
 
 
 class TestDependencyResolutionSimplified:
@@ -73,9 +74,9 @@ class TestDependencyResolutionSimplified:
         if language == "python":
             assert "click" in cli_content.lower(), "Python CLI should reference click"
         elif language in ["nodejs", "typescript"]:
-            assert (
-                "commander" in cli_content.lower()
-            ), "Node.js CLI should reference commander"
+            assert "commander" in cli_content.lower(), (
+                "Node.js CLI should reference commander"
+            )
         elif language == "rust":
             assert "clap" in cli_content.lower(), "Rust CLI should reference clap"
 
@@ -100,16 +101,16 @@ class TestDependencyResolutionSimplified:
 
         elif language in ["nodejs", "typescript"]:
             # Node.js/TS CLIs should reference basic Node.js patterns
-            assert (
-                "import" in cli_lower or "require" in cli_lower
-            ), "Node.js CLI should have import/require statements"
+            assert "import" in cli_lower or "require" in cli_lower, (
+                "Node.js CLI should have import/require statements"
+            )
 
         elif language == "rust":
             # Rust CLIs should have basic Rust patterns
             assert "use" in cli_lower, "Rust CLI should have use statements"
-            assert (
-                "serde" in cli_lower or "json" in cli_lower
-            ), "Rust CLI should reference serialization capabilities"
+            assert "serde" in cli_lower or "json" in cli_lower, (
+                "Rust CLI should reference serialization capabilities"
+            )
 
         print(f"✅ {language} CLI correctly declares heavy dependencies")
 
@@ -159,9 +160,9 @@ class TestDependencyResolutionSimplified:
                 pytest.fail(f"Failed to generate {language} CLI: {e}")
 
         # Verify all CLIs were generated successfully
-        assert len(generated_clis) == len(
-            languages
-        ), f"Not all languages generated successfully: {list(generated_clis.keys())}"
+        assert len(generated_clis) == len(languages), (
+            f"Not all languages generated successfully: {list(generated_clis.keys())}"
+        )
 
         # Verify all CLIs have some basic CLI framework imports/references
         for language, content in generated_clis.items():

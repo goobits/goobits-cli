@@ -14,29 +14,23 @@ def generate_basic_template(project_name: str) -> str:
 
 package_name: {project_name}
 
-command_name: {project_name.replace('-', '_')}
+command_name: {project_name.replace("-", "_")}
 
-display_name: "{project_name.replace('-', ' ').title()}"
+display_name: "{project_name.replace("-", " ").title()}"
 
 description: "A CLI tool built with Goobits"
-
-
 
 # Language selection (python, nodejs, typescript, or rust)
 
 language: python
 
 # CLI generation configuration
-cli_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace("-", "_")}/cli.py"
 cli_hooks: "cli_hooks.py"
-
-
 
 python:
 
   minimum_version: "3.8"
-
-
 
 dependencies:
 
@@ -44,11 +38,9 @@ dependencies:
 
     - pipx
 
-
-
 cli:
 
-  name: {project_name.replace('-', '_')}
+  name: {project_name.replace("-", "_")}
 
   tagline: "Your awesome CLI tool"
 
@@ -87,29 +79,23 @@ def generate_advanced_template(project_name: str) -> str:
 
 package_name: {project_name}
 
-command_name: {project_name.replace('-', '_')}
+command_name: {project_name.replace("-", "_")}
 
-display_name: "{project_name.replace('-', ' ').title()}"
+display_name: "{project_name.replace("-", " ").title()}"
 
 description: "An advanced CLI tool built with Goobits"
-
-
 
 # Language selection (python, nodejs, typescript, or rust)
 
 language: python
 
 # CLI generation configuration
-cli_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace("-", "_")}/cli.py"
 cli_hooks: "cli_hooks.py"
-
-
 
 python:
 
   minimum_version: "3.8"
-
-
 
 dependencies:
 
@@ -123,11 +109,9 @@ dependencies:
 
     - curl
 
-
-
 cli:
 
-  name: {project_name.replace('-', '_')}
+  name: {project_name.replace("-", "_")}
 
   tagline: "Advanced CLI with multiple commands"
 
@@ -140,7 +124,6 @@ cli:
     - name: "Utilities"
 
       commands: ["status", "config"]
-
 
   commands:
 
@@ -174,7 +157,6 @@ cli:
 
           default: "text"
 
-
     convert:
 
       desc: "Convert between formats"
@@ -197,11 +179,9 @@ cli:
 
           required: true
 
-
     status:
 
       desc: "Show system status"
-
 
     config:
 
@@ -236,29 +216,23 @@ def generate_api_client_template(project_name: str) -> str:
 
 package_name: {project_name}
 
-command_name: {project_name.replace('-', '_')}
+command_name: {project_name.replace("-", "_")}
 
-display_name: "{project_name.replace('-', ' ').title()}"
+display_name: "{project_name.replace("-", " ").title()}"
 
 description: "API client CLI tool built with Goobits"
-
-
 
 # Language selection (python, nodejs, typescript, or rust)
 
 language: python
 
 # CLI generation configuration
-cli_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace("-", "_")}/cli.py"
 cli_hooks: "cli_hooks.py"
-
-
 
 python:
 
   minimum_version: "3.8"
-
-
 
 dependencies:
 
@@ -272,11 +246,9 @@ dependencies:
 
     - jq
 
-
-
 cli:
 
-  name: {project_name.replace('-', '_')}
+  name: {project_name.replace("-", "_")}
 
   tagline: "API client for your service"
 
@@ -316,7 +288,6 @@ cli:
 
           desc: "Save output to file"
 
-
     post:
 
       desc: "POST request to API endpoint"
@@ -344,7 +315,6 @@ cli:
         - name: api-key
 
           desc: "API key for authentication"
-
 
     config:
 
@@ -375,29 +345,23 @@ def generate_text_processor_template(project_name: str) -> str:
 
 package_name: {project_name}
 
-command_name: {project_name.replace('-', '_')}
+command_name: {project_name.replace("-", "_")}
 
-display_name: "{project_name.replace('-', ' ').title()}"
+display_name: "{project_name.replace("-", " ").title()}"
 
 description: "Text processing CLI tool built with Goobits"
-
-
 
 # Language selection (python, nodejs, typescript, or rust)
 
 language: python
 
 # CLI generation configuration
-cli_path: "src/{project_name.replace('-', '_')}/cli.py"
+cli_path: "src/{project_name.replace("-", "_")}/cli.py"
 cli_hooks: "cli_hooks.py"
-
-
 
 python:
 
   minimum_version: "3.8"
-
-
 
 dependencies:
 
@@ -409,11 +373,9 @@ dependencies:
 
     - pandoc
 
-
-
 cli:
 
-  name: {project_name.replace('-', '_')}
+  name: {project_name.replace("-", "_")}
 
   tagline: "Process text files with ease"
 
@@ -464,7 +426,6 @@ cli:
           choices: ["text", "json", "markdown"]
 
           default: "text"
-
 
     count:
 
@@ -543,7 +504,6 @@ def init_command(
     config_path = Path("./goobits.yaml")
 
     if config_path.exists() and not force:
-
         typer.echo(
             f"Error: {config_path} already exists. Use --force to overwrite.", err=True
         )
@@ -553,7 +513,6 @@ def init_command(
     # Determine project name
 
     if not project_name:
-
         project_name = Path.cwd().name
 
     # Generate template based on type
@@ -566,7 +525,6 @@ def init_command(
     }
 
     if template not in templates:
-
         typer.echo(
             f"Error: Unknown template '{template}'. Available: {', '.join(templates.keys())}",
             err=True,
@@ -577,7 +535,6 @@ def init_command(
     # Write template
 
     with open(config_path, "w") as f:
-
         f.write(templates[template])
 
     typer.echo(f"\u2705 Created {config_path} using '{template}' template")

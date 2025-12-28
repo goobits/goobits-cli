@@ -18,14 +18,14 @@ Mission: Create Automated End-to-End Integration Tests
 """
 
 import json
-import tempfile
-import time
-import subprocess
 import shutil
+import subprocess
 import sys
+import tempfile
 import threading
+import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 # Import framework components
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -38,10 +38,10 @@ except ImportError:
     PYTEST_AVAILABLE = False
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.generation.renderers.python import PythonGenerator
 from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.generation.renderers.python import PythonGenerator
 from goobits_cli.generation.renderers.rust import RustGenerator
+from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
 
 
 class CLIExecutionResult:
@@ -210,9 +210,7 @@ class EndToEndIntegrationTester:
         hooks = {}
 
         if language == "python":
-            hooks[
-                "cli_hooks.py"
-            ] = '''"""
+            hooks["cli_hooks.py"] = '''"""
 Hook implementations for testing CLI execution.
 """
 
@@ -228,7 +226,7 @@ def on_count(items: list = None, type: str = "words", **kwargs):
     """Handle count command execution."""
     if not items:
         items = []
-    
+
     if type == "words":
         count = len(" ".join(items).split()) if items else 0
     elif type == "chars":
@@ -237,7 +235,7 @@ def on_count(items: list = None, type: str = "words", **kwargs):
         count = len(items) if items else 0
     else:
         count = 0
-    
+
     result = f"Count ({type}): {count}"
     print(f"HOOK_EXECUTED: {result}")
     return {"status": "success", "count": count, "type": type}
@@ -261,9 +259,7 @@ def on_status(**kwargs):
 '''
 
         elif language == "nodejs":
-            hooks[
-                "src/hooks.js"
-            ] = """/**
+            hooks["src/hooks.js"] = """/**
  * Hook implementations for testing CLI execution.
  */
 
@@ -279,7 +275,7 @@ async function onHello(args) {
 
 async function onCount(args) {
     const { items = [], type = "words" } = args;
-    
+
     let count = 0;
     if (type === "words") {
         count = items.length > 0 ? items.join(" ").split(" ").length : 0;
@@ -288,7 +284,7 @@ async function onCount(args) {
     } else if (type === "lines") {
         count = items.length;
     }
-    
+
     const result = `Count (${type}): ${count}`;
     console.log(`HOOK_EXECUTED: ${result}`);
     return { status: "success", count, type };
@@ -322,9 +318,7 @@ module.exports = {
 """
 
         elif language == "typescript":
-            hooks[
-                "src/hooks.ts"
-            ] = """/**
+            hooks["src/hooks.ts"] = """/**
  * Hook implementations for testing CLI execution.
  */
 
@@ -345,7 +339,7 @@ export async function onHello(args: any): Promise<HookResult> {
 
 export async function onCount(args: any): Promise<HookResult> {
     const { items = [], type = "words" } = args;
-    
+
     let count = 0;
     if (type === "words") {
         count = items.length > 0 ? items.join(" ").split(" ").length : 0;
@@ -354,7 +348,7 @@ export async function onCount(args: any): Promise<HookResult> {
     } else if (type === "lines") {
         count = items.length;
     }
-    
+
     const result = `Count (${type}): ${count}`;
     console.log(`HOOK_EXECUTED: ${result}`);
     return { status: "success", count, type };
@@ -392,12 +386,12 @@ pub fn on_hello(matches: &ArgMatches) -> Result<Value> {
     let name = matches.get_one::<String>("name").unwrap();
     let greeting = matches.get_one::<String>("greeting").map_or("Hello", |s| s.as_str());
     let uppercase = matches.get_flag("uppercase");
-    
+
     let mut message = format!("{} {}!", greeting, name);
     if uppercase {
         message = message.to_uppercase();
     }
-    
+
     println!("HOOK_EXECUTED: {}", message);
     Ok(json!({"status": "success", "message": message}))
 }
@@ -408,7 +402,7 @@ pub fn on_count(matches: &ArgMatches) -> Result<Value> {
         .cloned()
         .collect();
     let count_type = matches.get_one::<String>("type").map_or("words", |s| s.as_str());
-    
+
     let count = match count_type.as_str() {
         "words" => {
             if items.is_empty() { 0 } else { items.join(" ").split_whitespace().count() }
@@ -417,7 +411,7 @@ pub fn on_count(matches: &ArgMatches) -> Result<Value> {
         "lines" => items.len(),
         _ => 0,
     };
-    
+
     let result = format!("Count ({}): {}", count_type, count);
     println!("HOOK_EXECUTED: {}", result);
     Ok(json!({"status": "success", "count": count, "type": count_type}))
@@ -433,7 +427,7 @@ pub fn on_config_show(_matches: &ArgMatches) -> Result<Value> {
 pub fn on_config_set(matches: &ArgMatches) -> Result<Value> {
     let key = matches.get_one::<String>("key").unwrap();
     let value = matches.get_one::<String>("value").unwrap();
-    
+
     println!("HOOK_EXECUTED: Set {} = {}", key, value);
     Ok(json!({"status": "success", "key": key, "value": value}))
 }
@@ -1447,9 +1441,9 @@ pub fn on_status(_matches: &ArgMatches) -> Result<Value> {
                     "installation": lang_result.installation_success,
                     "overall_working": lang_result.success,
                 }
-                assessment["hook_integration_status"][
-                    language
-                ] = lang_result.hook_executed
+                assessment["hook_integration_status"][language] = (
+                    lang_result.hook_executed
+                )
 
         # Calculate base score
         working_languages = sum(
@@ -1557,9 +1551,9 @@ if PYTEST_AVAILABLE:
 
             # At least one language should work end-to-end
             successful_results = [r for r in results if r.success]
-            assert (
-                len(successful_results) >= 1
-            ), f"No languages worked end-to-end: {[r.error_message for r in results if not r.success]}"
+            assert len(successful_results) >= 1, (
+                f"No languages worked end-to-end: {[r.error_message for r in results if not r.success]}"
+            )
 
             # At least one language should have hook integration working
             hook_results = [r for r in results if r.hook_executed]
@@ -1573,9 +1567,9 @@ if PYTEST_AVAILABLE:
             # At least 50% of languages should handle errors gracefully
             successful_results = [r for r in results if r.success]
             success_rate = len(successful_results) / len(results) if results else 0
-            assert (
-                success_rate >= 0.5
-            ), f"Error handling success rate too low: {success_rate:.1%}"
+            assert success_rate >= 0.5, (
+                f"Error handling success rate too low: {success_rate:.1%}"
+            )
 
         @pytest.mark.timeout(600)  # 10 minute timeout for comprehensive test
         def test_comprehensive_integration_health(self):
@@ -1584,9 +1578,9 @@ if PYTEST_AVAILABLE:
 
             # System health should be reasonable
             health_score = report["summary"]["integration_health_score"]
-            assert (
-                health_score >= 30.0
-            ), f"Integration health score too low: {health_score}%"
+            assert health_score >= 30.0, (
+                f"Integration health score too low: {health_score}%"
+            )
 
             # Success rate should be decent
             success_rate = report["summary"]["success_rate"]
