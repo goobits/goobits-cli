@@ -17,29 +17,8 @@ from ..ir.models import IR, create_ir_from_dict
 from ..renderers.interface import Artifact, LanguageRenderer
 from ..renderers.registry import get_renderer
 
-
-def is_e2e_test_path(config_filename: str) -> bool:
-    """
-    Check if config_filename looks like a directory path for E2E test compatibility.
-
-    E2E tests call generator.generate(config, str(tmp_path)) expecting files to be written.
-    This function detects such paths.
-
-    Args:
-        config_filename: The filename or path to check
-
-    Returns:
-        True if this appears to be an E2E test path, False otherwise
-    """
-    config_path = Path(config_filename)
-    return (
-        config_path.is_dir()
-        or (not config_path.suffix and config_path.exists())
-        or (
-            not config_path.suffix
-            and ("pytest" in config_filename or config_filename.endswith("_test"))
-        )
-    )
+# Import from centralized utils to avoid duplication
+from goobits_cli.utils.paths import is_e2e_test_path
 
 
 def parse_config(config_path: Path) -> Dict[str, Any]:

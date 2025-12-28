@@ -96,6 +96,27 @@ except ImportError as e:
     )
 
 
+class FallbackProgress:
+    """Fallback progress indicator when Rich is unavailable or fails."""
+
+    def __init__(self, total: int = 100):
+        self.total = total
+        self.completed = 0
+        self.last_percentage = -1
+
+    def update(self, task_id, advance: int = 1):
+        self.completed += advance
+        if self.total > 0:
+            pct = min(100, (self.completed / self.total) * 100)
+            # Only print if percentage changed significantly
+            if int(pct) != self.last_percentage:
+                print(f"\rProgress: {pct:.1f}%", end="", flush=True)
+                self.last_percentage = int(pct)
+
+    def add_task(self, description: str, total: Optional[int] = None):
+        return "fallback_task"
+
+
 class ProgressHelper:
     """Helper class for progress indicators and visual feedback"""
 
@@ -180,32 +201,7 @@ class ProgressHelper:
 
         if self._fallback_enabled or not self.console:
             print(f"{description}")
-
-            class FallbackProgress:
-                def __init__(self):
-                    self.total = total or 100
-
-                    self.completed = 0
-
-                    self.last_percentage = -1
-
-                def update(self, task_id, advance: int = 1):
-                    self.completed += advance
-
-                    if self.total > 0:
-                        pct = min(100, (self.completed / self.total) * 100)
-
-                        # Only print if percentage changed significantly
-
-                        if int(pct) != self.last_percentage:
-                            print(f"\rProgress: {pct:.1f}%", end="", flush=True)
-
-                            self.last_percentage = int(pct)
-
-                def add_task(self, description: str, total: Optional[int] = None):
-                    return "fallback_task"
-
-            progress = FallbackProgress()
+            progress = FallbackProgress(total=total or 100)
 
             try:
                 yield progress, "fallback_task"
@@ -249,33 +245,11 @@ class ProgressHelper:
             logger.warning(
                 f"Rich progress bar failed, falling back to basic output: {e}"
             )
-
             # Fallback to simple progress
-
             print(f"{description}")
-
-            class FallbackProgress:
-                def __init__(self):
-                    self.total = total or 100
-
-                    self.completed = 0
-
-                def update(self, task_id, advance: int = 1):
-                    self.completed += advance
-
-                    if self.total > 0:
-                        pct = (self.completed / self.total) * 100
-
-                        print(f"\rProgress: {pct:.1f}%", end="", flush=True)
-
-                def add_task(self, description: str, total: Optional[int] = None):
-                    return "fallback_task"
-
-            progress = FallbackProgress()
-
+            progress = FallbackProgress(total=total or 100)
             try:
                 yield progress, "fallback_task"
-
             finally:
                 print()  # New line
 
