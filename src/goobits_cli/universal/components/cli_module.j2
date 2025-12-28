@@ -263,13 +263,13 @@ def cli(ctx, verbose):
 {%- if command.options %}
 {%- for option in command.options %}
 {%- if option.type == 'flag' or option.type == 'bool' %}
-@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}, is_flag=True, help='{{ option.desc | default('No description provided') }}')
+@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}, is_flag=True, help="{{ option.desc | default('No description provided') | replace('"', '\\"') }}")
 {%- elif option.type == 'int' %}
-@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}, type=int{% if option.default %}, default={{ option.default }}{% endif %}, help='{{ option.desc | default('No description provided') }}')
+@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}, type=int{% if option.default %}, default={{ option.default }}{% endif %}, help="{{ option.desc | default('No description provided') | replace('"', '\\"') }}")
 {%- elif option.type == 'float' %}
-@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}, type=float{% if option.default %}, default={{ option.default }}{% endif %}, help='{{ option.desc | default('No description provided') }}')
+@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}, type=float{% if option.default %}, default={{ option.default }}{% endif %}, help="{{ option.desc | default('No description provided') | replace('"', '\\"') }}")
 {%- else %}
-@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}{% if option.default %}, default='{{ option.default }}'{% endif %}, help='{{ option.desc | default('No description provided') }}')
+@click.option('--{{ option.name }}'{% if option.short %}, '-{{ option.short }}'{% endif %}{% if option.default %}, default='{{ option.default }}'{% endif %}, help="{{ option.desc | default('No description provided') | replace('"', '\\"') }}")
 {%- endif %}
 {%- endfor %}
 {%- endif %}
