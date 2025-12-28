@@ -30,6 +30,8 @@ def sample_config() -> Dict[str, Any]:
         "version": "1.0.0",
         "language": "python",
         "cli": {
+            "name": "Benchmark CLI",
+            "tagline": "A CLI for performance benchmarking",
             "commands": {
                 "hello": {
                     "desc": "Say hello",

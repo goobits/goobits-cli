@@ -106,6 +106,48 @@ class RenderError(GeneratorError):
         super().__init__(message, error_code, ", ".join(details) if details else None)
 
 
+# Configuration-specific errors (migrated from config.py)
+
+
+class ConfigError(Exception):
+    """Base configuration error for runtime configuration management."""
+
+    def __init__(
+        self,
+        message: str,
+        suggestion: Optional[str] = None,
+        config_path: Optional[Any] = None,
+    ):
+        self.message = message
+        self.suggestion = suggestion
+        self.config_path = config_path
+        super().__init__(self.message)
+
+
+class ConfigFileError(ConfigError):
+    """Configuration file access or format error."""
+
+    def __init__(
+        self, message: str, config_path: Any, suggestion: Optional[str] = None
+    ):
+        super().__init__(message, suggestion, config_path)
+
+
+class ConfigValidationError(ConfigError):
+    """Configuration validation error."""
+
+    def __init__(
+        self,
+        message: str,
+        key: str,
+        value: Any = None,
+        suggestion: Optional[str] = None,
+    ):
+        self.key = key
+        self.value = value
+        super().__init__(message, suggestion)
+
+
 __all__ = [
     "GeneratorError",
     "ConfigurationError",
@@ -113,4 +155,8 @@ __all__ = [
     "DependencyError",
     "ValidationError",
     "RenderError",
+    # Config-specific errors
+    "ConfigError",
+    "ConfigFileError",
+    "ConfigValidationError",
 ]

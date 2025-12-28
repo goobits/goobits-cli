@@ -41,7 +41,7 @@ def _get_jinja2():
     return _jinja2
 
 
-from ..template_engine import LanguageRenderer
+from .interface import LanguageRenderer
 
 
 class TypeScriptRenderer(LanguageRenderer):
@@ -107,7 +107,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
         Args:
 
-            ir: Intermediate representation from UniversalTemplateEngine
+            ir: Intermediate representation from IRBuilder
 
         Returns:
 
@@ -167,8 +167,16 @@ class TypeScriptRenderer(LanguageRenderer):
             },
             "timestamp": datetime.now().isoformat(),
             "generator_version": self._get_version(),
-            "package_name": context["project"].get("package_name", "cli"),
-            "command_name": context["project"].get("command_name", "cli"),
+            "package_name": (
+                context["project"].get("package_name")
+                or context.get("cli", {}).get("name")
+                or "cli"
+            ),
+            "command_name": (
+                context["project"].get("command_name")
+                or context.get("cli", {}).get("name")
+                or "cli"
+            ),
         }
 
         # Add datetime module for template generation headers
@@ -503,12 +511,20 @@ class TypeScriptRenderer(LanguageRenderer):
         if "project" in context:
             project = context["project"]
 
-            # Keep original names but add TypeScript variants
+            # Get name with fallbacks
+            name = (
+                project.get("name")
+                or project.get("package_name")
+                or context.get("cli", {}).get("name")
+                or "cli"
+            )
 
+            # Keep original names but add TypeScript variants
+            class_name = self._pascal_case_filter(name) or "CLI"
             project["typescript"] = {
-                "class_name": self._pascal_case_filter(project.get("name", "")),
-                "variable_name": self._camel_case_filter(project.get("name", "")),
-                "type_name": self._pascal_case_filter(project.get("name", "")) + "CLI",
+                "class_name": class_name,
+                "variable_name": self._camel_case_filter(name) or "cli",
+                "type_name": class_name + "CLI",
             }
 
         return context

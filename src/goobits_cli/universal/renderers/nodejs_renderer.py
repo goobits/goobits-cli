@@ -43,7 +43,7 @@ def _get_jinja2():
     return _jinja2
 
 
-from ..template_engine import LanguageRenderer
+from .interface import LanguageRenderer
 
 
 class NodeJSRenderer(LanguageRenderer):
@@ -86,7 +86,7 @@ class NodeJSRenderer(LanguageRenderer):
 
         Args:
 
-            ir: Intermediate representation from UniversalTemplateEngine
+            ir: Intermediate representation from IRBuilder
 
         Returns:
 
@@ -139,10 +139,14 @@ class NodeJSRenderer(LanguageRenderer):
                 },
                 # JavaScript naming conventions
                 "js_package_name": self._to_js_package_name(
-                    ir.get("project", {}).get("package_name", "cli")
+                    ir.get("project", {}).get("package_name")
+                    or ir.get("cli", {}).get("name")
+                    or "cli"
                 ),
                 "js_command_name": self._to_js_variable_name(
-                    ir.get("project", {}).get("command_name", "cli")
+                    ir.get("project", {}).get("command_name")
+                    or ir.get("cli", {}).get("name")
+                    or "cli"
                 ),
                 # Node.js-specific metadata
                 "node_version": ">=14.0.0",

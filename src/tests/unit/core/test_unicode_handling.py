@@ -37,10 +37,10 @@ from goobits_cli.core.schemas import (
     ShellIntegrationSchema,
     ValidationSchema,
 )
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.rust import RustGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.universal.generator import NodeJSGenerator
+from goobits_cli.universal.generator import PythonGenerator
+from goobits_cli.universal.generator import RustGenerator
+from goobits_cli.universal.generator import TypeScriptGenerator
 
 
 class TestUnicodeInConfigs:
@@ -410,11 +410,9 @@ class TestUnicodeInYamlParsing:
                 config = GoobitsConfigSchema(**loaded_content)
                 generator = PythonGenerator()
 
-                # Use a temporary directory for output instead of the YAML file path
+                # Use generate_all_files to get the generated content
                 with tempfile.TemporaryDirectory() as temp_output_dir:
-                    result = generator.generate_to_directory(
-                        config, temp_output_dir, yaml_file, "1.0.0"
-                    )
+                    result = generator.generate_all_files(config, yaml_file)
                     # Check that Unicode content is preserved in the appropriate files
                     if result:
                         # Verify package description Unicode is in configuration files (pyproject.toml)

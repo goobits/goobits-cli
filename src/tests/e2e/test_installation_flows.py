@@ -33,7 +33,8 @@ from typing import Dict, List, Optional
 import pytest
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.generation.builder import Builder
+from goobits_cli.core.errors import TemplateError
+from goobits_cli.universal.generator import UniversalGenerator
 
 integration_path = str(Path(__file__).parent.parent / "integration")
 if integration_path not in sys.path:
@@ -214,90 +215,53 @@ class CLITestHelper:
     @staticmethod
     def generate_cli(config: GoobitsConfigSchema, output_dir: str) -> Dict[str, str]:
         """Generate CLI files and return the file paths."""
-        builder = Builder(language=config.language)
+        generator = UniversalGenerator(config.language)
 
-        # Try to get all files from the generator if it supports generate_all_files
-        all_generated_files = {}
-        try:
-            if hasattr(builder, "generator") and hasattr(
-                builder.generator, "generate_all_files"
-            ):
-                all_generated_files = builder.generator.generate_all_files(
-                    config, "test_config.yaml", config.version
+        # Generate all files using the universal generator
+        all_generated_files = generator.generate_all_files(config, "test_config.yaml")
+
+        # Write generated files and track file paths
+        result = {}
+        for filename, content in all_generated_files.items():
+            file_path = Path(output_dir) / filename
+            # Create parent directories if needed
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
+
+            # Make files executable as needed (matching main.py logic)
+            if (
+                filename.startswith("bin/")
+                or filename in ["setup.sh"]
+                or (
+                    (filename.endswith(".js") or filename.endswith(".mjs"))
+                    and "cli" in filename
                 )
-        except Exception:
-            # Fall back to single file generation
-            pass
-
-        # If we got structured output, use it
-        if all_generated_files:
-            result = {}
-            for filename, content in all_generated_files.items():
-                file_path = Path(output_dir) / filename
-                # Create parent directories if needed
-                file_path.parent.mkdir(parents=True, exist_ok=True)
-                file_path.write_text(content)
-
-                # Make files executable as needed (matching main.py logic)
-                if (
-                    filename.startswith("bin/")
-                    or filename in ["setup.sh"]
-                    or (
-                        (filename.endswith(".js") or filename.endswith(".mjs"))
-                        and "cli" in filename
-                    )
-                ):
-                    file_path.chmod(0o755)
-
-                # Track the main CLI file
-                if filename.endswith(".py") and (
-                    "cli" in filename or "main" in filename
-                ):
-                    result["cli_file"] = str(file_path)
-                elif (filename.endswith(".js") or filename.endswith(".mjs")) and (
-                    "cli" in filename or "main" in filename
-                ):
-                    result["cli_file"] = str(file_path)
-                elif filename.endswith(".ts") and (
-                    "cli" in filename or "main" in filename or "index" in filename
-                ):
-                    result["cli_file"] = str(file_path)
-                elif filename.endswith(".rs") and (
-                    "main" in filename or "cli" in filename
-                ):
-                    result["cli_file"] = str(file_path)
-                elif filename == "package.json":
-                    result["package_file"] = str(file_path)
-                elif filename == "Cargo.toml":
-                    result["cargo_file"] = str(file_path)
-                elif filename == "tsconfig.json":
-                    result["tsconfig_file"] = str(file_path)
-        else:
-            # Fall back to single file generation (legacy)
-            generated_code = builder.build(config, "test_config.yaml", config.version)
-
-            # Determine the output file name based on language
-            if config.language == "python":
-                cli_file = Path(output_dir) / "cli.py"
-            elif config.language == "nodejs":
-                cli_file = Path(output_dir) / "cli.js"
-            elif config.language == "typescript":
-                cli_file = Path(output_dir) / "cli.ts"
-            elif config.language == "rust":
-                cli_file = Path(output_dir) / "src" / "main.rs"
-                # Create src directory for Rust
-                cli_file.parent.mkdir(parents=True, exist_ok=True)
-
-            # Write the generated CLI file
-            cli_file.write_text(generated_code)
-
-            # Make CLI file executable if it's a JavaScript file
-            if config.language in ["nodejs", "typescript"] and cli_file.name.endswith(
-                ".js"
             ):
-                cli_file.chmod(0o755)
+                file_path.chmod(0o755)
 
-            result = {"cli_file": str(cli_file)}
+            # Track the main CLI file
+            if filename.endswith(".py") and (
+                "cli" in filename or "main" in filename
+            ):
+                result["cli_file"] = str(file_path)
+            elif (filename.endswith(".js") or filename.endswith(".mjs")) and (
+                "cli" in filename or "main" in filename
+            ):
+                result["cli_file"] = str(file_path)
+            elif filename.endswith(".ts") and (
+                "cli" in filename or "main" in filename or "index" in filename
+            ):
+                result["cli_file"] = str(file_path)
+            elif filename.endswith(".rs") and (
+                "main" in filename or "cli" in filename
+            ):
+                result["cli_file"] = str(file_path)
+            elif filename == "package.json":
+                result["package_file"] = str(file_path)
+            elif filename == "Cargo.toml":
+                result["cargo_file"] = str(file_path)
+            elif filename == "tsconfig.json":
+                result["tsconfig_file"] = str(file_path)
 
         # For Python, ensure we have the proper package structure and setup files
         if config.language == "python":

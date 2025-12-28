@@ -1,8 +1,5 @@
 """
-Utility functions for the Universal Template System.
-
-This module provides helper functions used across the template engine
-and related components.
+String and attribute manipulation utilities.
 """
 
 from typing import Any

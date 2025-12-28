@@ -582,7 +582,9 @@ class TemplateCache:
             env.filters["python_repr"] = (
                 repr  # Python repr() for default values (alias)
             )
-            env.filters["tojson"] = str  # JSON serialization (pass-through)
+            # Use proper JSON serialization for JavaScript compatibility
+            import json
+            env.filters["tojson"] = lambda x: json.dumps(x)  # JSON serialization
 
             # Enable auto-reloading in development
 

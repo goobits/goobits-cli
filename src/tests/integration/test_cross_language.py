@@ -38,10 +38,10 @@ except ImportError:
     PYTEST_AVAILABLE = False
 
 from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.rust import RustGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.universal.generator import NodeJSGenerator
+from goobits_cli.universal.generator import PythonGenerator
+from goobits_cli.universal.generator import RustGenerator
+from goobits_cli.universal.generator import TypeScriptGenerator
 
 
 class CLIExecutionResult:

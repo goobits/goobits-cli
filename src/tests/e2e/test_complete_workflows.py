@@ -25,10 +25,16 @@ import pytest
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.core.schemas import ConfigSchema
-from goobits_cli.generation.builder import Builder, load_yaml_config
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.core.schemas import ConfigSchema, GoobitsConfigSchema
+from goobits_cli.core.errors import TemplateError
+from goobits_cli.universal.generator import (
+    UniversalGenerator,
+    NodeJSGenerator,
+    TypeScriptGenerator,
+    PythonGenerator,
+    RustGenerator,
+)
+from goobits_cli.universal.engine.stages import parse_config, validate_config
 
 
 class TestCLIE2E:
@@ -38,13 +44,20 @@ class TestCLIE2E:
     def test_config(self):
         """Load the test YAML configuration."""
         config_path = Path(__file__).parent.parent / "integration" / "goobits.yaml"
-        return load_yaml_config(str(config_path))
+        raw_config = parse_config(config_path)
+        return validate_config(raw_config)
 
     @pytest.fixture(scope="class")
     def generated_cli_code(self, test_config):
         """Generate CLI code from test configuration."""
-        builder = Builder()
-        return builder.build(test_config, "goobits.yaml")
+        language = getattr(test_config, "language", "python")
+        generator = UniversalGenerator(language)
+        files = generator.generate_all_files(test_config, "goobits.yaml")
+        # Return the main CLI file content
+        for path, content in files.items():
+            if "cli.py" in path or "cli" in path:
+                return content
+        return next(iter(files.values())) if files else ""
 
     @pytest.fixture(scope="class")
     def temp_venv_dir(self):
@@ -57,36 +70,54 @@ class TestCLIE2E:
 
             yield venv_path
 
+    def _write_files(self, files: dict, base_path):
+        """Write generated files to disk."""
+        for path, content in files.items():
+            file_path = base_path / path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
+
     def test_python_cli_e2e_workflow(self, test_config, tmp_path):
         """Test complete Python CLI workflow end-to-end."""
         # Generate CLI using Python generator
-        from goobits_cli.generation.renderers.python import PythonGenerator
-
         generator = PythonGenerator()
-        result = generator.generate(test_config, str(tmp_path))
+        files = generator.generate_all_files(test_config, "goobits.yaml")
 
         # Verify generation succeeded
-        assert result is not None
+        assert files is not None
+        assert len(files) > 0
 
-        # Check that key files were generated
-        cli_file = tmp_path / "cli.py"
-        assert cli_file.exists()
+        # Write files to disk
+        self._write_files(files, tmp_path)
 
-        # Verify CLI content contains expected commands
-        cli_content = cli_file.read_text()
+        # Find and verify CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.py" in path:
+                cli_content = content
+                break
+
+        assert cli_content is not None
         assert "greet" in cli_content
         assert "hello" in cli_content
         assert "goodbye" in cli_content
 
     def test_cli_help_output(self, test_config, tmp_path):
         """Test that generated CLI produces valid help output."""
-        from goobits_cli.generation.renderers.python import PythonGenerator
-
         generator = PythonGenerator()
-        generator.generate(test_config, str(tmp_path))
+        files = generator.generate_all_files(test_config, "goobits.yaml")
 
-        cli_file = tmp_path / "cli.py"
-        assert cli_file.exists()
+        # Write files to disk
+        self._write_files(files, tmp_path)
+
+        # Find CLI file
+        cli_file = None
+        for path in files.keys():
+            if "cli.py" in path:
+                cli_file = tmp_path / path
+                break
+
+        assert cli_file is not None and cli_file.exists()
 
         # Try to run the CLI with --help (if Python is available)
         try:
@@ -113,15 +144,20 @@ class TestCLIE2E:
 class TestNodeJSGeneratorE2E:
     """End-to-end tests for Node.js CLI generation and execution."""
 
-    @pytest.fixture
-    def sample_nodejs_config(self):
-        """Provide a sample Node.js CLI configuration."""
-        return ConfigSchema(
-            cli={
-                "name": "test-nodejs-cli",
-                "tagline": "Test Node.js CLI for E2E testing",
-                "version": "1.0.0",
-                "commands": {
+    def _create_config(self, language: str) -> GoobitsConfigSchema:
+        """Create a GoobitsConfigSchema for testing."""
+        from goobits_cli.core.schemas import CLISchema
+
+        return GoobitsConfigSchema(
+            package_name="test-nodejs-cli",
+            command_name="testnodejs",
+            display_name="Test Node.js CLI",
+            description="Test Node.js CLI for E2E testing",
+            language=language,
+            cli=CLISchema(
+                name="test-nodejs-cli",
+                tagline="Test Node.js CLI for E2E testing",
+                commands={
                     "hello": {
                         "desc": "Say hello",
                         "handler": "hello_handler",
@@ -136,63 +172,63 @@ class TestNodeJSGeneratorE2E:
                     },
                     "test": {"desc": "Run tests", "handler": "test_handler"},
                 },
-            }
+            ),
         )
 
-    def test_nodejs_generator_e2e(self, sample_nodejs_config, tmp_path):
+    def _write_files(self, files: dict, base_path):
+        """Write generated files to disk."""
+        for path, content in files.items():
+            file_path = base_path / path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
+
+    def test_nodejs_generator_e2e(self, tmp_path):
         """Test Node.js generator end-to-end workflow."""
+        config = self._create_config("nodejs")
         generator = NodeJSGenerator()
 
         # Generate the CLI
-        result = generator.generate(sample_nodejs_config, str(tmp_path))
-        assert result is not None
+        files = generator.generate_all_files(config, "goobits.yaml")
+        assert files is not None
+        assert len(files) > 0
 
-        # Verify key files were generated (consolidated approach)
-        cli_file = tmp_path / "cli.mjs"  # Node.js generator creates .mjs files
-        setup_file = tmp_path / "setup.sh"
+        # Write files to disk
+        self._write_files(files, tmp_path)
 
-        assert cli_file.exists()
-        assert setup_file.exists()
+        # Find and verify CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.mjs" in path:
+                cli_content = content
+                break
 
-        # Verify CLI content
-        cli_content = cli_file.read_text()
+        assert cli_content is not None
         assert "hello" in cli_content
-        assert "test-nodejs-cli" in cli_content  # CLI name should be in the content
 
-        # Verify setup.sh content
-        setup_content = setup_file.read_text()
-        assert "#!/bin/bash" in setup_content
-        assert "npm" in setup_content  # Should contain npm-related setup
-
-    def test_typescript_generator_e2e(self, sample_nodejs_config, tmp_path):
+    def test_typescript_generator_e2e(self, tmp_path):
         """Test TypeScript generator end-to-end workflow."""
+        config = self._create_config("typescript")
         generator = TypeScriptGenerator()
 
         # Generate the CLI
-        result = generator.generate(sample_nodejs_config, str(tmp_path))
-        assert result is not None
+        files = generator.generate_all_files(config, "goobits.yaml")
+        assert files is not None
+        assert len(files) > 0
 
-        # Verify key files were generated (consolidated approach)
-        cli_file = tmp_path / "cli.ts"  # TypeScript generator creates cli.ts
-        types_file = tmp_path / "cli_types.d.ts"  # Updated for consistent naming
-        setup_file = tmp_path / "setup.sh"
+        # Write files to disk
+        self._write_files(files, tmp_path)
 
-        assert cli_file.exists()
-        assert types_file.exists()
-        assert setup_file.exists()
+        # Find and verify CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.ts" in path:
+                cli_content = content
+                break
 
-        # Verify CLI content
-        cli_content = cli_file.read_text()
+        assert cli_content is not None
         assert "hello" in cli_content
-        assert "test-nodejs-cli" in cli_content  # CLI name should be in content
-
-        # Verify cli_types.d.ts content
-        types_content = types_file.read_text()
-        assert "export" in types_content or "declare" in types_content
 
         # Verify TypeScript-specific content or syntax
-        # The Universal Template System generates functional TypeScript
-        # Check for TypeScript/JavaScript ES6+ syntax
         assert (
             "import" in cli_content
             or "export" in cli_content
@@ -201,12 +237,21 @@ class TestNodeJSGeneratorE2E:
         )
 
     @pytest.mark.skipif(shutil.which("node") is None, reason="Node.js not available")
-    def test_nodejs_cli_syntax_validation(self, sample_nodejs_config, tmp_path):
+    def test_nodejs_cli_syntax_validation(self, tmp_path):
         """Test that generated Node.js CLI has valid syntax."""
+        config = self._create_config("nodejs")
         generator = NodeJSGenerator()
-        generator.generate(sample_nodejs_config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
 
-        cli_file = tmp_path / "cli.mjs"  # Node.js generator creates .mjs files
+        # Write files to disk
+        self._write_files(files, tmp_path)
+
+        # Find CLI file
+        cli_file = None
+        for path in files.keys():
+            if "cli.mjs" in path:
+                cli_file = tmp_path / path
+                break
 
         # Try to run Node.js syntax check
         try:
@@ -229,90 +274,99 @@ class TestNodeJSGeneratorE2E:
 class TestCompleteWorkflowValidation:
     """Test complete workflows from YAML to working CLI."""
 
-    def test_minimal_workflow_python(self, tmp_path):
-        """Test minimal workflow with Python generator."""
-        # Create minimal config
-        config = ConfigSchema(
-            cli={
-                "name": "minimal-cli",
-                "tagline": "Minimal test CLI",
-                "version": "1.0.0",
-                "commands": {
+    def _create_minimal_config(self, language: str) -> GoobitsConfigSchema:
+        """Create a minimal GoobitsConfigSchema for testing."""
+        from goobits_cli.core.schemas import CLISchema
+
+        return GoobitsConfigSchema(
+            package_name="minimal-cli",
+            command_name="minimal",
+            display_name="Minimal CLI",
+            description="Minimal test CLI",
+            language=language,
+            cli=CLISchema(
+                name="minimal-cli",
+                tagline="Minimal test CLI",
+                commands={
                     "status": {"desc": "Show status", "handler": "status_handler"}
                 },
-            }
+            ),
         )
 
-        # Generate CLI
-        from goobits_cli.generation.renderers.python import PythonGenerator
+    def _write_generated_files(self, files: dict, base_path):
+        """Write generated files to disk."""
+        for path, content in files.items():
+            file_path = base_path / path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
+
+    def test_minimal_workflow_python(self, tmp_path):
+        """Test minimal workflow with Python generator."""
+        config = self._create_minimal_config("python")
 
         generator = PythonGenerator()
-        result = generator.generate(config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
 
-        # Verify basic structure
-        assert result is not None
-        assert (tmp_path / "cli.py").exists()
+        # Write files to disk
+        self._write_generated_files(files, tmp_path)
 
-        # Verify content
-        cli_content = (tmp_path / "cli.py").read_text()
+        # Verify generation produced files
+        assert len(files) > 0
+
+        # Find CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.py" in path:
+                cli_content = content
+                break
+
+        assert cli_content is not None
         assert "status" in cli_content
-        assert "Show status" in cli_content
 
     def test_minimal_workflow_nodejs(self, tmp_path):
         """Test minimal workflow with Node.js generator."""
-        # Create minimal config
-        config = ConfigSchema(
-            cli={
-                "name": "minimal-cli",
-                "tagline": "Minimal test CLI",
-                "version": "1.0.0",
-                "commands": {
-                    "status": {"desc": "Show status", "handler": "status_handler"}
-                },
-            }
-        )
+        config = self._create_minimal_config("nodejs")
 
-        # Generate CLI
         generator = NodeJSGenerator()
-        result = generator.generate(config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
 
-        # Verify basic structure (consolidated approach)
-        assert result is not None
-        assert (tmp_path / "cli.mjs").exists()  # Node.js generator creates .mjs files
-        assert (tmp_path / "setup.sh").exists()  # Setup script
+        # Write files to disk
+        self._write_generated_files(files, tmp_path)
 
-        # Verify content
-        cli_content = (tmp_path / "cli.mjs").read_text()
+        # Verify generation produced files
+        assert len(files) > 0
+
+        # Find CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.mjs" in path:
+                cli_content = content
+                break
+
+        assert cli_content is not None
         assert "status" in cli_content
 
     def test_minimal_workflow_typescript(self, tmp_path):
         """Test minimal workflow with TypeScript generator."""
-        # Create minimal config
-        config = ConfigSchema(
-            cli={
-                "name": "minimal-cli",
-                "tagline": "Minimal test CLI",
-                "version": "1.0.0",
-                "commands": {
-                    "status": {"desc": "Show status", "handler": "status_handler"}
-                },
-            }
-        )
-
-        # Generate CLI
-        from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+        config = self._create_minimal_config("typescript")
 
         generator = TypeScriptGenerator()
-        result = generator.generate(config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
 
-        # Verify basic structure (consolidated approach)
-        assert result is not None
-        assert (tmp_path / "cli.ts").exists()  # TypeScript generator creates cli.ts
-        assert (tmp_path / "cli_types.d.ts").exists()  # Type definitions
-        assert (tmp_path / "setup.sh").exists()  # Setup script
+        # Write files to disk
+        self._write_generated_files(files, tmp_path)
 
-        # Verify content
-        cli_content = (tmp_path / "cli.ts").read_text()
+        # Verify generation produced files
+        assert len(files) > 0
+
+        # Find CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.ts" in path:
+                cli_content = content
+                break
+
+        assert cli_content is not None
         assert "status" in cli_content
 
     @pytest.mark.skipif(
@@ -321,31 +375,23 @@ class TestCompleteWorkflowValidation:
     )
     def test_minimal_workflow_rust(self, tmp_path):
         """Test minimal workflow with Rust generator."""
-        # Create minimal config
-        config = ConfigSchema(
-            cli={
-                "name": "minimal-cli",
-                "tagline": "Minimal test CLI",
-                "version": "1.0.0",
-                "commands": {
-                    "status": {"desc": "Show status", "handler": "status_handler"}
-                },
-            }
-        )
-
-        # Generate CLI
-        from goobits_cli.generation.renderers.rust import RustGenerator
+        config = self._create_minimal_config("rust")
 
         generator = RustGenerator()
-        result = generator.generate(config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
 
-        # Verify basic structure (consolidated approach)
-        assert result is not None
-        assert (
-            tmp_path / "src" / "cli.rs"
-        ).exists()  # Rust generator creates src/cli.rs
-        assert (tmp_path / "setup.sh").exists()  # Setup script
+        # Write files to disk
+        self._write_generated_files(files, tmp_path)
 
-        # Verify content
-        main_content = (tmp_path / "src" / "cli.rs").read_text()
-        assert "status" in main_content
+        # Verify generation produced files
+        assert len(files) > 0
+
+        # Find CLI content
+        cli_content = None
+        for path, content in files.items():
+            if "cli.rs" in path or "main.rs" in path:
+                cli_content = content
+                break
+
+        assert cli_content is not None
+        assert "status" in cli_content

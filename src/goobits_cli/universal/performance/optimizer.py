@@ -105,15 +105,12 @@ class CLIOptimizer:
         )
 
     def _create_template_engine(self):
-        """Create optimized template engine"""
+        """Create optimized orchestrator for generation."""
+        from ..engine.orchestrator import Orchestrator
 
-        from ..template_engine import UniversalTemplateEngine
-
-        engine = UniversalTemplateEngine(
-            template_cache=self.cache_manager.template_cache
-        )
-
-        return engine
+        # Use Orchestrator as the primary generation engine
+        orchestrator = Orchestrator()
+        return orchestrator
 
     def _create_config_manager(self):
         """Create configuration manager"""

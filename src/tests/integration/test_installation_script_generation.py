@@ -58,19 +58,19 @@ class TestInstallationScriptGeneration:
 
         # Use the specific generator classes
         if language == "python":
-            from goobits_cli.generation.renderers.python import PythonGenerator
+            from goobits_cli.universal.generator import PythonGenerator
 
             generator = PythonGenerator()
         elif language == "nodejs":
-            from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+            from goobits_cli.universal.generator import NodeJSGenerator
 
             generator = NodeJSGenerator()
         elif language == "typescript":
-            from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+            from goobits_cli.universal.generator import TypeScriptGenerator
 
             generator = TypeScriptGenerator()
         elif language == "rust":
-            from goobits_cli.generation.renderers.rust import RustGenerator
+            from goobits_cli.universal.generator import RustGenerator
 
             generator = RustGenerator()
         else:

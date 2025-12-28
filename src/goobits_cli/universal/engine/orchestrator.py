@@ -77,6 +77,7 @@ class Orchestrator:
         output_dir: Path,
         consolidate: bool = False,
         dry_run: bool = False,
+        with_integrations: bool = True,
     ) -> List[Path]:
         """
         Generate CLI implementation from configuration.
@@ -89,6 +90,7 @@ class Orchestrator:
             output_dir: Directory for generated files
             consolidate: Whether to consolidate into single file (Python only)
             dry_run: If True, don't write files
+            with_integrations: If True, apply completion/interactive/plugin integrations
 
         Returns:
             List of generated file paths
@@ -111,6 +113,15 @@ class Orchestrator:
             validated_config = stages.validate_config(raw_config)
         except Exception as e:
             raise ConfigurationError(f"Configuration validation failed: {e}") from e
+
+        try:
+            # Stage 2.5: Apply integrations (completion, interactive, plugins)
+            if with_integrations:
+                validated_config = stages.apply_integrations(validated_config, language)
+        except Exception:
+            # Non-fatal: continue without integrations (they're optional enhancements)
+            # Integration failures shouldn't block core CLI generation
+            pass
 
         try:
             # Stage 3: Build intermediate representation
@@ -144,6 +155,7 @@ class Orchestrator:
         output_dir: Path,
         config_filename: str = "goobits.yaml",
         dry_run: bool = False,
+        with_integrations: bool = True,
     ) -> List[Path]:
         """
         Generate CLI from pre-loaded configuration.
@@ -156,23 +168,67 @@ class Orchestrator:
             output_dir: Directory for generated files
             config_filename: Original filename for metadata
             dry_run: If True, don't write files
+            with_integrations: If True, apply completion/interactive/plugin integrations
 
         Returns:
             List of generated file paths
         """
+        # Get rendered content first
+        rendered_files = self.generate_content(
+            config, language, config_filename, with_integrations
+        )
+
+        return stages.write_files(rendered_files, output_dir, dry_run)
+
+    def generate_content(
+        self,
+        config: Any,
+        language: str,
+        config_filename: str = "goobits.yaml",
+        with_integrations: bool = True,
+    ) -> Dict[str, str]:
+        """
+        Generate CLI content from pre-loaded configuration without writing files.
+
+        This is useful when the caller needs to handle file writing
+        (e.g., for backup support, custom permissions).
+
+        Args:
+            config: Configuration dict or Pydantic model
+            language: Target language
+            config_filename: Original filename for metadata
+            with_integrations: If True, apply completion/interactive/plugin integrations
+
+        Returns:
+            Dictionary mapping file paths to their content
+        """
         try:
-            ir = stages.build_ir(config, config_filename)
+            # Normalize config to GoobitsConfigSchema if needed
+            normalized_config = stages.normalize_config(config)
+        except Exception as e:
+            raise ConfigurationError(f"Failed to normalize config: {e}") from e
+
+        try:
+            # Apply integrations if requested (non-fatal, matches generate() behavior)
+            if with_integrations:
+                normalized_config = stages.apply_integrations(normalized_config, language)
+        except Exception:
+            # Non-fatal: continue without integrations (they're optional enhancements)
+            pass
+
+        try:
+            ir = stages.build_ir(normalized_config, config_filename)
         except Exception as e:
             raise GeneratorError(f"Failed to build IR: {e}") from e
 
         try:
             rendered_files = stages.render_with_templates(
-                ir, language, self.component_registry
+                ir, language, self.component_registry, get_renderer(language)
             )
         except Exception as e:
             raise RenderError(f"Rendering failed: {e}") from e
 
-        return stages.write_files(rendered_files, output_dir, dry_run)
+        return rendered_files
 
     def get_ir(
         self,
@@ -225,7 +281,30 @@ def generate(
     return orchestrator.generate(config_path, language, output_dir, **kwargs)
 
 
+def generate_content(
+    config: Any,
+    language: str,
+    config_filename: str = "goobits.yaml",
+    **kwargs,
+) -> Dict[str, str]:
+    """
+    Convenience function for one-shot content generation without writing files.
+
+    Args:
+        config: Configuration dict or Pydantic model
+        language: Target language
+        config_filename: Original filename for metadata
+        **kwargs: Additional arguments passed to Orchestrator.generate_content
+
+    Returns:
+        Dictionary mapping file paths to their content
+    """
+    orchestrator = Orchestrator()
+    return orchestrator.generate_content(config, language, config_filename, **kwargs)
+
+
 __all__ = [
     "Orchestrator",
     "generate",
+    "generate_content",
 ]

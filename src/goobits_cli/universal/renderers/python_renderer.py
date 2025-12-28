@@ -26,7 +26,7 @@ try:
 except ImportError:
     _version = "3.0.0"  # Fallback version
 
-from ..template_engine import LanguageRenderer
+from .interface import LanguageRenderer
 
 
 class PythonRenderer(LanguageRenderer):
@@ -167,10 +167,16 @@ class PythonRenderer(LanguageRenderer):
                     },
                     "timestamp": datetime.now().isoformat(),
                     "generator_version": self._get_version(),
-                    "package_name": context["project"]["package_name"].replace(
-                        "-", "_"
+                    "package_name": (
+                        context["project"]["package_name"].replace("-", "_")
+                        if context["project"].get("package_name")
+                        else context.get("cli", {}).get("name", "cli").replace("-", "_")
                     ),
-                    "command_name": context["project"]["command_name"],
+                    "command_name": (
+                        context["project"]["command_name"]
+                        if context["project"].get("command_name")
+                        else context.get("cli", {}).get("name", "cli")
+                    ),
                 },
                 "config_filename": context.get("metadata", {}).get(
                     "config_filename", "goobits.yaml"
@@ -535,7 +541,11 @@ setup(
         Returns:
             Dictionary mapping component names to output file paths
         """
-        package_name = ir["project"]["package_name"].replace("-", "_")
+        package_name = (
+            ir["project"]["package_name"].replace("-", "_")
+            if ir["project"].get("package_name")
+            else ir.get("cli", {}).get("name", "cli").replace("-", "_")
+        )
 
         # Use user-defined paths if specified, otherwise use defaults
         # For backward compatibility, include package name in default path

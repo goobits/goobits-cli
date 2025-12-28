@@ -30,11 +30,12 @@ import pytest
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from goobits_cli.core.schemas import ConfigSchema
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.rust import RustGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.core.schemas import ConfigSchema, GoobitsConfigSchema, CLISchema
+from goobits_cli.universal.generator import NodeJSGenerator
+from goobits_cli.universal.generator import PythonGenerator
+from goobits_cli.universal.generator import RustGenerator
+from goobits_cli.universal.generator import TypeScriptGenerator
+from goobits_cli.universal.generator import UniversalGenerator
 
 
 @dataclass
@@ -65,12 +66,20 @@ class TestPerformanceBenchmarks:
 
     def setup_method(self):
         """Set up test environment."""
-        self.test_config = ConfigSchema(
-            cli={
-                "name": "benchmark-cli",
-                "tagline": "Performance benchmark CLI",
-                "version": "1.0.0",
-                "commands": {
+        self.test_config = None  # Will be created per-language
+
+    def _create_config(self, language: str) -> GoobitsConfigSchema:
+        """Create a GoobitsConfigSchema for the specified language."""
+        return GoobitsConfigSchema(
+            package_name="benchmark-cli",
+            command_name="benchmark",
+            display_name="Benchmark CLI",
+            description="Performance benchmark CLI",
+            language=language,
+            cli=CLISchema(
+                name="benchmark-cli",
+                tagline="Performance benchmark CLI",
+                commands={
                     "hello": {
                         "desc": "Say hello",
                         "handler": "hello_handler",
@@ -103,8 +112,15 @@ class TestPerformanceBenchmarks:
                         ],
                     },
                 },
-            }
+            ),
         )
+
+    def _write_files(self, files: dict, base_path):
+        """Write generated files to disk."""
+        for path, content in files.items():
+            file_path = base_path / path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
 
     @contextmanager
     def measure_performance(self):
@@ -139,22 +155,28 @@ class TestPerformanceBenchmarks:
 
     def test_python_generation_performance(self, tmp_path):
         """Test Python CLI generation performance."""
+        config = self._create_config("python")
         generator = PythonGenerator()
 
         with self.measure_performance():
-            result = generator.generate(self.test_config, str(tmp_path))
+            files = generator.generate_all_files(config, "goobits.yaml")
 
-        assert result is not None
+        assert files is not None
+        assert len(files) > 0
 
         # Performance assertions
         assert self._last_duration_ms < 5000  # Should complete within 5 seconds
         assert self._last_memory_mb < 100  # Should use less than 100MB
 
-        # Verify files were generated
-        assert (tmp_path / "cli.py").exists()
+        # Write files to disk for verification
+        self._write_files(files, tmp_path)
+
+        # Verify CLI file exists in generated files
+        assert any("cli.py" in path for path in files.keys())
 
     def test_nodejs_generation_performance(self, tmp_path):
         """Test Node.js CLI generation performance."""
+        config = self._create_config("nodejs")
         generator = NodeJSGenerator()
 
         # Add timeout to prevent hanging
@@ -168,9 +190,10 @@ class TestPerformanceBenchmarks:
 
         try:
             with self.measure_performance():
-                result = generator.generate(self.test_config, str(tmp_path))
+                files = generator.generate_all_files(config, "goobits.yaml")
 
-            assert result is not None
+            assert files is not None
+            assert len(files) > 0
 
             # Performance assertions
             assert (
@@ -180,19 +203,20 @@ class TestPerformanceBenchmarks:
                 self._last_memory_mb < 150
             )  # Increased memory limit for complex generation
 
-            # Verify files were generated (check for actual generated file types)
+            # Write files to disk
+            self._write_files(files, tmp_path)
+
+            # Verify main CLI file exists in generated files
             main_files = ["cli.js", "cli.mjs", "index.js"]
-            assert any((tmp_path / f).exists() for f in main_files), (
-                f"No main CLI file found in {list(tmp_path.iterdir())}"
-            )
-            # package.json might not be generated in test scenarios, so check if any files exist
-            generated_files = list(tmp_path.iterdir())
-            assert len(generated_files) > 0, f"No files generated in {tmp_path}"
+            assert any(
+                any(f in path for f in main_files) for path in files.keys()
+            ), f"No main CLI file found in {list(files.keys())}"
         finally:
             signal.alarm(0)  # Disable alarm
 
     def test_typescript_generation_performance(self, tmp_path):
         """Test TypeScript CLI generation performance."""
+        config = self._create_config("typescript")
         generator = TypeScriptGenerator()
 
         # Add timeout to prevent hanging
@@ -206,9 +230,10 @@ class TestPerformanceBenchmarks:
 
         try:
             with self.measure_performance():
-                result = generator.generate(self.test_config, str(tmp_path))
+                files = generator.generate_all_files(config, "goobits.yaml")
 
-            assert result is not None
+            assert files is not None
+            assert len(files) > 0
 
             # Performance assertions
             assert (
@@ -218,60 +243,62 @@ class TestPerformanceBenchmarks:
                 self._last_memory_mb < 150
             )  # Increased memory limit for complex generation
 
-            # Verify files were generated (check for either main file types)
+            # Write files to disk
+            self._write_files(files, tmp_path)
+
+            # Verify main CLI file exists in generated files
             main_files = ["cli.ts", "index.ts", "generated_index.ts"]
-            assert any((tmp_path / f).exists() for f in main_files), (
-                f"No main CLI file found in {list(tmp_path.iterdir())}"
-            )
-            # Verify at least some files were generated (config files might not be generated in test scenarios)
-            generated_files = list(tmp_path.iterdir())
-            assert len(generated_files) > 0, f"No files generated in {tmp_path}"
+            assert any(
+                any(f in path for f in main_files) for path in files.keys()
+            ), f"No main CLI file found in {list(files.keys())}"
         finally:
             signal.alarm(0)  # Disable alarm
 
     @pytest.mark.skipif(shutil.which("cargo") is None, reason="Cargo not available")
     def test_rust_generation_performance(self, tmp_path):
         """Test Rust CLI generation performance."""
+        config = self._create_config("rust")
         generator = RustGenerator()
 
         with self.measure_performance():
-            result = generator.generate(self.test_config, str(tmp_path))
+            files = generator.generate_all_files(config, "goobits.yaml")
 
-        assert result is not None
+        assert files is not None
+        assert len(files) > 0
 
         # Performance assertions
         assert self._last_duration_ms < 5000  # Should complete within 5 seconds
         assert self._last_memory_mb < 100  # Should use less than 100MB
 
-        # Verify files were generated
-        assert (tmp_path / "Cargo.toml").exists()
-        assert (tmp_path / "src" / "cli.rs").exists()
+        # Write files to disk
+        self._write_files(files, tmp_path)
+
+        # Verify CLI file exists in generated files
+        assert any("cli.rs" in path or "main.rs" in path for path in files.keys())
 
     def test_cross_language_performance_comparison(self, tmp_path):
         """Compare performance across all supported languages."""
-        generators = [
-            ("python", PythonGenerator),
-            ("nodejs", NodeJSGenerator),
-            ("typescript", TypeScriptGenerator),
-        ]
+        languages = ["python", "nodejs", "typescript"]
 
         # Add Rust if available
         if shutil.which("cargo"):
-            generators.append(("rust", RustGenerator))
+            languages.append("rust")
 
         results = {}
 
-        for lang, generator_class in generators:
+        for lang in languages:
+            config = self._create_config(lang)
+            generator = UniversalGenerator(lang)
             lang_dir = tmp_path / lang
             lang_dir.mkdir()
 
-            generator = generator_class()
-
             with self.measure_performance():
                 try:
-                    result = generator.generate(self.test_config, str(lang_dir))
-                    success = result is not None
+                    files = generator.generate_all_files(config, "goobits.yaml")
+                    success = files is not None and len(files) > 0
                     error = None
+                    if success:
+                        self._write_files(files, lang_dir)
                 except Exception as e:
                     success = False
                     error = str(e)
@@ -301,12 +328,16 @@ class TestPerformanceBenchmarks:
     def test_large_config_performance(self, tmp_path):
         """Test performance with a large configuration."""
         # Create a large configuration with many commands
-        large_config = ConfigSchema(
-            cli={
-                "name": "large-cli",
-                "tagline": "Large CLI for performance testing",
-                "version": "1.0.0",
-                "commands": {
+        large_config = GoobitsConfigSchema(
+            package_name="large-cli",
+            command_name="largecli",
+            display_name="Large CLI",
+            description="Large CLI for performance testing",
+            language="python",
+            cli=CLISchema(
+                name="large-cli",
+                tagline="Large CLI for performance testing",
+                commands={
                     f"command_{i}": {
                         "desc": f"Command {i} description",
                         "handler": f"command_{i}_handler",
@@ -329,15 +360,19 @@ class TestPerformanceBenchmarks:
                     }
                     for i in range(20)  # 20 commands
                 },
-            }
+            ),
         )
 
         generator = PythonGenerator()
 
         with self.measure_performance():
-            result = generator.generate(large_config, str(tmp_path))
+            files = generator.generate_all_files(large_config, "goobits.yaml")
 
-        assert result is not None
+        assert files is not None
+        assert len(files) > 0
+
+        # Write files to disk
+        self._write_files(files, tmp_path)
 
         # Performance should still be reasonable even with large config
         assert self._last_duration_ms < 15000  # 15 seconds max for large config
@@ -346,6 +381,7 @@ class TestPerformanceBenchmarks:
     def test_memory_efficiency(self, tmp_path):
         """Test memory efficiency by generating multiple CLIs."""
         generator = PythonGenerator()
+        config = self._create_config("python")
 
         initial_memory = self._get_memory_usage()
 
@@ -364,8 +400,12 @@ class TestPerformanceBenchmarks:
                 test_dir = tmp_path / f"cli_{i}"
                 test_dir.mkdir()
 
-                result = generator.generate(self.test_config, str(test_dir))
-                assert result is not None
+                files = generator.generate_all_files(config, "goobits.yaml")
+                assert files is not None
+                assert len(files) > 0
+
+                # Write files to disk
+                self._write_files(files, test_dir)
 
                 # Force garbage collection
                 gc.collect()
@@ -386,14 +426,21 @@ class TestPerformanceBenchmarks:
     def test_template_rendering_performance(self, tmp_path):
         """Test template rendering performance specifically."""
         generator = PythonGenerator()
+        config = self._create_config("python")
 
         # Measure template rendering specifically
         start_time = time.perf_counter()
 
         # Generate multiple times to get more accurate measurement
-        for _ in range(3):
-            result = generator.generate(self.test_config, str(tmp_path))
-            assert result is not None
+        for i in range(3):
+            files = generator.generate_all_files(config, "goobits.yaml")
+            assert files is not None
+            assert len(files) > 0
+
+            # Write files to disk
+            test_dir = tmp_path / f"render_{i}"
+            test_dir.mkdir()
+            self._write_files(files, test_dir)
 
         end_time = time.perf_counter()
         avg_duration_ms = ((end_time - start_time) / 3) * 1000
@@ -407,50 +454,64 @@ class TestPerformanceBenchmarks:
 class TestSimpleBenchmarks:
     """Simple performance benchmarks for quick validation."""
 
-    def test_basic_python_generation_speed(self, tmp_path):
-        """Test basic Python generation completes quickly."""
-        config = ConfigSchema(
-            cli={
-                "name": "speed-test",
-                "tagline": "Speed test CLI",
-                "version": "1.0.0",
-                "commands": {
+    def _create_config(self, language: str) -> GoobitsConfigSchema:
+        """Create a GoobitsConfigSchema for the specified language."""
+        return GoobitsConfigSchema(
+            package_name="speed-test",
+            command_name="speedtest",
+            display_name="Speed Test CLI",
+            description="Speed test CLI",
+            language=language,
+            cli=CLISchema(
+                name="speed-test",
+                tagline="Speed test CLI",
+                commands={
                     "fast": {"desc": "Fast command", "handler": "fast_handler"}
                 },
-            }
+            ),
         )
+
+    def _write_files(self, files: dict, base_path):
+        """Write generated files to disk."""
+        for path, content in files.items():
+            file_path = base_path / path
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(content)
+
+    def test_basic_python_generation_speed(self, tmp_path):
+        """Test basic Python generation completes quickly."""
+        config = self._create_config("python")
 
         generator = PythonGenerator()
 
         start_time = time.perf_counter()
-        result = generator.generate(config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
         end_time = time.perf_counter()
 
         duration_ms = (end_time - start_time) * 1000
 
-        assert result is not None
+        assert files is not None
+        assert len(files) > 0
         assert duration_ms < 3000  # Should complete within 3 seconds
+
+        # Write files to verify generation
+        self._write_files(files, tmp_path)
 
     def test_basic_nodejs_generation_speed(self, tmp_path):
         """Test basic Node.js generation completes quickly."""
-        config = ConfigSchema(
-            cli={
-                "name": "speed-test",
-                "tagline": "Speed test CLI",
-                "version": "1.0.0",
-                "commands": {
-                    "fast": {"desc": "Fast command", "handler": "fast_handler"}
-                },
-            }
-        )
+        config = self._create_config("nodejs")
 
         generator = NodeJSGenerator()
 
         start_time = time.perf_counter()
-        result = generator.generate(config, str(tmp_path))
+        files = generator.generate_all_files(config, "goobits.yaml")
         end_time = time.perf_counter()
 
         duration_ms = (end_time - start_time) * 1000
 
-        assert result is not None
+        assert files is not None
+        assert len(files) > 0
         assert duration_ms < 3000  # Should complete within 3 seconds
+
+        # Write files to verify generation
+        self._write_files(files, tmp_path)

@@ -1,66 +1,26 @@
 """
+Backward-compatible re-export of plugins module.
 
-Plugin system for Goobits CLI Framework.
+This module has been moved to goobits_cli.universal.integrations.plugins.
+This file provides backward compatibility for existing imports.
 
-Provides a secure, extensible plugin architecture with marketplace integration,
-
-version management, and cross-language support.
-
+DEPRECATED: Use goobits_cli.universal.integrations.plugins instead.
 """
 
-from .integration import setup_plugin_integration
-from .manager import PluginInfo, PluginManager, PluginRegistry
+# Re-export everything from the new location
+from ..integrations.plugins import *  # noqa: F401, F403
+from ..integrations.plugins import (
+    PluginInfo,
+    PluginManager,
+    PluginRegistry,
+    integrate_plugin_system,
+    setup_plugin_integration,
+)
 
-
-def integrate_plugin_system(config_dict, language):
-    """
-
-    Integrate plugin system into CLI configuration.
-
-    Args:
-
-        config_dict: CLI configuration dictionary
-
-        language: Target language (python, nodejs, typescript, rust)
-
-    Returns:
-
-        Enhanced configuration with plugin system support
-
-    """
-
-    # Create plugin integrator for the target language
-
-    setup_plugin_integration(language)
-
-    # Get enabled plugins
-
-    plugin_manager = PluginManager()
-
-    enabled_plugins = plugin_manager.list_plugins(status="enabled")
-
-    # Add plugin configuration to CLI config
-
-    if not config_dict.get("cli"):
-        config_dict["cli"] = {}
-
-    # Add plugin system configuration
-
-    config_dict["cli"]["plugin_system"] = {
-        "enabled": True,
-        "language": language,
-        "plugins_dir": str(plugin_manager.plugins_dir),
-        "enabled_plugins": [plugin.name for plugin in enabled_plugins],
-        "plugin_discovery": True,
-    }
-
-    # Add plugin loading capabilities to the CLI
-
-    config_dict["cli"]["features"] = config_dict["cli"].get("features", {})
-
-    config_dict["cli"]["features"]["plugins"] = True
-
-    return config_dict
-
-
-__all__ = ["PluginManager", "PluginInfo", "PluginRegistry", "integrate_plugin_system"]
+__all__ = [
+    "PluginManager",
+    "PluginInfo",
+    "PluginRegistry",
+    "integrate_plugin_system",
+    "setup_plugin_integration",
+]

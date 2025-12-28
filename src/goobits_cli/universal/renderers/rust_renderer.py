@@ -21,7 +21,7 @@ import json
 
 import jinja2
 
-from ..template_engine import LanguageRenderer
+from .interface import LanguageRenderer
 
 
 class RustRenderer(LanguageRenderer):
@@ -75,7 +75,7 @@ class RustRenderer(LanguageRenderer):
 
         Args:
 
-            ir: Intermediate representation from UniversalTemplateEngine
+            ir: Intermediate representation from IRBuilder
 
         Returns:
 
@@ -153,10 +153,16 @@ class RustRenderer(LanguageRenderer):
             },
             "timestamp": datetime.now().isoformat(),
             "generator_version": self._get_version(),
-            "package_name": context["project"]
-            .get("package_name", "cli")
-            .replace("-", "_"),
-            "command_name": context["project"].get("command_name", "cli"),
+            "package_name": (
+                context["project"].get("package_name")
+                or context.get("cli", {}).get("name")
+                or "cli"
+            ).replace("-", "_"),
+            "command_name": (
+                context["project"].get("command_name")
+                or context.get("cli", {}).get("name")
+                or "cli"
+            ),
             "rust_edition": "2021",
         }
 

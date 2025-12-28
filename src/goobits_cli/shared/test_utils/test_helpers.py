@@ -27,11 +27,18 @@ try:
 except ImportError:
     # Fallback for different test environments
     def generate_cli(config, filename):
-        """Fallback generate_cli implementation"""
-        from goobits_cli.generation.builder import Builder
+        """Fallback generate_cli implementation using Universal Generator"""
+        from goobits_cli.universal.generator import UniversalGenerator
 
-        builder = Builder()
-        return builder.build_files(config)
+        # Detect language from config
+        language = getattr(config, "language", "python")
+        if hasattr(config, "model_dump"):
+            language = config.model_dump().get("language", "python")
+        elif isinstance(config, dict):
+            language = config.get("language", "python")
+
+        generator = UniversalGenerator(language)
+        return generator.generate_all_files(config, filename)
 
 
 @dataclass

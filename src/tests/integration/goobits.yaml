@@ -1,3 +1,9 @@
+package_name: "test-cli"
+command_name: "testcli"
+display_name: "Test CLI"
+description: "A test CLI for integration tests"
+language: "python"
+
 cli:
   name: "TestCLI"
   tagline: "A test CLI for integration tests."

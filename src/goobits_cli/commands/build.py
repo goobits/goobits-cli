@@ -175,29 +175,14 @@ def build_command(
                     f"\U0001f680 Generating {language} CLI using Universal Template System"
                 )
 
-            # Route to appropriate generator based on language
-            if language == "nodejs":
-                from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
+            # Route to orchestrator for all languages (uses registry-based renderers)
+            from goobits_cli.universal.engine.orchestrator import Orchestrator
 
-                generator = NodeJSGenerator()
-            elif language == "typescript":
-                from goobits_cli.generation.renderers.typescript import (
-                    TypeScriptGenerator,
-                )
-
-                generator = TypeScriptGenerator()
-            elif language == "rust":
-                from goobits_cli.generation.renderers.rust import RustGenerator
-
-                generator = RustGenerator()
-            else:  # python (default)
-                from goobits_cli.generation.renderers.python import PythonGenerator
-
-                generator = PythonGenerator()
+            orchestrator = Orchestrator()
 
             # Generate all files for this language
-            all_files = generator.generate_all_files(
-                goobits_config, config_path.name, version
+            all_files = orchestrator.generate_content(
+                goobits_config, language, config_path.name
             )
 
             # Determine output directory for this language

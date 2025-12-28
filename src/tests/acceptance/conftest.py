@@ -32,6 +32,8 @@ def sample_goobits_yaml() -> Dict[str, Any]:
         "version": "1.0.0",
         "language": "python",
         "cli": {
+            "name": "Test CLI",
+            "tagline": "A test CLI for acceptance testing",
             "commands": {
                 "hello": {
                     "desc": "Say hello",

@@ -40,6 +40,8 @@ def full_config() -> Dict[str, Any]:
         "license": "MIT",
         "language": "python",
         "cli": {
+            "name": "Full CLI",
+            "tagline": "A comprehensive CLI for testing",
             "commands": {
                 "hello": {
                     "desc": "Say hello",

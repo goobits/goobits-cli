@@ -23,10 +23,7 @@ from goobits_cli.core.schemas import (
     ShellIntegrationSchema,
     ValidationSchema,
 )
-from goobits_cli.generation.renderers.nodejs import NodeJSGenerator
-from goobits_cli.generation.renderers.python import PythonGenerator
-from goobits_cli.generation.renderers.rust import RustGenerator
-from goobits_cli.generation.renderers.typescript import TypeScriptGenerator
+from goobits_cli.universal.generator import UniversalGenerator
 
 
 def determine_language(config: GoobitsConfigSchema) -> str:
@@ -40,25 +37,11 @@ def generate_cli(
     """Generate CLI files based on the configuration language.
 
     Returns a dictionary mapping file paths to their contents.
-    For Python, returns a single-entry dict with the CLI script.
-    For Node.js/TypeScript/Rust, returns multiple files.
+    Uses the Universal Generator for all languages.
     """
     language = determine_language(config)
-
-    if language == "nodejs":
-        generator = NodeJSGenerator()
-        return generator.generate_all_files(config, filename, version)
-    elif language == "typescript":
-        generator = TypeScriptGenerator()
-        return generator.generate_all_files(config, filename, version)
-    elif language == "rust":
-        generator = RustGenerator()
-        return generator.generate_all_files(config, filename, version)
-    else:
-        # Default to Python
-        generator = PythonGenerator()
-        cli_code = generator.generate(config, filename, version)
-        return {"cli.py": cli_code}  # Single file for Python
+    generator = UniversalGenerator(language)
+    return generator.generate_all_files(config, filename, version)
 
 
 def create_test_goobits_config(
@@ -191,12 +174,7 @@ def language_test_config(request, basic_cli_schema):
 
 
 @pytest.fixture(
-    params=[
-        (PythonGenerator, "python"),
-        (NodeJSGenerator, "nodejs"),
-        (TypeScriptGenerator, "typescript"),
-        (RustGenerator, "rust"),
-    ]
+    params=["python", "nodejs", "typescript", "rust"]
 )
 def parameterized_generator(request):
     """Provide a generator instance with its language identifier.
@@ -207,8 +185,8 @@ def parameterized_generator(request):
     Returns:
         tuple: (generator_instance, language_name)
     """
-    GeneratorClass, language = request.param
-    return GeneratorClass(), language
+    language = request.param
+    return UniversalGenerator(language), language
 
 
 # Note: YAML test integration has been removed in favor of keeping

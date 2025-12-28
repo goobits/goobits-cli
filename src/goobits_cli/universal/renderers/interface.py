@@ -107,6 +107,22 @@ class LanguageRenderer(ABC):
         """
         pass
 
+    def _set_language_context(self, ir: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Helper method to set language context from IR.
+
+        Ensures consistent language setting across all renderers.
+
+        Args:
+            ir: Intermediate representation dictionary
+
+        Returns:
+            Context dictionary with language field set to this renderer's language
+        """
+        context = ir.copy()
+        context["language"] = self.language
+        return context
+
     def render(self, ir: Dict[str, Any]) -> List[Artifact]:
         """
         Render all artifacts for the given intermediate representation.
