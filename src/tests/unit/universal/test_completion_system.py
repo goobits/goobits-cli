@@ -21,18 +21,18 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from goobits_cli.universal.completion.integration import (
+from goobits_cli.universal.integrations.completion.integration import (
     InteractiveCompletionIntegrator,
     setup_completion_for_language,
 )
-from goobits_cli.universal.completion.providers import (
+from goobits_cli.universal.integrations.completion.providers import (
     ConfigKeyProvider,
     EnvironmentVariableProvider,
     FilePathCompletionProvider,
     HistoryProvider,
     setup_default_providers,
 )
-from goobits_cli.universal.completion.registry import (
+from goobits_cli.universal.integrations.completion.registry import (
     CompletionContext,
     CompletionProvider,
     DynamicCompletionRegistry,

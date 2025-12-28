@@ -21,7 +21,7 @@ Example usage:
 
 # Interactive mode re-exports from universal
 # Completion system re-exports from universal
-from ..universal.completion import (
+from ..universal.integrations.completion import (
     CompletionContext,
     CompletionProvider,
     ConfigKeyProvider,
@@ -35,7 +35,7 @@ from ..universal.completion import (
     get_smart_completion_registry,
     integrate_completion_system,
 )
-from ..universal.interactive import (
+from ..universal.integrations.interactive import (
     BasicREPL,
     InteractiveCommand,
     InteractiveEngine,
@@ -46,7 +46,7 @@ from ..universal.interactive import (
 )
 
 # Plugin system re-exports
-from ..universal.plugins import (
+from ..universal.integrations.plugins import (
     PluginInfo,
     PluginManager,
     PluginRegistry,

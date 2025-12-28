@@ -38,9 +38,9 @@ from pathlib import Path
 
 # Import BasicREPL and session management
 try:
-    from goobits_cli.universal.interactive import BasicREPL, create_basic_repl{% if session_enabled %}, SessionREPL{% endif %}{% if variables_enabled %}, VariableREPL{% endif %}{% if pipelines_enabled %}, PipelineREPL{% endif %}
+    from goobits_cli.universal.integrations.interactive import BasicREPL, create_basic_repl{% if session_enabled %}, SessionREPL{% endif %}{% if variables_enabled %}, VariableREPL{% endif %}{% if pipelines_enabled %}, PipelineREPL{% endif %}
     
-    from goobits_cli.universal.completion.smart_completion import get_smart_completion_registry
+    from goobits_cli.universal.integrations.completion.smart_completion import get_smart_completion_registry
     REPL_AVAILABLE = True
 {% if session_enabled %}
     SESSION_AVAILABLE = True

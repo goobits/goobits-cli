@@ -14,12 +14,12 @@ from ..logger import get_logger
 # Enhanced imports for completion and plugin systems
 
 try:
-    from goobits_cli.universal.completion import get_completion_registry
-    from goobits_cli.universal.completion.integration import (
+    from goobits_cli.universal.integrations.completion import get_completion_registry
+    from goobits_cli.universal.integrations.completion.integration import (
         setup_completion_for_language,
     )
-    from goobits_cli.universal.plugins import get_plugin_manager
-    from goobits_cli.universal.plugins.integration import get_plugin_command_manager
+    from goobits_cli.universal.integrations.plugins import get_plugin_manager
+    from goobits_cli.universal.integrations.plugins.integration import get_plugin_command_manager
 
     ENHANCED_FEATURES_AVAILABLE = True
 

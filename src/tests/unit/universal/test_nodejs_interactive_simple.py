@@ -18,7 +18,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from goobits_cli.universal.interactive.nodejs_utils_simple import (
+from goobits_cli.universal.integrations.interactive.nodejs_utils_simple import (
     NodeJSInteractiveUtils,
     get_nodejs_interactive_dependencies,
 )
@@ -279,7 +279,7 @@ class TestNodeJSInteractiveTestsGeneration(unittest.TestCase):
 
     def test_test_code_generation(self):
         """Test generation of Node.js test code."""
-        from goobits_cli.universal.interactive.nodejs_utils_simple import (
+        from goobits_cli.universal.integrations.interactive.nodejs_utils_simple import (
             get_nodejs_interactive_tests,
         )
 

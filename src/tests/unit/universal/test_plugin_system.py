@@ -20,13 +20,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from goobits_cli.universal.plugins.integration import (
+from goobits_cli.universal.integrations.plugins.integration import (
     PluginCLIIntegrator,
     PluginCommandManager,
     create_plugin_template_context,
     setup_plugin_integration,
 )
-from goobits_cli.universal.plugins.manager import (
+from goobits_cli.universal.integrations.plugins.manager import (
     PluginInfo,
     PluginManager,
     PluginRegistry,

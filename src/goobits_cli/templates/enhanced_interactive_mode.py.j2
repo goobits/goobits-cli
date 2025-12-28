@@ -25,10 +25,10 @@ def _lazy_load_enhanced_features():
         return ENHANCED_FEATURES_AVAILABLE
     
     try:
-        from goobits_cli.universal.completion import get_completion_registry
-        from goobits_cli.universal.completion.integration import setup_completion_for_language
-        from goobits_cli.universal.plugins import get_plugin_manager
-        from goobits_cli.universal.plugins.integration import get_plugin_command_manager
+        from goobits_cli.universal.integrations.completion import get_completion_registry
+        from goobits_cli.universal.integrations.completion.integration import setup_completion_for_language
+        from goobits_cli.universal.integrations.plugins import get_plugin_manager
+        from goobits_cli.universal.integrations.plugins.integration import get_plugin_command_manager
         
         _completion_registry = get_completion_registry
         _plugin_manager = get_plugin_manager
@@ -78,7 +78,7 @@ class Enhanced{{ cli_name | title }}Interactive:
         """Setup enhanced completion and plugin features."""
         try:
             # Import the needed functions using lazy loading
-            from goobits_cli.universal.completion.integration import setup_completion_for_language
+            from goobits_cli.universal.integrations.completion.integration import setup_completion_for_language
             
             # Setup dynamic completion
             self.completion_integrator = setup_completion_for_language('python')

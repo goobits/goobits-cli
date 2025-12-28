@@ -31,8 +31,8 @@ from pathlib import Path
 
 # Import BasicREPL and smart completion
 try:
-    from goobits_cli.universal.interactive import BasicREPL, create_basic_repl
-    from goobits_cli.universal.completion.smart_completion import get_smart_completion_registry
+    from goobits_cli.universal.integrations.interactive import BasicREPL, create_basic_repl
+    from goobits_cli.universal.integrations.completion.smart_completion import get_smart_completion_registry
     REPL_AVAILABLE = True
 except ImportError:
     # Fallback to basic interactive mode

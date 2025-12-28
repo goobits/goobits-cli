@@ -9,7 +9,7 @@ from typing import Any, Dict
 
 import pytest
 
-from goobits_cli.universal.interactive import (
+from goobits_cli.universal.integrations.interactive import (
     integrate_interactive_mode,
     is_interactive_supported,
 )
@@ -194,7 +194,7 @@ class TestInteractiveMode:
 
         # Verify Python-specific content for enhanced REPL
         assert "Enhanced REPL for test-cli" in rendered
-        assert "from goobits_cli.universal.interactive import BasicREPL" in rendered
+        assert "from goobits_cli.universal.integrations.interactive import BasicREPL" in rendered
         assert "class TestcliREPL(BasicREPL" in rendered
         assert "def run_enhanced_repl():" in rendered
         assert "smart_completion_enabled=True" in rendered
