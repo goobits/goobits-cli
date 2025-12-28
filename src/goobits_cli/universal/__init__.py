@@ -21,9 +21,6 @@ from .utils import _safe_get_attr
 from .utils.paths import ensure_directory, get_relative_path, normalize_path
 from .utils.json import safe_json_dumps
 
-# Legacy exports (deprecated, use Orchestrator instead)
-from .template_engine import UniversalTemplateEngine
-
 __all__ = [
     # Primary API
     "Orchestrator",
@@ -44,6 +41,4 @@ __all__ = [
     "ensure_directory",
     "get_relative_path",
     "safe_json_dumps",
-    # Deprecated (backward compat)
-    "UniversalTemplateEngine",
 ]
