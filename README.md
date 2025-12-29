@@ -186,12 +186,12 @@ mypy src/goobits_cli/
 
 ## Examples
 
-See `test-fixtures/configs/` for sample configurations:
+See `examples/` for sample configurations:
 
-- `python/` - Python CLI example
-- `nodejs/` - Node.js CLI example
-- `typescript/` - TypeScript CLI example
-- `rust/` - Rust CLI example
+- `basic-demos/python-minimal.yaml` - Minimal Python CLI
+- `basic-demos/rust-advanced.yaml` - Feature-rich Rust CLI
+- `basic-demos/multi-language-demo.yaml` - Multi-language targets
+- `advanced-features/nested-command-demo.yaml` - Nested subcommands
 
 ## License
 
