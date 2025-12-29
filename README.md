@@ -34,7 +34,6 @@ goobits build
 | `goobits init` | Create initial goobits.yaml |
 | `goobits validate [config]` | Validate configuration without generating |
 | `goobits migrate <path>` | Migrate YAML configs to 3.0.0 format |
-| `goobits serve <dir>` | Serve local PyPI-compatible package index |
 | `goobits upgrade` | Upgrade goobits-cli to latest version |
 
 ### Command Options
@@ -45,7 +44,7 @@ goobits build
 - `--backup` - Create .bak files when overwriting
 
 **init**
-- `--template` - Choose template (basic, advanced, api-client)
+- `--template` - Choose template (basic, advanced, api-client, text-processor)
 - `--force` - Overwrite existing configuration
 
 **validate**
@@ -55,13 +54,11 @@ goobits build
 - `--backup` - Create backup files (.bak)
 - `--dry-run` - Show changes without applying
 
-**serve**
-- `--host` - Server host (default: localhost)
-- `--port` - Server port (default: 8080)
-
 **upgrade**
-- `--check` - Check for updates without installing
+- `--source` - Upgrade source (pypi, git, local)
+- `--version` - Specific version to install
 - `--pre` - Include pre-release versions
+- `--dry-run` - Show what would be upgraded without doing it
 
 ## ⚙️ Configuration
 
@@ -158,10 +155,10 @@ Implement business logic in language-specific hook files:
 
 | Language | Hook File |
 |----------|-----------|
-| Python | `cli_hooks.py` |
-| Node.js | `cli_hooks.mjs` |
-| TypeScript | `cli_hooks.ts` |
-| Rust | `src/cli_hooks.rs` |
+| Python | `app_hooks.py` |
+| Node.js | `hooks.mjs` |
+| TypeScript | `hooks.ts` |
+| Rust | `src/hooks.rs` |
 
 ### Built-in Validation
 
@@ -220,10 +217,12 @@ mypy src/goobits_cli/
 
 ## 💡 Examples
 
-See `src/examples/` for sample configurations:
+See `test-fixtures/configs/` for sample configurations:
 
-- `validation/` - Generated CLI examples in all 4 languages
-- `installation/` - Installation demos
+- `python/` - Generated Python CLI example
+- `nodejs/` - Generated Node.js CLI example
+- `typescript/` - Generated TypeScript CLI example
+- `rust/` - Generated Rust CLI example
 
 ## 📝 License
 
