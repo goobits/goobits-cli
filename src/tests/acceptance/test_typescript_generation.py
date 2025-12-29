@@ -72,14 +72,3 @@ class TestTypeScriptGeneration:
         )
 
         assert isinstance(files, list)
-
-
-@pytest.mark.acceptance
-@pytest.mark.skipif(not shutil.which("npx"), reason="npx not installed")
-class TestTypeScriptCLIExecution:
-    """Test execution of generated TypeScript CLIs."""
-
-    @pytest.mark.skip(reason="Requires full template rendering and ts-node setup")
-    def test_help_command(self, temp_project_dir: Path, write_config):
-        """Test that generated CLI responds to --help."""
-        pass

@@ -74,19 +74,3 @@ class TestNodeJSGeneration:
 
         # Should generate some files (may be 0 if templates missing)
         assert isinstance(files, list)
-
-
-@pytest.mark.acceptance
-@pytest.mark.skipif(not shutil.which("node"), reason="Node.js not installed")
-class TestNodeJSCLIExecution:
-    """Test execution of generated Node.js CLIs."""
-
-    @pytest.mark.skip(reason="Requires full template rendering setup")
-    def test_help_command(self, temp_project_dir: Path, write_config):
-        """Test that generated CLI responds to --help."""
-        pass
-
-    @pytest.mark.skip(reason="Requires full template rendering setup")
-    def test_version_command(self, temp_project_dir: Path, write_config):
-        """Test that generated CLI responds to --version."""
-        pass

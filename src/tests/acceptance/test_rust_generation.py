@@ -76,19 +76,3 @@ class TestRustGeneration:
         )
 
         assert isinstance(files, list)
-
-
-@pytest.mark.acceptance
-@pytest.mark.skipif(not shutil.which("cargo"), reason="Cargo not installed")
-class TestRustCLIExecution:
-    """Test execution of generated Rust CLIs."""
-
-    @pytest.mark.skip(reason="Requires full template rendering and cargo build")
-    def test_cargo_build_succeeds(self, temp_project_dir: Path, write_config):
-        """Test that generated Rust project builds with cargo."""
-        pass
-
-    @pytest.mark.skip(reason="Requires full template rendering and cargo build")
-    def test_help_command(self, temp_project_dir: Path, write_config):
-        """Test that generated CLI responds to --help."""
-        pass
