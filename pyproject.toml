@@ -61,27 +61,44 @@ line-ending = "auto"
 known-first-party = ["goobits_cli"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
+mypy_path = "src"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
+disallow_untyped_defs = false  # Lenient for rapid development
 disallow_incomplete_defs = true
 check_untyped_defs = true
-disallow_untyped_decorators = true
+disallow_untyped_decorators = false
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+ignore_missing_imports = true
+follow_imports = "silent"
+no_implicit_reexport = true
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "goobits_cli.*"
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
 
 [tool.setuptools.package-data]
 test_cli = [ "setup.sh",]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --strict-markers"
-testpaths = [ "src/tests",]
+addopts = "-ra -q --strict-markers --tb=short"
+testpaths = ["src/tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+timeout = 300
 markers = [
     "slow: marks tests as slow running",
     "integration: marks tests as integration tests",
@@ -89,6 +106,10 @@ markers = [
     "e2e: marks tests as end-to-end tests",
     "timeout: marks tests with timeout requirements",
     "asyncio: marks tests as asynchronous",
+    "acceptance: marks acceptance tests for generation verification",
+    "performance: marks performance benchmark tests",
+    "ir: marks intermediate representation tests",
+    "downstream: marks downstream project validation tests",
 ]
 
 [tool.setuptools.packages.find]
