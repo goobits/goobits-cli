@@ -688,11 +688,11 @@ let hooks = null;
 
 const loadHooks = async () => {
     try {
-        const hookModule = await import('./src/hooks.js');
+        const hookModule = await import('./cli_hooks.mjs');
         hooks = hookModule.default || hookModule;
     } catch (error) {
         if (error.code === 'ERR_MODULE_NOT_FOUND') {
-            console.error('Hook implementation not found. Please create \'src/hooks.js\' with your command implementations.');
+            console.error('Hook implementation not found. Please create \'cli_hooks.mjs\' with your command implementations.');
             console.error('See documentation for hook function signatures.');
         } else {
             console.error(`Failed to load hooks: ${error.message}`);
@@ -745,7 +745,7 @@ function handleError(error, context = 'Command execution', verbose = false) {
         process.exit(error.code);
     } else if (error.code === 'MODULE_NOT_FOUND' && error.message.includes('hooks')) {
         console.error('Hook implementation not found.');
-        console.error('Please implement the required hook function in src/hooks.js');
+        console.error('Please implement the required hook function in cli_hooks.mjs');
         process.exit(2);
     } else {
         console.error(`${context} failed: ${error.message}`);
@@ -817,10 +817,10 @@ const {{ cmd.name.replace('-', '_') }}Cmd = program
         
         if (typeof hooks[hookName] !== 'function') {
             const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
-            const message = `Hook function '${hookName}' not implemented in src/hooks.js`;
+            const message = `Hook function '${hookName}' not implemented in cli_hooks.mjs`;
             const details = availableHooks.length > 0 
                 ? `Available hooks: ${availableHooks.join(', ')}`
-                : 'No hook functions found in src/hooks.js';
+                : 'No hook functions found in cli_hooks.mjs';
             throw new CLIError(message, 2, details);
         }
         
@@ -873,10 +873,10 @@ const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ par
         
         if (typeof hooks[hookName] !== 'function') {
             const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
-            const message = `Hook function '${hookName}' not implemented in src/hooks.js`;
+            const message = `Hook function '${hookName}' not implemented in cli_hooks.mjs`;
             const details = availableHooks.length > 0 
                 ? `Available hooks: ${availableHooks.join(', ')}`
-                : 'No hook functions found in src/hooks.js';
+                : 'No hook functions found in cli_hooks.mjs';
             throw new CLIError(message, 2, details);
         }
         
@@ -959,7 +959,7 @@ const loadHooks = async () => {
         hooks = await import('./hooks.js');
     } catch (error: any) {
         if (error.code === 'MODULE_NOT_FOUND') {
-            console.error('Hook implementation not found. Please create \'src/hooks.ts\' with your command implementations.');
+            console.error('Hook implementation not found. Please create \'cli_hooks.ts\' with your command implementations.');
             console.error('See documentation for hook function signatures.');
         } else {
             console.error(`Failed to load hooks: ${error.message}`);
@@ -986,7 +986,7 @@ function handleError(error: unknown, context: string = 'Command execution', verb
     } else if (error instanceof Error) {
         if (error.message.includes('Cannot resolve module') || error.message.includes('MODULE_NOT_FOUND')) {
             console.error('Hook implementation not found.');
-            console.error('Please implement the required hook function in src/hooks.ts');
+            console.error('Please implement the required hook function in cli_hooks.ts');
             process.exit(2);
         } else {
             console.error(`${context} failed: ${error.message}`);
@@ -1053,10 +1053,10 @@ const {{ cmd.name.replace('-', '_') }}Cmd = program
         
         if (typeof hooks[hookName] !== 'function') {
             const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
-            const message = `Hook function '${String(hookName)}' not implemented in src/hooks.ts`;
+            const message = `Hook function '${String(hookName)}' not implemented in cli_hooks.ts`;
             const details = availableHooks.length > 0 
                 ? `Available hooks: ${availableHooks.join(', ')}`
-                : 'No hook functions found in src/hooks.ts';
+                : 'No hook functions found in cli_hooks.ts';
             throw new CLIError(message, 2, details);
         }
         
@@ -1109,10 +1109,10 @@ const {{ cmd.path | join('_') | replace('-', '_') }}Cmd = commandMap.get('{{ par
         
         if (typeof hooks[hookName] !== 'function') {
             const availableHooks = Object.keys(hooks).filter(key => typeof hooks[key] === 'function');
-            const message = `Hook function '${String(hookName)}' not implemented in src/hooks.ts`;
+            const message = `Hook function '${String(hookName)}' not implemented in cli_hooks.ts`;
             const details = availableHooks.length > 0 
                 ? `Available hooks: ${availableHooks.join(', ')}`
-                : 'No hook functions found in src/hooks.ts';
+                : 'No hook functions found in cli_hooks.ts';
             throw new CLIError(message, 2, details);
         }
         
@@ -1440,7 +1440,7 @@ fn main() {
                     // Check for specific error types
                     if e.to_string().contains("not implemented") {
                         let enhanced_error = anyhow!(
-                            "Hook function '{}' not implemented in src/hooks.rs. \
+                            "Hook function '{}' not implemented in src/cli_hooks.rs. \
                             Please implement: pub fn {}(matches: &ArgMatches) -> Result<()>",
                             hook_name, hook_name
                         );

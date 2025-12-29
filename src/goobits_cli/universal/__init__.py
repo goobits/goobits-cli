@@ -17,9 +17,6 @@ from .ir.builder import IRBuilder
 from .ir.feature_analyzer import FeatureAnalyzer
 from .renderers.interface import Artifact, LanguageRenderer
 from .renderers.registry import get_default_registry, get_renderer
-from .utils import _safe_get_attr
-from .utils.paths import ensure_directory, get_relative_path, normalize_path
-from .utils.json import safe_json_dumps
 
 __all__ = [
     # Primary API
@@ -35,10 +32,4 @@ __all__ = [
     "ComponentRegistry",
     "IRBuilder",
     "FeatureAnalyzer",
-    # Utilities
-    "_safe_get_attr",
-    "normalize_path",
-    "ensure_directory",
-    "get_relative_path",
-    "safe_json_dumps",
 ]

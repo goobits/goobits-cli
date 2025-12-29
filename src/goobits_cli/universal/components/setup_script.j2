@@ -76,11 +76,11 @@ EOF
     echo -e "${GREEN}✓ Created Cargo.toml with essential dependencies${NC}"
 fi
 
-# Check if src/hooks.rs exists
-if [ ! -f src/hooks.rs ]; then
-    echo -e "${YELLOW}⚠ src/hooks.rs not found, creating stub...${NC}"
+# Check if src/cli_hooks.rs exists
+if [ ! -f src/cli_hooks.rs ]; then
+    echo -e "${YELLOW}⚠ src/cli_hooks.rs not found, creating stub...${NC}"
     mkdir -p src
-    cat > src/hooks.rs << 'EOF'
+    cat > src/cli_hooks.rs << 'EOF'
 use clap::ArgMatches;
 use anyhow::Result;
 
@@ -90,7 +90,7 @@ pub fn on_default(_matches: &ArgMatches) -> Result<()> {
     Ok(())
 }
 EOF
-    echo -e "${GREEN}✓ Created src/hooks.rs stub${NC}"
+    echo -e "${GREEN}✓ Created src/cli_hooks.rs stub${NC}"
 fi
 
 # Build the project

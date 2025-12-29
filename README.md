@@ -179,9 +179,9 @@ Generated CLIs include shell completion scripts:
 ### Hooks System
 Implement business logic in language-specific hook files:
 - Python: `cli_hooks.py`
-- Node.js: `src/hooks.js`
-- TypeScript: `src/hooks.ts`
-- Rust: `src/hooks.rs`
+- Node.js: `cli_hooks.mjs`
+- TypeScript: `cli_hooks.ts`
+- Rust: `src/cli_hooks.rs`
 
 ### Validation
 Built-in validation for:

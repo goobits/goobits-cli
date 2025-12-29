@@ -47,22 +47,22 @@ python:
 ### Node.js Configuration
 ```yaml
 language: nodejs
-cli_hooks_path: "src/hooks.js"
-cli_path: "cli.js"  # Default
+cli_hooks_path: "cli_hooks.mjs"  # Default
+cli_path: "cli.js"
 ```
 
 ### TypeScript Configuration
 ```yaml
 language: typescript
-cli_hooks_path: "src/hooks.ts"
-cli_path: "cli.ts"  # Default
+cli_hooks_path: "cli_hooks.ts"  # Default
+cli_path: "cli.ts"
 ```
 
 ### Rust Configuration
 ```yaml
 language: rust
-cli_hooks_path: "src/hooks.rs"
-cli_path: "src/main.rs"  # Default
+cli_hooks_path: "src/cli_hooks.rs"  # Default
+cli_path: "src/main.rs"
 ```
 
 ## Advanced Configuration
