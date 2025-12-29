@@ -1,17 +1,17 @@
-# 🛠️ Goobits CLI Framework
+# Goobits CLI Framework
 
 Generate production-ready CLIs in Python, Node.js, TypeScript, or Rust from a single YAML configuration file.
 
-## ✨ Key Features
+## Key Features
 
-- **🌐 Multi-Language** - Python, Node.js, TypeScript, Rust from one config
-- **🎯 Zero Boilerplate** - Define CLI structure in YAML, get working code
-- **📦 Minimal Output** - Only 2-3 files generated per language
-- **🔄 Smart Merging** - Non-destructive package.json/Cargo.toml updates
-- **⚡ Production Ready** - Setup scripts, shell completions, validation
-- **🔧 Self-Hosting** - Framework generates its own CLI
+- **Multi-Language** - Python, Node.js, TypeScript, Rust from one config
+- **Zero Boilerplate** - Define CLI structure in YAML, get working code
+- **Minimal Output** - 3-4 files generated per language
+- **Smart Merging** - Non-destructive package.json/Cargo.toml updates
+- **Production Ready** - Setup scripts, validation
+- **Self-Hosting** - Framework generates its own CLI
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install
@@ -26,12 +26,12 @@ goobits build
 ./setup.sh install --dev
 ```
 
-## 🛠️ Commands
+## Commands
 
 | Command | Description |
 |---------|-------------|
 | `goobits build [config]` | Generate CLI from goobits.yaml |
-| `goobits init` | Create initial goobits.yaml |
+| `goobits init [project_name]` | Create initial goobits.yaml |
 | `goobits validate [config]` | Validate configuration without generating |
 | `goobits migrate <path>` | Migrate YAML configs to 3.0.0 format |
 | `goobits upgrade` | Upgrade goobits-cli to latest version |
@@ -39,20 +39,21 @@ goobits build
 ### Command Options
 
 **build**
-- `--output-dir` - Output directory for generated files
+- `-o`, `--output-dir` - Output directory for generated files
 - `--output` - Output filename for generated CLI
 - `--backup` - Create .bak files when overwriting
 
 **init**
-- `--template` - Choose template (basic, advanced, api-client, text-processor)
+- `-t`, `--template` - Choose template (basic, advanced, api-client, text-processor)
 - `--force` - Overwrite existing configuration
 
 **validate**
-- `--verbose` - Show detailed validation information
+- `-v`, `--verbose` - Show detailed validation information
 
 **migrate**
-- `--backup` - Create backup files (.bak)
+- `--backup/--no-backup` - Create backup files (.bak), enabled by default
 - `--dry-run` - Show changes without applying
+- `--pattern` - File pattern for directory migration (default: "*.yaml")
 
 **upgrade**
 - `--source` - Upgrade source (pypi, git, local)
@@ -60,7 +61,7 @@ goobits build
 - `--pre` - Include pre-release versions
 - `--dry-run` - Show what would be upgraded without doing it
 
-## ⚙️ Configuration
+## Configuration
 
 Create a `goobits.yaml` file:
 
@@ -85,23 +86,23 @@ cli:
       options:
         - name: greeting
           short: g
-          type: string
+          type: str
           desc: "Custom greeting"
           default: "Hello"
 ```
 
-## 🌐 Language Support
+## Language Support
 
 | Language | Files Generated | Configuration |
 |----------|----------------|---------------|
-| Python | `cli.py`, `setup.sh` | Default |
-| Node.js | `cli.mjs`, `setup.sh` | `language: nodejs` |
-| TypeScript | `cli.ts`, `types.d.ts`, `setup.sh` | `language: typescript` |
-| Rust | `src/main.rs`, `setup.sh` | `language: rust` |
+| Python | `cli.py`, `cli_hooks.py`, `setup.sh` | Default |
+| Node.js | `cli.mjs`, `cli_hooks.mjs`, `setup.sh` | `language: nodejs` |
+| TypeScript | `cli.ts`, `cli_hooks.ts`, `cli_types.d.ts`, `setup.sh` | `language: typescript` |
+| Rust | `src/cli.rs`, `src/cli_hooks.rs`, `Cargo.toml`, `setup.sh` | `language: rust` |
 
 ### Language-Specific Options
 
-**Python**
+**Python** (currently the only language with schema-validated options)
 ```yaml
 language: python
 python:
@@ -109,44 +110,16 @@ python:
   maximum_version: "3.13"
 ```
 
-**Node.js**
-```yaml
-language: nodejs
-nodejs:
-  minimum_version: "14.0.0"
-  package_manager: npm  # or yarn, pnpm
-```
+Other languages use sensible defaults (Node.js 14+, TypeScript ES2020, Rust edition 2021).
 
-**TypeScript**
-```yaml
-language: typescript
-typescript:
-  strict_mode: true
-  target: "ES2020"
-```
-
-**Rust**
-```yaml
-language: rust
-rust:
-  minimum_version: "1.70.0"
-  edition: "2021"
-```
-
-## 🔧 Advanced Features
+## Advanced Features
 
 ### Interactive Mode
 
-All generated CLIs support interactive mode:
+Node.js and TypeScript generated CLIs support interactive mode:
 
 ```bash
 mycli --interactive
-```
-
-### Shell Completions
-
-```bash
-./setup.sh --completions
 ```
 
 ### Hooks System
@@ -155,25 +128,26 @@ Implement business logic in language-specific hook files:
 
 | Language | Hook File |
 |----------|-----------|
-| Python | `app_hooks.py` |
-| Node.js | `hooks.mjs` |
-| TypeScript | `hooks.ts` |
-| Rust | `src/hooks.rs` |
+| Python | `cli_hooks.py` |
+| Node.js | `cli_hooks.mjs` |
+| TypeScript | `cli_hooks.ts` |
+| Rust | `src/cli_hooks.rs` |
 
 ### Built-in Validation
 
-- API key checking
 - Disk space requirements
 - System dependencies
 - Runtime versions
 
-## 📦 File Generation
+## File Generation
 
 ### What Gets Generated
 
 - CLI source file with all utilities embedded
+- Hook file template for your business logic
 - Setup script for installation
 - Type definitions (TypeScript only)
+- Cargo.toml (Rust only)
 
 ### What Does NOT Get Generated
 
@@ -186,7 +160,7 @@ Implement business logic in language-specific hook files:
 
 Existing `package.json`, `Cargo.toml`, or `pyproject.toml` files are preserved. Dependencies are merged without overwriting your configuration.
 
-## 🧪 Development
+## Development
 
 ### From Source
 
@@ -204,31 +178,26 @@ pytest --cov=goobits_cli src/tests/
 mypy src/goobits_cli/
 ```
 
-### Performance
-
-- CLI startup: <100ms
-- Memory usage: <10MB
-
-## 📖 Documentation
+## Documentation
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contributing guidelines
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 - [CLAUDE.md](CLAUDE.md) - AI assistant instructions
 
-## 💡 Examples
+## Examples
 
 See `test-fixtures/configs/` for sample configurations:
 
-- `python/` - Generated Python CLI example
-- `nodejs/` - Generated Node.js CLI example
-- `typescript/` - Generated TypeScript CLI example
-- `rust/` - Generated Rust CLI example
+- `python/` - Python CLI example
+- `nodejs/` - Node.js CLI example
+- `typescript/` - TypeScript CLI example
+- `rust/` - Rust CLI example
 
-## 📝 License
+## License
 
 MIT License - see [LICENSE](LICENSE)
 
-## 🔗 Links
+## Links
 
 - [GitHub Issues](https://github.com/goobits/goobits-cli/issues)
 - [GitHub Discussions](https://github.com/goobits/goobits-cli/discussions)
