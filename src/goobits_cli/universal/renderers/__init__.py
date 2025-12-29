@@ -9,15 +9,6 @@ This module contains:
 """
 
 # Interface and core types
-from .interface import Artifact, LanguageRenderer
-
-# Registry and factory functions
-from .registry import (
-    RendererRegistry,
-    get_default_registry,
-    get_renderer,
-)
-
 # Helper utilities
 from .helpers import (
     escape_string,
@@ -30,10 +21,18 @@ from .helpers import (
     to_pascal_case,
     to_snake_case,
 )
+from .interface import Artifact, LanguageRenderer
 
 # Concrete implementations
 from .nodejs_renderer import NodeJSRenderer
 from .python_renderer import PythonRenderer
+
+# Registry and factory functions
+from .registry import (
+    RendererRegistry,
+    get_default_registry,
+    get_renderer,
+)
 from .typescript_renderer import TypeScriptRenderer
 
 # Rust renderer may not exist yet

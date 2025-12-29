@@ -26,8 +26,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
-from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.universal.engine.stages import parse_config, validate_config
+from goobits_cli.universal.generator import UniversalGenerator
 
 
 class TestCLIE2E:

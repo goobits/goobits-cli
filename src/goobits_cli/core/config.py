@@ -13,7 +13,6 @@ from typing import Any, Dict, Optional, Union
 from .errors import ConfigError, ConfigFileError, ConfigValidationError
 from .logging import get_logger
 
-
 # Optional dependencies
 
 try:

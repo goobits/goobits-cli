@@ -44,6 +44,7 @@ ignore = [
     "B011",  # assert False (used intentionally in tests)
     "B904",  # Exception chaining (would require significant refactor)
     "B039",  # Mutable ContextVar defaults (intentional pattern)
+    "B017",  # Do not assert blind exception (acceptable in tests)
     "C401",  # Generator vs comprehension (style preference)
     "F401",  # Unused imports (sometimes for re-export or type hints)
     "F403",  # Star imports (used for hook imports by design)

@@ -7,7 +7,8 @@ intermediate representation that can be consumed by any language renderer.
 
 from typing import Any, Dict, List
 
-from ...core.utils import safe_to_dict as _safe_to_dict, safe_get_attr as _safe_get_attr
+from ...core.utils import safe_get_attr as _safe_get_attr
+from ...core.utils import safe_to_dict as _safe_to_dict
 from ..command_hierarchy import CommandFlattener, HierarchyBuilder
 from .feature_analyzer import FeatureAnalyzer
 

@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 
 from goobits_cli.core.errors import ConfigurationError
-from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.universal.engine.stages import parse_config, validate_config
+from goobits_cli.universal.generator import UniversalGenerator
 
 
 class TestBuilderIntegration:
@@ -178,8 +178,8 @@ class TestCLIGenerationIntegration:
 
     def test_python_cli_generation_and_execution(self, tmp_path):
         """Test Python CLI generation and basic execution."""
+        from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
         from goobits_cli.universal.generator import UniversalGenerator
-        from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 
         # Create a minimal test configuration using GoobitsConfigSchema
         config = GoobitsConfigSchema(
@@ -218,8 +218,8 @@ class TestCLIGenerationIntegration:
 
     def test_nodejs_cli_generation_and_execution(self, tmp_path):
         """Test Node.js CLI generation and basic execution."""
+        from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
         from goobits_cli.universal.generator import UniversalGenerator
-        from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 
         # Create a minimal test configuration using GoobitsConfigSchema
         config = GoobitsConfigSchema(
@@ -262,8 +262,8 @@ class TestCLIGenerationIntegration:
     )
     def test_rust_cli_generation_and_execution(self, tmp_path):
         """Test Rust CLI generation and basic execution."""
+        from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
         from goobits_cli.universal.generator import UniversalGenerator
-        from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
 
         # Create a minimal test configuration using GoobitsConfigSchema
         config = GoobitsConfigSchema(
@@ -302,7 +302,7 @@ class TestCLIGenerationIntegration:
 
     def test_cross_language_consistency(self, tmp_path):
         """Test that all languages generate consistent CLI behavior."""
-        from goobits_cli.core.schemas import GoobitsConfigSchema, CLISchema
+        from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
         from goobits_cli.universal.generator import UniversalGenerator
 
         # Test each language

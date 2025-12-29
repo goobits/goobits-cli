@@ -25,9 +25,6 @@ import pytest
 import typer
 import yaml
 
-from goobits_cli.core.schemas import GoobitsConfigSchema
-from goobits_cli.main import app, version_callback
-from goobits_cli.universal.generator import UniversalGenerator
 from goobits_cli.commands.init import (
     generate_advanced_template,
     generate_api_client_template,
@@ -44,6 +41,9 @@ from goobits_cli.commands.utils import (
     normalize_dependencies_for_template,
     update_pyproject_toml,
 )
+from goobits_cli.core.schemas import GoobitsConfigSchema
+from goobits_cli.main import app, version_callback
+from goobits_cli.universal.generator import UniversalGenerator
 
 from .test_base import TestMainCLIBase
 

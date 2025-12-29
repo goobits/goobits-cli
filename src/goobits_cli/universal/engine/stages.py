@@ -12,13 +12,13 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
+# Import from centralized utils to avoid duplication
+from goobits_cli.utils.paths import is_e2e_test_path
+
 from ..ir.builder import IRBuilder
 from ..ir.models import IR, create_ir_from_dict
 from ..renderers.interface import Artifact, LanguageRenderer
 from ..renderers.registry import get_renderer
-
-# Import from centralized utils to avoid duplication
-from goobits_cli.utils.paths import is_e2e_test_path
 
 
 def parse_config(config_path: Path) -> Dict[str, Any]:
@@ -40,7 +40,7 @@ def parse_config(config_path: Path) -> Dict[str, Any]:
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     if config is None:

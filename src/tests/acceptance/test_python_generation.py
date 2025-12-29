@@ -96,7 +96,7 @@ class TestPythonCLIExecution:
 
         # Generate CLI
         orchestrator = Orchestrator()
-        orchestrator.generate(
+        files = orchestrator.generate(
             config_path=config_path,
             language="python",
             output_dir=temp_project_dir,
@@ -126,7 +126,7 @@ class TestPythonCLIExecution:
         config_path = write_config(language="python")
 
         orchestrator = Orchestrator()
-        orchestrator.generate(
+        files = orchestrator.generate(
             config_path=config_path,
             language="python",
             output_dir=temp_project_dir,
@@ -180,9 +180,9 @@ class TestPythonGoldenFiles:
 
         # Normalize for comparison (strip trailing whitespace, timestamps)
         def normalize(s):
-            lines = [l.rstrip() for l in s.split("\n")]
+            lines = [line.rstrip() for line in s.split("\n")]
             # Remove timestamp lines
-            lines = [l for l in lines if "Generated at:" not in l]
+            lines = [line for line in lines if "Generated at:" not in line]
             return "\n".join(lines)
 
         assert normalize(generated) == normalize(golden)
