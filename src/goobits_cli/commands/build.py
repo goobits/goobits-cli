@@ -382,56 +382,6 @@ def build_command(
 
         typer.echo(f"\u2705 Generated setup script: {setup_output_path}")
 
-    # Copy setup.sh to package source directory for package-data inclusion (Python only)
-
-    if (
-        "python" in target_languages and goobits_config.cli
-    ):  # Only copy if CLI is configured
-        # Find the package source directory
-
-        if goobits_config.cli_path:
-            cli_path = goobits_config.cli_path.format(
-                package_name=goobits_config.package_name.replace("goobits-", "")
-            )
-        else:
-            # Generate default path when none specified
-            package_name_safe = goobits_config.package_name.replace("-", "_")
-            cli_path = f"{package_name_safe}/cli.py"
-
-        cli_path_parts = Path(cli_path).parts
-
-        # Determine package source directory
-
-        package_src_dir = None
-
-        if "src" in cli_path_parts:
-            src_index = cli_path_parts.index("src")
-
-            if src_index + 1 < len(cli_path_parts):
-                package_src_dir = output_dir / "src" / cli_path_parts[src_index + 1]
-
-        if package_src_dir and package_src_dir.exists():
-            # Copy setup.sh to package source directory
-
-            package_setup_path = package_src_dir / "setup.sh"
-
-            try:
-                shutil.copy2(setup_output_path, package_setup_path)
-
-                typer.echo(
-                    f"\u2705 Copied setup.sh to package directory: {package_setup_path}"
-                )
-
-            except Exception as e:
-                typer.echo(
-                    f"\u26a0\ufe0f  Could not copy setup.sh to package directory: {e}"
-                )
-
-        else:
-            typer.echo(
-                "\u2139\ufe0f  Package source directory not found, setup.sh not copied to package"
-            )
-
     # Update package manifests for Node.js and Rust
     for language in target_languages:
         if language in ["nodejs", "rust"]:
