@@ -19,7 +19,12 @@ use chrono::Local;
 use std::io::Write;
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 use rustyline::error::ReadlineError;
-use rustyline::{DefaultEditor, Result as RlResult};
+use rustyline::{Editor, Config, Result as RlResult};
+use rustyline::completion::{Completer, Pair};
+use rustyline::hint::Hinter;
+use rustyline::highlight::Highlighter;
+use rustyline::validate::Validator;
+use rustyline::Helper;
 {%- endif %}
 
 // ============================================================================
@@ -384,6 +389,57 @@ fn build_cli() -> Command {
         {%- endif %}
 }
 
+{%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
+{%- if cli.features.interactive_mode.tab_completion %}
+// ============================================================================
+// INTERACTIVE MODE HELPER (for tab completion)
+// ============================================================================
+
+struct InteractiveHelper {
+    commands: Vec<String>,
+}
+
+impl InteractiveHelper {
+    fn new(commands: Vec<String>) -> Self {
+        Self { commands }
+    }
+}
+
+impl Completer for InteractiveHelper {
+    type Candidate = Pair;
+
+    fn complete(
+        &self,
+        line: &str,
+        pos: usize,
+        _ctx: &rustyline::Context<'_>,
+    ) -> RlResult<(usize, Vec<Pair>)> {
+        let word_start = line[..pos].rfind(' ').map(|i| i + 1).unwrap_or(0);
+        let word = &line[word_start..pos];
+
+        let matches: Vec<Pair> = self.commands
+            .iter()
+            .filter(|cmd| cmd.starts_with(word))
+            .map(|cmd| Pair {
+                display: cmd.clone(),
+                replacement: cmd.clone(),
+            })
+            .collect();
+
+        Ok((word_start, matches))
+    }
+}
+
+impl Hinter for InteractiveHelper {
+    type Hint = String;
+}
+
+impl Highlighter for InteractiveHelper {}
+impl Validator for InteractiveHelper {}
+impl Helper for InteractiveHelper {}
+{%- endif %}
+{%- endif %}
+
 // ============================================================================
 // MAIN ENTRY POINT
 // ============================================================================
@@ -414,7 +470,7 @@ fn main() -> Result<()> {
         Some(("interactive", _)) => {
             println!("{}", "Entering interactive mode. Type 'help' for commands, 'exit' to quit.".cyan());
 
-            let commands = vec![
+            let commands: Vec<&str> = vec![
                 {%- if cli.commands %}
                   {%- for cmd_name in cli.commands.keys() %}
                 "{{ cmd_name }}",
@@ -433,7 +489,19 @@ fn main() -> Result<()> {
                 .unwrap_or_else(|| PathBuf::from(".{{ cli_name }}_history"));
             {%- endif %}
 
-            let mut rl = DefaultEditor::new().context("Failed to create readline editor")?;
+            {%- if interactive.tab_completion %}
+            let helper = InteractiveHelper::new(commands.iter().map(|s| s.to_string()).collect());
+            let config = Config::builder()
+                .max_history_size({{ interactive.max_history | default(1000) }})?
+                .build();
+            let mut rl = Editor::with_config(config)?;
+            rl.set_helper(Some(helper));
+            {%- else %}
+            let config = Config::builder()
+                .max_history_size({{ interactive.max_history | default(1000) }})?
+                .build();
+            let mut rl = Editor::<(), rustyline::history::DefaultHistory>::with_config(config)?;
+            {%- endif %}
 
             {%- if interactive.history_enabled %}
             let _ = rl.load_history(&history_path);
@@ -478,10 +546,52 @@ fn main() -> Result<()> {
                         let app = build_cli();
                         match app.try_get_matches_from(args) {
                             Ok(matches) => {
-                                if let Some((cmd_name, sub_matches)) = matches.subcommand() {
-                                    if cmd_name != "interactive" {
-                                        // Re-dispatch to appropriate handler
-                                        println!("{}: command execution in interactive mode", cmd_name.yellow());
+                                match matches.subcommand() {
+                                    Some(("completions", sub_matches)) => {
+                                        let shell = sub_matches.get_one::<String>("shell").unwrap();
+                                        if let Err(e) = completion::print_completion(shell) {
+                                            eprintln!("{}", format!("Error: {}", e).red());
+                                        }
+                                    }
+                                    Some(("interactive", _)) => {
+                                        println!("Already in interactive mode.");
+                                    }
+                                    {%- if clap_commands and clap_commands.subcommands %}
+                                      {%- for cmd_data in clap_commands.subcommands %}
+                                    Some(("{{ cmd_data.name }}", sub_matches)) => {
+                                        {%- if cmd_data.subcommands %}
+                                        match sub_matches.subcommand() {
+                                            {%- for sub_data in cmd_data.subcommands %}
+                                            Some(("{{ sub_data.name }}", sub_sub_matches)) => {
+                                                if let Err(e) = cli_hooks::on_{{ cmd_data.name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(sub_sub_matches) {
+                                                    eprintln!("{}", format!("Error: {}", e).red());
+                                                }
+                                            }
+                                            {%- endfor %}
+                                            _ => {
+                                                if let Err(e) = cli_hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches) {
+                                                    eprintln!("{}", format!("Error: {}", e).red());
+                                                }
+                                            }
+                                        }
+                                        {%- else %}
+                                        if let Err(e) = cli_hooks::on_{{ cmd_data.name.replace('-', '_') }}(sub_matches) {
+                                            eprintln!("{}", format!("Error: {}", e).red());
+                                        }
+                                        {%- endif %}
+                                    }
+                                      {%- endfor %}
+                                    {%- elif cli.root_command and cli.root_command.subcommands %}
+                                      {%- for command in cli.root_command.subcommands %}
+                                    Some(("{{ command.name }}", sub_matches)) => {
+                                        if let Err(e) = cli_hooks::on_{{ command.name.replace('-', '_') }}(sub_matches) {
+                                            eprintln!("{}", format!("Error: {}", e).red());
+                                        }
+                                    }
+                                      {%- endfor %}
+                                    {%- endif %}
+                                    _ => {
+                                        println!("{}", build_cli().render_help());
                                     }
                                 }
                             }
