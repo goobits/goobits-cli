@@ -12,6 +12,7 @@ import logging
 import os
 import shlex
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -103,7 +104,7 @@ class SessionSubprocessCache:
             "cwd": str(cwd),
             "env": env_context,
             "timeout": kwargs.get("timeout"),
-            "python_version": f"{os.sys.version_info.major}.{os.sys.version_info.minor}",
+            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}",
         }
 
         # Create deterministic hash

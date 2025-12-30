@@ -46,9 +46,10 @@ class TemplateError(GeneratorError):
         self.template_name = template_name
         self.line_number = line_number
         error_code = 3  # Template errors
-        details = f"Template: {template_name}" if template_name else None
+        details = f"Template: {template_name}" if template_name else ""
         if line_number:
             details += f", Line: {line_number}" if details else f"Line: {line_number}"
+        details = details or None  # Convert empty string back to None
         super().__init__(message, error_code, details)
 
 
