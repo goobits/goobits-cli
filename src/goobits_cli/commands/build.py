@@ -370,7 +370,16 @@ def build_command(
 
         setup_script = generate_setup_script(normalized_config, output_dir)
 
-        setup_output_path = output_dir / "setup.sh"
+        # Get configured setup_path or default to "setup.sh"
+        setup_path = (
+            goobits_config.installation.setup_path
+            if goobits_config.installation and goobits_config.installation.setup_path
+            else "setup.sh"
+        )
+        setup_output_path = output_dir / setup_path
+
+        # Ensure parent directory exists (for paths like "scripts/setup.sh")
+        setup_output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with open(setup_output_path, "w") as f:
             f.write(setup_script)

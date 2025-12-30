@@ -236,6 +236,7 @@ class InstallationSchema(BaseModel):
 
     pypi_name: str
     development_path: str = "."
+    setup_path: Optional[str] = "setup.sh"  # Output path for setup.sh (default: root)
     extras: Optional[ExtrasSchema] = None  # Multi-language package extras
 
 
