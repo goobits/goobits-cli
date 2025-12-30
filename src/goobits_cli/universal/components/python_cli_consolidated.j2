@@ -403,8 +403,17 @@ def interactive_mode(ctx):
     # Configure history
     {%- if interactive.history_enabled %}
     history_file = Path.home() / '.{{ cli_name }}_history'
+    max_history = {{ interactive.max_history | default(1000) }}
     try:
         history = FileHistory(str(history_file))
+        # Enforce max_history by loading and truncating
+        history_strings = list(history.load_history_strings())
+        if len(history_strings) > max_history:
+            # Truncate history file to max entries
+            with open(history_file, 'w') as f:
+                for entry in history_strings[-max_history:]:
+                    f.write(entry.replace('\n', '\\\n') + '\n')
+            history = FileHistory(str(history_file))
     except Exception:
         history = InMemoryHistory()
     {%- else %}
