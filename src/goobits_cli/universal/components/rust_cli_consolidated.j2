@@ -17,6 +17,10 @@ use env_logger;
 use colored::Colorize;
 use chrono::Local;
 use std::io::Write;
+{%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
+use rustyline::error::ReadlineError;
+use rustyline::{DefaultEditor, Result as RlResult};
+{%- endif %}
 
 // ============================================================================
 // INLINE CONFIG MODULE
@@ -372,6 +376,12 @@ fn build_cli() -> Command {
                         .value_parser(["bash", "zsh", "fish", "powershell", "elvish"])
                 )
         )
+        {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
+        .subcommand(
+            Command::new("interactive")
+                .about("Run in interactive mode with command history")
+        )
+        {%- endif %}
 }
 
 // ============================================================================
@@ -397,6 +407,108 @@ fn main() -> Result<()> {
             let shell = sub_matches.get_one::<String>("shell").unwrap();
             completion::print_completion(shell)?;
         }
+        {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
+        {%- set interactive = cli.features.interactive_mode %}
+        {%- set cli_name = cli.root_command.name | default(project.command_name) | default('cli') %}
+        {%- set prompt_str = interactive.prompt | default(cli_name ~ '> ') %}
+        Some(("interactive", _)) => {
+            println!("{}", "Entering interactive mode. Type 'help' for commands, 'exit' to quit.".cyan());
+
+            let commands = vec![
+                {%- if cli.commands %}
+                  {%- for cmd_name in cli.commands.keys() %}
+                "{{ cmd_name }}",
+                  {%- endfor %}
+                {%- elif cli.root_command and cli.root_command.subcommands %}
+                  {%- for command in cli.root_command.subcommands %}
+                "{{ command.name }}",
+                  {%- endfor %}
+                {%- endif %}
+                "help", "exit"
+            ];
+
+            {%- if interactive.history_enabled %}
+            let history_path = dirs::home_dir()
+                .map(|p| p.join(".{{ cli_name }}_history"))
+                .unwrap_or_else(|| PathBuf::from(".{{ cli_name }}_history"));
+            {%- endif %}
+
+            let mut rl = DefaultEditor::new().context("Failed to create readline editor")?;
+
+            {%- if interactive.history_enabled %}
+            let _ = rl.load_history(&history_path);
+            {%- endif %}
+
+            loop {
+                let readline = rl.readline("{{ prompt_str }}");
+                match readline {
+                    Ok(line) => {
+                        let input = line.trim();
+
+                        if input.is_empty() {
+                            continue;
+                        }
+
+                        {%- if interactive.history_enabled %}
+                        let _ = rl.add_history_entry(input);
+                        {%- endif %}
+
+                        if input.eq_ignore_ascii_case("exit") {
+                            println!("Exiting interactive mode.");
+                            break;
+                        }
+
+                        if input.eq_ignore_ascii_case("help") {
+                            println!("Available commands:");
+                            for cmd in &commands {
+                                if *cmd != "help" && *cmd != "exit" {
+                                    println!("  - {}", cmd);
+                                }
+                            }
+                            println!("\nBuilt-in: help, exit");
+                            continue;
+                        }
+
+                        // Build args for the command
+                        let args: Vec<&str> = std::iter::once("{{ cli_name }}")
+                            .chain(input.split_whitespace())
+                            .collect();
+
+                        // Parse and execute
+                        let app = build_cli();
+                        match app.try_get_matches_from(args) {
+                            Ok(matches) => {
+                                if let Some((cmd_name, sub_matches)) = matches.subcommand() {
+                                    if cmd_name != "interactive" {
+                                        // Re-dispatch to appropriate handler
+                                        println!("{}: command execution in interactive mode", cmd_name.yellow());
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("{}", format!("Error: {}", e).red());
+                            }
+                        }
+                    }
+                    Err(ReadlineError::Interrupted) => {
+                        println!("\nUse 'exit' to quit.");
+                    }
+                    Err(ReadlineError::Eof) => {
+                        println!("\nExiting interactive mode.");
+                        break;
+                    }
+                    Err(err) => {
+                        eprintln!("{}", format!("Error: {:?}", err).red());
+                        break;
+                    }
+                }
+            }
+
+            {%- if interactive.history_enabled %}
+            let _ = rl.save_history(&history_path);
+            {%- endif %}
+        }
+        {%- endif %}
         {%- if clap_commands and clap_commands.subcommands %}
           {%- for cmd_data in clap_commands.subcommands %}
         Some(("{{ cmd_data.name }}", sub_matches)) => {

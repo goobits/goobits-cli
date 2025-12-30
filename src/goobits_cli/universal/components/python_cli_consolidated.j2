@@ -20,7 +20,8 @@ from datetime import datetime
 from contextlib import contextmanager
 import click
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
-from prompt_toolkit import prompt
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory, InMemoryHistory
 from prompt_toolkit.completion import WordCompleter
 {%- endif %}
 
@@ -368,13 +369,17 @@ def {{ command.name.replace('-', '_') }}(ctx{% for arg in command.arguments | de
 # ============================================================================
 
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
+{%- set interactive = cli.features.interactive_mode %}
+{%- set cli_name = cli.root_command.name | default(project.command_name) | default('cli') %}
+{%- set prompt_str = interactive.prompt | default(cli_name ~ '> ') %}
 
 @cli.command('interactive')
 @click.pass_obj
 def interactive_mode(ctx):
-    """Run in interactive mode."""
-    logger.info("Entering interactive mode. Type 'help' for commands, 'exit' to quit.")
-    
+    """Run in interactive mode with command history and completion."""
+    print("Entering interactive mode. Type 'help' for commands, 'exit' to quit.")
+
+    # Available commands for completion
     commands = [
         {%- if cli.commands %}
           {%- for cmd_name in cli.commands.keys() %}
@@ -387,37 +392,64 @@ def interactive_mode(ctx):
         {%- endif %}
         'help', 'exit'
     ]
-    completer = WordCompleter(commands)
-    
+
+    # Configure completion
+    {%- if interactive.tab_completion %}
+    completer = WordCompleter(commands, ignore_case=True)
+    {%- else %}
+    completer = None
+    {%- endif %}
+
+    # Configure history
+    {%- if interactive.history_enabled %}
+    history_file = Path.home() / '.{{ cli_name }}_history'
+    try:
+        history = FileHistory(str(history_file))
+    except Exception:
+        history = InMemoryHistory()
+    {%- else %}
+    history = None
+    {%- endif %}
+
+    # Create prompt session
+    session = PromptSession(
+        history=history,
+        completer=completer,
+    )
+
     while True:
         try:
-            user_input = prompt('> ', completer=completer)
-            
-            if user_input.lower() == 'exit':
-                logger.info("Exiting interactive mode.")
+            user_input = session.prompt('{{ prompt_str }}').strip()
+
+            if not user_input:
+                continue
+            elif user_input.lower() == 'exit':
+                print("Exiting interactive mode.")
                 break
             elif user_input.lower() == 'help':
                 print("Available commands:")
                 for cmd in commands:
                     if cmd not in ['help', 'exit']:
                         print(f"  - {cmd}")
+                print("\nBuilt-in: help, exit")
             else:
                 # Parse and execute command
                 parts = user_input.split()
-                if parts and parts[0] in commands:
-                    # Invoke the Click command programmatically
+                if parts:
                     try:
                         cli.main(parts, standalone_mode=False, obj=ctx)
                     except SystemExit:
                         pass  # Ignore exit in interactive mode
-                else:
-                    logger.warning(f"Unknown command: {user_input}")
-                    
+                    except click.ClickException as e:
+                        e.show()
+                    except Exception as e:
+                        print(f"Error: {e}")
+
         except KeyboardInterrupt:
-            logger.info("\nExiting interactive mode.")
+            print("\nUse 'exit' to quit.")
+        except EOFError:
+            print("\nExiting interactive mode.")
             break
-        except Exception as e:
-            logger.error(f"Error: {e}")
 {%- endif %}
 
 # ============================================================================

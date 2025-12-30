@@ -10,13 +10,14 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 import yaml from 'js-yaml';
 import { fileURLToPath } from 'url';
 import { AsyncLocalStorage } from 'async_hooks';
 import winston from 'winston';
+import { createInterface } from 'readline';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -491,13 +492,104 @@ program
 
 // Interactive mode support
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
-program.option('--interactive', 'Run in interactive mode');
+{%- set interactive = cli.features.interactive_mode %}
+{%- set cli_name = cli.root_command.name | default(project.command_name) | default('cli') %}
+{%- set prompt_str = interactive.prompt | default(cli_name ~ '> ') %}
 
-if (process.argv.includes('--interactive')) {
-    console.log(chalk.cyan('Interactive mode is enabled but not yet implemented.'));
-    console.log('This feature will be available in a future version.');
-    process.exit(0);
-}
+program
+    .command('interactive')
+    .description('Run in interactive mode with command history')
+    .action(async () => {
+        const commands = [
+            {%- if cli.commands %}
+              {%- for cmd_name in cli.commands.keys() %}
+            '{{ cmd_name }}',
+              {%- endfor %}
+            {%- elif cli.root_command and cli.root_command.subcommands %}
+              {%- for command in cli.root_command.subcommands %}
+            '{{ command.name }}',
+              {%- endfor %}
+            {%- endif %}
+            'help', 'exit'
+        ];
+
+        {%- if interactive.history_enabled %}
+        const historyFile = join(homedir(), '.{{ cli_name }}_history');
+        let history = [];
+        try {
+            if (existsSync(historyFile)) {
+                history = readFileSync(historyFile, 'utf-8').split('\n').filter(Boolean);
+            }
+        } catch (e) { /* ignore */ }
+        {%- endif %}
+
+        const rl = createInterface({
+            input: process.stdin,
+            output: process.stdout,
+            {%- if interactive.tab_completion %}
+            completer: (line) => {
+                const hits = commands.filter(c => c.startsWith(line));
+                return [hits.length ? hits : commands, line];
+            },
+            {%- endif %}
+            {%- if interactive.history_enabled %}
+            history: history.slice(-{{ interactive.max_history | default(1000) }}),
+            {%- endif %}
+            prompt: '{{ prompt_str }}'
+        });
+
+        console.log(chalk.cyan("Entering interactive mode. Type 'help' for commands, 'exit' to quit."));
+        rl.prompt();
+
+        rl.on('line', async (line) => {
+            const input = line.trim();
+
+            if (!input) {
+                rl.prompt();
+                return;
+            }
+
+            {%- if interactive.history_enabled %}
+            try {
+                appendFileSync(historyFile, input + '\n');
+            } catch (e) { /* ignore */ }
+            {%- endif %}
+
+            if (input.toLowerCase() === 'exit') {
+                console.log('Exiting interactive mode.');
+                rl.close();
+                return;
+            }
+
+            if (input.toLowerCase() === 'help') {
+                console.log('Available commands:');
+                commands.filter(c => !['help', 'exit'].includes(c)).forEach(c => {
+                    console.log(`  - ${c}`);
+                });
+                console.log('\nBuilt-in: help, exit');
+                rl.prompt();
+                return;
+            }
+
+            // Execute command
+            const args = input.split(/\s+/);
+            try {
+                await program.parseAsync(['node', '{{ cli_name }}', ...args]);
+            } catch (e) {
+                console.error(chalk.red(`Error: ${e.message}`));
+            }
+            rl.prompt();
+        });
+
+        rl.on('close', () => {
+            process.exit(0);
+        });
+
+        rl.on('SIGINT', () => {
+            console.log("\nUse 'exit' to quit.");
+            rl.prompt();
+        });
+    });
 {%- endif %}
 
 // Error handlers

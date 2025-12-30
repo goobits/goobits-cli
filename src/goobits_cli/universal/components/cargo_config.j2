@@ -84,7 +84,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 # Optional dependencies for advanced features
 
 {% if features.interactive_mode -%}
-dialoguer = { version = "0.11", optional = true }
+rustyline = { version = "14.0", optional = true }
 {% endif -%}
 
 {% if features.progress_features -%}
@@ -120,7 +120,7 @@ async = ["tokio"]
 {% endif -%}
 
 {% if features.interactive_mode -%}
-interactive = ["dialoguer"]
+interactive = ["rustyline"]
 {% endif -%}
 
 {% if features.progress_features -%}
@@ -134,7 +134,7 @@ tables = ["tabled", "comfy-table"]
 # Convenience feature combinations
 {% set full_features = [] -%}
 {% if features.async_features -%}{% set _ = full_features.append("tokio") -%}{% endif -%}
-{% if features.interactive_mode -%}{% set _ = full_features.append("dialoguer") -%}{% endif -%}
+{% if features.interactive_mode -%}{% set _ = full_features.append("rustyline") -%}{% endif -%}
 {% if features.progress_features -%}{% set _ = full_features.append("indicatif") -%}{% endif -%}
 {% if features.table_formatting -%}
 {% set _ = full_features.append("tabled") -%}
