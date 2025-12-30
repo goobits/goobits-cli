@@ -23,7 +23,7 @@ pipx install goobits-cli
 mkdir my-cli && cd my-cli
 goobits init
 goobits build
-./setup.sh install --dev
+./scripts/setup.sh install --dev
 ```
 
 ## Commands

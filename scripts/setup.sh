@@ -847,7 +847,7 @@ Get started with:
   mkdir my-awesome-cli && cd my-awesome-cli
   goobits init        # Create initial goobits.yaml
   goobits build       # Generate CLI and setup scripts
-  ./setup.sh install --dev
+  ./scripts/setup.sh install --dev
 
 Visit https://github.com/goobits/goobits-cli for documentation.
 "

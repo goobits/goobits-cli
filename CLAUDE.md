@@ -281,7 +281,7 @@ The generated CLI includes the source YAML filename in comments for traceability
 
 Templates are in `src/goobits_cli/templates/`. After modifying:
 1. Run `goobits build` to regenerate
-2. Test with `./setup.sh install --dev`
+2. Test with `./scripts/setup.sh install --dev`
 
 ### Using Advanced Features
 
@@ -298,7 +298,7 @@ my-cli --interactive  # Works across all languages with optimized performance
 
 **Shell Completion:** Completion templates generated for supported languages:
 ```bash
-./setup.sh --completions  # Generate completion scripts
+./scripts/setup.sh --completions  # Generate completion scripts
 ```
 
 **Language Support:**

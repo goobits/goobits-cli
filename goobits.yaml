@@ -22,6 +22,7 @@ dependencies:
 installation:
   pypi_name: goobits-cli
   development_path: "."
+  setup_path: "scripts/setup.sh"  # Output to scripts directory
   extras:
     python: ["dev", "test"]
     apt: ["git", "python3-dev", "curl", "wget", "pipx"]
@@ -38,13 +39,13 @@ validation:
 messages:
   install_success: |
     🎉 Goobits CLI Framework has been installed successfully!
-    
+
     Get started with:
       mkdir my-awesome-cli && cd my-awesome-cli
       goobits init        # Create initial goobits.yaml
       goobits build       # Generate CLI and setup scripts
-      ./setup.sh install --dev
-    
+      ./scripts/setup.sh install --dev
+
     Visit https://github.com/goobits/goobits-cli for documentation.
   
   install_dev_success: |
@@ -84,7 +85,7 @@ cli:
         - { item: 'mkdir my-cli && cd my-cli', desc: "Create new project directory", style: "example" }
         - { item: 'goobits init', desc: "Generate initial goobits.yaml", style: "example" }
         - { item: 'goobits build', desc: "Create CLI and setup scripts", style: "example" }
-        - { item: './setup.sh install --dev', desc: "Install for development", style: "example" }
+        - { item: './scripts/setup.sh install --dev', desc: "Install for development", style: "example" }
 
     - title: "💡 Core Commands"
       items:

@@ -549,4 +549,4 @@ def init_command(
 
     typer.echo("  2. Run: goobits build")
 
-    typer.echo("  3. Run: ./setup.sh install --dev")
+    typer.echo("  3. Run: ./scripts/setup.sh install --dev")
