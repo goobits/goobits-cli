@@ -4,8 +4,6 @@ This package provides common utilities used across multiple generators
 to reduce code duplication and ensure consistent behavior.
 """
 
-from .config import to_dict
-from .paths import is_e2e_test_path
 from .strings import (
     escape_javascript_string,
     json_stringify,
@@ -22,6 +20,4 @@ __all__ = [
     "to_snake_case",
     "escape_javascript_string",
     "json_stringify",
-    "to_dict",
-    "is_e2e_test_path",
 ]

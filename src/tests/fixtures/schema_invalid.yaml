@@ -1,8 +1,0 @@
-name: schema-test
-version: 1.0.0
-language: python
-
-cli:
-  name: schematest
-  # Missing required 'commands' field
-  description: Test CLI with missing commands

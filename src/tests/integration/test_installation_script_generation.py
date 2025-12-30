@@ -21,7 +21,7 @@ from typing import Dict
 
 import pytest
 
-from .test_configs import TestConfigTemplates
+from .test_config_validation import TestConfigTemplates
 
 
 class TestInstallationScriptGeneration:

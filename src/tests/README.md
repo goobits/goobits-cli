@@ -19,7 +19,6 @@ The test suite uses a **layered testing approach** that matches the project's mu
 ```
 src/tests/unit/
 ├── test_builder.py                    # CLI generation pipeline
-├── test_formatter.py                  # Text formatting utilities  
 ├── test_main_cli.py                   # Main CLI commands
 ├── test_nodejs_generator.py           # Node.js code generation
 ├── test_verbose_flag.py               # Generation pipeline testing

@@ -78,8 +78,7 @@ Automatic shell completion generation for bash, zsh, and fish.
 Working examples are available in the repository:
 - `examples/basic-demos/` - Multi-language CLI examples for new users
 - `examples/advanced-features/` - Advanced nested command demonstrations
-- `rust_test_cli/` - Rust CLI implementation
-- `goobits.yaml` - Self-hosting configuration
+- `goobits.yaml` - Self-hosting configuration (the framework generates its own CLI)
 
 ## Support
 

@@ -40,7 +40,7 @@ if integration_path not in sys.path:
     sys.path.append(integration_path)
 
 try:
-    from test_configs import TestConfigTemplates
+    from test_config_validation import TestConfigTemplates
 except ImportError:
     # Fallback: create minimal test configs here
     from goobits_cli.core.schemas import GoobitsConfigSchema

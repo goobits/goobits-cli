@@ -103,7 +103,7 @@ if __name__ == "__main__":
         import sys
 
         # Store original module state
-        module_name = "goobits_cli.universal.template_engine"
+        module_name = "goobits_cli.universal.engine.orchestrator"
         was_loaded = module_name in sys.modules
         original_module = sys.modules.get(module_name)
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
             start = time.perf_counter()
 
             # Import the module fresh
-            import goobits_cli.universal.template_engine  # noqa: F401
+            import goobits_cli.universal.engine.orchestrator  # noqa: F401
 
             end = time.perf_counter()
             import_time = (end - start) * 1000
@@ -130,13 +130,13 @@ if __name__ == "__main__":
             # More lenient threshold for different environments
             max_import_time = 200 if import_time < 200 else 500
             assert import_time < max_import_time, (
-                f"Universal template engine import: {import_time:.1f}ms (target: <{max_import_time}ms)"
+                f"Universal orchestrator import: {import_time:.1f}ms (target: <{max_import_time}ms)"
             )
 
         except ImportError:
             # If import fails, that's ok - this is an optional optimization test
             pytest.skip(
-                "Universal template engine not available in current environment"
+                "Universal orchestrator not available in current environment"
             )
 
         finally:

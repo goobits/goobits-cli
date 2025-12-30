@@ -87,27 +87,24 @@ tests:
 - **Cross-Language**: Single test runs against all 4 language implementations  
 - **CLI-Focused**: Tests actual command execution, not framework internals
 
-### 3. ⚡ Performance Suite (`performance/`)
+### 3. ⚡ Performance Tests (`src/tests/performance/` and `src/tests/unit/`)
 
-**Purpose**: Production performance validation and benchmarking  
-**Target**: Startup times, memory usage, template rendering performance  
-**Execution**: `python performance/performance_suite.py`
+**Purpose**: Performance validation and regression prevention
+**Target**: Startup times, import performance, generation speed
+**Execution**: `pytest src/tests/performance/ src/tests/unit/test_performance_regression.py`
 
 ```bash
-# Complete performance validation
-python performance/performance_suite.py --quick
+# Run performance tests
+pytest src/tests/performance/ -v
 
-# Specific performance tools
-python performance/startup_validator.py --target 90 --iterations 10
-python performance/memory_profiler.py --command "python cli.py --help"
-python performance/template_benchmark.py --complexity all
+# Run performance regression tests
+pytest src/tests/unit/test_performance_regression.py -v
 ```
 
 **Production Thresholds:**
-- **Startup Time**: Python <90ms, Node.js <70ms, TypeScript <80ms
-- **Memory Usage**: <50MB for typical operations
-- **Template Rendering**: <500ms for complex CLI generation
-- **Success Rate**: >95% reliability required
+- **CLI Startup Time**: <100ms target
+- **Import Performance**: <200ms for lazy-loaded modules
+- **Generation Speed**: Validated via pytest benchmarks
 
 ## 🚀 Development Workflows
 
@@ -133,8 +130,7 @@ make test-parity        # Cross-language validation
 ```bash
 # Full production readiness check
 make test-all
-python performance/performance_suite.py
-# Manual review of performance benchmarks
+pytest src/tests/performance/ src/tests/unit/test_performance_regression.py -v
 ```
 
 ## 🎯 When to Use Each System
@@ -227,11 +223,11 @@ cd /tmp/parity_test_output/python && python cli.py --help
 
 ### Performance Failures
 ```bash
-# Run performance suite with detailed output
-python performance/performance_suite.py --verbose
+# Run performance tests with verbose output
+pytest src/tests/performance/ src/tests/unit/test_performance_regression.py -v
 
-# Profile specific component
-python performance/memory_profiler.py --command "your-command" --profile
+# Check specific performance test
+pytest src/tests/unit/test_performance_regression.py::TestPerformanceRegression -v
 ```
 
 ## 📊 CI/CD Integration
@@ -259,11 +255,10 @@ make typecheck    # Type validation
 make test-all     # Complete test suite
 ```
 
-**Tier 3: Release Validation** (~20-30 minutes)  
+**Tier 3: Release Validation** (~20-30 minutes)
 ```bash
 make test-all
-python performance/performance_suite.py
-# Manual performance review
+pytest src/tests/performance/ -v
 ```
 
 ## 🎓 Best Practices
@@ -302,11 +297,9 @@ python performance/performance_suite.py
 
 ## 🔗 Related Documentation
 
-- **[CODEMAP.md](./CODEMAP.md)**: Complete project architecture overview
-- **[CLAUDE.md](./CLAUDE.md)**: Development setup and commands  
-- **[Makefile](./Makefile)**: All available test commands
-- **[performance/README.md](./performance/README.md)**: Detailed performance suite documentation
-- **[.github/workflows/](/.github/workflows/)**: CI/CD pipeline configuration
+- **[CLAUDE.md](../../CLAUDE.md)**: Development setup and commands
+- **[Makefile](../../Makefile)**: All available test commands
+- **[.github/workflows/](../../.github/workflows/)**: CI/CD pipeline configuration
 
 ---
 

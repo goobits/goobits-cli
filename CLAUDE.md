@@ -4,14 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Quick Start
 
-For rapid project understanding, see **CODEMAP.md** - a comprehensive project map designed for LLM quick comprehension.
-
-**Note**: After installation, the framework provides the `goobits` command with 6 core commands:
+**Note**: After installation, the framework provides the `goobits` command with 5 core commands:
 - `build` - Generate CLI from goobits.yaml
 - `init` - Create initial goobits.yaml
 - `validate` - Validate configuration without generating
 - `migrate` - Migrate configs to v3.0.0 format
-- `serve` - Serve local PyPI package index
 - `upgrade` - Upgrade goobits-cli
 
 ## Project Overview
@@ -114,7 +111,7 @@ Rust:       src/cli.rs + src/cli_hooks.rs + Cargo.toml + setup.sh → cargo inst
 
 ### Key Components
 
-1. **main.py** - Entry point with commands: `build`, `init`, `serve`, `upgrade`
+1. **main.py** - Entry point with commands: `build`, `init`, `validate`, `migrate`, `upgrade`
 2. **schemas.py** - Pydantic models for YAML validation (ConfigSchema, GoobitsConfigSchema)
 3. **builder.py** - Routes to language-specific generators based on `language` field
 4. **generators/** - Language-specific generators with shared component integration:
@@ -244,8 +241,7 @@ The framework uses Universal Template System with fallback support:
 
 ## Implementation History
 
-The repository contains implementation milestones and proposals:
-- **PROPOSAL_06_UNIFIED_IMPLEMENTATION.md**: Master implementation roadmap (📋 ACTIVE)
+The repository contains implementation milestones:
 - **Core Framework**: Complete language implementations (✅ 100% COMPLETED - All 4 languages production-ready)
 - **Testing Framework**: YAML-based CLI testing (✅ 100% COMPLETED) 
 - **Shared Components**: Validation and documentation integration (✅ 100% COMPLETED)

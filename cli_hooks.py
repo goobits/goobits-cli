@@ -12,7 +12,6 @@ Example:
 
 # Import any modules you need here
 import sys
-import json
 from typing import Any, Dict, Optional
 def on_build(    output_dir: Optional[str] = None,    output: Optional[str] = None,    backup: bool = False,    **kwargs
 ) -> Dict[str, Any]:

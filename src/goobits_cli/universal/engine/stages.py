@@ -12,9 +12,6 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-# Import from centralized utils to avoid duplication
-from goobits_cli.utils.paths import is_e2e_test_path
-
 from ..ir.builder import IRBuilder
 from ..ir.models import IR, create_ir_from_dict
 from ..renderers.interface import Artifact, LanguageRenderer
@@ -406,7 +403,6 @@ def pipeline(
 
 
 __all__ = [
-    "is_e2e_test_path",
     "parse_config",
     "validate_config",
     "normalize_config",

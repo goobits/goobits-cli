@@ -13,7 +13,7 @@ import pytest
 
 from goobits_cli.universal.generator import UniversalGenerator
 
-from .test_configs import TestConfigTemplates
+from .test_config_validation import TestConfigTemplates
 
 
 class TestDependencyResolutionSimplified:

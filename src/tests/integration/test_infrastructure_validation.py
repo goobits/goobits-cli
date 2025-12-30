@@ -15,7 +15,7 @@ from .package_manager_utils import (
     PipManager,
     validate_installation_environment,
 )
-from .test_configs import TestConfigTemplates, TestScenarioRunner
+from .test_config_validation import TestConfigTemplates, TestScenarioRunner
 
 
 class TestInfrastructureValidation:
