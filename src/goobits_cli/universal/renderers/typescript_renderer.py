@@ -42,6 +42,7 @@ def _get_jinja2():
 
 
 from .interface import LanguageRenderer
+from ..formatters import TypeScriptHelpFormatter
 
 
 class TypeScriptRenderer(LanguageRenderer):
@@ -124,6 +125,14 @@ class TypeScriptRenderer(LanguageRenderer):
         context["commander_commands"] = self._build_commander_structure(
             ir.get("cli", {})
         )
+
+        # Unified help formatter for consistent output across languages
+        context["unified_formatter"] = {
+            "enabled": True,
+            "code": TypeScriptHelpFormatter().generate_full_code(),
+            "setup_call": TypeScriptHelpFormatter().generate_setup_call(),
+            "additional_imports": TypeScriptHelpFormatter().generate_additional_imports(),
+        }
 
         # Add TypeScript-specific transformations
 

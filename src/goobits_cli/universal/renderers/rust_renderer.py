@@ -22,6 +22,7 @@ import json
 import jinja2
 
 from .interface import LanguageRenderer
+from ..formatters import RustHelpFormatter
 
 
 class RustRenderer(LanguageRenderer):
@@ -90,6 +91,15 @@ class RustRenderer(LanguageRenderer):
 
         # Add clap structure (similar to commander_commands)
         context["clap_commands"] = self._build_clap_structure(ir.get("cli", {}))
+
+        # Unified help formatter for consistent output across languages
+        context["unified_formatter"] = {
+            "enabled": True,
+            "help_template": RustHelpFormatter().generate_help_template(),
+            "styles": RustHelpFormatter().generate_styles(),
+            "command_builder": RustHelpFormatter().generate_command_builder(),
+            "full_code": RustHelpFormatter().generate_full_code(),
+        }
 
         # Add Rust-specific transformations
 

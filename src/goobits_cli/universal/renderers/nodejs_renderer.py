@@ -44,6 +44,7 @@ def _get_jinja2():
 
 
 from .interface import LanguageRenderer
+from ..formatters import NodeJSHelpFormatter
 
 
 class NodeJSRenderer(LanguageRenderer):
@@ -122,6 +123,12 @@ class NodeJSRenderer(LanguageRenderer):
                 "npm_dependencies": npm_deps,
                 "nodejs_imports": nodejs_imports,
                 "hook_functions": self._build_hook_functions(ir.get("cli", {})),
+                # Unified help formatter for consistent output across languages
+                "unified_formatter": {
+                    "enabled": True,
+                    "code": NodeJSHelpFormatter().generate_full_code(),
+                    "setup_call": NodeJSHelpFormatter().generate_setup_call(),
+                },
                 # Node.js specific context structure (expected by tests)
                 "nodejs": {
                     "imports": nodejs_imports,

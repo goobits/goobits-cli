@@ -27,6 +27,7 @@ except ImportError:
     _version = "3.0.0"  # Fallback version
 
 from .interface import LanguageRenderer
+from ..formatters import PythonHelpFormatter
 
 
 class PythonRenderer(LanguageRenderer):
@@ -158,6 +159,13 @@ class PythonRenderer(LanguageRenderer):
                     },
                     "show_arguments": True,
                     "group_arguments_options": True,
+                },
+                # Unified help formatter for consistent output across languages
+                "unified_formatter": {
+                    "enabled": True,
+                    "code": PythonHelpFormatter().generate_full_code(),
+                    "group_class": PythonHelpFormatter().get_group_class(),
+                    "command_class": PythonHelpFormatter().get_command_class(),
                 },
                 "metadata": {
                     **{
