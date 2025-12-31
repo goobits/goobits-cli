@@ -583,12 +583,8 @@ setup(
         features = ir.get("features", {})
         interactive_mode = features.get("interactive_mode", {})
 
-        if (
-            interactive_mode.get("enabled", False) and False
-        ):  # Disabled for consolidation
-            # The main interactive_mode template handles all features based on configuration
-            # This single comprehensive template generates different implementations based on enabled features
-            output_structure["interactive_mode"] = f"src/{package_name}/interactive.py"
+        # Note: interactive_mode template disabled for consolidation
+        # The main CLI template handles all features based on configuration
 
         return output_structure
 

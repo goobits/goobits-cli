@@ -49,7 +49,7 @@ class InteractiveCompletionIntegrator:
                 self.registry.register_provider(provider)
 
     async def get_completions_for_interactive(
-        self, current_input: str, cursor_position: int = None
+        self, current_input: str, cursor_position: Optional[int] = None
     ) -> List[str]:
         """
 

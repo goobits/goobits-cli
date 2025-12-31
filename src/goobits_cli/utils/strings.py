@@ -145,7 +145,7 @@ def to_snake_case(text: str) -> str:
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
-def escape_javascript_string(value: str) -> str:
+def escape_javascript_string(value: Any) -> str:
     """Escape string for JavaScript while preserving Unicode characters.
 
     Only escapes necessary characters for JavaScript string literals:
