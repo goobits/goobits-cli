@@ -538,11 +538,11 @@ class ComponentRegistry:
         words = re.split(r"[-_\s]+", text.lower())
         return "".join(word.capitalize() for word in words)
 
-    def _js_string_filter(self, value: str) -> str:
+    def _js_string_filter(self, value: Any) -> str:
         """Escape string for JavaScript and wrap in quotes.
 
         Args:
-            value: String value to escape and quote
+            value: Value to escape and quote
 
         Returns:
             JavaScript-escaped string wrapped in double quotes

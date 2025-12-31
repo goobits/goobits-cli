@@ -906,7 +906,7 @@ class NodeJSRenderer(LanguageRenderer):
 
         return camel_name
 
-    def _js_string_filter(self, value: str) -> str:
+    def _js_string_filter(self, value: Any) -> str:
         """
         Escape string for JavaScript while preserving Unicode characters and wrap in quotes.
 

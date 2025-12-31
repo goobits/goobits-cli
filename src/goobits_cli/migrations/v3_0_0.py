@@ -26,7 +26,7 @@ class V3_0_0_Migration(Migration):
         """Check if data contains array-format subcommands that need migration."""
         return self._has_subcommands_arrays(data)
 
-    def migrate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def migrate(self, data: Any) -> Any:
         """Apply subcommands array to object conversion."""
         if not isinstance(data, dict):
             return data

@@ -98,8 +98,8 @@ class YAMLMigrationTool:
             return False
 
     def _migrate_structure(
-        self, data: Dict[str, Any], file_path: Path
-    ) -> Dict[str, Any]:
+        self, data: Any, file_path: Path
+    ) -> Any:
         """Apply all migration transformations to YAML structure."""
         from .migrations import apply_all_migrations
 

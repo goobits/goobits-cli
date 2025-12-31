@@ -999,7 +999,7 @@ setup(
         else:
             return f'"""{text}"""'
 
-    def _js_string_filter(self, value: str) -> str:
+    def _js_string_filter(self, value: Any) -> str:
         """
         Escape string for JavaScript while preserving Unicode characters (compatibility with universal templates).
 

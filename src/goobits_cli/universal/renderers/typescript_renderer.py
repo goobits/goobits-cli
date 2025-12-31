@@ -1068,7 +1068,7 @@ class TypeScriptRenderer(LanguageRenderer):
 
         return interactive_mode.get("enabled", False)
 
-    def _js_string_filter(self, value: str) -> str:
+    def _js_string_filter(self, value: Any) -> str:
         """
         Escape string for JavaScript/TypeScript while preserving Unicode characters.
 

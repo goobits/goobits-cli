@@ -34,7 +34,7 @@ class V3_0_2_Migration(Migration):
         """Check if any deprecated fields exist in the data."""
         return self._has_deprecated_fields(data)
 
-    def migrate(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def migrate(self, data: Any) -> Any:
         """Apply field name standardization."""
         if not isinstance(data, dict):
             return data
