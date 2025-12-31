@@ -21,6 +21,8 @@ from typing import Dict
 
 import pytest
 
+from goobits_cli.core.schemas import GoobitsConfigSchema
+
 from .test_config_validation import TestConfigTemplates
 
 
@@ -257,3 +259,52 @@ class TestInstallationScriptGeneration:
             print(f"ℹ️  Found instruction file: {filename}")
 
         print("✅ Installation instruction generation validated")
+
+    @pytest.mark.parametrize("language", ["python", "nodejs", "typescript", "rust"])
+    def test_setup_path_configuration(self, language):
+        """Test that setup_path configuration controls setup.sh output location."""
+        from goobits_cli.universal.generator import UniversalGenerator
+
+        # Create config with custom setup_path
+        config = TestConfigTemplates.minimal_config(language)
+
+        # Modify the installation config to use scripts/setup.sh path
+        if config.installation:
+            # Create a new installation config with setup_path set
+            config_dict = config.model_dump()
+            config_dict["installation"]["setup_path"] = "scripts/setup.sh"
+            config = GoobitsConfigSchema(**config_dict)
+
+        generator = UniversalGenerator(language)
+        files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+
+        # Check that setup.sh is at the configured path
+        setup_files = [f for f in files.keys() if "setup.sh" in f]
+
+        if setup_files:
+            # Verify setup.sh is at the configured subdirectory path
+            found_at_scripts = any("scripts" in f for f in setup_files)
+            assert found_at_scripts, (
+                f"setup.sh should be at scripts/setup.sh, but found at: {setup_files}"
+            )
+            print(f"✅ {language} setup_path configuration validated")
+        else:
+            # Some generators may not produce setup.sh
+            print(f"ℹ️  {language} does not generate setup.sh")
+
+    def test_setup_path_default_value(self):
+        """Test that setup_path defaults to root setup.sh when not configured."""
+        from goobits_cli.universal.generator import UniversalGenerator
+
+        # Create config without explicit setup_path
+        config = TestConfigTemplates.minimal_config("python")
+
+        # Verify installation exists but setup_path is default
+        if config.installation:
+            # Default should be "setup.sh" (root level)
+            default_path = config.installation.setup_path
+            assert default_path is None or default_path == "setup.sh", (
+                f"Default setup_path should be 'setup.sh' or None, got: {default_path}"
+            )
+
+        print("✅ setup_path default value validated")

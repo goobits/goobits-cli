@@ -1,4 +1,6 @@
+# =============================================================================
 # Python
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,7 +24,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Virtual environments (CRITICAL - NEVER COMMIT THESE)
+# Virtual environments
 venv/
 .venv/
 env/
@@ -34,20 +36,16 @@ venv.bak/
 virtualenv/
 pipenv-venv/
 
-# Project-specific directories to ignore
-.links/
-
 # PyInstaller
 *.manifest
 *.spec
 
-# Unit test / coverage reports
+# Testing and coverage
 htmlcov/
 .tox/
 .nox/
 .coverage
 .coverage.*
-.cache
 nosetests.xml
 coverage.xml
 *.cover
@@ -58,75 +56,40 @@ cover/
 test-results/
 test-reports/
 
-# Jupyter Notebook
+# Jupyter
 .ipynb_checkpoints
-
-# IPython
 profile_default/
 ipython_config.py
 
-# pyenv
+# Package managers
 .python-version
-
-# pipenv
 Pipfile.lock
-
-# poetry
 poetry.lock
 poetry.toml
-
-# pdm
 .pdm.toml
 .pdm-python
 .pdm-build/
-
-# PEP 582
 __pypackages__/
 
 # Celery
 celerybeat-schedule
 celerybeat.pid
 
-# SageMath parsed files
+# SageMath
 *.sage.py
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
+# Type checkers
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Pyre type checker
 .pyre/
-
-# pytype static type analyzer
 .pytype/
-
-# Cython debug symbols
 cython_debug/
-
-# Ruff
 .ruff_cache/
 
-# Node.js
+# =============================================================================
+# Node.js / TypeScript
+# =============================================================================
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -141,159 +104,31 @@ lerna-debug.log*
 .yarn/install-state.gz
 .pnp.*
 *.tgz
-
-# TypeScript
 *.tsbuildinfo
-dist/
-lib/
 out/
 compiled/
 
+# =============================================================================
 # Rust
+# =============================================================================
 target/
 Cargo.lock
 **/*.rs.bk
 *.pdb
 
-# OS Files
+# =============================================================================
+# Operating Systems
+# =============================================================================
+
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
-
-# IDE Files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-*.sublime-project
-*.sublime-workspace
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-.metadata
-.vscode-test/
-.history/
-.VSCodeCounter/
-
-# Editor directories and files
-.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.tmproj
-*.tmproject
-tmtags
-
-# Environment files
-.env
-.env.*
-!.env.example
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-config.local.*
-secrets.json
-secrets.yaml
-secrets.yml
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Runtime data
-pids/
-*.pid
-*.seed
-*.pid.lock
-
-# Cache directories
-.cache/
-.parcel-cache/
-.next/
-.nuxt/
-.vuepress/dist
-.serverless/
-.fusebox/
-.dynamodb/
-.tern-port
-.temp/
-.tmp/
-
-# Temporary files
-.tmp/
-temp/
-tmp/
-*.tmp
-*.temp
-*.bak
-*.backup
-*.old
-*.orig
-*.rej
-*~
-
-# Build outputs
-.output/
-.vercel/
-.next/
-out/
-_build/
-build/
-dist/
-
-# Documentation builds
-docs/_build/
-site/
-_site/
-
-# Backup files
-*.bak
-*.backup
-*~
-*.swp
-*.swo
-
-# Archives
-*.tar
-*.tar.gz
-*.zip
-*.7z
-*.rar
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# macOS
 .AppleDouble
 .LSOverride
 Icon
-._*
 .DocumentRevisions-V100
 .fseventsd
 .TemporaryItems
@@ -313,7 +148,12 @@ ehthumbs_vista.db
 *.stackdump
 [Dd]esktop.ini
 $RECYCLE.BIN/
+*.cab
+*.msi
 *.msix
+*.msm
+*.msp
+*.lnk
 
 # Linux
 .fuse_hidden*
@@ -321,6 +161,109 @@ $RECYCLE.BIN/
 .Trash-*
 .nfs*
 
-# Project specific (keep these)
-# test-fixtures/  # We want to keep test fixtures
-# examples/  # We want to keep examples
+# =============================================================================
+# IDEs and Editors
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+.metadata
+.vscode-test/
+.history/
+.VSCodeCounter/
+*.tmproj
+*.tmproject
+tmtags
+
+# =============================================================================
+# Environment and Secrets
+# =============================================================================
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.local.*
+secrets.json
+secrets.yaml
+secrets.yml
+
+# =============================================================================
+# Logs and Runtime
+# =============================================================================
+logs/
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# =============================================================================
+# Cache and Temporary Files
+# =============================================================================
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.temp/
+.tmp/
+temp/
+tmp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+
+# =============================================================================
+# Build Outputs
+# =============================================================================
+.output/
+.vercel/
+_build/
+
+# Documentation builds
+docs/_build/
+site/
+_site/
+
+# =============================================================================
+# Archives
+# =============================================================================
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# =============================================================================
+# Database
+# =============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# =============================================================================
+# Project-specific
+# =============================================================================
+.links/

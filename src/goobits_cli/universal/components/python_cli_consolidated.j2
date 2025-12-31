@@ -10,15 +10,13 @@ Generated from: {{ config_filename }}
 
 import sys
 import os
-import json
-import yaml
 import logging
 import traceback
 from pathlib import Path
-from typing import Any, Dict, Optional, List, Union
-from datetime import datetime
-from contextlib import contextmanager
+from typing import Any, Dict, Optional, List
+
 import click
+import yaml
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory, InMemoryHistory
