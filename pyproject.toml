@@ -32,6 +32,7 @@ goobits = "goobits_cli.main:app"
 line-length = 88
 target-version = "py38"
 src = ["src"]
+cache-dir = ".artifacts/cache/ruff"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "C4"]
@@ -64,6 +65,7 @@ known-first-party = ["goobits_cli"]
 [tool.mypy]
 python_version = "3.9"
 mypy_path = "src"
+cache_dir = ".artifacts/cache/mypy"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false  # Lenient for rapid development
@@ -97,6 +99,7 @@ test_cli = [ "setup.sh",]
 minversion = "6.0"
 addopts = "-ra -q --strict-markers --tb=short"
 testpaths = ["src/tests"]
+cache_dir = ".artifacts/cache/pytest"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 timeout = 300
@@ -112,6 +115,12 @@ markers = [
     "ir: marks intermediate representation tests",
     "downstream: marks downstream project validation tests",
 ]
+
+[tool.coverage.run]
+data_file = ".artifacts/cache/.coverage"
+
+[tool.coverage.html]
+directory = ".artifacts/cache/htmlcov"
 
 [tool.setuptools.packages.find]
 where = [ "src",]
