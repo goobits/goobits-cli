@@ -16,7 +16,7 @@ YAML Configuration → CLI Generation → Installation → Execution → Hook In
 ## 📁 Created Files
 
 ### 1. Comprehensive Integration Test Suite
-**File:** `/workspace/src/tests/integration/test_end_to_end_integration.py`
+**File:** `<repo>/src/tests/integration/test_end_to_end_integration.py`
 - **Size:** 1,387 lines
 - **Features:**
   - Tests all 4 languages: Python, Node.js, TypeScript, Rust
@@ -27,7 +27,7 @@ YAML Configuration → CLI Generation → Installation → Execution → Hook In
   - Comprehensive reporting
 
 ### 2. Simple Integration Test (Validation)
-**File:** `/workspace/src/tests/integration/test_simple_integration.py`
+**File:** `<repo>/src/tests/integration/test_simple_integration.py`
 - **Size:** 271 lines
 - **Purpose:** Focused Python CLI testing for validation
 - **Status:** ✅ Working (CLI generation successful, help command working)
