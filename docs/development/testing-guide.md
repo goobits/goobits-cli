@@ -30,20 +30,20 @@ Goobits CLI Framework uses a **purpose-built multi-system testing architecture**
 
 **Purpose**: Traditional software testing (unit, integration, e2e)  
 **Target**: Framework code quality and regression prevention  
-**Execution**: `make test-pytest` or `pytest src/tests/`
+**Execution**: `just goobits test-pytest` or `pytest src/tests/`
 
 ```bash
 # Quick unit tests during development
-make test-unit
+just goobits test-unit
 
 # Integration tests for complex workflows  
-make test-integration
+just goobits test-integration
 
 # End-to-end CLI generation testing
-make test-e2e
+just goobits test-e2e
 
 # Performance regression tests (basic)
-make test-performance
+just goobits test-performance
 ```
 
 **Categories:**
@@ -56,11 +56,11 @@ make test-performance
 
 **Purpose**: Cross-language CLI behavior validation  
 **Target**: Ensure generated CLIs behave consistently across Python/Node.js/TypeScript/Rust  
-**Execution**: `make test-parity`
+**Execution**: `just goobits test-parity`
 
 ```bash
 # Run all parity tests
-make test-parity
+just goobits test-parity
 
 # Test specific language (if supported)
 python src/tests/feature-parity/run_parity_tests.py --language python nodejs
@@ -112,24 +112,24 @@ pytest src/tests/unit/test_performance_regression.py -v
 
 ```bash
 # Quick feedback loop
-make test-fast          # PyTest only (~2-5 min)
-make lint               # Code quality
-make typecheck          # Type validation
+just goobits test-fast          # PyTest only (~2-5 min)
+just goobits lint               # Code quality
+just goobits typecheck          # Type validation
 ```
 
 ### Before Pull Request
 
 ```bash
 # Comprehensive validation
-make test-all           # All systems (~10-20 min)
-make test-parity        # Cross-language validation
+just goobits test-all           # All systems (~10-20 min)
+just goobits test-parity        # Cross-language validation
 ```
 
 ### Release Validation
 
 ```bash
 # Full production readiness check
-make test-all
+just goobits test-all
 pytest src/tests/performance/ src/tests/unit/test_performance_regression.py -v
 ```
 
@@ -245,19 +245,19 @@ pytest src/tests/unit/test_performance_regression.py::TestPerformanceRegression 
 
 **Tier 1: PR Checks** (~5-10 minutes)
 ```bash
-make test-fast    # PyTest only
-make lint         # Ruff + mypy  
-make typecheck    # Type validation
+just goobits test-fast    # PyTest only
+just goobits lint         # Ruff + mypy  
+just goobits typecheck    # Type validation
 ```
 
 **Tier 2: Integration Validation** (~10-20 minutes)
 ```bash
-make test-all     # Complete test suite
+just goobits test-all     # Complete test suite
 ```
 
 **Tier 3: Release Validation** (~20-30 minutes)
 ```bash
-make test-all
+just goobits test-all
 pytest src/tests/performance/ -v
 ```
 
