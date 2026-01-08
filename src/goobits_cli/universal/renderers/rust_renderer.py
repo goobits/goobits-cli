@@ -12,6 +12,8 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List
 
+from pathlib import Path
+
 try:
     from ... import __version__ as _version
 except ImportError:
@@ -232,22 +234,32 @@ class RustRenderer(LanguageRenderer):
         else:
             cli_path = base_cli_path or "src/cli.rs"
 
-        if base_hooks_path and base_hooks_path.endswith(".py"):
-            hooks_path = base_hooks_path.replace(".py", ".rs")
+        # Calculate hooks path relative to CLI path
+        if base_hooks_path:
+            if base_hooks_path.endswith(".py"):
+                hooks_path = base_hooks_path.replace(".py", ".rs")
+            else:
+                hooks_path = base_hooks_path
         else:
-            hooks_path = base_hooks_path or "src/cli_hooks.rs"
+            # Default to cli_hooks.rs in the same directory as cli.rs
+            cli_dir = Path(cli_path).parent
+            hooks_path = str(cli_dir / "cli_hooks.rs")
 
-        # Ensure src/ prefix for Rust files
+        # Ensure src/ prefix for Rust files if not present and if they look like source files
         if cli_path and not cli_path.startswith("src/"):
             cli_path = f"src/{cli_path}"
-        if hooks_path and not hooks_path.startswith("src/"):
-            hooks_path = f"src/{hooks_path}"
+        
+        # If hooks_path doesn't start with src/ and CLI does, check if we need to prefix it
+        # (Only if we didn't just derive it from cli_path which already has src/)
+        if hooks_path and not hooks_path.startswith("src/") and "src/" not in hooks_path:
+             hooks_path = f"src/{hooks_path}"
 
         # Generate 4 files: cli.rs, cli_hooks.rs, setup.sh, and Cargo.toml
         output = {
             "rust_cli_consolidated": cli_path,  # RENAMED from src/main.rs to src/cli.rs
             "hooks_template": hooks_path,  # User hooks implementation
-            "setup_script": "setup.sh",  # Smart setup with Cargo.toml merging
+            "setup_script": ir.get("installation", {}).get("setup_path")
+            or "setup.sh",  # Smart setup with Cargo.toml merging
             "cargo_config": "Cargo.toml",  # Package manifest with dependencies
         }
 

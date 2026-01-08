@@ -126,6 +126,14 @@ async function on_file_delete(filePath, options = {}) {
     }
 }
 
+async function on_config(options = {}) {
+    return 0;
+}
+
+async function on_file(options = {}) {
+    return 0;
+}
+
 export {
     on_hello,
     on_config_get,
@@ -135,5 +143,7 @@ export {
     on_fail,
     on_echo,
     on_file_create,
-    on_file_delete
+    on_file_delete,
+    on_config,
+    on_file
 };

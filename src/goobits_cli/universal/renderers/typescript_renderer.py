@@ -279,21 +279,22 @@ class TypeScriptRenderer(LanguageRenderer):
         if base_cli_path and base_cli_path.endswith(".py"):
             cli_path = base_cli_path.replace(".py", ".ts")
         else:
-            cli_path = base_cli_path or "cli.ts"
+            cli_path = base_cli_path or "bin/cli.ts"
 
         if base_hooks_path and base_hooks_path.endswith(".py"):
             hooks_path = base_hooks_path.replace(".py", ".ts")
         else:
-            hooks_path = base_hooks_path or "cli_hooks.ts"
+            hooks_path = base_hooks_path or "bin/cli_hooks.ts"
 
-        types_path = base_types_path or "cli_types.d.ts"
+        types_path = base_types_path or "bin/cli_types.d.ts"
 
         # TypeScript generates 4 files (cli, hooks, types, setup.sh)
         output = {
             "typescript_cli_consolidated": cli_path,  # TypeScript with everything embedded
             "hooks_template": hooks_path,  # RENAMED from src/hooks.ts to cli_hooks.ts
             "typescript_types": types_path,  # RENAMED from types.d.ts to cli_types.d.ts
-            "setup_script": "setup.sh",  # Smart setup with package.json/tsconfig merging
+            "setup_script": ir.get("installation", {}).get("setup_path")
+            or "setup.sh",  # Smart setup with package.json/tsconfig merging
         }
 
         return output

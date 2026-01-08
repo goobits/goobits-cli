@@ -1,0 +1,72 @@
+# Python Parity Test Example
+# Used by feature parity tests to verify CLI generation
+package_name: test-cli
+command_name: test-cli
+display_name: "Test CLI"
+description: "A test CLI for verifying feature parity"
+version: "1.0.0"
+language: python
+author: "Test User"
+email: "test@example.com"
+license: "MIT"
+
+cli:
+  name: test-cli
+  tagline: "A test CLI for verifying feature parity"
+  description: "A test CLI for verifying feature parity"
+  commands:
+    hello:
+      desc: "Say hello"
+      args:
+        - name: name
+          desc: "Name to greet"
+          required: true
+      options:
+        - name: greeting
+          short: g
+          desc: "Custom greeting"
+          default: "Hello"
+          
+    echo:
+      desc: "Echo back input"
+      args:
+        - name: text
+          desc: "Text to echo"
+          nargs: "*"
+          required: true
+          
+    fail:
+      desc: "Command that fails"
+      # Hook implementation in tests will make this fail
+      
+    config:
+      desc: "Configuration management"
+      commands:
+        get:
+          desc: "Get config value"
+          args:
+            - name: key
+              required: true
+        set:
+          desc: "Set config value"
+          args:
+            - name: key
+              required: true
+            - name: value
+              required: true
+              
+    file:
+      desc: "File operations"
+      commands:
+        create:
+          desc: "Create a file"
+          args:
+            - name: path
+              required: true
+            - name: content
+              required: true
+        delete:
+          desc: "Delete a file"
+          args:
+            - name: path
+              required: true

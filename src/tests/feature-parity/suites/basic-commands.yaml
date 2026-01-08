@@ -2,7 +2,7 @@ suite_name: basic-commands
 description: Tests for basic command execution, arguments, options, help, and version
 
 setup:
-  goobits_config: ../../../examples/basic-demos/python-example.yaml
+  goobits_config: ../../../../examples/basic-demos/python-example.yaml
   cleanup: true
 
 tests:

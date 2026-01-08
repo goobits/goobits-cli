@@ -115,3 +115,11 @@ pub fn on_file_delete(matches: &ArgMatches) -> Result<()> {
         }
     }
 }
+
+pub fn on_config(_matches: &ArgMatches) -> Result<()> {
+    Ok(())
+}
+
+pub fn on_file(_matches: &ArgMatches) -> Result<()> {
+    Ok(())
+}

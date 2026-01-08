@@ -110,32 +110,6 @@ class ParityTestRunner:
         if result.returncode != 0:
             raise RuntimeError(f"Failed to generate {language} CLI: {result.stderr}")
 
-        # Copy hook file to the generated directory
-        hook_source = config_path.parent / "cli_hooks.py"
-        if language == "python" and hook_source.exists():
-            # Copy to root and to src/demo_cli for basic-demos examples
-            shutil.copy(hook_source, output_dir / language / "cli_hooks.py")
-            if (output_dir / language / "src" / "demo_cli").exists():
-                shutil.copy(
-                    hook_source,
-                    output_dir / language / "src" / "demo_cli" / "cli_hooks.py",
-                )
-        elif language in ["nodejs", "typescript"]:
-            hook_source = config_path.parent / "hooks.js"
-            if hook_source.exists():
-                # Copy to the root directory as cli_hooks.js (what the CLI looks for)
-                shutil.copy(hook_source, output_dir / language / "cli_hooks.js")
-                # Also copy to src/hooks.js to replace generated template
-                src_dir = output_dir / language / "src"
-                src_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy(hook_source, src_dir / "hooks.js")
-        elif language == "rust":
-            hook_source = config_path.parent / "hooks.rs"
-            if hook_source.exists():
-                src_dir = output_dir / language / "src"
-                src_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy(hook_source, src_dir / "hooks.rs")
-
         # Find the generated CLI executable
         cli_name = config["cli"]["name"]
 
@@ -155,6 +129,12 @@ class ParityTestRunner:
                 / "cli.py",  # For basic-demos examples
                 output_dir / language / f"{cli_name}.py",
             ]
+            # Add recursive search as fallback
+            if not any(p.exists() for p in possible_paths):
+                found = list((output_dir / language).rglob("cli.py"))
+                if found:
+                    possible_paths.insert(0, found[0])
+
             cli_path = None
             for path in possible_paths:
                 if path.exists():
@@ -188,41 +168,84 @@ class ParityTestRunner:
                     if build_result.returncode != 0 and self.verbose:
                         print(f"npm build warning: {build_result.stderr[:200]}")
 
-                    # Copy hooks AFTER TypeScript compilation to ensure CommonJS format
-                    hook_source = config_path.parent / "hooks.js"
-                    if hook_source.exists():
-                        src_dir = output_dir / language / "src"
-                        if src_dir.exists():
-                            shutil.copy(hook_source, src_dir / "hooks.js")
-                            if self.verbose:
-                                print("Copied CommonJS hooks after TypeScript build")
+            # Intelligent hook placement for Node.js/TypeScript
+            # Find where the CLI source is and place hooks next to it
+            hook_source = config_path.parent / "hooks.js"
+            if hook_source.exists():
+                # Try to find the CLI source file to place hooks next to it
+                search_pattern = "cli.ts" if language == "typescript" else "cli.js"
+                source_files = list(npm_dir.rglob(search_pattern))
+                
+                # Also check for cli.mjs
+                if not source_files and language == "nodejs":
+                    source_files = list(npm_dir.rglob("cli.mjs"))
 
-            # For Node.js/TypeScript, look for bin/cli.js first, then fallback
-            # TypeScript generates .cjs files, Node.js generates .js files
+                if source_files:
+                    # Place hooks next to the main CLI file
+                    target_dir = source_files[0].parent
+                    target_ext = source_files[0].suffix
+                    target_hooks = target_dir / f"cli_hooks{target_ext}"
+                    shutil.copy(hook_source, target_hooks)
+                    if self.verbose:
+                        print(f"Copied hooks to {target_hooks}")
+                else:
+                    # Fallback to root and src
+                    shutil.copy(hook_source, output_dir / language / "cli_hooks.js")
+                    src_dir = output_dir / language / "src"
+                    if src_dir.exists():
+                        shutil.copy(hook_source, src_dir / "hooks.js")
+
+            # CLI Discovery
+            possible_paths = [
+                output_dir / language / "bin" / "cli.js",
+                output_dir / language / "bin" / "cli.cjs",
+                output_dir / language / "cli.js",
+                output_dir / language / "cli.cjs",
+                output_dir / language / "cli.mjs",
+                output_dir / language / "index.js",
+            ]
+            
+            # recursive search for built artifacts
             if language == "typescript":
-                possible_paths = [
-                    output_dir / language / "bin" / "cli.cjs",
-                    output_dir / language / "bin" / "cli.js",
-                    output_dir / language / "cli.cjs",
-                    output_dir / language / "cli.js",
-                    output_dir / language / "index.js",
-                ]
+                # Look in dist/
+                dist_files = list((output_dir / language / "dist").rglob("cli.js"))
+                if dist_files:
+                    possible_paths.insert(0, dist_files[0])
             else:
-                possible_paths = [
-                    output_dir / language / "bin" / "cli.js",
-                    output_dir / language / "cli.js",
-                    output_dir / language / "index.js",
-                ]
+                # Look for any cli.js/mjs
+                src_files = list((output_dir / language).rglob("cli.js"))
+                src_files.extend(list((output_dir / language).rglob("cli.mjs")))
+                if src_files:
+                    possible_paths = src_files + possible_paths
+
             cli_path = None
             for path in possible_paths:
                 if path.exists():
                     cli_path = path
                     break
             if not cli_path:
-                cli_path = possible_paths[0]  # Default to bin/cli.js
+                cli_path = possible_paths[0]
+
         elif language == "rust":
-            # For Rust, we need to build the binary
+            # Intelligent hook placement for Rust
+            hook_source = config_path.parent / "hooks.rs"
             cargo_dir = output_dir / language
+            
+            if hook_source.exists():
+                # Find cli.rs to place hooks next to it
+                cli_sources = list(cargo_dir.rglob("cli.rs"))
+                if cli_sources:
+                    target_dir = cli_sources[0].parent
+                    shutil.copy(hook_source, target_dir / "cli_hooks.rs")
+                    if self.verbose:
+                        print(f"Copied Rust hooks to {target_dir / 'cli_hooks.rs'}")
+                else:
+                    # Fallback
+                    src_dir = cargo_dir / "src"
+                    src_dir.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(hook_source, src_dir / "hooks.rs")
+
+            # Build Rust
             build_result = subprocess.run(
                 ["cargo", "build", "--release"],
                 cwd=cargo_dir,

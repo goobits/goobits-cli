@@ -79,6 +79,9 @@ class IRBuilder:
                     "pypi_name",
                     _safe_get_attr(config, "package_name"),
                 ),
+                "setup_path": _safe_get_attr(
+                    _safe_get_attr(config, "installation", {}), "setup_path"
+                ),
                 "development_path": _safe_get_attr(
                     _safe_get_attr(config, "installation", {}), "development_path", "."
                 ),

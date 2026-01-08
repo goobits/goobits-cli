@@ -573,7 +573,8 @@ setup(
         output_structure = {
             "python_cli_consolidated": cli_path,  # Everything embedded in single file
             "hooks_template": hooks_path,  # NEW: Python hooks template
-            # setup.sh is handled by the main build system
+            "setup_script": ir.get("installation", {}).get("setup_path")
+            or "setup.sh",  # Smart setup with package.json/tsconfig merging
         }
 
         # Python doesn't need separate type definitions file

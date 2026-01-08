@@ -281,20 +281,21 @@ class NodeJSRenderer(LanguageRenderer):
 
         # Transform file extensions for Node.js if they have Python extensions
         if base_cli_path and base_cli_path.endswith(".py"):
-            cli_path = base_cli_path.replace(".py", ".mjs")
+            cli_path = base_cli_path.replace(".py", ".js")
         else:
-            cli_path = base_cli_path or "cli.mjs"
+            cli_path = base_cli_path or "bin/cli.js"
 
         if base_hooks_path and base_hooks_path.endswith(".py"):
-            hooks_path = base_hooks_path.replace(".py", ".mjs")
+            hooks_path = base_hooks_path.replace(".py", ".js")
         else:
-            hooks_path = base_hooks_path or "cli_hooks.mjs"
+            hooks_path = base_hooks_path or "bin/cli_hooks.js"
 
         # Node.js generates 3 files (cli, hooks, setup.sh)
         output = {
             "nodejs_cli_consolidated": cli_path,  # ES6 module with everything embedded
             "hooks_template": hooks_path,  # RENAMED from src/hooks.js to cli_hooks.mjs
-            "setup_script": "setup.sh",  # Smart setup with package.json merging
+            "setup_script": ir.get("installation", {}).get("setup_path")
+            or "setup.sh",  # Smart setup with package.json merging
         }
 
         return output
