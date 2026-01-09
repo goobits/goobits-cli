@@ -8,12 +8,12 @@ help output configuration across all supported languages.
 import pytest
 
 from goobits_cli.universal.formatters import (
-    HelpFormatSpec,
     DEFAULT_FORMAT,
-    PythonHelpFormatter,
+    HelpFormatSpec,
     NodeJSHelpFormatter,
-    TypeScriptHelpFormatter,
+    PythonHelpFormatter,
     RustHelpFormatter,
+    TypeScriptHelpFormatter,
 )
 
 

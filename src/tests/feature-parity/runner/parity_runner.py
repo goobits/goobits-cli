@@ -175,7 +175,7 @@ class ParityTestRunner:
                 # Try to find the CLI source file to place hooks next to it
                 search_pattern = "cli.ts" if language == "typescript" else "cli.js"
                 source_files = list(npm_dir.rglob(search_pattern))
-                
+
                 # Also check for cli.mjs
                 if not source_files and language == "nodejs":
                     source_files = list(npm_dir.rglob("cli.mjs"))
@@ -204,7 +204,7 @@ class ParityTestRunner:
                 output_dir / language / "cli.mjs",
                 output_dir / language / "index.js",
             ]
-            
+
             # recursive search for built artifacts
             if language == "typescript":
                 # Look in dist/
@@ -230,7 +230,7 @@ class ParityTestRunner:
             # Intelligent hook placement for Rust
             hook_source = config_path.parent / "hooks.rs"
             cargo_dir = output_dir / language
-            
+
             if hook_source.exists():
                 # Find cli.rs to place hooks next to it
                 cli_sources = list(cargo_dir.rglob("cli.rs"))

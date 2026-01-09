@@ -41,8 +41,8 @@ def _get_jinja2():
     return _jinja2
 
 
-from .interface import LanguageRenderer
 from ..formatters import TypeScriptHelpFormatter
+from .interface import LanguageRenderer
 
 
 class TypeScriptRenderer(LanguageRenderer):

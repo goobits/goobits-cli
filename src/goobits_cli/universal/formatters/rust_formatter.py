@@ -6,7 +6,7 @@ help output. The generated code customizes Clap's help display while maintaining
 consistent formatting across all languages.
 """
 
-from .spec import HelpFormatSpec, DEFAULT_FORMAT
+from .spec import DEFAULT_FORMAT, HelpFormatSpec
 
 
 class RustHelpFormatter:
@@ -63,11 +63,11 @@ pub const SUBCOMMAND_HELP_TEMPLATE: &str = "\\
 
     def generate_styles(self) -> str:
         """Generate Clap styling configuration."""
-        return f'''
-use clap::builder::{{Styles, styling::AnsiColor}};
+        return '''
+use clap::builder::{Styles, styling::AnsiColor};
 
 /// Unified styling for consistent colors across all languages.
-pub fn unified_styles() -> Styles {{
+pub fn unified_styles() -> Styles {
     Styles::styled()
         .header(AnsiColor::Yellow.on_default().bold())
         .usage(AnsiColor::Yellow.on_default().bold())
@@ -76,7 +76,7 @@ pub fn unified_styles() -> Styles {{
         .valid(AnsiColor::Green.on_default())
         .invalid(AnsiColor::Red.on_default())
         .error(AnsiColor::Red.on_default().bold())
-}}
+}
 '''
 
     def generate_command_builder(self) -> str:

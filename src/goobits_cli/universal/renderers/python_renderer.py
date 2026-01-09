@@ -26,8 +26,8 @@ try:
 except ImportError:
     _version = "3.0.0"  # Fallback version
 
-from .interface import LanguageRenderer
 from ..formatters import PythonHelpFormatter
+from .interface import LanguageRenderer
 
 
 class PythonRenderer(LanguageRenderer):

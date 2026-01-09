@@ -10,9 +10,8 @@ with proper type safety, structs, and Rust-specific conventions using clap.
 
 import re
 from datetime import datetime
-from typing import Any, Dict, List
-
 from pathlib import Path
+from typing import Any, Dict, List
 
 try:
     from ... import __version__ as _version
@@ -23,8 +22,8 @@ import json
 
 import jinja2
 
-from .interface import LanguageRenderer
 from ..formatters import RustHelpFormatter
+from .interface import LanguageRenderer
 
 
 class RustRenderer(LanguageRenderer):
@@ -248,7 +247,7 @@ class RustRenderer(LanguageRenderer):
         # Ensure src/ prefix for Rust files if not present and if they look like source files
         if cli_path and not cli_path.startswith("src/"):
             cli_path = f"src/{cli_path}"
-        
+
         # If hooks_path doesn't start with src/ and CLI does, check if we need to prefix it
         # (Only if we didn't just derive it from cli_path which already has src/)
         if hooks_path and not hooks_path.startswith("src/") and "src/" not in hooks_path:

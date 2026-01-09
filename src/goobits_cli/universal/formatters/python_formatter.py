@@ -8,7 +8,7 @@ consistent formatting across all languages.
 
 from typing import Any, Dict
 
-from .spec import HelpFormatSpec, DEFAULT_FORMAT
+from .spec import DEFAULT_FORMAT, HelpFormatSpec
 
 
 class PythonHelpFormatter:

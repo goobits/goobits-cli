@@ -11,9 +11,11 @@ Example:
 """
 
 # Import any modules you need here
-import sys
 import json
+import sys
 from typing import Any, Dict, Optional
+
+
 def on_build(    output_dir: Optional[str] = None,    output: Optional[str] = None,    backup: bool = False,    **kwargs
 ) -> Dict[str, Any]:
     """
@@ -22,7 +24,7 @@ def on_build(    output_dir: Optional[str] = None,    output: Optional[str] = No
         Dictionary with status and optional results
     """
     # Add your business logic here
-    print(f"Executing build command")
+    print("Executing build command")
     return {
         "status": "success",
         "message": "build completed successfully"
@@ -35,7 +37,7 @@ def on_init(    template: Optional[str] = None,    force: bool = False,    **kwa
         Dictionary with status and optional results
     """
     # Add your business logic here
-    print(f"Executing init command")
+    print("Executing init command")
     return {
         "status": "success",
         "message": "init completed successfully"
@@ -48,7 +50,7 @@ def on_validate(    verbose: bool = False,    **kwargs
         Dictionary with status and optional results
     """
     # Add your business logic here
-    print(f"Executing validate command")
+    print("Executing validate command")
     return {
         "status": "success",
         "message": "validate completed successfully"
@@ -61,7 +63,7 @@ def on_migrate(    backup: bool = False,    dry_run: bool = False,    pattern: O
         Dictionary with status and optional results
     """
     # Add your business logic here
-    print(f"Executing migrate command")
+    print("Executing migrate command")
     return {
         "status": "success",
         "message": "migrate completed successfully"

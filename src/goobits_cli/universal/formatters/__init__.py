@@ -9,11 +9,11 @@ The formatters customize only the display output, not the functionality.
 All argument parsing, validation, completion, and other features remain native.
 """
 
-from .spec import HelpFormatSpec, DEFAULT_FORMAT
-from .python_formatter import PythonHelpFormatter
 from .nodejs_formatter import NodeJSHelpFormatter
-from .typescript_formatter import TypeScriptHelpFormatter
+from .python_formatter import PythonHelpFormatter
 from .rust_formatter import RustHelpFormatter
+from .spec import DEFAULT_FORMAT, HelpFormatSpec
+from .typescript_formatter import TypeScriptHelpFormatter
 
 __all__ = [
     "HelpFormatSpec",

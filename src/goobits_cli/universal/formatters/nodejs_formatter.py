@@ -6,7 +6,7 @@ The generated code customizes Commander's help display while maintaining
 consistent formatting across all languages.
 """
 
-from .spec import HelpFormatSpec, DEFAULT_FORMAT
+from .spec import DEFAULT_FORMAT, HelpFormatSpec
 
 
 class NodeJSHelpFormatter:
