@@ -203,6 +203,7 @@ class IRBuilder:
                     if "args" in cmd_dict and cmd_dict["args"]:
                         for arg in cmd_dict["args"]:
                             arg_dict = _safe_to_dict(arg)
+                            arg_nargs = arg_dict.get("nargs")
                             command_data["arguments"].append(
                                 {
                                     "name": arg_dict.get("name", ""),
@@ -212,6 +213,8 @@ class IRBuilder:
                                     "type": arg_dict.get("type", "string"),
                                     "required": arg_dict.get("required", False),
                                     "default": arg_dict.get("default"),
+                                    "nargs": arg_nargs,
+                                    "multiple": arg_nargs == "*",
                                 }
                             )
 
@@ -534,13 +537,15 @@ class IRBuilder:
 
             if hasattr(cmd, "arguments") and cmd.arguments:
                 for arg in cmd.arguments:
+                    arg_nargs = _safe_get_attr(arg, "nargs")
                     command_data["arguments"].append(
                         {
                             "name": _safe_get_attr(arg, "name"),
                             "description": _safe_get_attr(arg, "description"),
                             "type": _safe_get_attr(arg, "type", "string"),
                             "required": _safe_get_attr(arg, "required", True),
-                            "multiple": _safe_get_attr(arg, "multiple", False),
+                            "multiple": _safe_get_attr(arg, "multiple", False) or arg_nargs == "*",
+                            "nargs": arg_nargs,
                         }
                     )
 

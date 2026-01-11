@@ -187,13 +187,17 @@ class CLIContext:
 # HOOK SYSTEM
 # ============================================================================
 
+{#- Compute hooks module name from cli_hooks_path -#}
+{% set hooks_path = project.cli_hooks_path | default('cli_hooks.py') %}
+{% set hooks_module = hooks_path.replace('src/', '').replace('/', '.').replace('.py', '') %}
+
 def load_hooks():
     """Load user-defined hooks."""
     try:
-        import cli_hooks
-        return cli_hooks
+        import {{ hooks_module }} as hooks_module
+        return hooks_module
     except ImportError:
-        logger.warning("No cli_hooks.py found. Please create one with your command implementations.")
+        logger.warning("No hooks module found. Please create one with your command implementations.")
         logger.warning("Example:")
         logger.warning("  def on_build(ctx, **kwargs):")
         logger.warning("      print('Build command implementation')")
@@ -222,7 +226,7 @@ def cli(ctx, verbose, debug, config):
     {%- if not cmd_data.subcommands %}
 @cli.command('{{ cmd_name }}')
 {% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) -%}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if arg.required == false %}, required=False{% endif %}{% if arg.default is defined %}, default={{ arg.default | python_repr }}{% endif %})
 {% endfor -%}
 {% for opt in cmd_data.options | default([]) -%}
 @click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
@@ -263,10 +267,10 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
 
 @{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_name }}')
           {%- for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if arg.required == false %}, required=False{% endif %}{% if arg.default is defined %}, default={{ arg.default | python_repr }}{% endif %})
           {%- endfor %}
           {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
-@click.option('{{ opt.long }}'{% if opt.short %}, '{{ opt.short }}'{% endif %},
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.description | replace('"', '\\"') }}")
@@ -296,10 +300,10 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
 
 @{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_data.name }}')
           {% for arg in sub_data.arguments | default([]) %}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if arg.required == false %}, required=False{% endif %}{% if arg.default is defined %}, default={{ arg.default | python_repr }}{% endif %})
           {% endfor %}
           {% for opt in sub_data.options | default([]) %}
-@click.option('{{ opt.long }}'{% if opt.short %}, '{{ opt.short }}'{% endif %},
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.description | replace('"', '\\"') }}")
@@ -332,10 +336,10 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
 
 @cli.command('{{ command.name }}')
     {%- for arg in command.arguments | default([]) %}
-@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }})
+@click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if arg.required == false %}, required=False{% endif %}{% if arg.default is defined %}, default={{ arg.default | python_repr }}{% endif %})
     {%- endfor %}
     {%- for opt in command.options | default([]) %}
-@click.option('{{ opt.long }}'{% if opt.short %}, '{{ opt.short }}'{% endif %},
+@click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.description | replace('"', '\\"') }}")
@@ -469,6 +473,9 @@ def main():
         cli()
     except Exception as e:
         handle_error(e, '--verbose' in sys.argv or '--debug' in sys.argv)
+
+# Alias for compatibility with different entry point names
+cli_entry = main
 
 if __name__ == '__main__':
     main()
