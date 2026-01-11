@@ -231,6 +231,7 @@ def cli(ctx, verbose, debug, config):
 {% for opt in cmd_data.options | default([]) -%}
 @click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
+              {%- if opt.type == 'int' %} type=click.INT,{% elif opt.type == 'float' %} type=click.FLOAT,{% elif opt.type == 'str' %} type=click.STRING,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.desc | default(opt.description) | replace('"', '\\"') }}")
 {% endfor %}
@@ -272,6 +273,7 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
           {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
 @click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
+              {%- if opt.type == 'int' %} type=click.INT,{% elif opt.type == 'float' %} type=click.FLOAT,{% elif opt.type == 'str' %} type=click.STRING,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.description | replace('"', '\\"') }}")
           {%- endfor %}
@@ -305,6 +307,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
           {% for opt in sub_data.options | default([]) %}
 @click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
+              {%- if opt.type == 'int' %} type=click.INT,{% elif opt.type == 'float' %} type=click.FLOAT,{% elif opt.type == 'str' %} type=click.STRING,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.description | replace('"', '\\"') }}")
           {% endfor %}
@@ -341,6 +344,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
     {%- for opt in command.options | default([]) %}
 @click.option('--{{ opt.name }}'{% if opt.short %}, '-{{ opt.short }}'{% endif %},
               {%- if opt.type == 'bool' or opt.type == 'flag' %} is_flag=True,{% endif %}
+              {%- if opt.type == 'int' %} type=click.INT,{% elif opt.type == 'float' %} type=click.FLOAT,{% elif opt.type == 'str' %} type=click.STRING,{% endif %}
               {%- if opt.default is defined %} default={{ opt.default | python_repr }},{% endif %}
               help="{{ opt.description | replace('"', '\\"') }}")
     {%- endfor %}
