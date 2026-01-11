@@ -58,6 +58,12 @@ def _lazy_imports():
 DEFAULT_CACHE_TTL = 3600
 
 
+def _is_hooks_file(path: Path) -> bool:
+    """Check if a file is a hooks file that should be preserved."""
+    name = path.name.lower()
+    return "hooks" in name and name.endswith(".py")
+
+
 def load_goobits_config(file_path: Path) -> "GoobitsConfigSchema":
     """Load and validate goobits.yaml configuration file."""
     _lazy_imports()

@@ -229,6 +229,12 @@ def render_with_templates(
     return rendered_files
 
 
+def _is_hooks_file(path: Path) -> bool:
+    """Check if a file is a hooks file that should be preserved."""
+    name = path.name.lower()
+    return "hooks" in name and name.endswith(".py")
+
+
 def write_artifacts(
     artifacts: List[Artifact],
     output_dir: Path,
@@ -247,12 +253,19 @@ def write_artifacts(
     Returns:
         List of written file paths
     """
+    import click
+
     written_files = []
 
     for artifact in artifacts:
         file_path = output_dir / artifact.path
 
         if not dry_run:
+            # Skip hooks files if they already exist (preserve user implementations)
+            if _is_hooks_file(file_path) and file_path.exists():
+                click.echo(f"⏭️  Skipping {file_path} (exists - preserving user implementations)")
+                continue
+
             # Ensure parent directory exists
             file_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -283,6 +296,8 @@ def write_files(
     Returns:
         List of written file paths
     """
+    import click
+
     written_files = []
 
     for file_path, content in files.items():
@@ -293,6 +308,11 @@ def write_files(
             path = output_dir / path
 
         if not dry_run:
+            # Skip hooks files if they already exist (preserve user implementations)
+            if _is_hooks_file(path) and path.exists():
+                click.echo(f"⏭️  Skipping {path} (exists - preserving user implementations)")
+                continue
+
             # Ensure parent directory exists
             path.parent.mkdir(parents=True, exist_ok=True)
 

@@ -6,6 +6,7 @@ from typing import Optional
 import typer
 
 from .utils import (
+    _is_hooks_file,
     _lazy_imports,
     backup_file,
     generate_setup_script,
@@ -198,6 +199,11 @@ def build_command(
                     continue
 
                 full_path = lang_output_dir / file_path
+
+                # Skip hooks files if they already exist (preserve user implementations)
+                if _is_hooks_file(full_path) and full_path.exists():
+                    typer.echo(f"⏭️  Skipping {full_path} (exists - preserving user implementations)")
+                    continue
 
                 # Ensure parent directories exist
                 full_path.parent.mkdir(parents=True, exist_ok=True)
