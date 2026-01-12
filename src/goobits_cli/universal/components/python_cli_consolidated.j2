@@ -84,7 +84,7 @@ class ConfigManager:
 
     def __init__(self, config_file: Optional[Path] = None):
         """Initialize configuration manager."""
-        self.section = "{{ cli.root_command.name | default(project.command_name) | default('cli') | lower }}"
+        self.section = "{{ project.command_name | default('cli') | lower }}"
         if config_file is None:
             env_path = os.environ.get("MATILDA_CONFIG")
             config_file = Path(env_path) if env_path else Path.home() / ".matilda" / "config.toml"
