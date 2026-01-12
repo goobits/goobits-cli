@@ -606,9 +606,8 @@ setup(
         cli_schema = ir.get("cli", {})
 
         if self._has_config_features(cli_schema):
-            imports.append("import json")
-
-            imports.append("import configparser")
+            imports.append("import tomllib")
+            imports.append("import toml")
 
         if self._has_async_features(cli_schema):
             imports.append("import asyncio")
