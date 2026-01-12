@@ -47,8 +47,7 @@ class ProjectInfo:
     package_name: str            # Python package name (e.g., "my-cli-tool")
     command_name: str            # CLI command name (e.g., "mycli")
     cli_path: Optional[str]      # Output path for generated CLI
-    cli_hooks_path: Optional[str]  # Path to hooks file (new)
-    hooks_path: Optional[str]    # Path to hooks file (deprecated, use cli_hooks_path)
+    cli_hooks_path: Optional[str]  # Path to hooks file
 ```
 
 ### CLISchema
@@ -200,7 +199,7 @@ class GenerationMetadata:
         "package_name": "my-cli",
         "command_name": "mycli",
         "cli_path": "src/my_cli/cli.py",
-        "hooks_path": "src/my_cli/app_hooks.py",
+        "cli_hooks_path": "src/my_cli/cli_hooks.py",
     },
     "cli": {
         "root_command": {

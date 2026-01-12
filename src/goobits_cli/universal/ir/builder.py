@@ -70,7 +70,6 @@ class IRBuilder:
                 "command_name": _safe_get_attr(config, "command_name"),
                 "cli_path": _safe_get_attr(config, "cli_path"),
                 "cli_hooks_path": _safe_get_attr(config, "cli_hooks_path"),
-                "hooks_path": _safe_get_attr(config, "hooks_path"),
             },
             "cli": cli_schema,
             "installation": {

@@ -83,7 +83,6 @@ class IRCommand:
         examples: Usage examples
         aliases: Alternative command names
         hidden: Whether command is hidden from help
-        deprecated: Deprecation message if deprecated
     """
 
     name: str
@@ -94,7 +93,6 @@ class IRCommand:
     examples: tuple = field(default_factory=tuple)
     aliases: tuple = field(default_factory=tuple)
     hidden: bool = False
-    deprecated: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -236,7 +234,6 @@ class IR:
             "examples": list(cmd.examples),
             "aliases": list(cmd.aliases),
             "hidden": cmd.hidden,
-            "deprecated": cmd.deprecated,
         }
 
     def _option_to_dict(self, opt: IROption) -> Dict[str, Any]:
@@ -354,7 +351,6 @@ def _create_command_from_dict(name: str, data: Dict[str, Any]) -> IRCommand:
         examples=tuple(data.get("examples", [])),
         aliases=tuple(data.get("aliases", [])),
         hidden=data.get("hidden", False),
-        deprecated=data.get("deprecated"),
     )
 
 

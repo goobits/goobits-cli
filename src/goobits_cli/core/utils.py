@@ -55,9 +55,6 @@ def safe_to_dict(obj: Any) -> Dict[str, Any]:
     return {}
 
 
-# Alias for backward compatibility
-_safe_to_dict = safe_to_dict
-
 
 def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
     """
@@ -84,6 +81,5 @@ def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
 
 __all__ = [
     "safe_to_dict",
-    "_safe_to_dict",  # Backward compatibility
     "safe_get_attr",
 ]

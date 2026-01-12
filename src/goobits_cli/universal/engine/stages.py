@@ -71,8 +71,6 @@ def normalize_config(config: Any) -> Any:
     """
     Normalize configuration to GoobitsConfigSchema.
 
-    Handles conversion from legacy ConfigSchema format if needed.
-
     Args:
         config: Configuration in any supported format (dict, ConfigSchema, GoobitsConfigSchema)
 
@@ -97,9 +95,8 @@ def normalize_config(config: Any) -> Any:
     if isinstance(config, dict):
         return GoobitsConfigSchema(**config)
 
-    # Convert from legacy ConfigSchema
+    # Convert from ConfigSchema (CLI-only format)
     if isinstance(config, ConfigSchema):
-        hooks_path = getattr(config, "hooks_path", None)
         return GoobitsConfigSchema(
             package_name=getattr(config, "package_name", config.cli.name),
             command_name=getattr(config, "command_name", config.cli.name),
@@ -118,7 +115,6 @@ def normalize_config(config: Any) -> Any:
             shell_integration=None,
             validation=ValidationSchema(),
             messages={},
-            hooks_path=hooks_path,
         )
 
     # If it's a Pydantic model with model_dump, use that
@@ -344,10 +340,10 @@ def apply_integrations(
     Returns:
         Enhanced configuration with integrations applied
     """
-    from ...core.utils import _safe_to_dict
+    from ...core.utils import safe_to_dict
 
     # Convert to dict for integration functions
-    config_dict = _safe_to_dict(config)
+    config_dict = safe_to_dict(config)
 
     try:
         from ..integrations.interactive import integrate_interactive_mode

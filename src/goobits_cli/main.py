@@ -68,10 +68,6 @@ from .commands import (
     validate_command,
 )
 
-# Re-export template generation functions for backward compatibility
-
-# Re-export utility functions for backward compatibility with tests and external code
-
 # Register each command with its proper name
 app.command(name="build")(build_command)
 app.command(name="validate")(validate_command)

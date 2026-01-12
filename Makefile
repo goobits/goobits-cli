@@ -1,4 +1,4 @@
-.PHONY: test test-all test-pytest test-parity test-examples test-unit test-integration test-e2e test-performance test-performance-suite ci-test-fast ci-test-full ci-test-release ci-test clean-test install-dev lint typecheck dead-code dead-code-fix help
+.PHONY: test test-all test-pytest test-parity test-examples test-unit test-integration test-e2e test-performance test-performance-suite ci-test-fast ci-test-full ci-test-release clean-test install-dev lint typecheck dead-code dead-code-fix help
 
 # Default Python interpreter
 PYTHON := python3
@@ -217,9 +217,6 @@ ci-test-full: clean-test ## CI Tier 2: Full validation including parity (~10-20 
 ci-test-release: ci-test-full ## CI Tier 3: Release validation with performance (~20-30 min)
 	@echo "$(BOLD)🎯 CI Tier 3: Release Validation$(RESET)"
 	@$(MAKE) test-performance-suite || echo "$(YELLOW)Performance suite had issues$(RESET)"
-
-# Legacy CI target (deprecated - use ci-test-full)
-ci-test: ci-test-full ## Run tests in CI mode with XML output (deprecated)
 
 # Development workflow
 dev-test: ## Quick development test cycle

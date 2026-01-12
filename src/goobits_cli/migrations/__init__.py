@@ -1,73 +1,46 @@
 """
-Migration registry and runner for Goobits CLI Framework.
+Migration framework for Goobits CLI.
 
-This module provides the migration registry and orchestration for applying
-version-specific YAML configuration migrations.
+Provides infrastructure for YAML configuration migrations.
+Add new migrations here when needed.
 """
 
 from typing import Any, Dict, List
 
 from .migration import Migration
-from .v3_0_0 import V3_0_0_Migration
-from .v3_0_2 import V3_0_2_Migration
 
-# Registry of all available migrations in version order
-MIGRATIONS = [
-    V3_0_0_Migration(),
-    V3_0_2_Migration(),
-]
+# Registry of migrations (add new ones here in version order)
+MIGRATIONS: List[Migration] = []
 
 
 def get_applicable_migrations(data: Dict[str, Any]) -> List[Migration]:
-    """
-    Get migrations that should be applied to the data.
-
-    Args:
-        data: YAML configuration data
-
-    Returns:
-        List of migrations that need to be applied
-    """
-    return [migration for migration in MIGRATIONS if migration.should_migrate(data)]
+    """Get migrations that should be applied to the data."""
+    return [m for m in MIGRATIONS if m.should_migrate(data)]
 
 
 def apply_all_migrations(
-    data: Dict[str, Any], file_path
+    data: Dict[str, Any], file_path: str
 ) -> tuple[Dict[str, Any], List[str], List[str]]:
     """
-    Apply all applicable migrations to the data.
-
-    Args:
-        data: YAML configuration data
-        file_path: Path to the file being migrated (for error reporting)
+    Apply all applicable migrations.
 
     Returns:
         Tuple of (migrated_data, changes_made, warnings)
     """
     migrated_data = data.copy()
-    all_changes = []
-    all_warnings = []
+    all_changes: List[str] = []
+    all_warnings: List[str] = []
 
-    applicable_migrations = get_applicable_migrations(migrated_data)
-
-    for migration in applicable_migrations:
+    for migration in get_applicable_migrations(migrated_data):
         try:
-            if migration.should_migrate(migrated_data):
-                # Store original for change tracking
-                original_data = migrated_data.copy()
-
-                # Apply migration
-                migrated_data = migration.migrate(migrated_data)
-
-                # Track changes and warnings
-                changes = migration.get_changes(original_data, migrated_data)
-                all_changes.extend(changes)
-
-                warnings = getattr(migration, "warnings", [])
-                all_warnings.extend(warnings)
-
+            original = migrated_data.copy()
+            migrated_data = migration.migrate(migrated_data)
+            all_changes.extend(migration.get_changes(original, migrated_data))
+            all_warnings.extend(getattr(migration, "warnings", []))
         except Exception as e:
             all_warnings.append(f"Migration {migration.version} failed: {e}")
-            # Continue with other migrations
 
     return migrated_data, all_changes, all_warnings
+
+
+__all__ = ["Migration", "MIGRATIONS", "get_applicable_migrations", "apply_all_migrations"]

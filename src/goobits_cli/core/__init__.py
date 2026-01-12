@@ -67,7 +67,6 @@ from .schemas import (
     ValidationSchema,
 )
 from .utils import (
-    _safe_to_dict,
     safe_get_attr,
     safe_to_dict,
 )
@@ -127,6 +126,5 @@ __all__ = [
     "RenderError",
     # Utils
     "safe_to_dict",
-    "_safe_to_dict",
     "safe_get_attr",
 ]

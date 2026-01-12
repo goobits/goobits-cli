@@ -1,8 +1,7 @@
 """Pydantic schemas for YAML configuration validation.
 
 This module defines all schema classes used for validating YAML configuration
-files in both the legacy CLI-only format and the new unified goobits.yaml format.
-It supports multi-language CLI generation including Python, Node.js, TypeScript, and Rust.
+files. Supports multi-language CLI generation: Python, Node.js, TypeScript, and Rust.
 """
 
 from typing import Any, Dict, List, Literal, Optional, Union
@@ -116,7 +115,7 @@ class CLISchema(BaseModel):
 
 
 class ConfigSchema(BaseModel):
-    """Legacy schema for CLI-only configuration files."""
+    """Schema for CLI-only configuration files."""
 
     cli: CLISchema
 
@@ -185,7 +184,7 @@ class DependencyItem(BaseModel):
 
 
 class DependenciesSchema(BaseModel):
-    """Dependencies with backward compatibility for string format."""
+    """Dependencies schema supporting both string and DependencyItem formats."""
 
     required: Union[
         List[str], List[DependencyItem], List[Union[str, DependencyItem]]
