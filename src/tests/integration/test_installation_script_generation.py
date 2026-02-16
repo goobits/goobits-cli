@@ -64,7 +64,7 @@ class TestInstallationScriptGeneration:
             raise ValueError(f"Unsupported language: {language}")
 
         generator = UniversalGenerator(language)
-        return generator.generate_all_files(config, "test.yaml", "1.0.0")
+        return generator.generate_all_files(config, "test.yaml")
 
     @pytest.mark.parametrize("language", ["python", "nodejs", "typescript", "rust"])
     def test_setup_script_generation(self, language):
@@ -276,7 +276,7 @@ class TestInstallationScriptGeneration:
             config = GoobitsConfigSchema(**config_dict)
 
         generator = UniversalGenerator(language)
-        files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+        files = generator.generate_all_files(config, "test.yaml")
 
         # Check that setup.sh is at the configured path
         setup_files = [f for f in files.keys() if "setup.sh" in f]

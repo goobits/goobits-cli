@@ -19,8 +19,13 @@ import click
 try:
     import tomllib
 except ImportError:  # pragma: no cover
-    import toml as tomllib
-import toml
+    tomllib = None
+try:
+    import toml
+except ImportError:  # pragma: no cover
+    toml = None
+if tomllib is None and toml is None:  # pragma: no cover
+    raise RuntimeError("No TOML parser available. Install 'toml' package or use Python 3.11+.")
 {%- if cli.features and cli.features.interactive_mode and cli.features.interactive_mode.enabled %}
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory, InMemoryHistory
@@ -97,8 +102,9 @@ class ConfigManager:
         """Load configuration from file."""
         if self.config_file.exists():
             try:
+                parser = tomllib if tomllib is not None else toml
                 with open(self.config_file, "rb") as f:
-                    full_config = tomllib.load(f)
+                    full_config = parser.load(f)
                 section = full_config.get(self.section)
                 if isinstance(section, dict):
                     return section
@@ -111,13 +117,17 @@ class ConfigManager:
     def save_config(self) -> bool:
         """Save configuration to file."""
         try:
+            parser = tomllib if tomllib is not None else toml
             if self.config_file.exists():
                 with open(self.config_file, "rb") as f:
-                    full_config = tomllib.load(f)
+                    full_config = parser.load(f)
             else:
                 full_config = {}
 
             full_config[self.section] = self.config
+            if toml is None:
+                logger.error("Failed to save config: 'toml' package is required for writing TOML files.")
+                return False
             with open(self.config_file, "w", encoding="utf-8") as f:
                 f.write(toml.dumps(full_config))
             return True
@@ -204,7 +214,7 @@ class CLIContext:
 # ============================================================================
 
 {#- Compute hooks module name from cli_hooks_path -#}
-{% set hooks_path = project.cli_hooks_path | default('cli_hooks.py') %}
+{% set hooks_path = project.cli_hooks_path | default('cli_hooks.py', true) %}
 {% set hooks_module = hooks_path.replace('src/', '').replace('/', '.').replace('.py', '') %}
 
 def load_hooks():
@@ -219,7 +229,15 @@ def load_hooks():
         logger.warning("      print('Build command implementation')")
         return None
 
-hooks = load_hooks()
+_HOOKS_UNSET = object()
+_hooks = _HOOKS_UNSET
+
+def get_hooks():
+    """Lazily load hooks to avoid import-time side effects."""
+    global _hooks
+    if _hooks is _HOOKS_UNSET:
+        _hooks = load_hooks()
+    return _hooks
 
 # ============================================================================
 # CLI COMMANDS
@@ -241,7 +259,7 @@ def cli(ctx, verbose, debug, config):
 
     {%- if not cmd_data.subcommands %}
 @cli.command('{{ cmd_name }}')
-{% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) -%}
+{% for arg in cmd_data.arguments -%}
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if arg.required == false %}, required=False{% endif %}{% if arg.default is defined %}, default={{ arg.default | python_repr }}{% endif %})
 {% endfor -%}
 {% for opt in cmd_data.options | default([]) -%}
@@ -252,12 +270,13 @@ def cli(ctx, verbose, debug, config):
               help="{{ opt.desc | default(opt.description) | replace('"', '\\"') }}")
 {% endfor %}
 @click.pass_obj
-def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in cmd_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
+def {{ cmd_name.replace('-', '_') }}(ctx{% for arg in cmd_data.arguments %}, {{ arg.name }}{% endfor %}{% for opt in cmd_data.options %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
     """{{ cmd_data.desc | default(cmd_data.description) }}"""
     try:
+        hooks = get_hooks()
         if hooks and hasattr(hooks, 'on_{{ cmd_name.replace("-", "_") }}'):
             kwargs = {
-                {%- for arg in cmd_data.args | default(cmd_data.arguments) | default([]) %}
+                {%- for arg in cmd_data.arguments %}
                 '{{ arg.name }}': {{ arg.name }},
                 {%- endfor %}
                 {%- for opt in cmd_data.options | default([]) %}
@@ -283,7 +302,7 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
         {%- for sub_name, sub_data in cmd_data.subcommands.items() %}
 
 @{{ cmd_name.replace('-', '_') }}_group.command('{{ sub_name }}')
-          {%- for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}
+          {%- for arg in sub_data.arguments %}
 @click.argument('{{ arg.name }}', type={{ 'click.INT' if arg.type == 'int' else 'click.STRING' }}{% if arg.nargs == '*' or arg.multiple %}, nargs=-1{% endif %}{% if arg.required == false %}, required=False{% endif %}{% if arg.default is defined %}, default={{ arg.default | python_repr }}{% endif %})
           {%- endfor %}
           {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
@@ -294,12 +313,13 @@ def {{ cmd_name.replace('-', '_') }}_group(ctx):
               help="{{ opt.description | replace('"', '\\"') }}")
           {%- endfor %}
 @click.pass_obj
-def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
+def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for arg in sub_data.arguments %}, {{ arg.name }}{% endfor %}{% for opt in sub_data.options %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
     """{{ sub_data.desc if sub_data is mapping else sub_data if sub_data is string else '' }}"""
     try:
+        hooks = get_hooks()
         if hooks and hasattr(hooks, 'on_{{ cmd_name.replace("-", "_") }}_{{ sub_name.replace("-", "_") }}'):
             kwargs = {
-                {%- for arg in (sub_data.arguments if sub_data is mapping else []) | default([]) %}
+                {%- for arg in sub_data.arguments %}
                 '{{ arg.name }}': {{ arg.name }},
                 {%- endfor %}
                 {%- for opt in (sub_data.options if sub_data is mapping else []) | default([]) %}
@@ -331,6 +351,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_name.replace('-', '_') }}(ctx{% for 
 def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{% for arg in sub_data.arguments | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in sub_data.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
     """{{ sub_data.description }}"""
     try:
+        hooks = get_hooks()
         if hooks and hasattr(hooks, '{{ sub_data.hook_name }}'):
             kwargs = {
                 {%- for arg in sub_data.arguments | default([]) %}
@@ -368,6 +389,7 @@ def {{ cmd_name.replace('-', '_') }}_{{ sub_data.name.replace('-', '_') }}(ctx{%
 def {{ command.name.replace('-', '_') }}(ctx{% for arg in command.arguments | default([]) %}, {{ arg.name }}{% endfor %}{% for opt in command.options | default([]) %}, {{ opt.name.replace('-', '_') }}{% endfor %}):
     """{{ command.description }}"""
     try:
+        hooks = get_hooks()
         if hooks and hasattr(hooks, 'on_{{ command.name.replace("-", "_") }}'):
             kwargs = {
                 {%- for arg in command.arguments | default([]) %}
@@ -493,9 +515,6 @@ def main():
         cli()
     except Exception as e:
         handle_error(e, '--verbose' in sys.argv or '--debug' in sys.argv)
-
-# Alias for compatibility with different entry point names
-cli_entry = main
 
 if __name__ == '__main__':
     main()

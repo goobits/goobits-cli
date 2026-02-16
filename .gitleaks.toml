@@ -1,0 +1,9 @@
+title = "goobits-cli gitleaks config"
+
+[allowlist]
+description = "Allow test fixtures and lockfile integrity strings"
+paths = [
+  '''src/tests/''',
+  '''.*package-lock\.json''',
+  '''.*pnpm-lock\.yaml''',
+]

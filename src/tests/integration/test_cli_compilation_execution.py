@@ -139,7 +139,7 @@ class TestPythonCLICompilation:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
-            all_files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+            all_files = generator.generate_all_files(config, "test.yaml")
             assert all_files, "Python CLI generation failed"
 
             # Write files to disk
@@ -206,7 +206,7 @@ class TestPythonCLICompilation:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
-            all_files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+            all_files = generator.generate_all_files(config, "test.yaml")
             assert all_files, "Python CLI generation failed"
 
             # Write files and find CLI
@@ -284,7 +284,7 @@ class TestNodeJSCLICompilation:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
-            all_files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+            all_files = generator.generate_all_files(config, "test.yaml")
             assert all_files, "Node.js CLI generation failed"
 
             # Write files to disk
@@ -332,7 +332,7 @@ class TestNodeJSCLICompilation:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
-            all_files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+            all_files = generator.generate_all_files(config, "test.yaml")
             assert all_files, "Node.js CLI generation failed"
 
             # Write files
@@ -421,7 +421,7 @@ class TestTypeScriptCLICompilation:
 
         with tempfile.TemporaryDirectory() as temp_dir:
             # Generate CLI
-            all_files = generator.generate_all_files(config, "test.yaml", "1.0.0")
+            all_files = generator.generate_all_files(config, "test.yaml")
             assert all_files, "TypeScript CLI generation failed"
 
             # Write files
@@ -489,9 +489,7 @@ class TestCrossLanguageConsistency:
             with tempfile.TemporaryDirectory() as temp_dir:
                 try:
                     # Generate CLI
-                    all_files = generator.generate_all_files(
-                        config, "test.yaml", "1.0.0"
-                    )
+                    all_files = generator.generate_all_files(config, "test.yaml")
                     assert all_files, f"{language} CLI generation failed"
 
                     # Write files

@@ -16,7 +16,6 @@ from goobits_cli.utils.strings import (
     to_snake_case,
 )
 
-# Re-export for backwards compatibility
 __all__ = [
     "escape_string",
     "indent",

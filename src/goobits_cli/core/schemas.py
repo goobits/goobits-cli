@@ -4,7 +4,7 @@ This module defines all schema classes used for validating YAML configuration
 files. Supports multi-language CLI generation: Python, Node.js, TypeScript, and Rust.
 """
 
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -41,7 +41,7 @@ class OptionSchema(BaseModel):
     name: str
     short: Optional[str] = None
     type: str = "str"
-    desc: Optional[str] = None  # Make optional for defensive programming
+    desc: str = ""
     default: Optional[Any] = None
     choices: Optional[List[str]] = None
     multiple: Optional[bool] = False
@@ -54,9 +54,9 @@ class CommandSchema(BaseModel):
     icon: Optional[str] = None
     is_default: Optional[bool] = False
     lifecycle: Optional[Literal["standard", "managed"]] = "standard"
-    args: Optional[List[ArgumentSchema]] = Field(default_factory=list)
-    options: Optional[List[OptionSchema]] = Field(default_factory=list)
-    subcommands: Optional[Dict[str, "CommandSchema"]] = None
+    args: List[ArgumentSchema] = Field(default_factory=list)
+    options: List[OptionSchema] = Field(default_factory=list)
+    subcommands: Dict[str, "CommandSchema"] = Field(default_factory=dict)
 
     @model_validator(mode="before")
     @classmethod
@@ -184,19 +184,15 @@ class DependencyItem(BaseModel):
 
 
 class DependenciesSchema(BaseModel):
-    """Dependencies schema supporting both string and DependencyItem formats."""
+    """Dependencies schema with normalized dependency items."""
 
-    required: Union[
-        List[str], List[DependencyItem], List[Union[str, DependencyItem]]
-    ] = Field(default_factory=list)
-    optional: Union[
-        List[str], List[DependencyItem], List[Union[str, DependencyItem]]
-    ] = Field(default_factory=list)
+    required: List[DependencyItem] = Field(default_factory=list)
+    optional: List[DependencyItem] = Field(default_factory=list)
 
-    @field_validator("required", "optional")
+    @field_validator("required", "optional", mode="before")
     @classmethod
     def normalize_dependencies(cls, v):
-        """Convert strings to DependencyItem objects for backward compatibility."""
+        """Convert shorthand forms into normalized dependency items."""
         if not v:
             return []
 
@@ -209,7 +205,6 @@ class DependenciesSchema(BaseModel):
                 # Handle dict format (from YAML)
                 normalized.append(DependencyItem(**item))
             elif isinstance(item, DependencyItem):
-                # Already a DependencyItem
                 normalized.append(item)
             else:
                 raise ValueError(f"Invalid dependency format: {item}")
@@ -343,8 +338,8 @@ class GoobitsConfigSchema(BaseModel):
     # Optional feature configuration
     features: Optional[FeaturesSchema] = Field(default_factory=FeaturesSchema)
 
-    # Optional CLI configuration (for backward compatibility)
-    cli: Optional[CLISchema] = None
+    # CLI configuration is required for generation.
+    cli: CLISchema
 
     @model_validator(mode="after")
     def validate_language_configuration(self):

@@ -249,7 +249,7 @@ class TestCLIGenerationIntegration:
             file_path = tmp_path / path
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.write_text(content)
-            if "cli.mjs" in path:
+            if "cli.js" in path:
                 cli_content = content
 
         # Verify CLI content contains expected elements

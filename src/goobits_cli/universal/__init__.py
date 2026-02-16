@@ -12,7 +12,7 @@ from .component_registry import ComponentRegistry
 
 # Primary entry points (recommended)
 from .engine.orchestrator import Orchestrator, generate, generate_content
-from .generator import UniversalGenerator  # Thin wrapper for backward compat
+from .generator import UniversalGenerator
 from .ir.builder import IRBuilder
 from .ir.feature_analyzer import FeatureAnalyzer
 from .renderers.interface import Artifact, LanguageRenderer

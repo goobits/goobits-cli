@@ -379,7 +379,7 @@ setup(
     ],
     entry_points={{
         "console_scripts": [
-            "{config.command_name}=cli:cli_entry",
+            "{config.command_name}=cli:main",
         ],
     }},
     python_requires=">=3.8",
@@ -463,7 +463,7 @@ dependencies = [
 ]{optional_deps_section}
 
 [project.scripts]
-{config.command_name} = "cli:cli_entry"
+{config.command_name} = "cli:main"
 
 [project.urls]
 Homepage = "{config.homepage}"
@@ -534,7 +534,7 @@ setup(
     ],
     entry_points={{
         "console_scripts": [
-            "{config.command_name}={package_name}.cli:cli_entry",
+            "{config.command_name}={package_name}.cli:main",
         ],
     }},
     python_requires=">=3.8",
@@ -624,7 +624,7 @@ dependencies = [
 ]{optional_deps_section}
 
 [project.scripts]
-{config.command_name} = "{package_name}.cli:cli_entry"
+{config.command_name} = "{package_name}.cli:main"
 
 [project.urls]
 Homepage = "{config.homepage}"

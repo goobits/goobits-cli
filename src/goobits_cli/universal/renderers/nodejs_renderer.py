@@ -132,7 +132,6 @@ class NodeJSRenderer(LanguageRenderer):
                 # Node.js specific context structure (expected by tests)
                 "nodejs": {
                     "imports": nodejs_imports,
-                    "requires": nodejs_imports,  # Alias for backward compatibility
                     "main_entry": "cli.js",  # Main entry point for bin/cli.js template
                     "bin_entry": "bin/cli.js",  # Binary entry point for package.json
                     "package_config": {

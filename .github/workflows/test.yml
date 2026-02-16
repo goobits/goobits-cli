@@ -33,6 +33,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -e ".[dev,test]"
+
+    - name: Check generated artifacts are in sync
+      run: |
+        ./scripts/ci/check_generated_clean.sh
     
     - name: Run linting
       run: |
@@ -132,3 +136,15 @@ jobs:
         file: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run gitleaks
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

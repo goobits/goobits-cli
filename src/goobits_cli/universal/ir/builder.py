@@ -45,6 +45,15 @@ class IRBuilder:
 
         cli_config = config_dict.get("cli", {})
         cli_schema = self._extract_config_schema(cli_config)
+        package_name = str(_safe_get_attr(config, "package_name", "") or "")
+        command_name = str(_safe_get_attr(config, "command_name", "") or "")
+        project_version = str(_safe_get_attr(config, "version", "1.0.0") or "1.0.0")
+
+        cli_path = str(_safe_get_attr(config, "cli_path", "") or "").strip()
+        if not cli_path:
+            cli_path = f"src/{package_name.replace('-', '_')}/cli.py"
+
+        cli_hooks_path = str(_safe_get_attr(config, "cli_hooks_path", "") or "").strip()
 
         # Analyze feature requirements for performance optimization
         feature_requirements = self.feature_analyzer.analyze(config, config_filename)
@@ -55,21 +64,13 @@ class IRBuilder:
                     config, "display_name", _safe_get_attr(config, "command_name")
                 ),
                 "description": _safe_get_attr(config, "description"),
-                "version": (
-                    (lambda v: v if v is not None else "1.0.0")(
-                        _safe_get_attr(
-                            _safe_get_attr(config, "cli", {}), "version", "1.0.0"
-                        )
-                    )
-                    if _safe_get_attr(config, "cli")
-                    else "1.0.0"
-                ),
+                "version": project_version,
                 "author": _safe_get_attr(config, "author"),
                 "license": _safe_get_attr(config, "license"),
-                "package_name": _safe_get_attr(config, "package_name"),
-                "command_name": _safe_get_attr(config, "command_name"),
-                "cli_path": _safe_get_attr(config, "cli_path"),
-                "cli_hooks_path": _safe_get_attr(config, "cli_hooks_path"),
+                "package_name": package_name,
+                "command_name": command_name,
+                "cli_path": cli_path,
+                "cli_hooks_path": cli_hooks_path,
             },
             "cli": cli_schema,
             "installation": {

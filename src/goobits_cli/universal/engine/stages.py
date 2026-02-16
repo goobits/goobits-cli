@@ -77,15 +77,8 @@ def normalize_config(config: Any) -> Any:
     Returns:
         GoobitsConfigSchema instance
     """
-    # Lazy imports to avoid circular dependencies
-    from ...core.schemas import (
-        ConfigSchema,
-        DependenciesSchema,
-        GoobitsConfigSchema,
-        InstallationSchema,
-        PythonConfigSchema,
-        ValidationSchema,
-    )
+    # Lazy import to avoid circular dependencies
+    from ...core.schemas import GoobitsConfigSchema
 
     # Already a GoobitsConfigSchema - return as-is
     if isinstance(config, GoobitsConfigSchema):
@@ -95,34 +88,10 @@ def normalize_config(config: Any) -> Any:
     if isinstance(config, dict):
         return GoobitsConfigSchema(**config)
 
-    # Convert from ConfigSchema (CLI-only format)
-    if isinstance(config, ConfigSchema):
-        return GoobitsConfigSchema(
-            package_name=getattr(config, "package_name", config.cli.name),
-            command_name=getattr(config, "command_name", config.cli.name),
-            display_name=getattr(config, "display_name", config.cli.name),
-            description=getattr(
-                config,
-                "description",
-                config.cli.description or config.cli.tagline,
-            ),
-            cli=config.cli,
-            python=PythonConfigSchema(),
-            dependencies=DependenciesSchema(),
-            installation=InstallationSchema(
-                pypi_name=getattr(config, "package_name", config.cli.name)
-            ),
-            shell_integration=None,
-            validation=ValidationSchema(),
-            messages={},
-        )
-
     # If it's a Pydantic model with model_dump, use that
     if hasattr(config, "model_dump"):
         return GoobitsConfigSchema(**config.model_dump())
-
-    # Last resort: try direct conversion
-    return GoobitsConfigSchema(**dict(config))
+    raise TypeError(f"Unsupported configuration type for normalization: {type(config)!r}")
 
 
 def build_ir(

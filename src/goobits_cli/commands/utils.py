@@ -148,18 +148,9 @@ def load_goobits_config(file_path: Path) -> "GoobitsConfigSchema":
 def normalize_dependencies_for_template(
     config: "GoobitsConfigSchema",
 ) -> "GoobitsConfigSchema":
-    """Normalize dependencies for template rendering with enhanced data."""
+    """Return config unchanged (dependencies are normalized by schema)."""
     _lazy_imports()
-
-    # Create a copy to avoid modifying the original
-
-    normalized_config = deepcopy(config)
-
-    # The DependenciesSchema validator already normalizes the dependencies,
-
-    # so we just need to ensure they're properly formatted for the template
-
-    return normalized_config
+    return deepcopy(config)
 
 
 def dependency_to_dict(dep):
@@ -257,90 +248,24 @@ def generate_setup_script(config: "GoobitsConfigSchema", project_dir: Path) -> s
             "optional": config.dependencies.optional,
         },
         "installation": {
-            "pypi_name": (
-                config.installation.pypi_name
-                if hasattr(config, "installation") and config.installation
-                else config.package_name
-            ),
-            "development_path": (
-                config.installation.development_path
-                if hasattr(config, "installation") and config.installation
-                else "."
-            ),
-            "extras": (
-                config.installation.extras
-                if hasattr(config, "installation") and config.installation
-                else {}
-            ),
+            "pypi_name": config.installation.pypi_name if config.installation else config.package_name,
+            "development_path": config.installation.development_path if config.installation else ".",
+            "extras": config.installation.extras if config.installation else {},
         },
         "shell_integration": {
-            "enabled": (
-                config.shell_integration.enabled
-                if hasattr(config, "shell_integration")
-                and config.shell_integration
-                and hasattr(config.shell_integration, "enabled")
-                else False
-            ),
-            "alias": (
-                config.shell_integration.alias
-                if hasattr(config, "shell_integration")
-                and config.shell_integration
-                and hasattr(config.shell_integration, "alias")
-                else config.command_name
-            ),
+            "enabled": config.shell_integration.enabled if config.shell_integration else False,
+            "alias": config.shell_integration.alias if config.shell_integration else config.command_name,
         },
         "validation": {
-            "check_api_keys": (
-                config.validation.check_api_keys
-                if hasattr(config, "validation")
-                and config.validation
-                and hasattr(config.validation, "check_api_keys")
-                else False
-            ),
-            "check_disk_space": (
-                config.validation.check_disk_space
-                if hasattr(config, "validation")
-                and config.validation
-                and hasattr(config.validation, "check_disk_space")
-                else True
-            ),
-            "minimum_disk_space_mb": (
-                config.validation.minimum_disk_space_mb
-                if hasattr(config, "validation")
-                and config.validation
-                and hasattr(config.validation, "minimum_disk_space_mb")
-                else 100
-            ),
+            "check_api_keys": config.validation.check_api_keys if config.validation else False,
+            "check_disk_space": config.validation.check_disk_space if config.validation else True,
+            "minimum_disk_space_mb": config.validation.minimum_disk_space_mb if config.validation else 100,
         },
         "messages": {
-            "install_success": (
-                config.messages.install_success
-                if hasattr(config, "messages")
-                and config.messages
-                and hasattr(config.messages, "install_success")
-                else f"[check] {config.display_name} installed successfully!"
-            ),
-            "install_dev_success": (
-                config.messages.install_dev_success
-                if hasattr(config, "messages")
-                and config.messages
-                and hasattr(config.messages, "install_dev_success")
-                else f"[check] {config.display_name} installed in development mode!"
-            ),
-            "upgrade_success": (
-                config.messages.upgrade_success
-                if hasattr(config, "messages")
-                and config.messages
-                and hasattr(config.messages, "upgrade_success")
-                else f"[check] {config.display_name} upgraded successfully!"
-            ),
-            "uninstall_success": (
-                config.messages.uninstall_success
-                if hasattr(config, "messages")
-                and config.messages
-                and hasattr(config.messages, "uninstall_success")
-                else f"[check] {config.display_name} uninstalled successfully!"
-            ),
+            "install_success": config.messages.install_success if config.messages else "Installation completed successfully!",
+            "install_dev_success": config.messages.install_dev_success if config.messages else "Development installation completed successfully!",
+            "upgrade_success": config.messages.upgrade_success if config.messages else "Upgrade completed successfully!",
+            "uninstall_success": config.messages.uninstall_success if config.messages else "Uninstall completed successfully!",
         },
         "cache_ttl": DEFAULT_CACHE_TTL,
     }
@@ -409,7 +334,7 @@ def update_pyproject_toml(
             # Poetry format
 
             data["tool"]["poetry"]["scripts"][command_name] = (
-                f"{package_name}.{cli_module_name}:cli_entry"
+                f"{package_name}.{cli_module_name}:main"
             )
 
             typer.echo(f"[check] Updated Poetry entry point for '{command_name}'")
@@ -419,7 +344,7 @@ def update_pyproject_toml(
             # Convert package name hyphens to underscores for Python module naming
             module_name = package_name.replace("-", "_")
             data["project"]["scripts"][command_name] = (
-                f"{module_name}.{cli_module_name}:cli_entry"
+                f"{module_name}.{cli_module_name}:main"
             )
 
             typer.echo(f"[check] Updated PEP 621 entry point for '{command_name}'")
@@ -436,7 +361,7 @@ def update_pyproject_toml(
             # Convert package name hyphens to underscores for Python module naming
             module_name = package_name.replace("-", "_")
             data["project"]["scripts"][command_name] = (
-                f"{module_name}.{cli_module_name}:cli_entry"
+                f"{module_name}.{cli_module_name}:main"
             )
 
             typer.echo(f"[check] Created entry point for '{command_name}'")

@@ -11,7 +11,6 @@ from .utils import (
     backup_file,
     generate_setup_script,
     load_goobits_config,
-    normalize_dependencies_for_template,
     update_pyproject_toml,
 )
 
@@ -126,92 +125,77 @@ def build_command(
 
     typer.echo("Generating CLI scripts...")
 
-    # Generate CLI for each target language
+    # Multi-language generation loop
+    for language in target_languages:
+        # Add current language to context
+        set_context(language=language)
 
-    if goobits_config.cli:
-        # Multi-language generation loop
-
-        for language in target_languages:
-            # Add current language to context
-            set_context(language=language)
-
-            if len(target_languages) > 1:
-                typer.echo(
-                    f"\U0001f680 Generating {language} CLI using Universal Template System"
-                )
-
-            # Route to orchestrator for all languages (uses registry-based renderers)
-            from goobits_cli.universal.engine.orchestrator import Orchestrator
-
-            orchestrator = Orchestrator()
-
-            # Generate all files for this language
-            all_files = orchestrator.generate_content(
-                goobits_config, language, config_path.name
+        if len(target_languages) > 1:
+            typer.echo(
+                f"\U0001f680 Generating {language} CLI using Universal Template System"
             )
 
-            # Determine output directory for this language
-            if len(target_languages) > 1:
-                # Multi-language: organize by language subdirectories
-                lang_output_dir = output_dir / language
-                lang_output_dir.mkdir(parents=True, exist_ok=True)
-            else:
-                # Single language: use the main output directory
-                lang_output_dir = output_dir
+        # Route to orchestrator for all languages (uses registry-based renderers)
+        from goobits_cli.universal.engine.orchestrator import Orchestrator
 
-            # Write all generated files for this language
-            executable_files = all_files.pop("__executable__", [])
+        orchestrator = Orchestrator()
 
-            for file_path, content in all_files.items():
-                # Skip pyproject.toml when building goobits itself (self-hosting)
-                if (
-                    file_path == "pyproject.toml"
-                    and goobits_config.package_name == "goobits-cli"
-                ):
-                    typer.echo(
-                        "\u23ed\ufe0f  Skipping pyproject.toml for self-hosted goobits-cli"
-                    )
-                    continue
+        # Generate all files for this language
+        all_files = orchestrator.generate_content(goobits_config, language, config_path.name)
 
-                full_path = lang_output_dir / file_path
+        # Determine output directory for this language
+        if len(target_languages) > 1:
+            # Multi-language: organize by language subdirectories
+            lang_output_dir = output_dir / language
+            lang_output_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            # Single language: use the main output directory
+            lang_output_dir = output_dir
 
-                # Skip hooks files if they already exist (preserve user implementations)
-                if _is_hooks_file(full_path) and full_path.exists():
-                    typer.echo(f"⏭️  Skipping {full_path} (exists - preserving user implementations)")
-                    continue
+        # Write all generated files for this language
+        executable_files = all_files.pop("__executable__", [])
 
-                # Ensure parent directories exist
-                full_path.parent.mkdir(parents=True, exist_ok=True)
+        for file_path, content in all_files.items():
+            # Skip pyproject.toml when building goobits itself (self-hosting)
+            if file_path == "pyproject.toml" and goobits_config.package_name == "goobits-cli":
+                typer.echo("\u23ed\ufe0f  Skipping pyproject.toml for self-hosted goobits-cli")
+                continue
 
-                # Backup existing file if requested
-                backup_path = backup_file(full_path, backup)
-                if backup_path:
-                    typer.echo(f"\U0001f4cb Backed up existing file: {backup_path}")
+            full_path = lang_output_dir / file_path
 
-                # Write file
-                with open(full_path, "w") as f:
-                    f.write(content)
+            # Skip hooks files if they already exist (preserve user implementations)
+            if _is_hooks_file(full_path) and full_path.exists():
+                typer.echo(f"⏭️  Skipping {full_path} (exists - preserving user implementations)")
+                continue
 
-                # Make files executable as needed
-                if (
-                    file_path.startswith("bin/")
-                    or file_path in executable_files
-                    or file_path == "setup.sh"
-                ):
-                    full_path.chmod(0o755)
+            # Ensure parent directories exist
+            full_path.parent.mkdir(parents=True, exist_ok=True)
 
-                typer.echo(f"\u2705 Generated: {full_path}")
+            # Backup existing file if requested
+            backup_path = backup_file(full_path, backup)
+            if backup_path:
+                typer.echo(f"\U0001f4cb Backed up existing file: {backup_path}")
 
-            # Show summary for this language
-            file_count = len(all_files) + len(executable_files)
-            if len(target_languages) > 1:
-                typer.echo(f"\u2705 Generated {file_count} files for {language}")
+            # Write file
+            with open(full_path, "w") as f:
+                f.write(content)
 
-        # Multi-language generation complete
+            # Make files executable as needed
+            if file_path.startswith("bin/") or file_path in executable_files or file_path == "setup.sh":
+                full_path.chmod(0o755)
 
-        # Extract package name and filename for pyproject.toml update (Python only)
+            typer.echo(f"\u2705 Generated: {full_path}")
 
-        if "python" in target_languages:
+        # Show summary for this language
+        file_count = len(all_files) + len(executable_files)
+        if len(target_languages) > 1:
+            typer.echo(f"\u2705 Generated {file_count} files for {language}")
+
+    # Multi-language generation complete
+
+    # Extract package name and filename for pyproject.toml update (Python only)
+
+    if "python" in target_languages:
             # Use configured output path for Python
 
             if goobits_config.cli_path:
@@ -313,7 +297,7 @@ def build_command(
                     )
 
                     typer.echo(
-                        f"   Please update your entry points to use: {module_name}.{full_module_path}:cli_entry"
+                        f"   Please update your entry points to use: {module_name}.{full_module_path}:main"
                     )
 
             else:
@@ -335,21 +319,12 @@ def build_command(
 
                 typer.echo("   ./setup.sh install --dev")
 
-    else:
-        typer.echo(
-            "\u26a0\ufe0f  No CLI configuration found, skipping cli.py generation"
-        )
-
     # Generate setup.sh (Python only - Node.js generates its own)
 
-    if "python" in target_languages and goobits_config.cli:
+    if "python" in target_languages:
         typer.echo("Generating setup script...")
 
-        # Normalize dependencies for backward compatibility
-
-        normalized_config = normalize_dependencies_for_template(goobits_config)
-
-        setup_script = generate_setup_script(normalized_config, output_dir)
+        setup_script = generate_setup_script(goobits_config, output_dir)
 
         # Get configured setup_path or default to "setup.sh"
         setup_path = (

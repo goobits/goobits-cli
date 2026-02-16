@@ -75,7 +75,7 @@ class TestUnicodeInConfigs:
         )
 
         generator = UniversalGenerator("python")
-        result = generator.generate(config, "unicode.yaml", "1.0.0")
+        result = generator.generate(config, "unicode.yaml")
 
         # Verify the generated code handles emoji properly
         assert "🚀 Deploy application to production" in result
@@ -158,7 +158,7 @@ class TestUnicodeInConfigs:
             else:  # rust
                 generator = UniversalGenerator("rust")
 
-            result = generator.generate(config, "intl.yaml", "1.0.0")
+            result = generator.generate(config, "intl.yaml")
 
             # Verify Unicode characters are preserved in command descriptions
             assert "初始化新项目" in result  # Chinese text from command description
@@ -215,7 +215,7 @@ class TestUnicodeInConfigs:
         )
 
         generator = UniversalGenerator("python")
-        result = generator.generate(config, "norm.yaml", "1.0.0")
+        result = generator.generate(config, "norm.yaml")
 
         # Both forms should be preserved in the generated code
         assert nfc_french_project in result
@@ -271,7 +271,7 @@ class TestUnicodeInConfigs:
         )
 
         generator = UniversalGenerator("python")
-        result = generator.generate(config, "control.yaml", "1.0.0")
+        result = generator.generate(config, "control.yaml")
 
         # Verify the generator handles these characters without crashing
         assert isinstance(result, str)
@@ -335,7 +335,7 @@ class TestUnicodeInConfigs:
             else:  # rust
                 generator = UniversalGenerator("rust")
 
-            result = generator.generate(config, "rtl.yaml", "1.0.0")
+            result = generator.generate(config, "rtl.yaml")
 
             # Verify RTL text is preserved
             assert arabic_db in result  # "قاعدة البيانات" - Arabic for "Database"
@@ -445,7 +445,7 @@ class TestUnicodeInYamlParsing:
                         # Set result to the combined content for final verification
                         result = all_content
                     else:
-                        result = generator.generate(config, "test.yaml", "1.0.0")
+                        result = generator.generate(config, "test.yaml")
 
                 # Final verification that all Unicode content is preserved somewhere
                 assert "漢字" in result  # Chinese characters from package description
@@ -528,7 +528,7 @@ class TestGeneratedCodeSyntaxValidation:
         )
 
         generator = UniversalGenerator("python")
-        result = generator.generate(config, "syntax.yaml", "1.0.0")
+        result = generator.generate(config, "syntax.yaml")
 
         # Try to compile the generated Python code
         try:
@@ -565,7 +565,7 @@ class TestGeneratedCodeSyntaxValidation:
         )
 
         generator = UniversalGenerator("nodejs")
-        result = generator.generate(config, "js-syntax.yaml", "1.0.0")
+        result = generator.generate(config, "js-syntax.yaml")
 
         # Basic validation that result contains expected elements
         assert isinstance(result, str)
@@ -607,7 +607,7 @@ class TestGeneratedCodeSyntaxValidation:
         )
 
         generator = UniversalGenerator("rust")
-        result = generator.generate(config, "rust-syntax.yaml", "1.0.0")
+        result = generator.generate(config, "rust-syntax.yaml")
 
         # Basic validation for Rust structure
         assert isinstance(result, str)
@@ -680,7 +680,7 @@ class TestUnicodeOptionAndArgumentNames:
             else:  # rust
                 generator = UniversalGenerator("rust")
 
-            result = generator.generate(config, "unicode-options.yaml", "1.0.0")
+            result = generator.generate(config, "unicode-options.yaml")
 
             # Verify Unicode option names are handled
             assert "語言" in result
@@ -729,7 +729,7 @@ class TestUnicodeOptionAndArgumentNames:
         )
 
         generator = UniversalGenerator("python")
-        result = generator.generate(config, "unicode-args.yaml", "1.0.0")
+        result = generator.generate(config, "unicode-args.yaml")
 
         # Verify Unicode argument names are handled
         assert "入力" in result
@@ -856,7 +856,7 @@ class TestComplexUnicodeScenarios:
             else:  # rust
                 generator = UniversalGenerator("rust")
 
-            result = generator.generate(config, "multilingual.yaml", "1.0.0")
+            result = generator.generate(config, "multilingual.yaml")
 
             # Verify key Unicode content is preserved in command descriptions
             # Note: Universal Template System doesn't include tagline, only command descriptions
@@ -956,7 +956,7 @@ class TestComplexUnicodeScenarios:
         )
 
         generator = UniversalGenerator("python")
-        result = generator.generate(config, "edge-case.yaml", "1.0.0")
+        result = generator.generate(config, "edge-case.yaml")
 
         # Verify the generator handles complex Unicode without crashing
         assert isinstance(result, str)

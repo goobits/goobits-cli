@@ -195,6 +195,49 @@ class TestMainCLICommands(TestMainCLIBase):
         # Should not show backup disabled message
         assert "💡 Backups disabled" not in result.stdout
 
+    def test_build_command_handles_null_cli_hooks_path(self):
+        """Regression: null cli_hooks_path must not crash template rendering."""
+        config_content = """
+package_name: test-cli
+command_name: testcli
+display_name: "Test CLI"
+description: "A test CLI"
+language: python
+cli_hooks_path:
+
+python:
+  minimum_version: "3.8"
+
+dependencies:
+  required:
+    - pipx
+
+installation:
+  pypi_name: "test-cli"
+
+shell_integration:
+  enabled: false
+  alias: "testcli"
+
+validation:
+  check_api_keys: false
+  check_disk_space: true
+  minimum_disk_space_mb: 100
+
+messages:
+  install_success: "Installation completed successfully!"
+
+cli:
+  name: testcli
+  tagline: "Test CLI tool"
+  commands:
+    hello:
+      desc: "Say hello"
+"""
+        config_path = self.create_test_config_file(config_content)
+        result = self.runner.invoke(app, ["build", str(config_path)])
+        assert result.exit_code == 0
+
     def test_init_command_basic(self):
         """Test init command with basic template."""
         original_cwd = Path.cwd()
@@ -584,7 +627,7 @@ cli:
         assert result.exit_code == 1
 
     def test_build_command_no_cli_section(self):
-        """Test build command when CLI section is missing."""
+        """Test build command fails fast when CLI section is missing."""
         config_content = """
 package_name: test-cli
 command_name: testcli
@@ -618,8 +661,8 @@ messages:
 
         result = self.runner.invoke(app, ["build", str(config_path)])
 
-        assert result.exit_code == 0  # Should not fail, just skip CLI generation
-        assert "No CLI configuration found" in result.stdout
+        assert result.exit_code == 1
+        assert "Configuration Validation Errors" in result.stdout
 
     @patch("goobits_cli.commands.build.update_pyproject_toml")
     def test_build_command_pyproject_update_failure(self, mock_update):

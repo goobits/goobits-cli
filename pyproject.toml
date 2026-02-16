@@ -103,6 +103,7 @@ minversion = "6.0"
 addopts = "-ra -q --strict-markers --tb=short"
 testpaths = ["src/tests"]
 cache_dir = ".artifacts/cache/pytest"
+required_plugins = ["pytest-timeout"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 timeout = 300

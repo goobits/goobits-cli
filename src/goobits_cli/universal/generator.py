@@ -9,7 +9,7 @@ Usage:
     files = generator.generate_all_files(config, "goobits.yaml")
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from .engine.orchestrator import Orchestrator
 from .renderers.registry import get_default_registry
@@ -52,7 +52,6 @@ class UniversalGenerator:
         self,
         config: Any,
         config_filename: str,
-        version: Optional[str] = None,
     ) -> Dict[str, str]:
         """
         Generate all files for the CLI.
@@ -60,7 +59,6 @@ class UniversalGenerator:
         Args:
             config: The configuration object (GoobitsConfigSchema or dict)
             config_filename: Name of the configuration file
-            version: Optional version string (unused, kept for API compatibility)
 
         Returns:
             Dictionary mapping file paths to their contents
@@ -75,7 +73,6 @@ class UniversalGenerator:
         self,
         config: Any,
         config_filename: str,
-        version: Optional[str] = None,
     ) -> str:
         """
         Generate the main CLI file content.
@@ -83,12 +80,11 @@ class UniversalGenerator:
         Args:
             config: The configuration object
             config_filename: Name of the configuration file
-            version: Optional version string
 
         Returns:
             Generated CLI code as a string
         """
-        files = self.generate_all_files(config, config_filename, version)
+        files = self.generate_all_files(config, config_filename)
 
         # Return the main CLI file content
         for path, content in files.items():
