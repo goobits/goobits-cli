@@ -142,7 +142,9 @@ def to_snake_case(text: str) -> str:
 
     # Insert underscores before uppercase letters (handles camelCase/PascalCase)
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", text)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+    snake = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+    # Normalize duplicated separators from mixed input like "hello World".
+    return re.sub(r"_+", "_", snake).strip("_")
 
 
 def escape_javascript_string(value: Any) -> str:

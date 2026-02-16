@@ -71,7 +71,11 @@ pub fn on_fail(matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn on_echo(matches: &ArgMatches) -> Result<()> {
-    let words = matches.get_one::<String>("words").map(|s| s.as_str()).unwrap_or("");
+    let words = matches
+        .get_one::<String>("words")
+        .or_else(|| matches.get_one::<String>("text"))
+        .map(|s| s.as_str())
+        .unwrap_or("");
     if !words.is_empty() {
         println!("{}", words);
     }

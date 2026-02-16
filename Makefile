@@ -86,7 +86,7 @@ test-all: clean-test install-dev ## Run all tests: pytest, parity, and examples
 
 test-fast: install-dev ## Run only pytest tests (skip slower parity tests)
 	@echo "$(BOLD)⚡ Running Fast Test Suite (PyTest only)$(RESET)"
-	@$(MAKE) test-pytest
+	@$(PYTEST) $(TESTS_DIR)/ -m "not heavy" -v
 	@$(MAKE) test-examples
 
 # Standard pytest tests

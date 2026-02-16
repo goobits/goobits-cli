@@ -15,6 +15,37 @@ from .utils import (
 )
 
 
+def _detect_main_cli_path(language: str, generated_files: list[str]) -> Path:
+    """Return the main generated CLI path for a language."""
+    if language == "python":
+        candidates = ("cli.py", "main.py")
+        extensions = (".py",)
+    elif language == "nodejs":
+        candidates = ("cli.js", "main.js", "cli.mjs", "main.mjs")
+        extensions = (".js", ".mjs")
+    elif language == "typescript":
+        candidates = ("cli.ts", "main.ts", "cli.js", "main.js", "cli.mjs", "main.mjs")
+        extensions = (".ts", ".js", ".mjs")
+    elif language == "rust":
+        candidates = ("src/main.rs", "src/cli.rs", "main.rs", "cli.rs")
+        extensions = (".rs",)
+    else:
+        return Path()
+
+    for candidate in candidates:
+        if candidate in generated_files:
+            return Path(candidate)
+
+    for file_path in generated_files:
+        file_name = Path(file_path).name
+        if "hooks" in file_name:
+            continue
+        if file_name.endswith(extensions) and ("cli" in file_name or "main" in file_name):
+            return Path(file_path)
+
+    return Path()
+
+
 def build_command(
     config_path: Optional[Path] = typer.Argument(
         None, help="Path to goobits.yaml file (defaults to ./goobits.yaml)"
@@ -126,6 +157,7 @@ def build_command(
     typer.echo("Generating CLI scripts...")
 
     # Multi-language generation loop
+    generated_main_cli_paths: dict[str, Path] = {}
     for language in target_languages:
         # Add current language to context
         set_context(language=language)
@@ -151,6 +183,10 @@ def build_command(
         else:
             # Single language: use the main output directory
             lang_output_dir = output_dir
+
+        generated_main_cli_paths[language] = _detect_main_cli_path(
+            language, list(all_files.keys())
+        )
 
         # Write all generated files for this language
         executable_files = all_files.pop("__executable__", [])
@@ -352,10 +388,10 @@ def build_command(
             from goobits_cli.core.manifest import update_manifests_for_build
 
             # Get CLI output path from generated files
-            if language == "nodejs":
-                cli_path = Path("cli.mjs")  # Node.js generates cli.mjs
+            if language == "rust":
+                cli_path = generated_main_cli_paths.get(language, Path()) or Path("src/main.rs")
             else:
-                cli_path = Path("src/main.rs")  # Rust always uses src/main.rs
+                cli_path = generated_main_cli_paths.get(language, Path()) or Path("cli.js")
 
             # Determine correct output directory for multi-language
             if len(target_languages) > 1:
@@ -363,8 +399,11 @@ def build_command(
             else:
                 manifest_output_dir = output_dir
 
+            manifest_config = goobits_config.model_dump()
+            manifest_config["language"] = language
+
             manifest_result = update_manifests_for_build(
-                config=goobits_config.model_dump(),
+                config=manifest_config,
                 output_dir=manifest_output_dir,
                 cli_path=cli_path,
             )

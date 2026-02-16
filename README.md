@@ -95,9 +95,9 @@ cli:
 
 | Language | Files Generated | Configuration |
 |----------|----------------|---------------|
-| Python | `cli.py`, `cli_hooks.py`, `setup.sh` | Default |
-| Node.js | `cli.mjs`, `cli_hooks.mjs`, `setup.sh` | `language: nodejs` |
-| TypeScript | `cli.ts`, `cli_hooks.ts`, `cli_types.d.ts`, `setup.sh` | `language: typescript` |
+| Python | `cli.py`, `app_hooks.py`, `setup.sh` | Default |
+| Node.js | `cli.js`, `app_hooks.js`, `setup.sh` | `language: nodejs` |
+| TypeScript | `cli.ts`, `app_hooks.ts`, `cli_types.d.ts`, `setup.sh` | `language: typescript` |
 | Rust | `src/cli.rs`, `src/cli_hooks.rs`, `Cargo.toml`, `setup.sh` | `language: rust` |
 
 ### Language-Specific Options
@@ -128,9 +128,9 @@ Implement business logic in language-specific hook files:
 
 | Language | Hook File |
 |----------|-----------|
-| Python | `cli_hooks.py` |
-| Node.js | `cli_hooks.mjs` |
-| TypeScript | `cli_hooks.ts` |
+| Python | `app_hooks.py` |
+| Node.js | `app_hooks.js` |
+| TypeScript | `app_hooks.ts` |
 | Rust | `src/cli_hooks.rs` |
 
 ### Built-in Validation
@@ -175,6 +175,8 @@ pip install -e .[dev,test]
 ```bash
 pytest src/tests/
 pytest --cov=goobits_cli src/tests/
+# Fast local run (skips heavy toolchain/network tests)
+pytest src/tests/ -m "not heavy"
 mypy src/goobits_cli/
 ```
 

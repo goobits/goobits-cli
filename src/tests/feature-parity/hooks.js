@@ -79,8 +79,14 @@ async function on_fail(options = {}) {
 }
 
 async function on_echo(words, options = {}) {
-    if (words && words.length > 0) {
-        console.log(words.join(' '));
+    let values = words;
+    if (typeof values === 'string') {
+        values = [values];
+    } else if (!Array.isArray(values) && options && Array.isArray(options.words)) {
+        values = options.words;
+    }
+    if (values && values.length > 0) {
+        console.log(values.join(' '));
     }
     return 0;
 }

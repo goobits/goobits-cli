@@ -35,6 +35,8 @@ import pytest
 from goobits_cli.core.schemas import GoobitsConfigSchema
 from goobits_cli.universal.generator import UniversalGenerator
 
+pytestmark = [pytest.mark.e2e, pytest.mark.heavy]
+
 integration_path = str(Path(__file__).parent.parent / "integration")
 if integration_path not in sys.path:
     sys.path.append(integration_path)

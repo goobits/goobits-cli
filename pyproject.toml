@@ -109,6 +109,7 @@ asyncio_default_fixture_loop_scope = "function"
 timeout = 300
 markers = [
     "slow: marks tests as slow running",
+    "heavy: marks tests that require external toolchains/network and are expensive",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
     "e2e: marks tests as end-to-end tests",

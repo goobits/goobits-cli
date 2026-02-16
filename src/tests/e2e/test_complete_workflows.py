@@ -28,6 +28,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from goobits_cli.core.schemas import CLISchema, GoobitsConfigSchema
 from goobits_cli.universal.engine.stages import parse_config, validate_config
 from goobits_cli.universal.generator import UniversalGenerator
+from tests.helpers.generated_paths import find_main_cli_path
 
 
 class TestCLIE2E:
@@ -187,11 +188,8 @@ class TestNodeJSGeneratorE2E:
         self._write_files(files, tmp_path)
 
         # Find and verify CLI content
-        cli_content = None
-        for path, content in files.items():
-            if "cli.mjs" in path:
-                cli_content = content
-                break
+        cli_path = find_main_cli_path(files, "nodejs")
+        cli_content = files.get(cli_path) if cli_path else None
 
         assert cli_content is not None
         assert "hello" in cli_content
@@ -238,11 +236,9 @@ class TestNodeJSGeneratorE2E:
         self._write_files(files, tmp_path)
 
         # Find CLI file
-        cli_file = None
-        for path in files.keys():
-            if "cli.mjs" in path:
-                cli_file = tmp_path / path
-                break
+        cli_path = find_main_cli_path(files, "nodejs")
+        cli_file = (tmp_path / cli_path) if cli_path else None
+        assert cli_file is not None
 
         # Try to run Node.js syntax check
         try:
@@ -328,11 +324,8 @@ class TestCompleteWorkflowValidation:
         assert len(files) > 0
 
         # Find CLI content
-        cli_content = None
-        for path, content in files.items():
-            if "cli.mjs" in path:
-                cli_content = content
-                break
+        cli_path = find_main_cli_path(files, "nodejs")
+        cli_content = files.get(cli_path) if cli_path else None
 
         assert cli_content is not None
         assert "status" in cli_content

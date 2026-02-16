@@ -66,8 +66,10 @@ def on_fail(code=1, verbose=False, config=None, **kwargs):
     return code
 
 
-def on_echo(words, verbose=False, config=None, **kwargs):
+def on_echo(words=None, text=None, verbose=False, config=None, **kwargs):
     """Echo arguments"""
+    if words is None and text is not None:
+        words = text if isinstance(text, list) else [str(text)]
     if words:
         print(" ".join(words))
     return 0

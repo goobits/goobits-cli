@@ -4,6 +4,7 @@ Handles atomic updates with backup/rollback capabilities.
 """
 
 import json
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -182,7 +183,9 @@ class ManifestUpdater:
         }
 
         if additional_deps:
-            essential_deps.update(additional_deps)
+            for dep, version in additional_deps.items():
+                if dep not in essential_deps:
+                    essential_deps[dep] = version
 
         if "dependencies" not in package_data:
             package_data["dependencies"] = {}
@@ -198,6 +201,49 @@ class ManifestUpdater:
             package_data["engines"]["node"] = ">=14.0.0"
 
         return warnings
+
+    def extract_nodejs_import_dependencies(self, cli_source_path: Path) -> Dict[str, str]:
+        """Extract external ESM import dependencies from a generated Node.js source file."""
+        if not cli_source_path.exists():
+            return {}
+
+        content = cli_source_path.read_text(encoding="utf-8")
+        imports = re.findall(r"from\s+['\"]([^'\"]+)['\"]", content)
+
+        stdlib_modules = {
+            "assert",
+            "async_hooks",
+            "buffer",
+            "child_process",
+            "crypto",
+            "events",
+            "fs",
+            "http",
+            "https",
+            "module",
+            "net",
+            "os",
+            "path",
+            "process",
+            "readline",
+            "stream",
+            "timers",
+            "tty",
+            "url",
+            "util",
+            "zlib",
+        }
+
+        external_deps: Dict[str, str] = {}
+        for module_name in imports:
+            if module_name.startswith((".", "/")):
+                continue
+            root_module = module_name.split("/", 1)[0]
+            if root_module in stdlib_modules:
+                continue
+            external_deps[root_module] = "latest"
+
+        return external_deps
 
     def _merge_rust_config(
         self,
@@ -319,17 +365,24 @@ def update_manifests_for_build(
         cli_path: Path to the generated CLI file
     """
     updater = ManifestUpdater()
-    language = config.get("language", "python").lower()
-    cli_name = config.get("cli", {}).get("name", "cli")
+    language = str(config.get("language", "python")).lower()
+    cli_config = config.get("cli") if isinstance(config.get("cli"), dict) else {}
+    cli_name = cli_config.get("name", "cli")
+    installation = config.get("installation")
+    installation_config = installation if isinstance(installation, dict) else {}
+    extras = installation_config.get("extras")
+    extras_config = extras if isinstance(extras, dict) else {}
     all_warnings = []
 
     try:
         if language == "nodejs":
             package_json_path = output_dir / "package.json"
-            cli_file = cli_path.name
+            cli_file = cli_path.as_posix()
 
             # Extract additional dependencies from config if present
-            extra_deps = config.get("installation", {}).get("extras", {}).get("npm", {})
+            extra_deps = dict(extras_config.get("npm", {}))
+            generated_cli_path = output_dir / cli_path
+            extra_deps.update(updater.extract_nodejs_import_dependencies(generated_cli_path))
 
             result = updater.update_package_json(
                 package_json_path, cli_name, cli_file, extra_deps
@@ -342,13 +395,10 @@ def update_manifests_for_build(
 
         elif language == "rust":
             cargo_toml_path = output_dir / "Cargo.toml"
-            # Rust CLI file is always src/main.rs relative to Cargo.toml
-            cli_file = "src/main.rs"
+            cli_file = cli_path.as_posix()
 
             # Extract additional dependencies from config if present
-            extra_deps = (
-                config.get("installation", {}).get("extras", {}).get("cargo", {})
-            )
+            extra_deps = extras_config.get("cargo", {})
 
             result = updater.update_cargo_toml(
                 cargo_toml_path, cli_name, cli_file, extra_deps

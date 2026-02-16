@@ -81,6 +81,71 @@ class ParityTestRunner:
 
         return suite
 
+    def _find_hook_source(self, config_path: Path, candidates: List[str]) -> Optional[Path]:
+        """Find hook source file from config-local or parity fallback locations."""
+        search_roots = [
+            Path(__file__).resolve().parent.parent,
+            config_path.parent,
+        ]
+        for root in search_roots:
+            for name in candidates:
+                candidate = root / name
+                if candidate.exists():
+                    return candidate
+        return None
+
+    def _discover_cli_path(self, base_dir: Path, language: str) -> Optional[Path]:
+        """Discover generated CLI entrypoint for a language."""
+        if language == "python":
+            preferred = ("cli.py", "main.py")
+            patterns = ("*.py",)
+        elif language == "nodejs":
+            preferred = ("cli.js", "main.js", "cli.mjs", "main.mjs")
+            patterns = ("*.js", "*.mjs")
+        elif language == "typescript":
+            preferred = (
+                "dist/cli.js",
+                "bin/cli.js",
+                "cli.js",
+                "main.js",
+                "cli.mjs",
+                "main.mjs",
+                "cli.ts",
+                "main.ts",
+            )
+            patterns = ("*.ts", "*.js", "*.mjs")
+        elif language == "rust":
+            preferred = ("src/main.rs", "src/cli.rs", "main.rs", "cli.rs")
+            patterns = ("*.rs",)
+        else:
+            return None
+
+        for rel in preferred:
+            candidate = base_dir / rel
+            if candidate.exists():
+                return candidate
+
+        for pattern in patterns:
+            for candidate in base_dir.rglob(pattern):
+                name = candidate.name
+                if name.endswith(".d.ts"):
+                    continue
+                if "hooks" in name:
+                    continue
+                if "cli" in name or "main" in name:
+                    return candidate
+        return None
+
+    def _find_package_root(self, cli_path: Optional[Path], fallback_root: Path) -> Optional[Path]:
+        """Find nearest parent containing package.json for npm install/build."""
+        if cli_path is not None:
+            for parent in [cli_path.parent, *cli_path.parents]:
+                if (parent / "package.json").exists():
+                    return parent
+        if (fallback_root / "package.json").exists():
+            return fallback_root
+        return None
+
     def generate_cli(self, language: str, config_path: Path, output_dir: Path) -> Path:
         """Generate a CLI for the specified language"""
         # Create a temporary config with the language set
@@ -113,39 +178,39 @@ class ParityTestRunner:
         # Find the generated CLI executable
         cli_name = config["cli"]["name"]
 
-        if language == "python":
-            # Try multiple possible locations for Python CLI
-            possible_paths = [
-                output_dir / language / "cli.py",
-                output_dir
-                / language
-                / "src"
-                / f"{cli_name.replace('-', '_')}"
-                / "cli.py",
-                output_dir
-                / language
-                / "src"
-                / "demo_cli"
-                / "cli.py",  # For basic-demos examples
-                output_dir / language / f"{cli_name}.py",
-            ]
-            # Add recursive search as fallback
-            if not any(p.exists() for p in possible_paths):
-                found = list((output_dir / language).rglob("cli.py"))
-                if found:
-                    possible_paths.insert(0, found[0])
+        generated_root = output_dir / language
 
-            cli_path = None
-            for path in possible_paths:
-                if path.exists():
-                    cli_path = path
-                    break
-            if not cli_path:
-                cli_path = possible_paths[0]  # Default to first option
+        if language == "python":
+            cli_path = self._discover_cli_path(generated_root, "python")
+            if cli_path is None:
+                raise RuntimeError(f"Generated CLI not found under: {generated_root}")
+
+            hook_source = self._find_hook_source(config_path, ["cli_hooks.py", "hooks.py"])
+            if hook_source is not None:
+                target_hooks = cli_path.parent / "cli_hooks.py"
+                shutil.copy(hook_source, target_hooks)
+                if self.verbose:
+                    print(f"Copied hooks to {target_hooks}")
         elif language in ["nodejs", "typescript"]:
+            cli_path = self._discover_cli_path(generated_root, language)
+
+            # Intelligent hook placement for Node.js/TypeScript
+            hook_source = self._find_hook_source(config_path, ["hooks.js", "cli_hooks.js"])
+            if hook_source is not None and cli_path is not None:
+                target_hooks = []
+                if language == "typescript" and cli_path.suffix == ".ts":
+                    target_hooks.append(cli_path.parent / "cli_hooks.ts")
+                else:
+                    target_hooks.append(cli_path.parent / "cli_hooks.js")
+                    target_hooks.append(cli_path.parent / "cli_hooks.mjs")
+                for target_hook in target_hooks:
+                    shutil.copy(hook_source, target_hook)
+                    if self.verbose:
+                        print(f"Copied hooks to {target_hook}")
+
             # Install npm dependencies first
-            npm_dir = output_dir / language
-            if (npm_dir / "package.json").exists():
+            npm_dir = self._find_package_root(cli_path, generated_root)
+            if npm_dir is not None:
                 npm_result = subprocess.run(
                     ["npm", "install", "--silent"],
                     cwd=npm_dir,
@@ -168,70 +233,26 @@ class ParityTestRunner:
                     if build_result.returncode != 0 and self.verbose:
                         print(f"npm build warning: {build_result.stderr[:200]}")
 
-            # Intelligent hook placement for Node.js/TypeScript
-            # Find where the CLI source is and place hooks next to it
-            hook_source = config_path.parent / "hooks.js"
-            if hook_source.exists():
-                # Try to find the CLI source file to place hooks next to it
-                search_pattern = "cli.ts" if language == "typescript" else "cli.js"
-                source_files = list(npm_dir.rglob(search_pattern))
-
-                # Also check for cli.mjs
-                if not source_files and language == "nodejs":
-                    source_files = list(npm_dir.rglob("cli.mjs"))
-
-                if source_files:
-                    # Place hooks next to the main CLI file
-                    target_dir = source_files[0].parent
-                    target_ext = source_files[0].suffix
-                    target_hooks = target_dir / f"cli_hooks{target_ext}"
-                    shutil.copy(hook_source, target_hooks)
-                    if self.verbose:
-                        print(f"Copied hooks to {target_hooks}")
-                else:
-                    # Fallback to root and src
-                    shutil.copy(hook_source, output_dir / language / "cli_hooks.js")
-                    src_dir = output_dir / language / "src"
-                    if src_dir.exists():
-                        shutil.copy(hook_source, src_dir / "hooks.js")
-
-            # CLI Discovery
-            possible_paths = [
-                output_dir / language / "bin" / "cli.js",
-                output_dir / language / "bin" / "cli.cjs",
-                output_dir / language / "cli.js",
-                output_dir / language / "cli.cjs",
-                output_dir / language / "cli.mjs",
-                output_dir / language / "index.js",
-            ]
-
-            # recursive search for built artifacts
             if language == "typescript":
-                # Look in dist/
-                dist_files = list((output_dir / language / "dist").rglob("cli.js"))
-                if dist_files:
-                    possible_paths.insert(0, dist_files[0])
-            else:
-                # Look for any cli.js/mjs
-                src_files = list((output_dir / language).rglob("cli.js"))
-                src_files.extend(list((output_dir / language).rglob("cli.mjs")))
-                if src_files:
-                    possible_paths = src_files + possible_paths
+                built_cli = self._discover_cli_path(generated_root / "dist", "nodejs")
+                if built_cli is not None:
+                    cli_path = built_cli
 
-            cli_path = None
-            for path in possible_paths:
-                if path.exists():
-                    cli_path = path
-                    break
-            if not cli_path:
-                cli_path = possible_paths[0]
+            if cli_path is None:
+                cli_path = self._discover_cli_path(generated_root, "nodejs")
+            if cli_path is None:
+                raise RuntimeError(f"Generated CLI not found under: {generated_root}")
+            if language == "typescript" and cli_path.suffix == ".ts":
+                raise RuntimeError(
+                    f"No runnable TypeScript JavaScript entrypoint found under: {generated_root}"
+                )
 
         elif language == "rust":
             # Intelligent hook placement for Rust
-            hook_source = config_path.parent / "hooks.rs"
-            cargo_dir = output_dir / language
+            hook_source = self._find_hook_source(config_path, ["hooks.rs", "cli_hooks.rs"])
+            cargo_dir = generated_root
 
-            if hook_source.exists():
+            if hook_source is not None:
                 # Find cli.rs to place hooks next to it
                 cli_sources = list(cargo_dir.rglob("cli.rs"))
                 if cli_sources:

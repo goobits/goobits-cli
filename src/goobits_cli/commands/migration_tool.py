@@ -98,7 +98,7 @@ class YAMLMigrationTool:
         self, data: Any, file_path: Path
     ) -> Any:
         """Apply all migration transformations to YAML structure."""
-        from .migrations import apply_all_migrations
+        from ..migrations import apply_all_migrations
 
         if not isinstance(data, dict):
             return data
@@ -140,6 +140,17 @@ class YAMLMigrationTool:
         """Recursively find differences between original and migrated structures."""
         changes = []
 
+        if isinstance(original, list) and isinstance(migrated, dict):
+            # This is the subcommands array -> object conversion
+            changes.append(
+                {
+                    "type": "Structure",
+                    "location": path or "root",
+                    "description": "Subcommands array converted to object format",
+                }
+            )
+            return changes
+
         if type(original) is not type(migrated):
             changes.append(
                 {
@@ -179,16 +190,6 @@ class YAMLMigrationTool:
                 changes.extend(
                     self._find_changes(original[key], migrated[key], key_path)
                 )
-
-        elif isinstance(original, list) and isinstance(migrated, dict):
-            # This is the subcommands array → object conversion
-            changes.append(
-                {
-                    "type": "Structure",
-                    "location": path or "root",
-                    "description": "Subcommands array converted to object format",
-                }
-            )
 
         return changes
 
