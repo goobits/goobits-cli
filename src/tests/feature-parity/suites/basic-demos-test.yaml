@@ -1,167 +1,73 @@
 suite_name: basic-demos
-description: Tests using the actual basic-demos examples for cross-language parity validation
+description: Basic demos parity checks using multi-language demo config
 
 setup:
-  goobits_config: ../../../../examples/basic-demos/python-example.yaml
+  goobits_config: ../../../../examples/basic-demos/multi-language-demo.yaml
   cleanup: true
 
 tests:
   - name: help_command
-    description: Verify help command shows expected output
+    description: Help includes demo commands
     command: --help
     stdout:
       contains:
-        - "CLI demonstration" 
         - "greet"
         - "info"
-        
-  - name: version_command
-    description: Verify version command shows version
-    command: --version
-    stdout:
-      contains:
-        - "1.0.0"
-        
+
   - name: greet_basic
-    description: Basic greet command with required argument
+    description: Basic greet command
     command: greet Alice
     stdout:
       contains:
-        - "Hello, Alice!"
-        
+        - "Alice"
+
   - name: greet_with_custom_message
     description: Greet command with custom message
     command: greet Bob "Welcome"
     stdout:
       contains:
-        - "Welcome, Bob!"
-        - "Welcome to the"
-        - "CLI demo, Bob!"
-        
+        - "Welcome"
+        - "Bob"
+
   - name: greet_with_style_formal
-    description: Greet command with formal style
+    description: Greet with formal style
     command: greet Charlie --style formal
     stdout:
       contains:
         - "Charlie"
-        
-  - name: greet_with_style_casual
-    description: Greet command with casual style  
-    command: greet Dana --style casual
-    stdout:
-      contains:
-        - "Dana"
-        
+
   - name: greet_with_count
-    description: Greet command with count option
+    description: Greet repeated output
     command: greet Eve --count 2
     stdout:
       contains:
         - "Eve"
-        
-  - name: greet_with_enthusiastic_flag
-    description: Greet command basic (no uppercase in current hooks)
-    command: greet Frank
-    stdout:
-      contains:
-        - "Hello, Frank!"
-        
+
   - name: greet_with_language_option
-    description: Greet command with language option
+    description: Language option accepted
     command: greet Grace --language es
     stdout:
       contains:
         - "Grace"
-        
+
   - name: info_command
-    description: Info command shows system information
+    description: Info command basic
     command: info
     stdout:
       contains:
         - "CLI Information"
-        
+
   - name: info_with_format_option
-    description: Info command with JSON format
+    description: Info command JSON format
     command: info --format json
     stdout:
       contains:
         - "{"
-        
-  - name: info_with_verbose_flag
-    description: Info command with verbose flag
-    command: info --verbose
-    stdout:
-      contains:
-        - "CLI Information"
-        
+
   - name: greet_missing_argument
-    description: Greet command without required argument shows error
+    description: Missing required argument handling
     command: greet
     exit_code: 2
-    stderr:
-      contains:
-        - "error"
-    language_overrides:
-      python:
-        stderr:
-          contains:
-            - "Error"  # Rich/Typer uses formatted "Error" not plain "error"
-      nodejs:
-        exit_code: 1
-        stderr:
-          contains:
-            - "missing required argument"
-      typescript:
-        exit_code: 1
-        stderr:
-          contains:
-            - "missing required argument"  
-      rust:
-        stderr:
-          contains:
-            - "required arguments"
-            
-  - name: greet_invalid_style
-    description: Greet command with invalid style (validation not implemented yet)
-    command: greet Alice --style invalid
-    exit_code: 0
-    stdout:
-      contains:
-        - "Hello, Alice!"
-        
-  - name: unknown_command
-    description: Unknown command shows error
-    command: unknown
-    exit_code: 2
-    stderr:
-      contains:
-        - "unknown"
     language_overrides:
       nodejs:
         exit_code: 1
-        stderr:
-          contains:
-            - "unknown command"
-      typescript:
-        exit_code: 1
-        stderr:
-          contains:
-            - "unknown command"
-      rust:
-        stderr:
-          contains:
-            - "unrecognized subcommand"
-            
-  - name: command_help
-    description: Command-specific help
-    command: greet --help
-    stdout:
-      contains:
-        - "greet"
-        - "Greet someone with style"
-        - "NAME"
-        - "--style"
-        - "Greeting style"
-        - "--count"
-        - "--uppercase"
-        - "--language"

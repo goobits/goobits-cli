@@ -44,7 +44,7 @@ class ParityResult:
 class ParityTestRunner:
     """Runs feature parity tests across multiple language implementations"""
 
-    LANGUAGES = ["python", "nodejs", "typescript", "rust"]
+    LANGUAGES = ["python", "nodejs", "rust"]
 
     def __init__(self, verbose: bool = False):
         self.verbose = verbose

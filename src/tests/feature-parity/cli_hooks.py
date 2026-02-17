@@ -63,7 +63,7 @@ def on_config_reset(force=False, verbose=False, config=None, **kwargs):
 def on_fail(code=1, verbose=False, config=None, **kwargs):
     """Command that always fails"""
     print(f"Command failed with exit code {code}", file=sys.stderr)
-    return code
+    raise SystemExit(int(code))
 
 
 def on_echo(words=None, text=None, verbose=False, config=None, **kwargs):
@@ -122,4 +122,45 @@ def on_config(verbose=False, config=None, **kwargs):
 
 def on_file(verbose=False, config=None, **kwargs):
     """File command group"""
+    return 0
+
+
+def on_get(key=None, **kwargs):
+    return on_config_get(key=key, **kwargs)
+
+
+def on_set(key=None, value=None, **kwargs):
+    return on_config_set(key=key, value=value, **kwargs)
+
+
+def on_list(**kwargs):
+    return on_config_list(**kwargs)
+
+
+def on_reset(force=False, **kwargs):
+    return on_config_reset(force=force, **kwargs)
+
+
+def on_create(path=None, content=None, **kwargs):
+    return on_file_create(path=path, content=content, **kwargs)
+
+
+def on_delete(path=None, **kwargs):
+    return on_file_delete(path=path, **kwargs)
+
+
+def on_greet(name, message="Hello", style="casual", count=1, uppercase=False, language="en", **kwargs):
+    text = f"{message}, {name}!"
+    if uppercase:
+        text = text.upper()
+    for _ in range(max(1, int(count))):
+        print(text)
+    return 0
+
+
+def on_info(format="text", verbose=False, sections="all", **kwargs):
+    if format == "json":
+        print('{"info":"CLI Information"}')
+    else:
+        print("CLI Information")
     return 0

@@ -75,7 +75,7 @@ async function on_config_reset(options = {}) {
 async function on_fail(options = {}) {
     const { code = 1 } = options;
     console.error(`Error: Command failed with exit code ${code}`);
-    return code;
+    process.exit(Number(code));
 }
 
 async function on_echo(words, options = {}) {
@@ -140,12 +140,63 @@ async function on_file(options = {}) {
     return 0;
 }
 
+async function on_get(key, options = {}) {
+    return on_config_get(key, options);
+}
+
+async function on_set(key, value, options = {}) {
+    return on_config_set(key, value, options);
+}
+
+async function on_list(options = {}) {
+    return on_config_list(options);
+}
+
+async function on_reset(options = {}) {
+    return on_config_reset(options);
+}
+
+async function on_create(pathArg, options = {}) {
+    return on_file_create(pathArg, options);
+}
+
+async function on_delete(pathArg, options = {}) {
+    return on_file_delete(pathArg, options);
+}
+
+async function on_greet(name, message = 'Hello', options = {}) {
+    const { uppercase = false, count = 1 } = options;
+    const text = `${message}, ${name}!`;
+    for (let i = 0; i < Math.max(1, Number(count)); i += 1) {
+        console.log(uppercase ? text.toUpperCase() : text);
+    }
+    return 0;
+}
+
+async function on_info(options = {}) {
+    const { format = 'text' } = options;
+    if (format === 'json') {
+        console.log('{"info":"CLI Information"}');
+    } else {
+        console.log('CLI Information');
+    }
+    return 0;
+}
+
 export {
+    on_create,
+    on_delete,
     on_hello,
+    on_greet,
+    on_info,
     on_config_get,
     on_config_set,
     on_config_list,
     on_config_reset,
+    on_get,
+    on_set,
+    on_list,
+    on_reset,
     on_fail,
     on_echo,
     on_file_create,

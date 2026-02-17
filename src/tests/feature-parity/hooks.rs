@@ -71,13 +71,20 @@ pub fn on_fail(matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn on_echo(matches: &ArgMatches) -> Result<()> {
-    let words = matches
+    if let Some(words) = matches.get_many::<String>("words") {
+        let joined = words.map(|s| s.as_str()).collect::<Vec<_>>().join(" ");
+        if !joined.is_empty() {
+            println!("{}", joined);
+            return Ok(());
+        }
+    }
+    let word = matches
         .get_one::<String>("words")
         .or_else(|| matches.get_one::<String>("text"))
         .map(|s| s.as_str())
         .unwrap_or("");
-    if !words.is_empty() {
-        println!("{}", words);
+    if !word.is_empty() {
+        println!("{}", word);
     }
     Ok(())
 }
@@ -125,5 +132,58 @@ pub fn on_config(_matches: &ArgMatches) -> Result<()> {
 }
 
 pub fn on_file(_matches: &ArgMatches) -> Result<()> {
+    Ok(())
+}
+
+pub fn on_get(matches: &ArgMatches) -> Result<()> {
+    on_config_get(matches)
+}
+
+pub fn on_set(matches: &ArgMatches) -> Result<()> {
+    on_config_set(matches)
+}
+
+pub fn on_list(matches: &ArgMatches) -> Result<()> {
+    on_config_list(matches)
+}
+
+pub fn on_reset(matches: &ArgMatches) -> Result<()> {
+    on_config_reset(matches)
+}
+
+pub fn on_create(matches: &ArgMatches) -> Result<()> {
+    on_file_create(matches)
+}
+
+pub fn on_delete(matches: &ArgMatches) -> Result<()> {
+    on_file_delete(matches)
+}
+
+pub fn on_greet(matches: &ArgMatches) -> Result<()> {
+    let name = matches.get_one::<String>("name").map(|s| s.as_str()).unwrap_or("");
+    let message = matches.get_one::<String>("message").map(|s| s.as_str()).unwrap_or("Hello");
+    let uppercase = matches.get_flag("uppercase");
+    let count = matches
+        .get_one::<String>("count")
+        .and_then(|s| s.parse::<usize>().ok())
+        .unwrap_or(1);
+    let text = format!("{}, {}!", message, name);
+    for _ in 0..count.max(1) {
+        if uppercase {
+            println!("{}", text.to_uppercase());
+        } else {
+            println!("{}", text);
+        }
+    }
+    Ok(())
+}
+
+pub fn on_info(matches: &ArgMatches) -> Result<()> {
+    let format = matches.get_one::<String>("format").map(|s| s.as_str()).unwrap_or("text");
+    if format == "json" {
+        println!("{{\"info\":\"CLI Information\"}}");
+    } else {
+        println!("CLI Information");
+    }
     Ok(())
 }

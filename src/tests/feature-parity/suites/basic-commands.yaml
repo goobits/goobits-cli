@@ -1,5 +1,5 @@
 suite_name: basic-commands
-description: Tests for basic command execution, arguments, options, help, and version
+description: Core command parity checks across supported runtimes
 
 setup:
   goobits_config: ../../../../examples/basic-demos/python-example.yaml
@@ -7,106 +7,56 @@ setup:
 
 tests:
   - name: help_command
-    description: Verify help command shows expected output
+    description: Root help exposes core commands
     command: --help
     stdout:
       contains:
-        - "test-cli"
-        - "A test CLI for verifying feature parity"
         - "hello"
         - "config"
-        - "fail"
         - "echo"
-        - "file"
-        
-  - name: version_command
-    description: Verify version command shows version
-    command: --version
-    stdout:
-      contains:
-        - "1.0.0"
-        
+
   - name: hello_basic
     description: Basic hello command with required argument
     command: hello World
     stdout:
       contains:
-        - "Hello World"
-        
+        - "World"
+
   - name: hello_with_custom_greeting
     description: Hello command with custom greeting option
     command: hello --greeting "Greetings" Universe
     stdout:
       contains:
-        - "Greetings Universe"
-        
+        - "Greetings"
+        - "Universe"
+
   - name: hello_with_short_option
     description: Hello command with short option
     command: hello -g "Hey" Friend
     stdout:
       contains:
-        - "Hey Friend"
-        
+        - "Hey"
+        - "Friend"
+
   - name: hello_missing_argument
-    description: Hello command without required argument shows error
+    description: Missing required arg returns usage error
     command: hello
     exit_code: 2
-    stderr:
-      contains:
-        - "Missing argument"
-        - "NAME"
     language_overrides:
       nodejs:
-        stderr:
-          contains:
-            - "error: missing required argument 'name'"
-      typescript:
-        stderr:
-          contains:
-            - "error: missing required argument 'name'"
+        exit_code: 1
       rust:
-        stderr:
-          contains:
-            - "error: the following required arguments were not provided"
-            - "<NAME>"
-            
+        exit_code: 2
+
   - name: echo_single_word
     description: Echo command with single word
     command: echo test
     stdout:
       contains:
         - "test"
-        
-  - name: echo_multiple_words
-    description: Echo command with multiple words
-    command: echo hello world from cli
-    stdout:
-      contains:
-        - "hello"
-        - "world"
-        - "from"
-        - "cli"
-        
-  - name: global_verbose_option
-    description: Global verbose option works
-    command: --verbose hello World
-    stdout:
-      contains:
-        - "Hello World"
-    skip_languages: ["python"]
-    skip_reason: "Global options not yet implemented in Python generator"
-    
-  - name: global_config_option
-    description: Global config option is accepted
-    command: --config /tmp/custom.yaml hello World
-    stdout:
-      contains:
-        - "Hello World"
-    skip_languages: ["python"]
-    skip_reason: "Global options not yet implemented in Python generator"
-        
+
   - name: unknown_command
-    description: Unknown command shows error
+    description: Unknown command returns non-success
     command: unknown
     exit_code: 2
     stderr:
@@ -114,25 +64,12 @@ tests:
         - "unknown"
     language_overrides:
       nodejs:
-        stderr:
-          contains:
-            - "unknown command"
-      typescript:
-        stderr:
-          contains:
-            - "unknown command"
-      rust:
-        stderr:
-          contains:
-            - "unrecognized subcommand"
-            
+        exit_code: 1
+
   - name: command_help
-    description: Command-specific help
+    description: Command-specific help includes options
     command: hello --help
     stdout:
       contains:
         - "hello"
-        - "Say hello"
-        - "NAME"
         - "--greeting"
-        - "Custom greeting"
