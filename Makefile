@@ -3,6 +3,7 @@
 # Default Python interpreter
 PYTHON := python3
 PYTEST := pytest
+SKIP_INSTALL_DEV ?= 0
 
 # Test directories
 TESTS_DIR := src/tests
@@ -155,7 +156,11 @@ test-performance-suite: ## Run comprehensive performance validation suite
 # Development utilities
 install-dev: ## Install development dependencies
 	@echo "$(YELLOW)Installing development dependencies...$(RESET)"
-	pip install -e .[dev,test]
+	@if [ "$(SKIP_INSTALL_DEV)" = "1" ]; then \
+		echo "$(YELLOW)Skipping dependency install (SKIP_INSTALL_DEV=1)$(RESET)"; \
+	else \
+		pip install -e .[dev,test]; \
+	fi
 
 lint: ## Run code linting
 	@echo "$(YELLOW)Running code linting...$(RESET)"

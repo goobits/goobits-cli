@@ -94,6 +94,13 @@ class ParityTestRunner:
                     return candidate
         return None
 
+    def _copy_hooks(self, hook_source: Path, target_paths: List[Path]) -> None:
+        """Copy hook source to one or more target paths."""
+        for target_path in target_paths:
+            shutil.copy(hook_source, target_path)
+            if self.verbose:
+                print(f"Copied hooks to {target_path}")
+
     def _discover_cli_path(self, base_dir: Path, language: str) -> Optional[Path]:
         """Discover generated CLI entrypoint for a language."""
         if language == "python":
@@ -146,6 +153,35 @@ class ParityTestRunner:
             return fallback_root
         return None
 
+    def _install_node_dependencies(self, npm_dir: Path, language: str) -> None:
+        """Install/build Node.js dependencies for parity runs."""
+        lock_file = npm_dir / "package-lock.json"
+        install_cmd = (
+            ["npm", "ci", "--silent", "--no-audit", "--no-fund"]
+            if lock_file.exists()
+            else ["npm", "install", "--silent", "--no-audit", "--no-fund"]
+        )
+        npm_result = subprocess.run(
+            install_cmd,
+            cwd=npm_dir,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+        if npm_result.returncode != 0 and self.verbose:
+            print(f"npm dependency install warning: {npm_result.stderr[:200]}")
+
+        if language == "typescript":
+            build_result = subprocess.run(
+                ["npm", "run", "build", "--silent"],
+                cwd=npm_dir,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            if build_result.returncode != 0 and self.verbose:
+                print(f"npm build warning: {build_result.stderr[:200]}")
+
     def generate_cli(self, language: str, config_path: Path, output_dir: Path) -> Path:
         """Generate a CLI for the specified language"""
         # Create a temporary config with the language set
@@ -188,9 +224,7 @@ class ParityTestRunner:
             hook_source = self._find_hook_source(config_path, ["cli_hooks.py", "hooks.py"])
             if hook_source is not None:
                 target_hooks = cli_path.parent / "cli_hooks.py"
-                shutil.copy(hook_source, target_hooks)
-                if self.verbose:
-                    print(f"Copied hooks to {target_hooks}")
+                self._copy_hooks(hook_source, [target_hooks])
         elif language in ["nodejs", "typescript"]:
             cli_path = self._discover_cli_path(generated_root, language)
 
@@ -203,35 +237,12 @@ class ParityTestRunner:
                 else:
                     target_hooks.append(cli_path.parent / "cli_hooks.js")
                     target_hooks.append(cli_path.parent / "cli_hooks.mjs")
-                for target_hook in target_hooks:
-                    shutil.copy(hook_source, target_hook)
-                    if self.verbose:
-                        print(f"Copied hooks to {target_hook}")
+                self._copy_hooks(hook_source, target_hooks)
 
             # Install npm dependencies first
             npm_dir = self._find_package_root(cli_path, generated_root)
             if npm_dir is not None:
-                npm_result = subprocess.run(
-                    ["npm", "install", "--silent"],
-                    cwd=npm_dir,
-                    capture_output=True,
-                    text=True,
-                    timeout=60,
-                )
-                if npm_result.returncode != 0 and self.verbose:
-                    print(f"npm install warning: {npm_result.stderr[:200]}")
-
-                # For TypeScript, build after npm install
-                if language == "typescript":
-                    build_result = subprocess.run(
-                        ["npm", "run", "build", "--silent"],
-                        cwd=npm_dir,
-                        capture_output=True,
-                        text=True,
-                        timeout=60,
-                    )
-                    if build_result.returncode != 0 and self.verbose:
-                        print(f"npm build warning: {build_result.stderr[:200]}")
+                self._install_node_dependencies(npm_dir, language)
 
             if language == "typescript":
                 built_cli = self._discover_cli_path(generated_root / "dist", "nodejs")
@@ -257,14 +268,12 @@ class ParityTestRunner:
                 cli_sources = list(cargo_dir.rglob("cli.rs"))
                 if cli_sources:
                     target_dir = cli_sources[0].parent
-                    shutil.copy(hook_source, target_dir / "cli_hooks.rs")
-                    if self.verbose:
-                        print(f"Copied Rust hooks to {target_dir / 'cli_hooks.rs'}")
+                    self._copy_hooks(hook_source, [target_dir / "cli_hooks.rs"])
                 else:
                     # Fallback
                     src_dir = cargo_dir / "src"
                     src_dir.mkdir(parents=True, exist_ok=True)
-                    shutil.copy(hook_source, src_dir / "hooks.rs")
+                    self._copy_hooks(hook_source, [src_dir / "hooks.rs"])
 
             # Build Rust
             build_result = subprocess.run(
