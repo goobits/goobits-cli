@@ -189,6 +189,9 @@ class ParityTestRunner:
             config = yaml.safe_load(f)
 
         config["language"] = language
+        # Force single-language generation for deterministic per-language parity runs.
+        config.pop("languages", None)
+        config.pop("targets", None)
 
         temp_config = output_dir / f"config-{language}.yaml"
         with open(temp_config, "w") as f:
