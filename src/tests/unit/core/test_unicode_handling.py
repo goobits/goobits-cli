@@ -428,19 +428,17 @@ class TestUnicodeInYamlParsing:
 
                         # Verify Unicode is preserved through the entire pipeline
                         # Check that package description Unicode appears somewhere
-                        assert package_description_found or "漢字" in all_content, (
-                            "Package description Unicode characters (漢字) not found in generated files"
-                        )
+                        assert (
+                            package_description_found or "漢字" in all_content
+                        ), "Package description Unicode characters (漢字) not found in generated files"
                         assert (
                             package_description_found or "кириллица" in all_content
-                        ), (
-                            "Package description Unicode characters (кириллица) not found in generated files"
-                        )
+                        ), "Package description Unicode characters (кириллица) not found in generated files"
 
                         # Command names with Unicode should be preserved in CLI logic files
-                        assert command_content_found or "东西" in all_content, (
-                            "Command Unicode content (东西) not found in generated files"
-                        )
+                        assert (
+                            command_content_found or "东西" in all_content
+                        ), "Command Unicode content (东西) not found in generated files"
 
                         # Set result to the combined content for final verification
                         result = all_content
@@ -873,9 +871,9 @@ class TestComplexUnicodeScenarios:
             ]
 
             for text in key_unicode_texts:
-                assert text in result, (
-                    f"Key Unicode text '{text}' not found in {language} output"
-                )
+                assert (
+                    text in result
+                ), f"Key Unicode text '{text}' not found in {language} output"
 
             # Verify the generated code has basic structure
             assert isinstance(result, str)

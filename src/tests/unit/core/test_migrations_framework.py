@@ -96,4 +96,3 @@ def test_base_migration_helpers_cover_recursive_walk_and_changes():
 
     nested = {"a": [{"b": 1}, 2, "x"]}
     assert migration._migrate_value(nested, "root") == nested
-

@@ -46,7 +46,10 @@ class TestTypeScriptGeneration:
         from goobits_cli.universal.renderers.helpers import safe_identifier
 
         # Same as Node.js (camelCase)
-        assert safe_identifier("hello", "typescript") == "helloWorld" or safe_identifier("hello-world", "typescript") == "helloWorld"
+        assert (
+            safe_identifier("hello", "typescript") == "helloWorld"
+            or safe_identifier("hello-world", "typescript") == "helloWorld"
+        )
 
         # TypeScript-specific reserved words
         assert safe_identifier("interface", "typescript") == "interface_"
@@ -54,8 +57,7 @@ class TestTypeScriptGeneration:
         assert safe_identifier("enum", "typescript") == "enum_"
 
     @pytest.mark.skipif(
-        not shutil.which("node"),
-        reason="Node.js/TypeScript not installed"
+        not shutil.which("node"), reason="Node.js/TypeScript not installed"
     )
     def test_generate_cli_produces_files(
         self, temp_project_dir: Path, write_config, sample_goobits_yaml

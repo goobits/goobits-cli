@@ -250,8 +250,12 @@ class RustRenderer(LanguageRenderer):
 
         # If hooks_path doesn't start with src/ and CLI does, check if we need to prefix it
         # (Only if we didn't just derive it from cli_path which already has src/)
-        if hooks_path and not hooks_path.startswith("src/") and "src/" not in hooks_path:
-             hooks_path = f"src/{hooks_path}"
+        if (
+            hooks_path
+            and not hooks_path.startswith("src/")
+            and "src/" not in hooks_path
+        ):
+            hooks_path = f"src/{hooks_path}"
 
         # Generate 4 files: cli.rs, cli_hooks.rs, setup.sh, and Cargo.toml
         output = {

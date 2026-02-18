@@ -210,13 +210,17 @@ class IR:
     def _cli_to_dict(self) -> Dict[str, Any]:
         """Convert CLI configuration to dictionary."""
         return {
-            "root_command": self._command_to_dict(self.cli.root_command)
-            if self.cli.root_command
-            else None,
+            "root_command": (
+                self._command_to_dict(self.cli.root_command)
+                if self.cli.root_command
+                else None
+            ),
             "commands": {
                 cmd.name: self._command_to_dict(cmd) for cmd in self.cli.commands
             },
-            "global_options": [self._option_to_dict(opt) for opt in self.cli.global_options],
+            "global_options": [
+                self._option_to_dict(opt) for opt in self.cli.global_options
+            ],
             "completion": self.cli.completion,
             "interactive": self.cli.interactive,
         }
@@ -331,9 +335,7 @@ def create_ir_from_dict(data: Dict[str, Any]) -> IR:
 
 def _create_command_from_dict(name: str, data: Dict[str, Any]) -> IRCommand:
     """Create an IRCommand from dictionary data."""
-    options = tuple(
-        _create_option_from_dict(opt) for opt in data.get("options", [])
-    )
+    options = tuple(_create_option_from_dict(opt) for opt in data.get("options", []))
     arguments = tuple(
         _create_argument_from_dict(arg) for arg in data.get("arguments", [])
     )

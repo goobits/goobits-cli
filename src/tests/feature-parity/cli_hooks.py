@@ -149,7 +149,15 @@ def on_delete(path=None, **kwargs):
     return on_file_delete(path=path, **kwargs)
 
 
-def on_greet(name, message="Hello", style="casual", count=1, uppercase=False, language="en", **kwargs):
+def on_greet(
+    name,
+    message="Hello",
+    style="casual",
+    count=1,
+    uppercase=False,
+    language="en",
+    **kwargs,
+):
     text = f"{message}, {name}!"
     if uppercase:
         text = text.upper()

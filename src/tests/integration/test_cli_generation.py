@@ -335,20 +335,20 @@ class TestCLIGenerationIntegration:
                 results[lang] = {"success": False, "error": str(e)}
 
         # At least Python and Node.js should succeed
-        assert results["python"]["success"], (
-            f"Python generation failed: {results['python']['error']}"
-        )
-        assert results["nodejs"]["success"], (
-            f"Node.js generation failed: {results['nodejs']['error']}"
-        )
+        assert results["python"][
+            "success"
+        ], f"Python generation failed: {results['python']['error']}"
+        assert results["nodejs"][
+            "success"
+        ], f"Node.js generation failed: {results['nodejs']['error']}"
 
         # TypeScript should also succeed
-        assert results["typescript"]["success"], (
-            f"TypeScript generation failed: {results['typescript']['error']}"
-        )
+        assert results["typescript"][
+            "success"
+        ], f"TypeScript generation failed: {results['typescript']['error']}"
 
         # Rust might fail if cargo is not available, but that's acceptable
         if shutil.which("cargo"):
-            assert results["rust"]["success"], (
-                f"Rust generation failed: {results['rust']['error']}"
-            )
+            assert results["rust"][
+                "success"
+            ], f"Rust generation failed: {results['rust']['error']}"

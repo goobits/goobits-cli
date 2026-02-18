@@ -39,7 +39,9 @@ class ValidationMessage:
         }[self.severity]
 
         location = f" at {self.field_path}" if self.field_path else ""
-        suggestion_text = f"\n  Suggestion: {self.suggestion}" if self.suggestion else ""
+        suggestion_text = (
+            f"\n  Suggestion: {self.suggestion}" if self.suggestion else ""
+        )
         return f"{prefix} {self.severity.value.upper()}{location}: {self.message}{suggestion_text}"
 
 

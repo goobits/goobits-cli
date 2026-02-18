@@ -75,9 +75,9 @@ class TestDependencyResolutionSimplified:
         if language == "python":
             assert "click" in cli_content.lower(), "Python CLI should reference click"
         elif language in ["nodejs", "typescript"]:
-            assert "commander" in cli_content.lower(), (
-                "Node.js CLI should reference commander"
-            )
+            assert (
+                "commander" in cli_content.lower()
+            ), "Node.js CLI should reference commander"
         elif language == "rust":
             assert "clap" in cli_content.lower(), "Rust CLI should reference clap"
 
@@ -103,9 +103,9 @@ class TestDependencyResolutionSimplified:
 
         elif language in ["nodejs", "typescript"]:
             # Node.js/TS CLIs should reference basic Node.js patterns
-            assert "import" in cli_lower or "require" in cli_lower, (
-                "Node.js CLI should have import/require statements"
-            )
+            assert (
+                "import" in cli_lower or "require" in cli_lower
+            ), "Node.js CLI should have import/require statements"
 
         elif language == "rust":
             # Rust CLIs should have basic Rust patterns
@@ -152,7 +152,9 @@ class TestDependencyResolutionSimplified:
             generator = UniversalGenerator(language)
 
             try:
-                generated_files = generator.generate_all_files(config, f"test_{language}.yaml")
+                generated_files = generator.generate_all_files(
+                    config, f"test_{language}.yaml"
+                )
                 cli_content = self._get_main_cli_content(generated_files, language)
                 generated_clis[language] = cli_content
 
@@ -160,9 +162,9 @@ class TestDependencyResolutionSimplified:
                 pytest.fail(f"Failed to generate {language} CLI: {e}")
 
         # Verify all CLIs were generated successfully
-        assert len(generated_clis) == len(languages), (
-            f"Not all languages generated successfully: {list(generated_clis.keys())}"
-        )
+        assert len(generated_clis) == len(
+            languages
+        ), f"Not all languages generated successfully: {list(generated_clis.keys())}"
 
         # Verify all CLIs have some basic CLI framework imports/references
         for language, content in generated_clis.items():

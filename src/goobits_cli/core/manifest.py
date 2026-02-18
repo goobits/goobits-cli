@@ -202,7 +202,9 @@ class ManifestUpdater:
 
         return warnings
 
-    def extract_nodejs_import_dependencies(self, cli_source_path: Path) -> Dict[str, str]:
+    def extract_nodejs_import_dependencies(
+        self, cli_source_path: Path
+    ) -> Dict[str, str]:
         """Extract external ESM import dependencies from a generated Node.js source file."""
         if not cli_source_path.exists():
             return {}
@@ -382,7 +384,9 @@ def update_manifests_for_build(
             # Extract additional dependencies from config if present
             extra_deps = dict(extras_config.get("npm", {}))
             generated_cli_path = output_dir / cli_path
-            extra_deps.update(updater.extract_nodejs_import_dependencies(generated_cli_path))
+            extra_deps.update(
+                updater.extract_nodejs_import_dependencies(generated_cli_path)
+            )
 
             result = updater.update_package_json(
                 package_json_path, cli_name, cli_file, extra_deps

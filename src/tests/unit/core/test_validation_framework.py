@@ -62,4 +62,3 @@ def test_validation_result_merge_combines_messages_and_validity():
     assert merged is left
     assert len(left.messages) == 2
     assert not left.is_valid
-

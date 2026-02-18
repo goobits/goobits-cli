@@ -165,7 +165,6 @@ class TestMainCLICommands(TestMainCLIBase):
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
 
-
         with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/test_cli/generated_cli.py": "# Generated CLI code",
@@ -181,7 +180,6 @@ class TestMainCLICommands(TestMainCLIBase):
         """Test build command with --backup flag."""
         config_content = self.get_minimal_valid_config()
         config_path = self.create_test_config_file(config_content)
-
 
         with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
@@ -559,9 +557,9 @@ cli:
                 )
 
                 assert result.exit_code == 0, f"Failed for template: {template}"
-                assert config_path.exists(), (
-                    f"Config not created for template: {template}"
-                )
+                assert (
+                    config_path.exists()
+                ), f"Config not created for template: {template}"
 
                 content = config_path.read_text()
                 assert f"test-{template}" in content
@@ -706,7 +704,6 @@ cli:
 """
         config_path = self.create_test_config_file(config_content)
 
-
         with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {
                 "src/test_cli/generated_cli.py": "# Generated CLI code",
@@ -760,7 +757,6 @@ cli:
       is_default: true
 """
         config_path = self.create_test_config_file(config_content)
-
 
         with patch.object(UniversalGenerator, "generate_all_files") as mock_gen:
             mock_gen.return_value = {

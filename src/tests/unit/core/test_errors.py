@@ -37,8 +37,12 @@ def test_template_error_formats_details():
 
 
 def test_dependency_validation_and_render_errors():
-    dep = DependencyError("missing", dependency="node", install_command="apt install nodejs")
-    val = ValidationError("invalid", field="language", value="go", valid_options=["python", "nodejs"])
+    dep = DependencyError(
+        "missing", dependency="node", install_command="apt install nodejs"
+    )
+    val = ValidationError(
+        "invalid", field="language", value="go", valid_options=["python", "nodejs"]
+    )
     ren = RenderError("render failed", language="python", component="cli")
 
     assert dep.error_code == 4
@@ -57,8 +61,12 @@ def test_dependency_validation_and_render_errors():
 
 def test_config_errors_fields():
     base = ConfigError("bad", suggestion="fix", config_path="/tmp/a")
-    file_err = ConfigFileError("missing", config_path="/tmp/cfg.json", suggestion="create file")
-    val_err = ConfigValidationError("invalid", key="api.token", value="x", suggestion="set proper token")
+    file_err = ConfigFileError(
+        "missing", config_path="/tmp/cfg.json", suggestion="create file"
+    )
+    val_err = ConfigValidationError(
+        "invalid", key="api.token", value="x", suggestion="set proper token"
+    )
 
     assert base.message == "bad"
     assert base.suggestion == "fix"
@@ -85,4 +93,3 @@ def test_errors_module_exports_expected_symbols():
         "ConfigValidationError",
     }
     assert expected.issubset(set(errors.__all__))
-

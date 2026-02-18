@@ -241,9 +241,7 @@ class CLITestHelper:
                 file_path.chmod(0o755)
 
             # Track the main CLI file
-            if filename.endswith(".py") and (
-                "cli" in filename or "main" in filename
-            ):
+            if filename.endswith(".py") and ("cli" in filename or "main" in filename):
                 result["cli_file"] = str(file_path)
             elif (filename.endswith(".js") or filename.endswith(".mjs")) and (
                 "cli" in filename or "main" in filename
@@ -253,9 +251,7 @@ class CLITestHelper:
                 "cli" in filename or "main" in filename or "index" in filename
             ):
                 result["cli_file"] = str(file_path)
-            elif filename.endswith(".rs") and (
-                "main" in filename or "cli" in filename
-            ):
+            elif filename.endswith(".rs") and ("main" in filename or "cli" in filename):
                 result["cli_file"] = str(file_path)
             elif filename == "package.json":
                 result["package_file"] = str(file_path)
@@ -1377,9 +1373,9 @@ class TestCrossLanguageInstallation(TestInstallationWorkflows):
 
         # Verify files are contained in the temp directory
         for file_path in generated_files.values():
-            assert temp_dir in file_path, (
-                f"Generated file {file_path} not in temp directory"
-            )
+            assert (
+                temp_dir in file_path
+            ), f"Generated file {file_path} not in temp directory"
 
 
 if __name__ == "__main__":

@@ -182,7 +182,9 @@ class TestPythonCLICompilation:
 
             if import_test_result.returncode != 0:
                 # Allow for missing dependencies or missing hooks file (not syntax/import errors)
-                error_text = (import_test_result.stderr + import_test_result.stdout).lower()
+                error_text = (
+                    import_test_result.stderr + import_test_result.stdout
+                ).lower()
                 allowed_errors = [
                     "modulenotfounderror: no module named 'click'",
                     "importerror",
@@ -258,15 +260,15 @@ class TestPythonCLICompilation:
                 cwd=temp_dir,
             )
 
-            assert help_result.returncode == 0, (
-                f"Python CLI help failed: {help_result.stderr}"
-            )
-            assert "hello" in help_result.stdout.lower(), (
-                "Help should show hello command"
-            )
-            assert "config" in help_result.stdout.lower(), (
-                "Help should show config command"
-            )
+            assert (
+                help_result.returncode == 0
+            ), f"Python CLI help failed: {help_result.stderr}"
+            assert (
+                "hello" in help_result.stdout.lower()
+            ), "Help should show hello command"
+            assert (
+                "config" in help_result.stdout.lower()
+            ), "Help should show config command"
 
             print("✅ Python CLI execution with dependencies passed")
 
@@ -398,12 +400,12 @@ class TestNodeJSCLICompilation:
                 cwd=temp_dir,
             )
 
-            assert help_result.returncode == 0, (
-                f"Node.js CLI help failed: {help_result.stderr}"
-            )
-            assert "hello" in help_result.stdout.lower(), (
-                "Help should show hello command"
-            )
+            assert (
+                help_result.returncode == 0
+            ), f"Node.js CLI help failed: {help_result.stderr}"
+            assert (
+                "hello" in help_result.stdout.lower()
+            ), "Help should show hello command"
 
             print("✅ Node.js CLI execution with dependencies passed")
 
@@ -506,19 +508,19 @@ class TestCrossLanguageConsistency:
                         ):
                             cli_file = file_path
 
-                    assert cli_file is not None, (
-                        f"No main CLI file found for {language}"
-                    )
+                    assert (
+                        cli_file is not None
+                    ), f"No main CLI file found for {language}"
 
                     # Basic validation that file has expected structure
                     content = cli_file.read_text()
                     assert len(content) > 100, f"{language} CLI file is too short"
-                    assert "hello" in content.lower(), (
-                        f"{language} CLI should contain hello command"
-                    )
-                    assert "config" in content.lower(), (
-                        f"{language} CLI should contain config command"
-                    )
+                    assert (
+                        "hello" in content.lower()
+                    ), f"{language} CLI should contain hello command"
+                    assert (
+                        "config" in content.lower()
+                    ), f"{language} CLI should contain config command"
 
                     help_outputs[language] = "Generated successfully"
 
@@ -531,9 +533,9 @@ class TestCrossLanguageConsistency:
             for lang, result in help_outputs.items()
             if "Generated successfully" in result
         ]
-        assert len(successful) > 0, (
-            f"No languages generated successfully: {help_outputs}"
-        )
+        assert (
+            len(successful) > 0
+        ), f"No languages generated successfully: {help_outputs}"
 
         print(f"✅ Cross-language consistency test passed for: {', '.join(successful)}")
         if len(successful) < len(help_outputs):

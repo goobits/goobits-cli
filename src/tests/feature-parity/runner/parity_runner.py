@@ -81,7 +81,9 @@ class ParityTestRunner:
 
         return suite
 
-    def _find_hook_source(self, config_path: Path, candidates: List[str]) -> Optional[Path]:
+    def _find_hook_source(
+        self, config_path: Path, candidates: List[str]
+    ) -> Optional[Path]:
         """Find hook source file from config-local or parity fallback locations."""
         search_roots = [
             Path(__file__).resolve().parent.parent,
@@ -143,7 +145,9 @@ class ParityTestRunner:
                     return candidate
         return None
 
-    def _find_package_root(self, cli_path: Optional[Path], fallback_root: Path) -> Optional[Path]:
+    def _find_package_root(
+        self, cli_path: Optional[Path], fallback_root: Path
+    ) -> Optional[Path]:
         """Find nearest parent containing package.json for npm install/build."""
         if cli_path is not None:
             for parent in [cli_path.parent, *cli_path.parents]:
@@ -224,7 +228,9 @@ class ParityTestRunner:
             if cli_path is None:
                 raise RuntimeError(f"Generated CLI not found under: {generated_root}")
 
-            hook_source = self._find_hook_source(config_path, ["cli_hooks.py", "hooks.py"])
+            hook_source = self._find_hook_source(
+                config_path, ["cli_hooks.py", "hooks.py"]
+            )
             if hook_source is not None:
                 target_hooks = cli_path.parent / "cli_hooks.py"
                 self._copy_hooks(hook_source, [target_hooks])
@@ -232,7 +238,9 @@ class ParityTestRunner:
             cli_path = self._discover_cli_path(generated_root, language)
 
             # Intelligent hook placement for Node.js/TypeScript
-            hook_source = self._find_hook_source(config_path, ["hooks.js", "cli_hooks.js"])
+            hook_source = self._find_hook_source(
+                config_path, ["hooks.js", "cli_hooks.js"]
+            )
             if hook_source is not None and cli_path is not None:
                 target_hooks = []
                 if language == "typescript" and cli_path.suffix == ".ts":
@@ -263,7 +271,9 @@ class ParityTestRunner:
 
         elif language == "rust":
             # Intelligent hook placement for Rust
-            hook_source = self._find_hook_source(config_path, ["hooks.rs", "cli_hooks.rs"])
+            hook_source = self._find_hook_source(
+                config_path, ["hooks.rs", "cli_hooks.rs"]
+            )
             cargo_dir = generated_root
 
             if hook_source is not None:

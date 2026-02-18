@@ -22,14 +22,29 @@ def find_main_cli_path(files: dict[str, str], language: str) -> str | None:
         name = Path(path).name
         if "hooks" in name:
             continue
-        if language == "python" and name.endswith(".py") and ("cli" in name or "main" in name):
+        if (
+            language == "python"
+            and name.endswith(".py")
+            and ("cli" in name or "main" in name)
+        ):
             return path
-        if language == "nodejs" and name.endswith((".js", ".mjs")) and ("cli" in name or "main" in name):
+        if (
+            language == "nodejs"
+            and name.endswith((".js", ".mjs"))
+            and ("cli" in name or "main" in name)
+        ):
             return path
-        if language == "typescript" and name.endswith(".ts") and ("cli" in name or "main" in name):
+        if (
+            language == "typescript"
+            and name.endswith(".ts")
+            and ("cli" in name or "main" in name)
+        ):
             return path
-        if language == "rust" and name.endswith(".rs") and ("cli" in name or "main" in name):
+        if (
+            language == "rust"
+            and name.endswith(".rs")
+            and ("cli" in name or "main" in name)
+        ):
             return path
 
     return None
-

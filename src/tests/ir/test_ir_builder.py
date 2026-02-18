@@ -49,8 +49,18 @@ def full_config() -> Dict[str, Any]:
                         {"name": "name", "desc": "Name to greet", "required": False},
                     ],
                     "options": [
-                        {"name": "loud", "short": "l", "type": "bool", "desc": "Be loud"},
-                        {"name": "times", "type": "int", "default": 1, "desc": "Repeat count"},
+                        {
+                            "name": "loud",
+                            "short": "l",
+                            "type": "bool",
+                            "desc": "Be loud",
+                        },
+                        {
+                            "name": "times",
+                            "type": "int",
+                            "default": 1,
+                            "desc": "Repeat count",
+                        },
                     ],
                 },
                 "config": {
@@ -84,7 +94,11 @@ class TestIRBuilderMinimal:
         assert "project" in ir
         # Project name comes from package_name or display_name
         project = ir["project"]
-        assert project.get("name") or project.get("package_name") or project.get("display_name")
+        assert (
+            project.get("name")
+            or project.get("package_name")
+            or project.get("display_name")
+        )
 
     def test_build_sets_metadata(self, minimal_config):
         """Test that build sets proper metadata."""

@@ -55,7 +55,6 @@ def safe_to_dict(obj: Any) -> Dict[str, Any]:
     return {}
 
 
-
 def safe_get_attr(obj: Any, attr: str, default: Any = None) -> Any:
     """
     Safely get an attribute from an object or dict.

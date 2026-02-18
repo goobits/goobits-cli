@@ -41,8 +41,7 @@ class UniversalGenerator:
         if not registry.has(self.language):
             available = registry.available_languages()
             raise ValueError(
-                f"Unsupported language: {language}. "
-                f"Supported: {available}"
+                f"Unsupported language: {language}. " f"Supported: {available}"
             )
 
         # Initialize orchestrator for generation
@@ -88,7 +87,12 @@ class UniversalGenerator:
 
         # Return the main CLI file content
         for path, content in files.items():
-            if "cli.py" in path or "cli.mjs" in path or "cli.ts" in path or "cli.rs" in path:
+            if (
+                "cli.py" in path
+                or "cli.mjs" in path
+                or "cli.ts" in path
+                or "cli.rs" in path
+            ):
                 return content
 
         # Fallback: return first file content

@@ -48,7 +48,7 @@ def sample_config() -> Dict[str, Any]:
                         "set": {"desc": "Set config"},
                     },
                 },
-            }
+            },
         },
     }
 
@@ -59,7 +59,9 @@ class TestGenerationTime:
 
     MAX_GENERATION_TIME = 1.0  # 1 second target
 
-    def test_python_generation_time(self, sample_config: Dict[str, Any], tmp_path: Path):
+    def test_python_generation_time(
+        self, sample_config: Dict[str, Any], tmp_path: Path
+    ):
         """Test Python generation completes within 1 second."""
         sample_config["language"] = "python"
 
@@ -73,11 +75,13 @@ class TestGenerationTime:
 
         elapsed = time.perf_counter() - start
 
-        assert elapsed < self.MAX_GENERATION_TIME, (
-            f"Python generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
-        )
+        assert (
+            elapsed < self.MAX_GENERATION_TIME
+        ), f"Python generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
 
-    def test_nodejs_generation_time(self, sample_config: Dict[str, Any], tmp_path: Path):
+    def test_nodejs_generation_time(
+        self, sample_config: Dict[str, Any], tmp_path: Path
+    ):
         """Test Node.js generation completes within 1 second."""
         sample_config["language"] = "nodejs"
 
@@ -91,11 +95,13 @@ class TestGenerationTime:
 
         elapsed = time.perf_counter() - start
 
-        assert elapsed < self.MAX_GENERATION_TIME, (
-            f"Node.js generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
-        )
+        assert (
+            elapsed < self.MAX_GENERATION_TIME
+        ), f"Node.js generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
 
-    def test_typescript_generation_time(self, sample_config: Dict[str, Any], tmp_path: Path):
+    def test_typescript_generation_time(
+        self, sample_config: Dict[str, Any], tmp_path: Path
+    ):
         """Test TypeScript generation completes within 1 second."""
         sample_config["language"] = "typescript"
 
@@ -109,9 +115,9 @@ class TestGenerationTime:
 
         elapsed = time.perf_counter() - start
 
-        assert elapsed < self.MAX_GENERATION_TIME, (
-            f"TypeScript generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
-        )
+        assert (
+            elapsed < self.MAX_GENERATION_TIME
+        ), f"TypeScript generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
 
     def test_rust_generation_time(self, sample_config: Dict[str, Any], tmp_path: Path):
         """Test Rust generation completes within 1 second."""
@@ -127,9 +133,9 @@ class TestGenerationTime:
 
         elapsed = time.perf_counter() - start
 
-        assert elapsed < self.MAX_GENERATION_TIME, (
-            f"Rust generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
-        )
+        assert (
+            elapsed < self.MAX_GENERATION_TIME
+        ), f"Rust generation took {elapsed:.2f}s, expected < {self.MAX_GENERATION_TIME}s"
 
 
 @pytest.mark.performance

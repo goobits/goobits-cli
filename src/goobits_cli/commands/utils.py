@@ -248,24 +248,58 @@ def generate_setup_script(config: "GoobitsConfigSchema", project_dir: Path) -> s
             "optional": config.dependencies.optional,
         },
         "installation": {
-            "pypi_name": config.installation.pypi_name if config.installation else config.package_name,
-            "development_path": config.installation.development_path if config.installation else ".",
+            "pypi_name": (
+                config.installation.pypi_name
+                if config.installation
+                else config.package_name
+            ),
+            "development_path": (
+                config.installation.development_path if config.installation else "."
+            ),
             "extras": config.installation.extras if config.installation else {},
         },
         "shell_integration": {
-            "enabled": config.shell_integration.enabled if config.shell_integration else False,
-            "alias": config.shell_integration.alias if config.shell_integration else config.command_name,
+            "enabled": (
+                config.shell_integration.enabled if config.shell_integration else False
+            ),
+            "alias": (
+                config.shell_integration.alias
+                if config.shell_integration
+                else config.command_name
+            ),
         },
         "validation": {
-            "check_api_keys": config.validation.check_api_keys if config.validation else False,
-            "check_disk_space": config.validation.check_disk_space if config.validation else True,
-            "minimum_disk_space_mb": config.validation.minimum_disk_space_mb if config.validation else 100,
+            "check_api_keys": (
+                config.validation.check_api_keys if config.validation else False
+            ),
+            "check_disk_space": (
+                config.validation.check_disk_space if config.validation else True
+            ),
+            "minimum_disk_space_mb": (
+                config.validation.minimum_disk_space_mb if config.validation else 100
+            ),
         },
         "messages": {
-            "install_success": config.messages.install_success if config.messages else "Installation completed successfully!",
-            "install_dev_success": config.messages.install_dev_success if config.messages else "Development installation completed successfully!",
-            "upgrade_success": config.messages.upgrade_success if config.messages else "Upgrade completed successfully!",
-            "uninstall_success": config.messages.uninstall_success if config.messages else "Uninstall completed successfully!",
+            "install_success": (
+                config.messages.install_success
+                if config.messages
+                else "Installation completed successfully!"
+            ),
+            "install_dev_success": (
+                config.messages.install_dev_success
+                if config.messages
+                else "Development installation completed successfully!"
+            ),
+            "upgrade_success": (
+                config.messages.upgrade_success
+                if config.messages
+                else "Upgrade completed successfully!"
+            ),
+            "uninstall_success": (
+                config.messages.uninstall_success
+                if config.messages
+                else "Uninstall completed successfully!"
+            ),
         },
         "cache_ttl": DEFAULT_CACHE_TTL,
     }
@@ -333,9 +367,9 @@ def update_pyproject_toml(
         ):
             # Poetry format
 
-            data["tool"]["poetry"]["scripts"][command_name] = (
-                f"{package_name}.{cli_module_name}:main"
-            )
+            data["tool"]["poetry"]["scripts"][
+                command_name
+            ] = f"{package_name}.{cli_module_name}:main"
 
             typer.echo(f"[check] Updated Poetry entry point for '{command_name}'")
 
@@ -343,9 +377,9 @@ def update_pyproject_toml(
             # PEP 621 format
             # Convert package name hyphens to underscores for Python module naming
             module_name = package_name.replace("-", "_")
-            data["project"]["scripts"][command_name] = (
-                f"{module_name}.{cli_module_name}:main"
-            )
+            data["project"]["scripts"][
+                command_name
+            ] = f"{module_name}.{cli_module_name}:main"
 
             typer.echo(f"[check] Updated PEP 621 entry point for '{command_name}'")
 
@@ -360,9 +394,9 @@ def update_pyproject_toml(
 
             # Convert package name hyphens to underscores for Python module naming
             module_name = package_name.replace("-", "_")
-            data["project"]["scripts"][command_name] = (
-                f"{module_name}.{cli_module_name}:main"
-            )
+            data["project"]["scripts"][
+                command_name
+            ] = f"{module_name}.{cli_module_name}:main"
 
             typer.echo(f"[check] Created entry point for '{command_name}'")
 

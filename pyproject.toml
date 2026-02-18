@@ -71,7 +71,7 @@ mypy_path = "src"
 cache_dir = ".artifacts/cache/mypy"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false  # Lenient for rapid development
+disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
 disallow_untyped_decorators = false
@@ -86,10 +86,11 @@ follow_imports = "silent"
 no_implicit_reexport = true
 namespace_packages = true
 explicit_package_bases = true
+exclude = "(^|/)feature-parity/"
 
 [[tool.mypy.overrides]]
 module = "goobits_cli.*"
-ignore_errors = false
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "tests.*"

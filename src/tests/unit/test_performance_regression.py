@@ -26,9 +26,9 @@ class TestPerformanceRegression:
         import_time = (end - start) * 1000
 
         # Basic CLI imports should be fast
-        assert import_time < 100, (
-            f"Basic CLI imports took {import_time:.1f}ms (target: <100ms)"
-        )
+        assert (
+            import_time < 100
+        ), f"Basic CLI imports took {import_time:.1f}ms (target: <100ms)"
 
     def test_lazy_loading_overhead(self):
         """Test that lazy loading callbacks add minimal overhead."""
@@ -43,9 +43,9 @@ class TestPerformanceRegression:
         callback_time = (end - start) * 1000
 
         # Lazy loading setup should add <50ms overhead
-        assert callback_time < 50, (
-            f"Lazy loading overhead: {callback_time:.1f}ms (target: <50ms)"
-        )
+        assert (
+            callback_time < 50
+        ), f"Lazy loading overhead: {callback_time:.1f}ms (target: <50ms)"
 
     def test_interactive_mode_lazy_loading(self):
         """Test that interactive mode uses lazy loading."""
@@ -129,15 +129,13 @@ if __name__ == "__main__":
             # The import itself should be fast due to lazy loading
             # More lenient threshold for different environments
             max_import_time = 200 if import_time < 200 else 500
-            assert import_time < max_import_time, (
-                f"Universal orchestrator import: {import_time:.1f}ms (target: <{max_import_time}ms)"
-            )
+            assert (
+                import_time < max_import_time
+            ), f"Universal orchestrator import: {import_time:.1f}ms (target: <{max_import_time}ms)"
 
         except ImportError:
             # If import fails, that's ok - this is an optional optimization test
-            pytest.skip(
-                "Universal orchestrator not available in current environment"
-            )
+            pytest.skip("Universal orchestrator not available in current environment")
 
         finally:
             # Restore original module state to avoid affecting other tests
@@ -197,9 +195,9 @@ if __name__ == "__main__":
         else:
             max_time = 500  # Slower system or busy environment
 
-        assert startup_time < max_time, (
-            f"Generated CLI startup: {startup_time:.1f}ms (target: <{max_time}ms for this environment)"
-        )
+        assert (
+            startup_time < max_time
+        ), f"Generated CLI startup: {startup_time:.1f}ms (target: <{max_time}ms for this environment)"
 
         print(
             f"✅ CLI startup performance: {startup_time:.1f}ms (target: <{max_time}ms)"
@@ -229,12 +227,12 @@ def test_performance_targets():
     # Validate targets
     total_time = basic_time + overhead_time
 
-    assert total_time < 100, (
-        f"Total CLI startup time: {total_time:.1f}ms (target: <100ms)"
-    )
-    assert overhead_time < 50, (
-        f"Advanced features overhead: {overhead_time:.1f}ms (target: <50ms)"
-    )
+    assert (
+        total_time < 100
+    ), f"Total CLI startup time: {total_time:.1f}ms (target: <100ms)"
+    assert (
+        overhead_time < 50
+    ), f"Advanced features overhead: {overhead_time:.1f}ms (target: <50ms)"
 
 
 if __name__ == "__main__":

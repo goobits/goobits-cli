@@ -544,7 +544,8 @@ class IRBuilder:
                             "description": _safe_get_attr(arg, "description"),
                             "type": _safe_get_attr(arg, "type", "string"),
                             "required": _safe_get_attr(arg, "required", True),
-                            "multiple": _safe_get_attr(arg, "multiple", False) or arg_nargs == "*",
+                            "multiple": _safe_get_attr(arg, "multiple", False)
+                            or arg_nargs == "*",
                             "nargs": arg_nargs,
                         }
                     )

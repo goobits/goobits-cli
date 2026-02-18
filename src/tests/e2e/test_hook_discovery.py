@@ -318,12 +318,12 @@ if __name__ == "__main__":
 
         for file_path, expected_import, expected_module in test_cases:
             import_path, module_name = _path_to_import_path(file_path)
-            assert import_path == expected_import, (
-                f"Expected {expected_import}, got {import_path} for {file_path}"
-            )
-            assert module_name == expected_module, (
-                f"Expected {expected_module}, got {module_name} for {file_path}"
-            )
+            assert (
+                import_path == expected_import
+            ), f"Expected {expected_import}, got {import_path} for {file_path}"
+            assert (
+                module_name == expected_module
+            ), f"Expected {expected_module}, got {module_name} for {file_path}"
 
         print("✅ Hook path conversion function test passed")
 

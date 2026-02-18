@@ -55,4 +55,3 @@ def test_safe_get_attr_supports_dict_object_and_defaults():
     assert safe_get_attr(Obj(), "value", 0) == 42
     assert safe_get_attr(Obj(), "missing", 5) == 5
     assert safe_get_attr(None, "anything", "d") == "d"
-

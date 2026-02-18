@@ -43,4 +43,9 @@ def apply_all_migrations(
     return migrated_data, all_changes, all_warnings
 
 
-__all__ = ["Migration", "MIGRATIONS", "get_applicable_migrations", "apply_all_migrations"]
+__all__ = [
+    "Migration",
+    "MIGRATIONS",
+    "get_applicable_migrations",
+    "apply_all_migrations",
+]

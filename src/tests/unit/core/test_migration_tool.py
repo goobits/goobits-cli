@@ -70,4 +70,6 @@ def test_find_changes_detects_added_removed_and_type_changes():
     assert any("Type Change" == c["type"] for c in changes)
     assert any("Key removed" in d for d in descriptions)
     assert any("Key added" in d for d in descriptions)
-    assert any("Subcommands array converted to object format" in d for d in descriptions)
+    assert any(
+        "Subcommands array converted to object format" in d for d in descriptions
+    )

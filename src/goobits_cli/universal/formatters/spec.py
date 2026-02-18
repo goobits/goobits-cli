@@ -54,14 +54,14 @@ class SectionOrder:
 
     order: List[str] = field(
         default_factory=lambda: [
-            "header",      # Name + version
-            "description", # Brief description
-            "usage",       # Usage pattern
-            "arguments",   # Positional arguments
-            "options",     # Optional flags
-            "commands",    # Subcommands
-            "examples",    # Usage examples (if any)
-            "footer",      # Additional notes
+            "header",  # Name + version
+            "description",  # Brief description
+            "usage",  # Usage pattern
+            "arguments",  # Positional arguments
+            "options",  # Optional flags
+            "commands",  # Subcommands
+            "examples",  # Usage examples (if any)
+            "footer",  # Additional notes
         ]
     )
 

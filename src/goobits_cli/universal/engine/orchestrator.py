@@ -209,7 +209,9 @@ class Orchestrator:
         try:
             # Apply integrations if requested (non-fatal, matches generate() behavior)
             if with_integrations:
-                normalized_config = stages.apply_integrations(normalized_config, language)
+                normalized_config = stages.apply_integrations(
+                    normalized_config, language
+                )
         except Exception:
             # Non-fatal: continue without integrations (they're optional enhancements)
             pass

@@ -91,7 +91,9 @@ def normalize_config(config: Any) -> Any:
     # If it's a Pydantic model with model_dump, use that
     if hasattr(config, "model_dump"):
         return GoobitsConfigSchema(**config.model_dump())
-    raise TypeError(f"Unsupported configuration type for normalization: {type(config)!r}")
+    raise TypeError(
+        f"Unsupported configuration type for normalization: {type(config)!r}"
+    )
 
 
 def build_ir(
@@ -228,7 +230,9 @@ def write_artifacts(
         if not dry_run:
             # Skip hooks files if they already exist (preserve user implementations)
             if _is_hooks_file(file_path) and file_path.exists():
-                click.echo(f"⏭️  Skipping {file_path} (exists - preserving user implementations)")
+                click.echo(
+                    f"⏭️  Skipping {file_path} (exists - preserving user implementations)"
+                )
                 continue
 
             # Ensure parent directory exists
@@ -275,7 +279,9 @@ def write_files(
         if not dry_run:
             # Skip hooks files if they already exist (preserve user implementations)
             if _is_hooks_file(path) and path.exists():
-                click.echo(f"⏭️  Skipping {path} (exists - preserving user implementations)")
+                click.echo(
+                    f"⏭️  Skipping {path} (exists - preserving user implementations)"
+                )
                 continue
 
             # Ensure parent directory exists

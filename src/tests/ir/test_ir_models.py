@@ -84,12 +84,8 @@ class TestIRCreation:
         hello_cmd = IRCommand(
             name="hello",
             description="Say hello",
-            options=(
-                IROption(name="name", type="string", default="World"),
-            ),
-            arguments=(
-                IRArgument(name="greeting", required=False),
-            ),
+            options=(IROption(name="name", type="string", default="World"),),
+            arguments=(IRArgument(name="greeting", required=False),),
         )
 
         ir = IR(

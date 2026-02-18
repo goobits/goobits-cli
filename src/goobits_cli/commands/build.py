@@ -40,7 +40,9 @@ def _detect_main_cli_path(language: str, generated_files: list[str]) -> Path:
         file_name = Path(file_path).name
         if "hooks" in file_name:
             continue
-        if file_name.endswith(extensions) and ("cli" in file_name or "main" in file_name):
+        if file_name.endswith(extensions) and (
+            "cli" in file_name or "main" in file_name
+        ):
             return Path(file_path)
 
     return Path()
@@ -173,7 +175,9 @@ def build_command(
         orchestrator = Orchestrator()
 
         # Generate all files for this language
-        all_files = orchestrator.generate_content(goobits_config, language, config_path.name)
+        all_files = orchestrator.generate_content(
+            goobits_config, language, config_path.name
+        )
 
         # Determine output directory for this language
         if len(target_languages) > 1:
@@ -193,15 +197,22 @@ def build_command(
 
         for file_path, content in all_files.items():
             # Skip pyproject.toml when building goobits itself (self-hosting)
-            if file_path == "pyproject.toml" and goobits_config.package_name == "goobits-cli":
-                typer.echo("\u23ed\ufe0f  Skipping pyproject.toml for self-hosted goobits-cli")
+            if (
+                file_path == "pyproject.toml"
+                and goobits_config.package_name == "goobits-cli"
+            ):
+                typer.echo(
+                    "\u23ed\ufe0f  Skipping pyproject.toml for self-hosted goobits-cli"
+                )
                 continue
 
             full_path = lang_output_dir / file_path
 
             # Skip hooks files if they already exist (preserve user implementations)
             if _is_hooks_file(full_path) and full_path.exists():
-                typer.echo(f"⏭️  Skipping {full_path} (exists - preserving user implementations)")
+                typer.echo(
+                    f"⏭️  Skipping {full_path} (exists - preserving user implementations)"
+                )
                 continue
 
             # Ensure parent directories exist
@@ -217,7 +228,11 @@ def build_command(
                 f.write(content)
 
             # Make files executable as needed
-            if file_path.startswith("bin/") or file_path in executable_files or file_path == "setup.sh":
+            if (
+                file_path.startswith("bin/")
+                or file_path in executable_files
+                or file_path == "setup.sh"
+            ):
                 full_path.chmod(0o755)
 
             typer.echo(f"\u2705 Generated: {full_path}")
@@ -232,119 +247,91 @@ def build_command(
     # Extract package name and filename for pyproject.toml update (Python only)
 
     if "python" in target_languages:
-            # Use configured output path for Python
+        # Use configured output path for Python
 
-            if goobits_config.cli_path:
-                cli_path = goobits_config.cli_path.format(
-                    package_name=goobits_config.package_name.replace("goobits-", "")
-                )
-            else:
-                # Generate default path when none specified
-                package_name_safe = goobits_config.package_name.replace("-", "_")
-                cli_path = f"{package_name_safe}/cli.py"
+        if goobits_config.cli_path:
+            cli_path = goobits_config.cli_path.format(
+                package_name=goobits_config.package_name.replace("goobits-", "")
+            )
+        else:
+            # Generate default path when none specified
+            package_name_safe = goobits_config.package_name.replace("-", "_")
+            cli_path = f"{package_name_safe}/cli.py"
 
-            # Extract the actual module name from the CLI output path
+        # Extract the actual module name from the CLI output path
 
-            # e.g., "src/ttt/cli.py" -> "ttt"
+        # e.g., "src/ttt/cli.py" -> "ttt"
 
-            cli_path_parts = Path(cli_path).parts
+        cli_path_parts = Path(cli_path).parts
 
-            if "src" in cli_path_parts:
-                src_index = cli_path_parts.index("src")
+        if "src" in cli_path_parts:
+            src_index = cli_path_parts.index("src")
 
-                if src_index + 1 < len(cli_path_parts):
-                    module_name = cli_path_parts[src_index + 1]
-
-                else:
-                    # Fallback to package name conversion
-
-                    module_name = goobits_config.package_name.replace("-", "_")
+            if src_index + 1 < len(cli_path_parts):
+                module_name = cli_path_parts[src_index + 1]
 
             else:
                 # Fallback to package name conversion
 
                 module_name = goobits_config.package_name.replace("-", "_")
 
-            # Extract the full module path relative to the package root
+        else:
+            # Fallback to package name conversion
 
-            cli_path_obj = Path(cli_path)
+            module_name = goobits_config.package_name.replace("-", "_")
 
-            cli_path_parts = cli_path_obj.parts
+        # Extract the full module path relative to the package root
 
-            # Find the path relative to the package directory
+        cli_path_obj = Path(cli_path)
 
-            if "src" in cli_path_parts:
-                src_index = cli_path_parts.index("src")
+        cli_path_parts = cli_path_obj.parts
 
-                if src_index + 2 < len(cli_path_parts):  # src/package/...
-                    # Get all parts after src/package/ up to filename
+        # Find the path relative to the package directory
 
-                    relative_parts = cli_path_parts[
-                        src_index + 2 :
-                    ]  # Everything after src/package/
+        if "src" in cli_path_parts:
+            src_index = cli_path_parts.index("src")
 
-                    # Join directory parts with dots, then add filename without .py
+            if src_index + 2 < len(cli_path_parts):  # src/package/...
+                # Get all parts after src/package/ up to filename
 
-                    if len(relative_parts) > 1:
-                        dir_parts = relative_parts[:-1]  # All but filename
+                relative_parts = cli_path_parts[
+                    src_index + 2 :
+                ]  # Everything after src/package/
 
-                        filename_part = relative_parts[-1].replace(".py", "")
+                # Join directory parts with dots, then add filename without .py
 
-                        full_module_path = ".".join(dir_parts) + "." + filename_part
+                if len(relative_parts) > 1:
+                    dir_parts = relative_parts[:-1]  # All but filename
 
-                    else:
-                        # Just a filename
+                    filename_part = relative_parts[-1].replace(".py", "")
 
-                        full_module_path = relative_parts[0].replace(".py", "")
+                    full_module_path = ".".join(dir_parts) + "." + filename_part
 
                 else:
-                    # Fallback to just filename
+                    # Just a filename
 
-                    full_module_path = cli_path_obj.name.replace(".py", "")
+                    full_module_path = relative_parts[0].replace(".py", "")
 
             else:
                 # Fallback to just filename
 
                 full_module_path = cli_path_obj.name.replace(".py", "")
 
-            # Update pyproject.toml to use the generated CLI (skip for goobits-cli itself)
+        else:
+            # Fallback to just filename
 
-            if goobits_config.package_name != "goobits-cli":
-                if update_pyproject_toml(
-                    output_dir,
-                    module_name,
-                    goobits_config.command_name,
-                    full_module_path + ".py",
-                    backup,
-                ):
-                    typer.echo(
-                        f"\u2705 Updated {output_dir}/pyproject.toml to use generated CLI"
-                    )
+            full_module_path = cli_path_obj.name.replace(".py", "")
 
-                    typer.echo(
-                        "\n\U0001f4a1 Remember to reinstall the package for changes to take effect:"
-                    )
+        # Update pyproject.toml to use the generated CLI (skip for goobits-cli itself)
 
-                    typer.echo("   ./setup.sh install --dev")
-
-                else:
-                    typer.echo(
-                        "\u26a0\ufe0f  Could not update pyproject.toml automatically"
-                    )
-
-                    typer.echo(
-                        f"   Please update your entry points to use: {module_name}.{full_module_path}:main"
-                    )
-
-            else:
-                # For goobits-cli, we maintain pyproject.toml manually
-
-                typer.echo(
-                    f"\u2705 Updated PEP 621 entry point for '{goobits_config.command_name}'"
-                )
-
-                typer.echo(f"\u2705 Added setup.sh to package-data for '{module_name}'")
-
+        if goobits_config.package_name != "goobits-cli":
+            if update_pyproject_toml(
+                output_dir,
+                module_name,
+                goobits_config.command_name,
+                full_module_path + ".py",
+                backup,
+            ):
                 typer.echo(
                     f"\u2705 Updated {output_dir}/pyproject.toml to use generated CLI"
                 )
@@ -354,6 +341,34 @@ def build_command(
                 )
 
                 typer.echo("   ./setup.sh install --dev")
+
+            else:
+                typer.echo(
+                    "\u26a0\ufe0f  Could not update pyproject.toml automatically"
+                )
+
+                typer.echo(
+                    f"   Please update your entry points to use: {module_name}.{full_module_path}:main"
+                )
+
+        else:
+            # For goobits-cli, we maintain pyproject.toml manually
+
+            typer.echo(
+                f"\u2705 Updated PEP 621 entry point for '{goobits_config.command_name}'"
+            )
+
+            typer.echo(f"\u2705 Added setup.sh to package-data for '{module_name}'")
+
+            typer.echo(
+                f"\u2705 Updated {output_dir}/pyproject.toml to use generated CLI"
+            )
+
+            typer.echo(
+                "\n\U0001f4a1 Remember to reinstall the package for changes to take effect:"
+            )
+
+            typer.echo("   ./setup.sh install --dev")
 
     # Generate setup.sh (Python only - Node.js generates its own)
 
@@ -389,9 +404,13 @@ def build_command(
 
             # Get CLI output path from generated files
             if language == "rust":
-                cli_path = generated_main_cli_paths.get(language, Path()) or Path("src/main.rs")
+                cli_path = generated_main_cli_paths.get(language, Path()) or Path(
+                    "src/main.rs"
+                )
             else:
-                cli_path = generated_main_cli_paths.get(language, Path()) or Path("cli.js")
+                cli_path = generated_main_cli_paths.get(language, Path()) or Path(
+                    "cli.js"
+                )
 
             # Determine correct output directory for multi-language
             if len(target_languages) > 1:

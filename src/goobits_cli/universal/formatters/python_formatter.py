@@ -122,7 +122,7 @@ class GoobitsCommand(RichCommand):
 
     def generate_rich_click_config(self) -> str:
         """Generate rich-click configuration for unified styling."""
-        return f'''
+        return f"""
 # Unified help styling configuration
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN = False
@@ -136,7 +136,7 @@ click.rich_click.MAX_WIDTH = {self.spec.layout.max_content_width}
 click.rich_click.OPTIONS_PANEL_TITLE = "{self.spec.options_header}"
 click.rich_click.ARGUMENTS_PANEL_TITLE = "{self.spec.arguments_header}"
 click.rich_click.COMMANDS_PANEL_TITLE = "{self.spec.commands_header}"
-'''
+"""
 
     def generate_full_code(self) -> str:
         """Generate all formatter-related code to embed in CLI."""

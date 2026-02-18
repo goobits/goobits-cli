@@ -68,4 +68,3 @@ def test_json_stringify_handles_model_dump_and_dict_and_plain_values():
     assert json.loads(model_json) == {"a": 1}
     assert json.loads(dict_json) == {"b": 2}
     assert json.loads(plain_json) == {"c": 3}
-

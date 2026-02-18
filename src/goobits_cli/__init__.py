@@ -8,4 +8,5 @@ def main() -> None:
 
     generated_main()
 
+
 __all__ = ["main", "__version__"]

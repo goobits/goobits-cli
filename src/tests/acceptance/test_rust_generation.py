@@ -57,10 +57,7 @@ class TestRustGeneration:
         assert safe_identifier("struct", "rust") == "struct_"
         assert safe_identifier("mut", "rust") == "mut_"
 
-    @pytest.mark.skipif(
-        not shutil.which("cargo"),
-        reason="Cargo/Rust not installed"
-    )
+    @pytest.mark.skipif(not shutil.which("cargo"), reason="Cargo/Rust not installed")
     def test_generate_cli_produces_files(
         self, temp_project_dir: Path, write_config, sample_goobits_yaml
     ):

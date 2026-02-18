@@ -54,10 +54,7 @@ class TestNodeJSGeneration:
         assert safe_identifier("function", "nodejs") == "function_"
         assert safe_identifier("const", "nodejs") == "const_"
 
-    @pytest.mark.skipif(
-        not shutil.which("node"),
-        reason="Node.js not installed"
-    )
+    @pytest.mark.skipif(not shutil.which("node"), reason="Node.js not installed")
     def test_generate_cli_produces_files(
         self, temp_project_dir: Path, write_config, sample_goobits_yaml
     ):

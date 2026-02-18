@@ -48,7 +48,7 @@ def sample_goobits_yaml() -> Dict[str, Any]:
                     ],
                 },
                 "version": {"desc": "Show version information"},
-            }
+            },
         },
     }
 
@@ -69,7 +69,9 @@ def write_config(temp_project_dir: Path, sample_goobits_yaml: Dict[str, Any]):
     return _write
 
 
-def run_command(cmd: list, cwd: Path = None, timeout: int = 30) -> subprocess.CompletedProcess:
+def run_command(
+    cmd: list, cwd: Path = None, timeout: int = 30
+) -> subprocess.CompletedProcess:
     """Run a command and return the result."""
     return subprocess.run(
         cmd,
@@ -80,7 +82,9 @@ def run_command(cmd: list, cwd: Path = None, timeout: int = 30) -> subprocess.Co
     )
 
 
-def run_generated_cli(cli_path: Path, args: list = None, cwd: Path = None) -> subprocess.CompletedProcess:
+def run_generated_cli(
+    cli_path: Path, args: list = None, cwd: Path = None
+) -> subprocess.CompletedProcess:
     """Run a generated CLI script."""
     args = args or []
 
@@ -104,7 +108,9 @@ def run_generated_cli(cli_path: Path, args: list = None, cwd: Path = None) -> su
 def goobits_build():
     """Provide a function to run goobits build."""
 
-    def _build(config_path: Path, output_dir: Path = None) -> subprocess.CompletedProcess:
+    def _build(
+        config_path: Path, output_dir: Path = None
+    ) -> subprocess.CompletedProcess:
         cmd = ["goobits", "build", str(config_path)]
         return run_command(cmd, cwd=config_path.parent)
 

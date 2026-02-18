@@ -21,25 +21,32 @@ def _make_config(language: str) -> GoobitsConfigSchema:
 
 
 def test_generated_main_cli_filename_contract_python():
-    files = UniversalGenerator("python").generate_all_files(_make_config("python"), "test.yaml")
+    files = UniversalGenerator("python").generate_all_files(
+        _make_config("python"), "test.yaml"
+    )
     main_path = find_main_cli_path(files, "python")
     assert main_path == "src/contract_python_cli/cli.py"
 
 
 def test_generated_main_cli_filename_contract_nodejs():
-    files = UniversalGenerator("nodejs").generate_all_files(_make_config("nodejs"), "test.yaml")
+    files = UniversalGenerator("nodejs").generate_all_files(
+        _make_config("nodejs"), "test.yaml"
+    )
     main_path = find_main_cli_path(files, "nodejs")
     assert main_path == "src/contract_nodejs_cli/cli.js"
 
 
 def test_generated_main_cli_filename_contract_typescript():
-    files = UniversalGenerator("typescript").generate_all_files(_make_config("typescript"), "test.yaml")
+    files = UniversalGenerator("typescript").generate_all_files(
+        _make_config("typescript"), "test.yaml"
+    )
     main_path = find_main_cli_path(files, "typescript")
     assert main_path == "src/contract_typescript_cli/cli.ts"
 
 
 def test_generated_main_cli_filename_contract_rust():
-    files = UniversalGenerator("rust").generate_all_files(_make_config("rust"), "test.yaml")
+    files = UniversalGenerator("rust").generate_all_files(
+        _make_config("rust"), "test.yaml"
+    )
     main_path = find_main_cli_path(files, "rust")
     assert main_path == "src/contract_rust_cli/cli.rs"
-

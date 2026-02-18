@@ -323,9 +323,9 @@ class TestLoggingIntegration:
         avg_time_per_operation = total_time / 100
 
         # Should be reasonably fast (less than 10ms per operation)
-        assert avg_time_per_operation < 0.01, (
-            f"Context operations too slow: {avg_time_per_operation * 1000:.2f}ms per operation"
-        )
+        assert (
+            avg_time_per_operation < 0.01
+        ), f"Context operations too slow: {avg_time_per_operation * 1000:.2f}ms per operation"
 
         # Test context get performance
         set_context(test_data="performance_test")
@@ -340,9 +340,9 @@ class TestLoggingIntegration:
         avg_time_per_get = total_time / 100
 
         # Should be reasonably fast
-        assert avg_time_per_get < 0.01, (
-            f"Context get operations too slow: {avg_time_per_get * 1000:.2f}ms per operation"
-        )
+        assert (
+            avg_time_per_get < 0.01
+        ), f"Context get operations too slow: {avg_time_per_get * 1000:.2f}ms per operation"
 
 
 if __name__ == "__main__":

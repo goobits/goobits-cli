@@ -69,7 +69,9 @@ def test_merge_nodejs_config_converts_string_bin_and_keeps_existing_deps():
 def test_merge_rust_config_adds_bin_and_dependencies():
     updater = ManifestUpdater()
     cargo_data = {}
-    updater._merge_rust_config(cargo_data, "mycli", "src/cli.rs", {"serde_json": "1.0.1"})
+    updater._merge_rust_config(
+        cargo_data, "mycli", "src/cli.rs", {"serde_json": "1.0.1"}
+    )
 
     assert cargo_data["package"]["edition"] == "2021"
     assert cargo_data["bin"][0]["name"] == "mycli"
@@ -141,7 +143,9 @@ def test_update_manifests_for_build_handles_none_installation_and_scans_node_imp
         "installation": None,
     }
 
-    node_res = update_manifests_for_build(node_cfg, tmp_path, node_cli.relative_to(tmp_path))
+    node_res = update_manifests_for_build(
+        node_cfg, tmp_path, node_cli.relative_to(tmp_path)
+    )
     assert not node_res.is_err()
     package_data = json.loads((tmp_path / "package.json").read_text(encoding="utf-8"))
 

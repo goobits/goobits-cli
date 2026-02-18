@@ -39,11 +39,16 @@ def test_validate_command_success_verbose_prints_summary(monkeypatch, tmp_path: 
         package_name="demo",
         command_name="democli",
         language="python",
-        cli=SimpleNamespace(version="1.2.3", commands={"a": {}, "b": {}, "c": {}, "d": {}, "e": {}, "f": {}}),
+        cli=SimpleNamespace(
+            version="1.2.3",
+            commands={"a": {}, "b": {}, "c": {}, "d": {}, "e": {}, "f": {}},
+        ),
     )
 
     monkeypatch.setattr("goobits_cli.commands.validate._lazy_imports", lambda: None)
-    monkeypatch.setattr("goobits_cli.commands.validate.load_goobits_config", lambda _p: config)
+    monkeypatch.setattr(
+        "goobits_cli.commands.validate.load_goobits_config", lambda _p: config
+    )
     monkeypatch.setattr(typer, "echo", fake_echo)
 
     validate_command(config_path=cfg_path, verbose=True)
@@ -139,4 +144,3 @@ def test_migrate_command_callback_failure_exits_1(monkeypatch):
 
     assert exc.value.exit_code == 1
     assert any("Migration failed:" in msg and err for msg, err in calls)
-

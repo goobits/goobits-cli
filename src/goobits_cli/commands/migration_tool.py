@@ -94,9 +94,7 @@ class YAMLMigrationTool:
             self.errors.append(f"Migration failed for {file_path}: {e}")
             return False
 
-    def _migrate_structure(
-        self, data: Any, file_path: Path
-    ) -> Any:
+    def _migrate_structure(self, data: Any, file_path: Path) -> Any:
         """Apply all migration transformations to YAML structure."""
         from ..migrations import apply_all_migrations
 
