@@ -328,3 +328,8 @@ Run dead code detection with:
 
 Tools: Vulture (unused code) + Ruff (unused imports)
 Config: Makefile, .vulture_whitelist.py
+
+## Shared-Folder Git
+
+- Shared macOS/Linux checkouts should use `core.filemode=false`; chmod-only changes will not be noticed reliably.
+- When a script must be executable, run `git update-index --chmod=+x path/to/script.sh` and include that in the commit.
