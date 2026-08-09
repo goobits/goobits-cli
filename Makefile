@@ -4,6 +4,7 @@
 PYTHON := python3
 PYTEST := pytest
 SKIP_INSTALL_DEV ?= 0
+MATILDA_ARTIFACT_ROOT ?= $(if $(filter /workspace /workspace/%,$(CURDIR)),/var/tmp/matilda/workspace,)
 
 # Test directories
 TESTS_DIR := src/tests
@@ -11,7 +12,7 @@ EXAMPLES_DIR := src/examples
 FEATURE_PARITY_RUNNER := $(TESTS_DIR)/feature-parity/run_parity_tests.py
 
 # Test output directory
-TEST_OUTPUT_DIR := test-results
+TEST_OUTPUT_DIR ?= $(if $(MATILDA_ARTIFACT_ROOT),$(MATILDA_ARTIFACT_ROOT)/goobits-cli/test-results,test-results)
 COVERAGE_DIR := $(TEST_OUTPUT_DIR)/coverage
 
 # Colors for output
