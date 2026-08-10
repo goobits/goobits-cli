@@ -145,6 +145,7 @@ class IRBuilder:
             "header_sections": _safe_get_attr(cli_config, "header_sections", []),
             "footer_note": _safe_get_attr(cli_config, "footer_note"),
             "version": _safe_get_attr(cli_config, "version", "1.0.0"),
+            "display_version": _safe_get_attr(cli_config, "display_version", True),
         }
 
         # Extract arguments (CLI root rarely has arguments in current schema)

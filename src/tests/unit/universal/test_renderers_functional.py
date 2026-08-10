@@ -5,7 +5,54 @@ Tests the actual rendering functionality, template context generation,
 and language-specific code generation for Node.js and TypeScript renderers.
 """
 
+from importlib.resources import files
+
 from goobits_cli.universal.renderers.nodejs_renderer import NodeJSRenderer
+from goobits_cli.universal.renderers.python_renderer import PythonRenderer
+
+
+class TestPythonRendererFunctional:
+    def test_version_option_follows_cli_contract(self):
+        renderer = PythonRenderer()
+        ir = {
+            "project": {
+                "name": "Demo CLI",
+                "description": "Demo",
+                "version": "1.0.0",
+                "package_name": "demo-cli",
+                "command_name": "demo",
+            },
+            "cli": {
+                "version": "2.4.0",
+                "display_version": True,
+                "description": "Demo",
+                "commands": {},
+            },
+            "installation": {},
+        }
+        context = renderer.get_template_context(ir)
+        template = (
+            files("goobits_cli.universal.components")
+            .joinpath("python_cli_consolidated.j2")
+            .read_text()
+        )
+
+        rendered = renderer.render_component(
+            "python_cli_consolidated", template, context
+        )
+
+        assert (
+            "@click.version_option('2.4.0', '--version', '-V', prog_name='demo')"
+            in rendered
+        )
+
+        ir["cli"]["display_version"] = False
+        hidden_context = renderer.get_template_context(ir)
+        hidden = renderer.render_component(
+            "python_cli_consolidated", template, hidden_context
+        )
+
+        assert "@click.version_option" not in hidden
 
 
 class TestNodeJSRendererFunctional:

@@ -275,6 +275,9 @@ class DefaultCommandGroup(click.Group):
 {% else %}
 @click.group()
 {% endif %}
+{% if cli.display_version %}
+@click.version_option('{{ cli.version }}', '--version', '-V', prog_name='{{ project.command_name }}')
+{% endif %}
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
 @click.option('--debug', is_flag=True, help='Enable debug output')
 @click.option('--config', type=click.Path(), help='Path to config file (default: ~/.matilda/config.toml)')
