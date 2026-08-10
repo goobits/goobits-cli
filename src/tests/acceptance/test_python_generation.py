@@ -7,10 +7,13 @@ These tests verify that:
 3. Type mappings and identifiers work correctly
 """
 
+import importlib.util
+import sys
 from pathlib import Path
 from typing import Any, Dict
 
 import pytest
+from click.testing import CliRunner
 
 from goobits_cli.universal.engine import Orchestrator
 from goobits_cli.universal.renderers import get_renderer
@@ -81,3 +84,71 @@ class TestPythonGeneration:
 
         # Starting with number
         assert safe_identifier("123abc", "python") == "_123abc"
+
+    def test_generated_cli_honors_default_nested_and_exit_contracts(
+        self, tmp_path: Path, monkeypatch
+    ):
+        """Execute generated Click code to verify the hook contract end to end."""
+        config = {
+            "package_name": "contract-cli",
+            "command_name": "contract",
+            "display_name": "Contract CLI",
+            "description": "Contract test CLI",
+            "language": "python",
+            "cli_path": "contract_cli/cli.py",
+            "cli_hooks_path": "contract_hooks.py",
+            "cli": {
+                "name": "Contract CLI",
+                "tagline": "Contract test CLI",
+                "commands": {
+                    "speak": {
+                        "desc": "Speak text",
+                        "is_default": True,
+                        "args": [{"name": "text", "desc": "Text", "required": False}],
+                    },
+                    "voice": {
+                        "desc": "Manage voices",
+                        "subcommands": {"status": {"desc": "Show voice status"}},
+                    },
+                },
+            },
+        }
+        files = Orchestrator(test_mode=True).generate_content(
+            config, "python", with_integrations=False
+        )
+        cli_source = files["contract_cli/cli.py"]
+        package_dir = tmp_path / "contract_cli"
+        package_dir.mkdir()
+        (package_dir / "__init__.py").write_text("")
+        cli_path = package_dir / "cli.py"
+        cli_path.write_text(cli_source)
+        (tmp_path / "contract_hooks.py").write_text(
+            "import sys\n\n"
+            "def on_speak(ctx, text):\n"
+            "    text = text or sys.stdin.read().strip()\n"
+            "    print(f'spoken:{text}')\n"
+            "    return 7 if text == 'fail' else 0\n\n"
+            "def on_voice_status(ctx):\n"
+            "    print('voice:ready')\n"
+            "    return 0\n"
+        )
+        monkeypatch.syspath_prepend(str(tmp_path))
+        spec = importlib.util.spec_from_file_location("contract_cli.cli", cli_path)
+        assert spec and spec.loader
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+
+        runner = CliRunner()
+        implicit = runner.invoke(module.cli, ["hello"])
+        piped = runner.invoke(module.cli, [], input="from pipe")
+        nested = runner.invoke(module.cli, ["voice", "status"])
+        failure = runner.invoke(module.cli, ["fail"])
+
+        assert implicit.exit_code == 0
+        assert "spoken:hello" in implicit.output
+        assert piped.exit_code == 0
+        assert "spoken:from pipe" in piped.output
+        assert nested.exit_code == 0
+        assert "voice:ready" in nested.output
+        assert failure.exit_code == 7

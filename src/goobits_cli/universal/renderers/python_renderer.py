@@ -664,6 +664,14 @@ setup(
                 )
 
             transformed["commands"] = transformed_commands
+            transformed["default_command"] = next(
+                (
+                    name
+                    for name, command in transformed_commands.items()
+                    if command.get("is_default")
+                ),
+                None,
+            )
 
         return transformed
 

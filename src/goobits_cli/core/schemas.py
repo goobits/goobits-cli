@@ -113,6 +113,19 @@ class CLISchema(BaseModel):
     enable_recursive_help: Optional[bool] = False
     enable_help_json: Optional[bool] = False
 
+    @model_validator(mode="after")
+    def validate_single_default_command(self):
+        """Ensure implicit dispatch has one unambiguous target."""
+        defaults = [
+            name for name, command in self.commands.items() if command.is_default
+        ]
+        if len(defaults) > 1:
+            raise ValueError(
+                "Only one command can set is_default: true; found "
+                + ", ".join(defaults)
+            )
+        return self
+
 
 class ConfigSchema(BaseModel):
     """Schema for CLI-only configuration files."""

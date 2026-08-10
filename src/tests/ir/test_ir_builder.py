@@ -45,6 +45,7 @@ def full_config() -> Dict[str, Any]:
             "commands": {
                 "hello": {
                     "desc": "Say hello",
+                    "is_default": True,
                     "args": [
                         {"name": "name", "desc": "Name to greet", "required": False},
                     ],
@@ -150,6 +151,15 @@ class TestIRBuilderComplex:
 
         hello = ir["cli"]["commands"]["hello"]
         assert "arguments" in hello or "args" in hello
+
+    def test_build_preserves_default_and_full_nested_hook_paths(self, full_config):
+        """Default dispatch and nested hooks remain explicit in the IR."""
+        builder = IRBuilder()
+        ir = builder.build(full_config, "full.yaml")
+
+        assert ir["cli"]["commands"]["hello"]["is_default"] is True
+        config_show = ir["cli"]["commands"]["config"]["subcommands"][0]
+        assert config_show["hook_name"] == "on_config_show"
 
 
 @pytest.mark.ir

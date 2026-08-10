@@ -147,13 +147,7 @@ class CommandFlattener:
                     print(f"Content: {subcommands_data}")
 
     def _generate_hook_name(self, command_path: List[str]) -> str:
-        """
-        Generate hook name with intelligent abbreviation for deep paths.
-
-        Strategy:
-        - 1-2 levels: exact path (on_greet, on_database_users)
-        - 3-4 levels: skip middle (on_api_users_create for api->v1->users->create)
-        - 5+ levels: first + last 2 (on_api_permissions_grant for api->v1->users->permissions->grant)
+        """Generate an unambiguous hook name from the full command path.
 
         Args:
             command_path: Full command path list
@@ -161,18 +155,7 @@ class CommandFlattener:
         Returns:
             Hook name string
         """
-        if len(command_path) <= 2:
-            # Short paths: use exact match
-            return f"on_{'_'.join(command_path)}"
-        elif len(command_path) <= 4:
-            # Medium paths: skip middle components
-            if len(command_path) == 3:
-                return f"on_{command_path[0]}_{command_path[2]}"
-            else:  # length 4
-                return f"on_{command_path[0]}_{command_path[2]}_{command_path[3]}"
-        else:
-            # Long paths: first + last 2 components
-            return f"on_{command_path[0]}_{command_path[-2]}_{command_path[-1]}"
+        return f"on_{'_'.join(part.replace('-', '_') for part in command_path)}"
 
 
 class HierarchyBuilder:

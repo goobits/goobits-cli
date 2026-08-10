@@ -238,12 +238,14 @@ def get_hooks():
         _hooks = load_hooks()
     return _hooks
 
-def invoke_hook(ctx, hook_name: str, kwargs: Dict[str, Any]) -> None:
+def invoke_hook(ctx, hook_name: str, kwargs: Dict[str, Any]) -> Any:
     """Invoke a hook by name or exit with a clear error."""
     hooks = get_hooks()
     if hooks and hasattr(hooks, hook_name):
-        getattr(hooks, hook_name)(ctx=ctx, **kwargs)
-        return
+        result = getattr(hooks, hook_name)(ctx=ctx, **kwargs)
+        if isinstance(result, int) and not isinstance(result, bool) and result != 0:
+            raise SystemExit(result)
+        return result
     logger.error(f"Hook '{hook_name}' not implemented in cli_hooks.py")
     sys.exit(1)
 
@@ -251,7 +253,28 @@ def invoke_hook(ctx, hook_name: str, kwargs: Dict[str, Any]) -> None:
 # CLI COMMANDS
 # ============================================================================
 
+{% if cli.default_command %}
+class DefaultCommandGroup(click.Group):
+    """Route unknown positional input to the configured default command."""
+
+    def __init__(self, *args, default_command: str, **kwargs):
+        self.default_command = default_command
+        super().__init__(*args, **kwargs)
+
+    def resolve_command(self, ctx, args):
+        if args and args[0] not in self.commands:
+            args.insert(0, self.default_command)
+        return super().resolve_command(ctx, args)
+
+@click.group(
+    cls=DefaultCommandGroup,
+    default_command='{{ cli.default_command }}',
+    invoke_without_command=True,
+    no_args_is_help=False,
+)
+{% else %}
 @click.group()
+{% endif %}
 @click.option('--verbose', '-v', is_flag=True, help='Enable verbose output')
 @click.option('--debug', is_flag=True, help='Enable debug output')
 @click.option('--config', type=click.Path(), help='Path to config file (default: ~/.matilda/config.toml)')
@@ -261,6 +284,25 @@ def cli(ctx, verbose, debug, config):
     config_path = Path(config) if config else None
     config_manager = ConfigManager(config_path)
     ctx.obj = CLIContext(config_manager, verbose, debug)
+    {% if cli.default_command %}
+    if ctx.invoked_subcommand is None:
+        if sys.stdin.isatty():
+            click.echo(ctx.get_help())
+            return
+        invoke_hook(
+            ctx.obj,
+            'on_{{ cli.default_command.replace("-", "_") }}',
+            {
+                {%- set default_data = cli.commands[cli.default_command] %}
+                {%- for arg in default_data.arguments %}
+                '{{ arg.name }}': {{ '()' if arg.nargs == '*' or arg.multiple else (arg.default | python_repr) }},
+                {%- endfor %}
+                {%- for opt in default_data.options | default([]) %}
+                '{{ opt.name.replace("-", "_") }}': {{ opt.default | python_repr }},
+                {%- endfor %}
+            },
+        )
+    {% endif %}
 
 {% if cli.commands %}
   {%- for cmd_name, cmd_data in cli.commands.items() %}

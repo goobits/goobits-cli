@@ -197,6 +197,7 @@ class IRBuilder:
                         "options": [],
                         "subcommands": [],
                         "hook_name": f"on_{cmd_name.replace('-', '_')}",
+                        "is_default": bool(cmd_dict.get("is_default", False)),
                     }
 
                     # Extract command arguments
@@ -239,7 +240,7 @@ class IRBuilder:
                     # Handle nested subcommands
                     if "subcommands" in cmd_dict and cmd_dict["subcommands"]:
                         command_data["subcommands"] = self._extract_subcommands_dict(
-                            cmd_dict["subcommands"]
+                            cmd_dict["subcommands"], [cmd_name]
                         )
 
                     schema["root_command"]["subcommands"].append(command_data)
@@ -260,6 +261,7 @@ class IRBuilder:
                         "options": [],
                         "subcommands": [],
                         "hook_name": f"on_{cmd_name.replace('-', '_')}",
+                        "is_default": bool(cmd_dict.get("is_default", False)),
                     }
 
                     # Extract command arguments
@@ -301,7 +303,7 @@ class IRBuilder:
 
                     if "subcommands" in cmd_dict and cmd_dict["subcommands"]:
                         command_data["subcommands"] = self._extract_subcommands_dict(
-                            cmd_dict["subcommands"]
+                            cmd_dict["subcommands"], [cmd_name]
                         )
 
                     schema["root_command"]["subcommands"].append(command_data)
@@ -395,7 +397,7 @@ class IRBuilder:
             return ".".join(parent_path).replace("-", "_")
 
     def _extract_subcommands_dict(
-        self, commands: Dict[str, Any]
+        self, commands: Dict[str, Any], parent_path: List[str]
     ) -> List[Dict[str, Any]]:
         """
         Extract subcommands from dictionary format (used by CLISchema).
@@ -410,13 +412,16 @@ class IRBuilder:
         subcommands = []
 
         for cmd_name, cmd in commands.items():
+            command_path = [*parent_path, cmd_name]
             command_data = {
                 "name": cmd_name,
                 "description": _safe_get_attr(cmd, "desc"),
                 "arguments": [],
                 "options": [],
                 "subcommands": [],
-                "hook_name": f"on_{cmd_name.replace('-', '_')}",
+                "hook_name": "on_"
+                + "_".join(part.replace("-", "_") for part in command_path),
+                "is_default": False,
             }
 
             # Extract arguments and options similar to main commands
@@ -503,7 +508,7 @@ class IRBuilder:
 
             if nested_subcommands:
                 command_data["subcommands"] = self._extract_subcommands_dict(
-                    nested_subcommands
+                    nested_subcommands, command_path
                 )
 
             subcommands.append(command_data)
